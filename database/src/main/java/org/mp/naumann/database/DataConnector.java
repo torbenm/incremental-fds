@@ -7,7 +7,7 @@ public interface DataConnector {
     List<String> getTableNames();
     Table getTable(String tableName);
 
-    void connect();
+    void connect(String connectionString);
     void disconnect();
 
 }
