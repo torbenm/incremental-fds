@@ -1,4 +1,6 @@
 package org.mp.naumann.database.identifier;
 
-public interface RowIdentifier {
+import org.mp.naumann.database.HasRowIdentifier;
+
+public interface RowIdentifier extends HasRowIdentifier {
 }

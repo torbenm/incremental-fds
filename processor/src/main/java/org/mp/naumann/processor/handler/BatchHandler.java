@@ -1,4 +1,4 @@
-package org.mp.naumann.processor;
+package org.mp.naumann.processor.handler;
 
 import org.mp.naumann.processor.batch.Batch;
 

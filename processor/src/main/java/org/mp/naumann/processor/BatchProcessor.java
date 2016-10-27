@@ -3,8 +3,8 @@ package org.mp.naumann.processor;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.source.BatchSource;
 import org.mp.naumann.processor.batch.source.BatchSourceListener;
+import org.mp.naumann.processor.handler.BatchHandler;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 public abstract class BatchProcessor<BatchCollectionType extends Collection<BatchHandler>> implements BatchSourceListener {

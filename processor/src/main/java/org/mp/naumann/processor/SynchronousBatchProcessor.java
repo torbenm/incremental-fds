@@ -2,13 +2,14 @@ package org.mp.naumann.processor;
 
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.source.BatchSource;
+import org.mp.naumann.processor.handler.BatchHandler;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SequentialBatchProcessor extends BatchProcessor<List<BatchHandler>> {
+public class SynchronousBatchProcessor extends BatchProcessor<List<BatchHandler>> {
 
-    public SequentialBatchProcessor(BatchSource batchSource) {
+    public SynchronousBatchProcessor(BatchSource batchSource) {
         super(batchSource);
     }
 
