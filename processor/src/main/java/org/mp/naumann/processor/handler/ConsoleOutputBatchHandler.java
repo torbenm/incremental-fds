@@ -6,5 +6,8 @@ public class ConsoleOutputBatchHandler implements BatchHandler {
     @Override
     public void handleBatch(Batch batch) {
         System.out.println("Received batch of size "+ batch.getSize());
+        System.out.println("----- Insert statements: "+batch.getInsertStatements().size());
+        System.out.println("----- Delete statements: "+batch.getDeleteStatements().size());
+        System.out.println("----- Update statements: "+batch.getUpdateStatements().size());
     }
 }

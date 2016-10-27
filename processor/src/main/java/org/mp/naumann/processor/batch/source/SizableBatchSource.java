@@ -59,6 +59,8 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
     }
 
     protected void weakStream(){
+        // Streams if either their is enough to fill a batch,
+        // or all the rest if filling is completed.
         if(hasEnoughToStream()){
             stream(batchSize);
             weakStream();
@@ -67,9 +69,11 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
         }
     }
     protected  void forceStream(){
-        int size = hasEnoughToStream() ? batchSize : statementList.size() -currentStatementPosition;
-        stream(size);
-        forceStream();
+        if(hasSomethingToStream()){
+            int size = hasEnoughToStream() ? batchSize : statementList.size() -currentStatementPosition;
+            stream(size);
+            forceStream();
+        }
     }
     private synchronized void stream(int size){
         Batch batchToSend = new ListBatch(
@@ -83,6 +87,10 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
 
     protected boolean hasEnoughToStream(){
         return statementList.size() - currentStatementPosition >= batchSize;
+    }
+
+    protected boolean hasSomethingToStream(){
+        return statementList.size() > currentStatementPosition;
     }
 
     public String getTableName() {

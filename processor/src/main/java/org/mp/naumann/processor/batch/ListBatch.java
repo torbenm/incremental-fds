@@ -7,13 +7,16 @@ import org.mp.naumann.database.statement.UpdateStatement;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ListBatch implements Batch {
 
     private final List<Statement> statements;
+    private final String tableName;
 
     public ListBatch(List<Statement> statements, String tableName) {
         this.statements = statements;
+        this.tableName = tableName;
     }
 
     @Override
@@ -23,22 +26,29 @@ public class ListBatch implements Batch {
 
     @Override
     public String getTableName() {
-        return null;
+        return tableName;
     }
 
     @Override
     public List<InsertStatement> getInsertStatements() {
-        return null;
+        return filterStatements(InsertStatement.class);
     }
 
     @Override
     public List<DeleteStatement> getDeleteStatements() {
-        return null;
+        return filterStatements(DeleteStatement.class);
     }
 
     @Override
     public List<UpdateStatement> getUpdateStatements() {
-        return null;
+        return filterStatements(UpdateStatement.class);
+    }
+
+    private <T extends Statement> List<T> filterStatements(final Class<T> clazz){
+        return getStatements().parallelStream()
+                .filter(clazz::isInstance)
+                .map(n -> (T)n)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -48,6 +58,6 @@ public class ListBatch implements Batch {
 
     @Override
     public List<Statement> getStatements() {
-        return null;
+        return statements;
     }
 }
