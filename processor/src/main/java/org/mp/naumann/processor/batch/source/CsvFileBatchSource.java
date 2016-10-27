@@ -5,6 +5,9 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.mp.naumann.database.identifier.DefaultRowIdentifier;
 import org.mp.naumann.database.identifier.RowIdentifier;
+import org.mp.naumann.database.statement.DefaultDeleteStatement;
+import org.mp.naumann.database.statement.DefaultInsertStatement;
+import org.mp.naumann.database.statement.DefaultUpdateStatement;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 
@@ -27,6 +30,7 @@ public class CsvFileBatchSource extends SizableBatchSource {
     public CsvFileBatchSource(File file, String tableName, int batchSize) {
         super(tableName, batchSize);
         this.csvFile = file;
+        readFile();
     }
 
 
@@ -46,25 +50,23 @@ public class CsvFileBatchSource extends SizableBatchSource {
                 values.remove(ACTION_COLUMN_NAME);
                 values.remove("record");
 
-                Statement stmt = createStatement(action, values);
+                Statement stmt = createStatement(action, values, rowId);
                 addStatement(getTableName(), stmt);
             }
 
         } catch (IOException e) {
-            try {
-                if (parser != null)
-                    parser.close();
-            } catch (IOException e1) {
-            }
             e.printStackTrace();
         }
     }
 
-    private Statement createStatement(String type, Map values){
+    private <T> Statement createStatement(String type, Map<String, T> values, RowIdentifier rowIdentifier){
         switch(type.toLowerCase()){
             case "insert":
+                return new DefaultInsertStatement<T>(values, rowIdentifier);
             case "delete":
+                return new DefaultDeleteStatement(rowIdentifier);
             case "update":
+                return new DefaultUpdateStatement<T>(values, rowIdentifier);
             default:
                 return null; //TODO: need something better here
         }
