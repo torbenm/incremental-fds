@@ -69,6 +69,7 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
     protected  void forceStream(){
         int size = hasEnoughToStream() ? batchSize : statementList.size() -currentStatementPosition;
         stream(size);
+        forceStream();
     }
     private synchronized void stream(int size){
         Batch batchToSend = new ListBatch(
