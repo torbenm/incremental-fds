@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public abstract class SizableBatchSource extends AbstractBatchSource {
+public abstract class SizableBatchSource extends AbstractBatchSource implements StreamableBatchSource{
 
     private final int batchSize;
     private final List<Statement> statementList = new ArrayList<Statement>();
@@ -47,6 +47,7 @@ public abstract class SizableBatchSource extends AbstractBatchSource {
     }
 
     protected void finishFilling(){
+        doneFilling = true;
         if(streaming)
             forceStream();
     }

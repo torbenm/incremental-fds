@@ -37,22 +37,22 @@ public class CsvFileBatchSource extends SizableBatchSource {
     private void readFile() {
         CSVParser parser = null;
         try {
-            parser = CSVParser.parse(csvFile, Charset.defaultCharset(), CSVFormat.DEFAULT);
-            parser.getHeaderMap();
-            for (CSVRecord csvRecord : parser) {
+            parser = CSVParser.parse(csvFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withFirstRecordAsHeader());
 
+            for (CSVRecord csvRecord : parser) {
                 Map<String, String> values = csvRecord.toMap();
 
-                String action = values.get(ACTION_COLUMN_NAME);
-                int record = Integer.parseInt(values.get(RECORD_COLUMN_NAME));
+                String action = csvRecord.get(ACTION_COLUMN_NAME);
+                int record = Integer.parseInt(csvRecord.get(RECORD_COLUMN_NAME));
                 RowIdentifier rowId = new DefaultRowIdentifier(record);
 
                 values.remove(ACTION_COLUMN_NAME);
-                values.remove("record");
+                values.remove(RECORD_COLUMN_NAME);
 
                 Statement stmt = createStatement(action, values, rowId);
                 addStatement(getTableName(), stmt);
             }
+            finishFilling();
 
         } catch (IOException e) {
             e.printStackTrace();

@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>batch</artifactId>
+    <artifactId>processor</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.mp.naumann</groupId>
@@ -25,7 +25,6 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>RELEASE</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
