@@ -11,5 +11,12 @@
 
     <artifactId>database</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>net.sourceforge.csvjdbc</groupId>
+            <artifactId>csvjdbc</artifactId>
+            <version>1.0.28</version>
+        </dependency>
+    </dependencies>
 
 </project>

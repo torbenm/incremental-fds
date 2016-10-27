@@ -1,4 +1,7 @@
-package org.mp.naumann.database;
+package org.mp.naumann.database.jdbc;
+
+import org.mp.naumann.database.DataConnector;
+import org.mp.naumann.database.Table;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -35,7 +38,7 @@ public class JDBCDataConnector implements DataConnector {
     }
 
     public Table getTable(String tableName) {
-        return null;
+        return new JDBCTable(tableName, conn);
     }
 
     public void connect() {

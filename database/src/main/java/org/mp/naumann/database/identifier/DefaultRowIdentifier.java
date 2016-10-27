@@ -7,8 +7,19 @@ public class DefaultRowIdentifier implements RowIdentifier {
         this.rowId = rowId;
     }
 
-    @Override
-    public RowIdentifier getRowIdentifier() {
-        return null;
+    public int getRowId() {
+        return rowId;
+    }
+
+    public boolean equals(Object object) {
+        if ((object instanceof RowIdentifier) && (((RowIdentifier)object).getRowId() == rowId)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public int hashCode() {
+        return ((Integer)rowId).hashCode();
     }
 }
