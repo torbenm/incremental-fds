@@ -58,6 +58,11 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
             weakStream();
     }
 
+    /**
+     * Streams only when there is enough to stream. Calls itself afterwards again.
+     * Otherwise, it checks if filling the storage up is done.
+     * Then it calls forceStream to stream the rest.
+     */
     protected void weakStream(){
         // Streams if either their is enough to fill a batch,
         // or all the rest if filling is completed.
@@ -68,7 +73,13 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
             forceStream();
         }
     }
+
+    /**
+     * Streams either way. However, it does not send out batches bigger than the specified batch size,
+     * but does not mind sending less either.
+     */
     protected  void forceStream(){
+        // Streams all there is left if it is fewer than the specified size
         if(hasSomethingToStream()){
             int size = hasEnoughToStream() ? batchSize : statementList.size() -currentStatementPosition;
             stream(size);
