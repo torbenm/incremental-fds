@@ -7,6 +7,7 @@ import java.util.List;
 public class JDBCDataConnector implements DataConnector {
 
     private Connection conn;
+    private String connectionString;
 
     public JDBCDataConnector(String className, String connectionString) {
         try {
@@ -14,15 +15,18 @@ public class JDBCDataConnector implements DataConnector {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+        this.connectionString = connectionString;
+        connect();
     }
 
     public List<String> getTableNames() {
         List<String> result = new ArrayList<>();
         try {
             DatabaseMetaData md = conn.getMetaData();
-            ResultSet rs = md.getTables(null, null, "%", null);
-            while (rs.next()) {
-                result.add(rs.getString(3));
+            try (ResultSet rs = md.getTables(null, null, "%", null)) {
+                while (rs.next()) {
+                    result.add(rs.getString(3));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -34,7 +38,7 @@ public class JDBCDataConnector implements DataConnector {
         return null;
     }
 
-    public void connect(String connectionString) {
+    public void connect() {
         try {
             conn = DriverManager.getConnection(connectionString);
         } catch (SQLException e) {
