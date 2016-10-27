@@ -12,5 +12,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: net.sourceforge.csvjdbc:csvjdbc:1.0.28" level="project" />
+    <orderEntry type="module" module-name="utils" />
   </component>
 </module>

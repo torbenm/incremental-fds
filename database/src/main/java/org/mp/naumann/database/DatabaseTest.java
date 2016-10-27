@@ -6,7 +6,7 @@ import org.mp.naumann.database.jdbc.JDBCDataConnector;
 public class DatabaseTest {
 
     public static void main(String[] args) {
-        DataConnector connector = new JDBCDataConnector("org.relique.jdbc.csv.CsvDriver", "jdbc:relique:csv:database\\src\\main\\resources");
+        DataConnector connector = new JDBCDataConnector("org.relique.jdbc.csv.CsvDriver", "jdbc:relique:csv:database/src/main/resources");
         try {
             for (String tableName : connector.getTableNames()) {
                 System.out.println(String.format("Table name: %s", tableName));

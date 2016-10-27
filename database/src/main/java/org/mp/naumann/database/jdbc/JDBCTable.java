@@ -9,15 +9,19 @@ import org.mp.naumann.database.identifier.RowIdentifier;
 import org.mp.naumann.database.identifier.RowIdentifierGroup;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.StatementGroup;
+import static org.mp.naumann.utils.GenericHelper.cast;
+import static org.mp.naumann.utils.GenericHelper.createGenericMap;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 public class JDBCTable implements Table {
 
@@ -63,15 +67,16 @@ public class JDBCTable implements Table {
     public Column getColumn(String name) {
         try (java.sql.Statement stmt = conn.createStatement()) {
             try (ResultSet rs = stmt.executeQuery(String.format("SELECT %s FROM %s", name, this.name))) {
-                //ResultSetMetaData md = rs.getMetaData();
-                //Class columnType = Class.forName(md.getColumnClassName(1));
-                Map<RowIdentifier, Object> values = new HashMap<>();
+                ResultSetMetaData md = rs.getMetaData();
+                //TODO: Replace with actual column type!
+                Class<?> columnType  = String.class;
+                Map values = createGenericMap(HashMap.class, RowIdentifier.class, columnType);
                 int i = 0;
                 while (rs.next()) {
-                    values.put(new DefaultRowIdentifier(i), rs.getObject(1));
+                    values.put(new DefaultRowIdentifier(i), cast(rs.getObject(1), columnType));
                     i++;
                 }
-                return new GenericColumn<>(name, values);
+                return new GenericColumn(name, values);
             }
         } catch (Exception e) {
             e.printStackTrace();
