@@ -12,11 +12,10 @@ public class DatabaseTest {
                 System.out.println(String.format("Table name: %s", tableName));
                 Table table = connector.getTable(tableName);
                 System.out.println(String.format("Row count: %s", table.getRowCount()));
-                System.out.println("Column names:");
+                System.out.println("Columns:");
                 for (String columnName: table.getColumnNames()) {
-                    Column<String> col = table.getColumn(columnName);
-                    System.out.println(String.format("    %s", col.getName()));
-                    System.out.println(String.format("    %s", col.getValue(new DefaultRowIdentifier(1))));
+                    Column col = table.getColumn(columnName);
+                    System.out.println(String.format("    %s (%s)", col.getName(), col.getColumnType()));
                 }
             }
         } finally {

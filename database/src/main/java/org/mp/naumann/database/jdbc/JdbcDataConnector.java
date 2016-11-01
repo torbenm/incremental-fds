@@ -38,7 +38,7 @@ public class JdbcDataConnector implements DataConnector {
     }
 
     public Table getTable(String tableName) {
-        return new JDBCTable(tableName, conn);
+        return new JdbcTable(tableName, conn);
     }
 
     public void connect() {

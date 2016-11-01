@@ -1,11 +1,11 @@
 package org.mp.naumann.database;
 
-import org.mp.naumann.database.identifier.DefaultRowIdentifier;
 import org.mp.naumann.database.identifier.RowIdentifier;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class GenericColumn<T> implements Column<T> {
 
@@ -16,7 +16,6 @@ public class GenericColumn<T> implements Column<T> {
 
         this.name = name;
         this.values = values;
-        System.out.println(values.get(new DefaultRowIdentifier(1)).getClass().toString());
     }
 
     public String getName() {
@@ -34,8 +33,11 @@ public class GenericColumn<T> implements Column<T> {
 
     @Override
     public Class<T> getColumnType() {
-        // Even though there is an unchecked cast here,
-        // this can never be an invalid cast
-        return (Class<T>)values.values().stream().findFirst().get().getClass();
+        Optional<T> o = values.values().stream().findFirst();
+        if (o.isPresent())
+            //noinspection unchecked
+            return (Class<T>)o.get().getClass();
+        else
+            return null;
     }
 }

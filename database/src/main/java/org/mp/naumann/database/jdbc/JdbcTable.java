@@ -22,13 +22,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-public class JDBCTable implements Table {
+public class JdbcTable implements Table {
 
     private String name;
     private Connection conn;
 
-    public JDBCTable(String name, Connection conn) {
+    public JdbcTable(String name, Connection conn) {
         this.name = name;
         this.conn = conn;
     }
@@ -67,15 +66,15 @@ public class JDBCTable implements Table {
     public Column getColumn(String name) {
         try (java.sql.Statement stmt = conn.createStatement()) {
             try (ResultSet rs = stmt.executeQuery(String.format("SELECT %s FROM %s", name, this.name))) {
-                ResultSetMetaData md = rs.getMetaData();
-                //TODO: Replace with actual column type!
-                Class<?> columnType  = String.class;
+                Class<?> columnType = SQLTypeMap.toClass(rs.getMetaData().getColumnType(1));
                 Map values = createGenericMap(HashMap.class, RowIdentifier.class, columnType);
                 int i = 0;
                 while (rs.next()) {
+                    //noinspection unchecked
                     values.put(new DefaultRowIdentifier(i), cast(rs.getObject(1), columnType));
                     i++;
                 }
+                //noinspection unchecked
                 return new GenericColumn(name, values);
             }
         } catch (Exception e) {
