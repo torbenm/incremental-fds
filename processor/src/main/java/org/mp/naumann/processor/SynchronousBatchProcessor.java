@@ -23,4 +23,5 @@ public class SynchronousBatchProcessor extends BatchProcessor<List<BatchHandler>
             batchHandler.handleBatch(batch);
         }
     }
+
 }

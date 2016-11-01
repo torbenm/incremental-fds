@@ -48,7 +48,7 @@ public class CsvFileBatchSource extends SizableBatchSource {
 
                 values.remove(ACTION_COLUMN_NAME);
                 values.remove(RECORD_COLUMN_NAME);
-
+                System.out.println(values);
                 Statement stmt = createStatement(action, values, rowId);
                 addStatement(getTableName(), stmt);
             }
@@ -59,7 +59,7 @@ public class CsvFileBatchSource extends SizableBatchSource {
         }
     }
 
-    private Statement createStatement(String type, Map<String, String> values, RowIdentifier rowIdentifier){
+    protected Statement createStatement(String type, Map<String, String> values, RowIdentifier rowIdentifier){
         switch(type.toLowerCase()){
             case "insert":
                 return new DefaultInsertStatement(values, rowIdentifier, this.getTableName());

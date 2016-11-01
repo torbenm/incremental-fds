@@ -40,4 +40,7 @@ public abstract class BatchProcessor<BatchCollectionType extends Collection<Batc
 
     protected abstract void distributeBatch(Batch batch);
 
+    public DatabaseBatchHandler getDatabaseBatchHandler() {
+        return databaseBatchHandler;
+    }
 }
