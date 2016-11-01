@@ -19,13 +19,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class JdbcTable implements Table {
+class JdbcTable implements Table {
 
     private String name;
     private Connection conn;
     private Class<? extends RowIdentifier> rowIdentifierType;
 
-    public JdbcTable(String name, Connection conn) {
+    JdbcTable(String name, Connection conn) {
         this.name = name;
         this.conn = conn;
         rowIdentifierType = determineRowIdentifierType();
@@ -101,11 +101,20 @@ public class JdbcTable implements Table {
     }
 
     public boolean execute(Statement statement) {
-        return false;
+        try (java.sql.Statement stmt = conn.createStatement()) {
+            return stmt.execute(SqlQueryBuilder.generateSql(statement));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public boolean execute(StatementGroup statementGroup) {
-        return false;
+        boolean success = true;
+        for (Object stmt: statementGroup.getStatements()) {
+            success = success && execute((Statement) stmt);
+        }
+        return success;
     }
 
     public Table getSubTable(RowIdentifierGroup group) {
