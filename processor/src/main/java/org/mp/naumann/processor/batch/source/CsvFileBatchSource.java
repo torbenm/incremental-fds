@@ -9,7 +9,6 @@ import org.mp.naumann.database.statement.DefaultDeleteStatement;
 import org.mp.naumann.database.statement.DefaultInsertStatement;
 import org.mp.naumann.database.statement.DefaultUpdateStatement;
 import org.mp.naumann.database.statement.Statement;
-import org.mp.naumann.processor.batch.Batch;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,11 +61,11 @@ public class CsvFileBatchSource extends SizableBatchSource {
     private <T> Statement createStatement(String type, Map<String, T> values, RowIdentifier rowIdentifier){
         switch(type.toLowerCase()){
             case "insert":
-                return new DefaultInsertStatement<T>(values, rowIdentifier);
+                return new DefaultInsertStatement<T>(values, rowIdentifier, tableName);
             case "delete":
-                return new DefaultDeleteStatement(rowIdentifier);
+                return new DefaultDeleteStatement(rowIdentifier, tableName);
             case "update":
-                return new DefaultUpdateStatement<T>(values, rowIdentifier);
+                return new DefaultUpdateStatement<T>(values, rowIdentifier, tableName);
             default:
                 return null; //TODO: need something better here
         }

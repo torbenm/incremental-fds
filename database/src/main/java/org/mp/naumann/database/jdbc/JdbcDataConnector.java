@@ -7,12 +7,12 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JDBCDataConnector implements DataConnector {
+public class JdbcDataConnector implements DataConnector {
 
     private Connection conn;
     private String connectionString;
 
-    public JDBCDataConnector(String className, String connectionString) {
+    public JdbcDataConnector(String className, String connectionString) {
         try {
             Class.forName(className);
         } catch (ClassNotFoundException e) {

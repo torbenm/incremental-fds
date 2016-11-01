@@ -7,10 +7,12 @@ import java.util.Map;
 public class DefaultUpdateStatement<T> implements UpdateStatement<T> {
     private final Map<String, T> map;
     private final RowIdentifier rowIdentifier;
+    private final String tableName;
 
-    public DefaultUpdateStatement(Map<String, T> map, RowIdentifier rowIdentifier) {
+    public DefaultUpdateStatement(Map<String, T> map, RowIdentifier rowIdentifier, String tableName) {
         this.map = map;
         this.rowIdentifier = rowIdentifier;
+        this.tableName = tableName;
     }
 
     @Override
@@ -21,5 +23,10 @@ public class DefaultUpdateStatement<T> implements UpdateStatement<T> {
     @Override
     public RowIdentifier getRowIdentifier() {
         return rowIdentifier;
+    }
+
+    @Override
+    public String getTableName() {
+        return tableName;
     }
 }

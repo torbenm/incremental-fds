@@ -32,4 +32,10 @@ public class GenericColumn<T> implements Column<T> {
 
     public T getValue(RowIdentifier id) { return values.get(id); }
 
+    @Override
+    public Class<T> getColumnType() {
+        // Even though there is an unchecked cast here,
+        // this can never be an invalid cast
+        return (Class<T>)values.values().stream().findFirst().get().getClass();
+    }
 }

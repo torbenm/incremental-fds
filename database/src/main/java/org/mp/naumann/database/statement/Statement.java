@@ -4,4 +4,5 @@ import org.mp.naumann.database.HasRowIdentifier;
 
 public interface Statement extends HasRowIdentifier {
 
+    String getTableName();
 }
