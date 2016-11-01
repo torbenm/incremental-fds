@@ -1,6 +1,6 @@
 package org.mp.naumann.database.statement;
 
-import org.mp.naumann.database.HasRowIdentifier;
+import org.mp.naumann.database.identifier.HasRowIdentifier;
 
 import java.util.Map;
 
