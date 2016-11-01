@@ -1,14 +1,15 @@
-package org.mp.naumann.processor.handler;
+package org.mp.naumann.processor.handler.database;
 
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.processor.batch.Batch;
+import org.mp.naumann.processor.handler.BatchHandler;
 
-public class DatabaseBatchHandler implements BatchHandler {
+public class PassThroughDatabaseBatchHandler implements BatchHandler {
 
     private final DataConnector dataConnector;
 
-    public DatabaseBatchHandler(DataConnector dataConnector) {
+    public PassThroughDatabaseBatchHandler(DataConnector dataConnector) {
         this.dataConnector = dataConnector;
     }
 

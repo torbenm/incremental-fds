@@ -3,7 +3,7 @@ package org.mp.naumann.processor;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.source.BatchSource;
 import org.mp.naumann.processor.handler.BatchHandler;
-import org.mp.naumann.processor.handler.DatabaseBatchHandler;
+import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
 import java.util.ArrayList;
 import java.util.List;
