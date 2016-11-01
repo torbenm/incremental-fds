@@ -25,10 +25,16 @@ public class JdbcTable implements Table {
 
     private String name;
     private Connection conn;
+    private Class<? extends RowIdentifier> rowIdentifierType;
 
     public JdbcTable(String name, Connection conn) {
         this.name = name;
         this.conn = conn;
+        rowIdentifierType = determineRowIdentifierType();
+    }
+
+    private Class<? extends RowIdentifier> determineRowIdentifierType() {
+        return DefaultRowIdentifier.class;
     }
 
     public List<String> getColumnNames() {
@@ -97,5 +103,7 @@ public class JdbcTable implements Table {
     public String getName() {
         return name;
     }
+
+    public Class<? extends RowIdentifier> getRowIdentifierType() { return rowIdentifierType; };
 
 }

@@ -18,4 +18,6 @@ public interface Table extends HasName, HasColumns {
 
     Table getSubTable(RowIdentifierGroup group);
 
+    Class<? extends RowIdentifier> getRowIdentifierType();
+
 }

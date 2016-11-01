@@ -12,11 +12,7 @@ public class DefaultRowIdentifier implements RowIdentifier {
     }
 
     public boolean equals(Object object) {
-        if ((object instanceof RowIdentifier) && (((RowIdentifier)object).getRowId() == rowId)) {
-            return true;
-        } else {
-            return false;
-        }
+        return ((object instanceof RowIdentifier) && (((RowIdentifier)object).getRowId() == rowId));
     }
 
     public int hashCode() {
