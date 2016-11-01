@@ -1,6 +1,10 @@
 package org.mp.naumann.database.jdbc;
 
 import org.mp.naumann.database.*;
+import org.mp.naumann.database.data.Column;
+import org.mp.naumann.database.data.GenericColumn;
+import org.mp.naumann.database.data.GenericRow;
+import org.mp.naumann.database.data.Row;
 import org.mp.naumann.database.identifier.DefaultRowIdentifier;
 import org.mp.naumann.database.identifier.RowIdentifier;
 import org.mp.naumann.database.identifier.RowIdentifierGroup;
