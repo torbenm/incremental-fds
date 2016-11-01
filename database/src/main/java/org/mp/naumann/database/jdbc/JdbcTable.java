@@ -15,7 +15,6 @@ import static org.mp.naumann.utils.GenericHelper.createGenericMap;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,7 +65,7 @@ public class JdbcTable implements Table {
     public Column getColumn(String name) {
         try (java.sql.Statement stmt = conn.createStatement()) {
             try (ResultSet rs = stmt.executeQuery(String.format("SELECT %s FROM %s", name, this.name))) {
-                Class<?> columnType = SQLTypeMap.toClass(rs.getMetaData().getColumnType(1));
+                Class<?> columnType = SqlTypeMap.toClass(rs.getMetaData().getColumnType(1));
                 Map values = createGenericMap(HashMap.class, RowIdentifier.class, columnType);
                 int i = 0;
                 while (rs.next()) {

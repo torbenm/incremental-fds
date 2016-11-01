@@ -5,7 +5,7 @@ import java.sql.Types;
 /**
  * Converts database types to Java class types.
  */
-public class SQLTypeMap {
+public class SqlTypeMap {
     /**
      * Translates a data type from an integer (java.sql.Types value) to a string
      * that represents the corresponding class.
