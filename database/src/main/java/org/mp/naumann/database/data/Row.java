@@ -1,4 +1,4 @@
-package org.mp.naumann.database;
+package org.mp.naumann.database.data;
 
 import org.mp.naumann.database.identifier.HasRowIdentifier;
 

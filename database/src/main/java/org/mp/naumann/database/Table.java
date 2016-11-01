@@ -1,6 +1,10 @@
 package org.mp.naumann.database;
 
 
+import org.mp.naumann.database.data.Column;
+import org.mp.naumann.database.data.HasColumns;
+import org.mp.naumann.database.data.HasName;
+import org.mp.naumann.database.data.Row;
 import org.mp.naumann.database.identifier.RowIdentifier;
 import org.mp.naumann.database.identifier.RowIdentifierGroup;
 import org.mp.naumann.database.statement.Statement;

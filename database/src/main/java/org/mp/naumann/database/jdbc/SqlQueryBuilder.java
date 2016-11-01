@@ -5,45 +5,68 @@ import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.UpdateStatement;
 
-public class SqlQueryBuilder {
+import java.util.Map;
 
-    public static String generateSql(Statement stmt){
-        if(stmt instanceof InsertStatement){
+class SqlQueryBuilder {
+
+    static String generateSql(Statement stmt){
+        if (stmt instanceof InsertStatement) {
             return generateSql((InsertStatement)stmt);
         }
 
-        if(stmt instanceof DeleteStatement){
+        if (stmt instanceof DeleteStatement) {
             return generateSql((DeleteStatement) stmt);
         }
 
-        if(stmt instanceof UpdateStatement){
+        if (stmt instanceof UpdateStatement) {
             return generateSql((UpdateStatement) stmt);
         }
 
         return "ERROR! However, this case should never occur.";
     }
 
-    public static String generateSql(InsertStatement stmt){
-        StringBuilder query = new StringBuilder("INSERT INTO ")
-                .append(stmt.getTableName())
-                .append(" (");
-
-        return query.toString();
+    private static void appendValueMapToStringBuilder(Map<String, String> valueMap, StringBuilder query, String separator) {
+        if (valueMap.isEmpty()) {
+            query.append("1 = 0");
+        } else {
+            valueMap.forEach(
+                    (key, value) -> query
+                            .append(key)
+                            .append(" = ")
+                            .append(value)
+                            .append(separator)
+            );
+            query.setLength(query.length() - separator.length());
+        }
     }
 
-    public static String generateSql(DeleteStatement stmt){
+    private static String generateSql(InsertStatement stmt){
+        return "INSERT INTO "
+            + stmt.getTableName()
+            + " ("
+            + String.join(", ", stmt.getValueMap().keySet())
+            + ") VALUES ("
+            + String.join(", ", stmt.getValueMap().values())
+            + ")";
+    }
+
+    private static String generateSql(DeleteStatement stmt){
         StringBuilder query = new StringBuilder("DELETE FROM ")
                 .append(stmt.getTableName())
-                .append(" (");
-
+                .append(" WHERE (");
+        appendValueMapToStringBuilder(stmt.getValueMap(), query, ") AND (");
+        query.append(")");
         return query.toString();
     }
 
-    public static String generateSql(UpdateStatement stmt){
+    private static String generateSql(UpdateStatement stmt){
         StringBuilder query = new StringBuilder("UPDATE ")
                 .append(stmt.getTableName())
-                .append(" (");
-
+                .append(" SET ");
+        appendValueMapToStringBuilder(stmt.getValueMap(), query, ", ");
+        query.append(" WHERE (");
+        appendValueMapToStringBuilder(stmt.getOldValueMap(), query, ") AND (");
+        query.append(")");
         return query.toString();
     }
 
