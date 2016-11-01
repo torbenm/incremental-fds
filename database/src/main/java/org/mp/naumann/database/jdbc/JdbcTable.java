@@ -1,9 +1,6 @@
 package org.mp.naumann.database.jdbc;
 
-import org.mp.naumann.database.Column;
-import org.mp.naumann.database.GenericColumn;
-import org.mp.naumann.database.Row;
-import org.mp.naumann.database.Table;
+import org.mp.naumann.database.*;
 import org.mp.naumann.database.identifier.DefaultRowIdentifier;
 import org.mp.naumann.database.identifier.RowIdentifier;
 import org.mp.naumann.database.identifier.RowIdentifierGroup;
@@ -12,10 +9,7 @@ import org.mp.naumann.database.statement.StatementGroup;
 import static org.mp.naumann.utils.GenericHelper.cast;
 import static org.mp.naumann.utils.GenericHelper.createGenericMap;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,7 +59,21 @@ public class JdbcTable implements Table {
     }
 
     public Row getRow(RowIdentifier rowIdentifier) {
-        return null;
+        try (java.sql.Statement stmt = conn.createStatement()) {
+            try (ResultSet rs = stmt.executeQuery(String.format("SELECT * FROM %s ORDER BY 1 LIMIT 1 OFFSET %s", this.name, rowIdentifier.getRowId()))) {
+                ResultSetMetaData md = rs.getMetaData();
+                Map<String, Object> values = new HashMap<>();
+                if (rs.next()) {
+                    for (int i = 1; i <= md.getColumnCount(); i++) {
+                        values.put(md.getColumnName(i), rs.getObject(i));
+                    }
+                }
+                return new GenericRow(rowIdentifier, values);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public Column getColumn(String name) {
@@ -104,6 +112,6 @@ public class JdbcTable implements Table {
         return name;
     }
 
-    public Class<? extends RowIdentifier> getRowIdentifierType() { return rowIdentifierType; };
+    public Class<? extends RowIdentifier> getRowIdentifierType() { return rowIdentifierType; }
 
 }

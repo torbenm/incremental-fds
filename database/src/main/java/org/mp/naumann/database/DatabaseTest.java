@@ -17,6 +17,12 @@ public class DatabaseTest {
                     Column col = table.getColumn(columnName);
                     System.out.println(String.format("    %s (%s)", col.getName(), col.getColumnType()));
                 }
+                System.out.println("Values of first row:");
+                Row row = table.getRow(new DefaultRowIdentifier(1));
+                for (String columnName: row.getColumnNames()) {
+                    Object value = row.getValue(columnName);
+                    System.out.println(String.format("    %s (%s)", value, value.getClass()));
+                }
             }
         } finally {
             connector.disconnect();

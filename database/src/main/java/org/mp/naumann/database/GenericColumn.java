@@ -13,7 +13,6 @@ public class GenericColumn<T> implements Column<T> {
     private Map<RowIdentifier, T> values;
 
     public GenericColumn(String name, Map<RowIdentifier, T> values) {
-
         this.name = name;
         this.values = values;
     }
@@ -31,7 +30,6 @@ public class GenericColumn<T> implements Column<T> {
 
     public T getValue(RowIdentifier id) { return values.get(id); }
 
-    @Override
     public Class<T> getColumnType() {
         Optional<T> o = values.values().stream().findFirst();
         if (o.isPresent())
