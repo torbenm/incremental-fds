@@ -10,3 +10,4 @@ buildNumber.properties
 
 .idea/
 .DS_Store
+database/src/test/data/csv_test/
