@@ -13,13 +13,13 @@ public class JdbcDataConnectorTest extends JdbcTest {
     public void testGetTableNames() {
         List<String> tableNames = connector.getTableNames();
         assertTrue(tableNames.size() == 1);
-        assertTrue(tableNames.get(0).equals("test"));
+        assertTrue(tableNames.get(0).equals(testTableName));
     }
 
     @Test
     public void testGetTable() {
-        Table table = connector.getTable("test");
-        assertTrue(table.getName().equals("test"));
+        Table table = connector.getTable(testTableName);
+        assertTrue(table.getName().equals(testTableName));
     }
 }
 
