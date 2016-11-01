@@ -2,23 +2,11 @@ package org.mp.naumann.database.statement;
 
 import org.mp.naumann.database.identifier.RowIdentifier;
 
-public class DefaultDeleteStatement implements DeleteStatement {
+import java.util.Map;
 
-    private final RowIdentifier rowIdentifier;
-    private final String tableName;
+public class DefaultDeleteStatement extends StatementBase implements DeleteStatement {
 
-    public DefaultDeleteStatement(RowIdentifier rowIdentifier, String tableName) {
-        this.rowIdentifier = rowIdentifier;
-        this.tableName = tableName;
-    }
-
-    @Override
-    public RowIdentifier getRowIdentifier() {
-        return rowIdentifier;
-    }
-
-    @Override
-    public String getTableName() {
-        return tableName;
+    public DefaultDeleteStatement(Map<String, String> map, RowIdentifier rowIdentifier, String tableName) {
+        super(map, rowIdentifier, tableName);
     }
 }

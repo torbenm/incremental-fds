@@ -58,14 +58,14 @@ public class CsvFileBatchSource extends SizableBatchSource {
         }
     }
 
-    private <T> Statement createStatement(String type, Map<String, T> values, RowIdentifier rowIdentifier){
+    private Statement createStatement(String type, Map<String, String> values, RowIdentifier rowIdentifier){
         switch(type.toLowerCase()){
             case "insert":
-                return new DefaultInsertStatement<T>(values, rowIdentifier, this.getTableName());
+                return new DefaultInsertStatement(values, rowIdentifier, this.getTableName());
             case "delete":
-                return new DefaultDeleteStatement(rowIdentifier, this.getTableName());
+                return new DefaultDeleteStatement(values, rowIdentifier, this.getTableName());
             case "update":
-                return new DefaultUpdateStatement<T>(values, rowIdentifier, this.getTableName());
+                return new DefaultUpdateStatement(values, rowIdentifier, this.getTableName());
             default:
                 return null; //TODO: need something better here
         }

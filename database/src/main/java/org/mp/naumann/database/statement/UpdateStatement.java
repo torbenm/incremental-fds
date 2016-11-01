@@ -1,4 +1,4 @@
 package org.mp.naumann.database.statement;
 
-public interface UpdateStatement<T> extends WriteStatement<T> {
+public interface UpdateStatement extends Statement {
 }
