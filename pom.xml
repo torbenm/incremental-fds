@@ -12,6 +12,7 @@
         <module>database</module>
         <module>processor</module>
         <module>utils</module>
+        <module>algorithms</module>
     </modules>
 
     <properties>

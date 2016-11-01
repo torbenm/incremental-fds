@@ -5,9 +5,6 @@ import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.UpdateStatement;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 public class SqlQueryBuilder {
 
     public static String generateSql(Statement stmt){

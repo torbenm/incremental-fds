@@ -4,15 +4,18 @@ import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.source.BatchSource;
 import org.mp.naumann.processor.batch.source.BatchSourceListener;
 import org.mp.naumann.processor.handler.BatchHandler;
+import org.mp.naumann.processor.handler.DatabaseBatchHandler;
 
 import java.util.Collection;
 
 public abstract class BatchProcessor<BatchCollectionType extends Collection<BatchHandler>> implements BatchSourceListener {
 
     private final BatchCollectionType batchHandlerCollection;
+    private final DatabaseBatchHandler databaseBatchHandler;
 
-    public BatchProcessor(BatchSource batchSource){
-        batchHandlerCollection = initializeBatchHandlerCollection();
+    public BatchProcessor(BatchSource batchSource, DatabaseBatchHandler databaseBatchHandler){
+        this.databaseBatchHandler = databaseBatchHandler;
+        this.batchHandlerCollection = initializeBatchHandlerCollection();
         batchSource.addBatchSourceListener(this);
     }
 
@@ -32,6 +35,7 @@ public abstract class BatchProcessor<BatchCollectionType extends Collection<Batc
 
     public void batchArrived(Batch batch){
         distributeBatch(batch);
+        databaseBatchHandler.handleBatch(batch);
     }
 
     protected abstract void distributeBatch(Batch batch);
