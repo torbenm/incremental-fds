@@ -5,7 +5,7 @@ import org.mp.naumann.database.Table;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.handler.BatchHandler;
 
-public class PassThroughDatabaseBatchHandler implements BatchHandler {
+public class PassThroughDatabaseBatchHandler implements DatabaseBatchHandler {
 
     private final DataConnector dataConnector;
 

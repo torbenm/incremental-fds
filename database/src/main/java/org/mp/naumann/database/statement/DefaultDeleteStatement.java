@@ -9,4 +9,5 @@ public class DefaultDeleteStatement extends StatementBase implements DeleteState
     public DefaultDeleteStatement(Map<String, String> map, RowIdentifier rowIdentifier, String tableName) {
         super(map, rowIdentifier, tableName);
     }
+
 }

@@ -5,6 +5,7 @@ import org.mp.naumann.database.identifier.RowIdentifier;
 import java.util.Map;
 
 class StatementBase implements Statement {
+
     private final Map<String, String> map;
     private final RowIdentifier rowIdentifier;
     private final String tableName;

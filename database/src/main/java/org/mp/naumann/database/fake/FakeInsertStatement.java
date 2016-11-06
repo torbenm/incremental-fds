@@ -21,4 +21,9 @@ public class FakeInsertStatement implements InsertStatement {
     public Map<String, String> getValueMap() {
         return null;
     }
+
+    @Override
+    public boolean isOfEqualSchema(InsertStatement statement) {
+        return false;
+    }
 }
