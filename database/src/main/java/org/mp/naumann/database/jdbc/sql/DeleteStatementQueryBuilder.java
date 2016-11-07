@@ -36,7 +36,7 @@ public class DeleteStatementQueryBuilder implements StatementQueryBuilder<Delete
             List<DeleteStatement> unequal = new ArrayList<>();
 
             for (DeleteStatement stmt : statements) {
-                if (DeleteStatement.areEqualSchema(base, stmt)) {
+                if (base.isOfEqualSchema(stmt)) {
                     equal.add(stmt);
                 } else {
                     unequal.add(stmt);

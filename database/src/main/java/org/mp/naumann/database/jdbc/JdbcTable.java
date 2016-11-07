@@ -112,11 +112,12 @@ class JdbcTable implements Table {
     }
 
     public boolean execute(StatementGroup statementGroup) {
-        boolean success = true;
-        for (Object stmt: statementGroup.getStatements()) {
-            success = success && execute((Statement) stmt);
+        try(java.sql.Statement stmt = conn.createStatement()){
+            return stmt.execute(SqlQueryBuilder.generateSql(statementGroup));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
-        return success;
     }
 
     public Table getSubTable(RowIdentifierGroup group) {
