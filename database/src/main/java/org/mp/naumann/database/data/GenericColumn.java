@@ -28,6 +28,11 @@ public class GenericColumn<T> implements Column<T> {
             return new ArrayList<>(values.values());
     }
 
+    @Override
+    public final Map<RowIdentifier, T> getValues() {
+        return values;
+    }
+
     public T getValue(RowIdentifier id) { return values.get(id); }
 
     public Class<T> getColumnType() {

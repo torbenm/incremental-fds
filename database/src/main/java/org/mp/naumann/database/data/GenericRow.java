@@ -24,6 +24,11 @@ public class GenericRow implements Row {
         return new ArrayList<Object>(values.values());
     }
 
+    @Override
+    public Map<String, Object> getValues() {
+        return values;
+    }
+
     public Object getValue(String id) { return values.get(id); }
 
     public RowIdentifier getRowIdentifier() { return rowIdentifier; }
