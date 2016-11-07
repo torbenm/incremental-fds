@@ -1,4 +1,4 @@
-package org.mp.naumann.database.jdbc.helper;
+package org.mp.naumann.database.jdbc.sql.helper;
 
 import org.mp.naumann.database.identifier.EmptyRowIdentifier;
 import org.mp.naumann.database.statement.DefaultInsertStatement;
