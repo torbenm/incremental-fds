@@ -1,4 +1,4 @@
-package org.mp.naumann.database;
+package org.mp.naumann.database.data;
 
 import org.mp.naumann.database.identifier.RowIdentifier;
 
@@ -22,6 +22,11 @@ public class GenericRow implements Row {
 
     public List<Object> toList() {
         return new ArrayList<Object>(values.values());
+    }
+
+    @Override
+    public Map<String, Object> getValues() {
+        return values;
     }
 
     public Object getValue(String id) { return values.get(id); }

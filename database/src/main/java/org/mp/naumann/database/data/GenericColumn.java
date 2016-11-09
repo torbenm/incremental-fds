@@ -1,4 +1,4 @@
-package org.mp.naumann.database;
+package org.mp.naumann.database.data;
 
 import org.mp.naumann.database.identifier.RowIdentifier;
 
@@ -26,6 +26,11 @@ public class GenericColumn<T> implements Column<T> {
             return (List<T>) values.values();
         else
             return new ArrayList<>(values.values());
+    }
+
+    @Override
+    public final Map<RowIdentifier, T> getValues() {
+        return values;
     }
 
     public T getValue(RowIdentifier id) { return values.get(id); }

@@ -1,4 +1,4 @@
-package org.mp.naumann.database.jdbc;
+package org.mp.naumann.database.jdbc.sql;
 
 import java.sql.Types;
 

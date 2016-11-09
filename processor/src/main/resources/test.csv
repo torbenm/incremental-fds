@@ -12,7 +12,7 @@ INSERT,0,demo1,demo2,demo3,demo4,demo5
 INSERT,0,demo1,demo2,demo3,demo4,demo5
 INSERT,0,demo1,demo2,demo3,demo4,demo5
 INSERT,0,demo1,demo2,demo3,demo4,demo5
-UPDATE,500193,demo1,demo2,demo3,demo4,demo5
+UPDATE,500193,demo1\|old1,demo2\|old2,demo3\|old3,demo4\|old4,demo5\|old5
 INSERT,0,demo1,demo2,demo3,demo4,demo5
 INSERT,0,demo1,demo2,demo3,demo4,demo5
 INSERT,0,demo1,demo2,demo3,demo4,demo5

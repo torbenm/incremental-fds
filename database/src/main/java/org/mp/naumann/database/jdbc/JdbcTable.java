@@ -1,9 +1,15 @@
 package org.mp.naumann.database.jdbc;
 
 import org.mp.naumann.database.*;
+import org.mp.naumann.database.data.Column;
+import org.mp.naumann.database.data.GenericColumn;
+import org.mp.naumann.database.data.GenericRow;
+import org.mp.naumann.database.data.Row;
 import org.mp.naumann.database.identifier.DefaultRowIdentifier;
 import org.mp.naumann.database.identifier.RowIdentifier;
 import org.mp.naumann.database.identifier.RowIdentifierGroup;
+import org.mp.naumann.database.jdbc.sql.SqlQueryBuilder;
+import org.mp.naumann.database.jdbc.sql.SqlTypeMap;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.StatementGroup;
 import static org.mp.naumann.utils.GenericHelper.cast;
@@ -15,13 +21,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class JdbcTable implements Table {
+class JdbcTable implements Table {
 
     private String name;
     private Connection conn;
     private Class<? extends RowIdentifier> rowIdentifierType;
 
-    public JdbcTable(String name, Connection conn) {
+    JdbcTable(String name, Connection conn) {
         this.name = name;
         this.conn = conn;
         rowIdentifierType = determineRowIdentifierType();
@@ -97,11 +103,21 @@ public class JdbcTable implements Table {
     }
 
     public boolean execute(Statement statement) {
-        return false;
+        try (java.sql.Statement stmt = conn.createStatement()) {
+            return stmt.execute(SqlQueryBuilder.generateSql(statement));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public boolean execute(StatementGroup statementGroup) {
-        return false;
+        try(java.sql.Statement stmt = conn.createStatement()){
+            return stmt.execute(SqlQueryBuilder.generateSql(statementGroup));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public Table getSubTable(RowIdentifierGroup group) {

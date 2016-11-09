@@ -12,8 +12,4 @@ public interface Batch extends Iterable<Statement>, StatementGroup<Statement> {
 
     int getSize();
     String getTableName();
-    List<InsertStatement> getInsertStatements();
-    List<DeleteStatement> getDeleteStatements();
-    List<UpdateStatement> getUpdateStatements();
-
 }

@@ -13,6 +13,7 @@ import org.mp.naumann.database.statement.Statement;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Map;
 
 public class CsvFileBatchSource extends SizableBatchSource {
@@ -47,7 +48,7 @@ public class CsvFileBatchSource extends SizableBatchSource {
 
                 values.remove(ACTION_COLUMN_NAME);
                 values.remove(RECORD_COLUMN_NAME);
-
+                System.out.println(values);
                 Statement stmt = createStatement(action, values, rowId);
                 addStatement(getTableName(), stmt);
             }
@@ -58,14 +59,20 @@ public class CsvFileBatchSource extends SizableBatchSource {
         }
     }
 
-    private Statement createStatement(String type, Map<String, String> values, RowIdentifier rowIdentifier){
+    protected Statement createStatement(String type, Map<String, String> values, RowIdentifier rowIdentifier){
         switch(type.toLowerCase()){
             case "insert":
                 return new DefaultInsertStatement(values, rowIdentifier, this.getTableName());
             case "delete":
                 return new DefaultDeleteStatement(values, rowIdentifier, this.getTableName());
             case "update":
-                return new DefaultUpdateStatement(values, rowIdentifier, this.getTableName());
+                Map<String, String> oldValues = new HashMap<>();
+                Map<String, String> newValues = new HashMap<>();
+                values.forEach((key, value) -> {
+                    oldValues.put(key, value.split("\\|")[0]);
+                    newValues.put(key, value.split("\\|")[1]);
+                });
+                return new DefaultUpdateStatement(newValues, oldValues, rowIdentifier, this.getTableName());
             default:
                 return null; //TODO: need something better here
         }
