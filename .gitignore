@@ -12,3 +12,7 @@ buildNumber.properties
 .DS_Store
 database/src/test/data/csv_test/
 csv_test/
+.classpath
+*.iml
+.project
+.settings/
