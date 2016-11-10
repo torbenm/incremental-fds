@@ -13,11 +13,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>net.sourceforge.csvjdbc</groupId>
-            <artifactId>csvjdbc</artifactId>
-            <version>1.0.28</version>
-        </dependency>
-        <dependency>
             <groupId>org.mp.naumann</groupId>
             <artifactId>utils</artifactId>
             <version>1.0-SNAPSHOT</version>

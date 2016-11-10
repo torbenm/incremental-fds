@@ -1,14 +1,15 @@
 package org.mp.naumann.algorithms.implementations;
 
-import static junit.framework.TestCase.assertEquals;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.mp.naumann.algorithms.result.ResultSet;
+import org.mp.naumann.database.DataConnector;
+import org.mp.naumann.database.jdbc.JdbcDataConnector;
+import org.mp.naumann.database.utils.PostgresConnection;
 
 import java.io.IOException;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.mp.naumann.algorithms.implementations.helper.DatabaseHelper;
-import org.mp.naumann.algorithms.result.ResultSet;
-import org.mp.naumann.database.DataConnector;
+import static junit.framework.TestCase.assertEquals;
 
 
 public class MedianInitialAlgorithmTest {
@@ -16,25 +17,20 @@ public class MedianInitialAlgorithmTest {
     private static DataConnector dataConnector;
     private static MedianInitialAlgorithm algorithm;
 
-    protected static final String tableName = "median";
-    protected static final String columnName = "age";
-    private static final String schema = "";
+    private static final String schema = "test";
+    private static final String tableName = "countries";
+    private static final String columnName = "population";
 
     @BeforeClass
     public static void setUp() throws IOException {
-        DatabaseHelper.prepareDataset();
-        dataConnector = DatabaseHelper.getDataConnector();
+        dataConnector = new JdbcDataConnector("org.postgresql.Driver", PostgresConnection.getConnectionInfo());
         algorithm = new MedianInitialAlgorithm(dataConnector, schema, tableName, columnName);
     }
 
     @Test
     public void testExecute(){
-        // As CSV files are loaded as String tables, this method
-        // sorts the numbers alphabetically - not numberwise.
         ResultSet<String> result = algorithm.execute().getResultSet();
-        assertEquals("19", result.iterator().next());
+        assertEquals("3286936", result.iterator().next());
     }
-
-
 
 }
