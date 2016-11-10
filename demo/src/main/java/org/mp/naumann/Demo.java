@@ -18,9 +18,10 @@ public class Demo {
 	private static final String BATCH_FILE = null;
 	private static final String TABLE = null;
 	private static final int BATCH_SIZE = 10;
+	private static final String SCHEMA = "public";
 
 	public static void main(String[] args) {
-		StreamableBatchSource batchSource = new CsvFileBatchSource(BATCH_FILE, TABLE, BATCH_SIZE);
+		StreamableBatchSource batchSource = new CsvFileBatchSource(BATCH_FILE, SCHEMA, TABLE, BATCH_SIZE);
 		JdbcDataConnector dataConnector = new JdbcDataConnector(DRIVER_NAME,
 				"jdbc:" + PROTOCOL + "//" + HOST + ":" + PORT + "/" + DATABASE);
 		DatabaseBatchHandler databaseBatchHandler = new PassThroughDatabaseBatchHandler(dataConnector);

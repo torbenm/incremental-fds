@@ -1,13 +1,17 @@
 package org.mp.naumann.algorithms.fd.fdep;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.hyfd.HyFD;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 class FDEP {
+
+	private final static Logger LOG = Logger.getLogger(HyFD.class.getName());
 	
 	private int numAttributes;
 	private ValueComparator valueComparator;
@@ -25,7 +29,7 @@ class FDEP {
 		//long t = System.currentTimeMillis();
 		FDTree posCoverTree = this.calculatePositiveCover(negCoverTree);
 		negCoverTree = null;
-		//System.out.println("t = " + (System.currentTimeMillis() - t));
+		//LOG.info("t = " + (System.currentTimeMillis() - t));
 		
 		//posCoverTree.filterDeadElements();
 		

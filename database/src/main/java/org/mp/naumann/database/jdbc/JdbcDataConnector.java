@@ -26,11 +26,11 @@ public class JdbcDataConnector implements DataConnector {
         connect();
     }
 
-    public List<String> getTableNames() {
+    public List<String> getTableNames(String schema) {
         List<String> result = new ArrayList<>();
         try {
             DatabaseMetaData md = conn.getMetaData();
-            try (ResultSet rs = md.getTables(null, null, "%", null)) {
+            try (ResultSet rs = md.getTables(null, schema, "%", null)) {
                 while (rs.next()) {
                     result.add(rs.getString(3));
                 }
@@ -41,8 +41,8 @@ public class JdbcDataConnector implements DataConnector {
         return result;
     }
 
-    public Table getTable(String tableName) {
-        return new JdbcTable(tableName, conn);
+    public Table getTable(String schema, String tableName) {
+        return new JdbcTable(schema, tableName, conn);
     }
 
     public void connect() {

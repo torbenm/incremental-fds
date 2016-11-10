@@ -18,8 +18,11 @@ import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.database.data.Row;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 public class TaneAlgorithm implements FunctionalDependencyAlgorithm {
+
+	private static Logger LOG = Logger.getLogger(TaneAlgorithm.class.getName());
 
 	private Table table;
 	private String tableName;

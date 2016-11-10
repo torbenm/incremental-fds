@@ -18,10 +18,12 @@ public class MedianInitialAlgorithm implements InitialAlgorithm<String, TreeSet<
 	private String table;
 	private DataConnector dataConnector;
 	private TreeSet<String> tree;
+	private String schema;
 
-	public MedianInitialAlgorithm(DataConnector dataConnector, String table, String column) {
+	public MedianInitialAlgorithm(DataConnector dataConnector, String schema, String table, String column) {
 		this.dataConnector = dataConnector;
 		this.column = column;
+		this.schema = schema;
 		this.table = table;
 	}
 
@@ -41,9 +43,13 @@ public class MedianInitialAlgorithm implements InitialAlgorithm<String, TreeSet<
 		this.table = table;
 	}
 
+	public String getSchema() { return schema; }
+
+	public void setSchema(String Schema) { this.schema = Schema; }
+
 	@Override
 	public String execute() {
-		Table t = dataConnector.getTable(table);
+		Table t = dataConnector.getTable(schema, table);
 		try (TableInput input = t.open()) {
 			return executeAlgorithm(input);
 		} catch (InputReadException e) {

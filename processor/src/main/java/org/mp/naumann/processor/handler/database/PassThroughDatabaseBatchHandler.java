@@ -13,7 +13,7 @@ public class PassThroughDatabaseBatchHandler implements DatabaseBatchHandler {
     }
 
     public void handleBatch(Batch batch) {
-        Table table = dataConnector.getTable(batch.getTableName());
+        Table table = dataConnector.getTable(batch.getSchema(), batch.getTableName());
         table.execute(batch);
     }
 

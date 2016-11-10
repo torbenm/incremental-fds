@@ -4,8 +4,8 @@ import org.mp.naumann.processor.batch.source.SizableBatchSource;
 
 public class FakeSizeableBatchSource extends SizableBatchSource {
 
-    public FakeSizeableBatchSource(String tableName, int batchSize) {
-        super(tableName, batchSize);
+    public FakeSizeableBatchSource(String schema, String tableName, int batchSize) {
+        super(schema, tableName, batchSize);
     }
 
 	@Override

@@ -19,20 +19,19 @@ public class CsvFileBatchSource extends SizableBatchSource {
 	private static final Charset CHARSET = Charset.defaultCharset();
 
 	private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withFirstRecordAsHeader();
-
 	private final File csvFile;
 
 	private static final String ACTION_COLUMN_NAME = "::action";
 	private static final String RECORD_COLUMN_NAME = "::record";
+	
+    public CsvFileBatchSource(String filePath, String schema, String tableName, int batchSize) {
+        this(new File(filePath), schema, tableName, batchSize);
+    }
 
-	public CsvFileBatchSource(String filePath, String tableName, int batchSize) {
-		this(new File(filePath), tableName, batchSize);
-	}
-
-	public CsvFileBatchSource(File file, String tableName, int batchSize) {
-		super(tableName, batchSize);
-		this.csvFile = file;
-	}
+    public CsvFileBatchSource(File file, String schema, String tableName, int batchSize) {
+        super(schema, tableName, batchSize);
+        this.csvFile = file;
+    }
 
 	protected void start() {
 		try (CSVParser parser = CSVParser.parse(csvFile, CHARSET, FORMAT)) {

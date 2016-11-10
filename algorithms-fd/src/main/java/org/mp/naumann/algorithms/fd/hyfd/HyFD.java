@@ -23,8 +23,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class HyFD implements FunctionalDependencyAlgorithm {
+
+    private final static Logger LOG = Logger.getLogger(HyFD.class.getName());
 
 	private Table table = null;
 	private FunctionalDependencyResultReceiver resultReceiver = null;
@@ -64,12 +67,12 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		// this.executeFDEP();
 		this.executeHyFD();
 
-		System.out.println("Time: " + (System.currentTimeMillis() - startTime) + " ms");
+		LOG.info("Time: " + (System.currentTimeMillis() - startTime) + " ms");
 	}
 
 	private void executeHyFD() throws AlgorithmExecutionException {
 		// Initialize
-		System.out.println("Initializing ...");
+		LOG.info("Initializing ...");
 		TableInput tableInput = this.getInput();
 		this.initialize(tableInput);
 
@@ -78,7 +81,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		///////////////////////////////////////////////////////
 
 		// Calculate plis
-		System.out.println("Reading data and calculating plis ...");
+		LOG.info("Reading data and calculating plis ...");
 		PLIBuilder pliBuilder = new PLIBuilder();
 		List<PositionListIndex> plis = pliBuilder.getPLIs(tableInput, this.numAttributes,
 				this.valueComparator.isNullEqualNull());
@@ -98,7 +101,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		// Sort plis by number of clusters: For searching in the covers and for
 		// validation, it is good to have attributes with few non-unique values
 		// and many clusters left in the prefix tree
-		System.out.println("Sorting plis by number of clusters ...");
+		LOG.info("Sorting plis by number of clusters ...");
 		Collections.sort(plis, new Comparator<PositionListIndex>() {
 
 			@Override
@@ -110,12 +113,12 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		});
 
 		// Calculate inverted plis
-		System.out.println("Inverting plis ...");
+		LOG.info("Inverting plis ...");
 		int[][] invertedPlis = PliUtils.invert(plis, numRecords);
 
 		// Extract the integer representations of all records from the inverted
 		// plis
-		System.out.println("Extracting integer representations for the records ...");
+		LOG.info("Extracting integer representations for the records ...");
 		int[][] compressedRecords = new int[numRecords][];
 		for (int recordId = 0; recordId < numRecords; recordId++)
 			compressedRecords[recordId] = this.fetchRecordFrom(recordId, invertedPlis);
@@ -152,14 +155,14 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		negCover = null;
 
 		// Output all valid FDs
-		System.out.println("Translating FD-tree into result format ...");
+		LOG.info("Translating FD-tree into result format ...");
 
 		// int numFDs = posCover.writeFunctionalDependencies("HyFD_backup_" +
 		// this.tableName + "_results.txt", this.buildColumnIdentifiers(), plis,
 		// false);
 		int numFDs = posCover.addFunctionalDependenciesInto(this.resultReceiver, this.buildColumnIdentifiers(), plis);
 
-		System.out.println("... done! (" + numFDs + " FDs)");
+		LOG.info("... done! (" + numFDs + " FDs)");
 	}
 
 	private TableInput getInput() {

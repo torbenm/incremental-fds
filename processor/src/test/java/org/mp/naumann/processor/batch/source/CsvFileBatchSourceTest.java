@@ -11,7 +11,7 @@ public class CsvFileBatchSourceTest {
     public void init(){
         csv = new CsvFileBatchSource(
                 getClass().getClassLoader().getResource("test.csv").getPath(),
-                "demotable", 5
+                "", "demotable", 5
         );
     }
 

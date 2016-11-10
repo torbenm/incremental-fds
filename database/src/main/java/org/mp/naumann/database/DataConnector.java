@@ -4,8 +4,8 @@ import java.util.List;
 
 public interface DataConnector {
 
-    List<String> getTableNames();
-    Table getTable(String tableName);
+    List<String> getTableNames(String schema);
+    Table getTable(String schema, String tableName);
 
     void connect();
     void disconnect();

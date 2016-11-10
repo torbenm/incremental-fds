@@ -19,12 +19,14 @@ import org.mp.naumann.database.statement.StatementGroup;
 class JdbcTable implements Table {
 
 	private Connection conn;
-	private String name;
+    private String schema, name, fullName;
 	private List<Column<String>> columns;
 
-	JdbcTable(String name, Connection conn) {
-		this.name = name;
-		this.conn = conn;
+	JdbcTable(String schema, String name, Connection conn) {
+        this.schema = schema;
+        this.name = name;
+        this.conn = conn;
+        fullName = schema.equals("") ? name : schema + "." + name;
 	}
 
 	@Override
@@ -53,7 +55,7 @@ class JdbcTable implements Table {
 			try {
 				columns = new ArrayList<>();
 				DatabaseMetaData meta = conn.getMetaData();
-				try (ResultSet rs = meta.getColumns(null, null, name, null)) {
+				try (ResultSet rs = meta.getColumns(null, schema, name, null)) {
 					while (rs.next()) {
 						columns.add(new StringColumn(rs.getString(4)));
 					}
@@ -73,7 +75,7 @@ class JdbcTable implements Table {
 	@Override
 	public long getRowCount() {
 		try (java.sql.Statement stmt = conn.createStatement()) {
-			try (ResultSet rs = stmt.executeQuery(String.format("SELECT COUNT(*) FROM %s", name))) {
+			try (ResultSet rs = stmt.executeQuery(String.format("SELECT COUNT(*) FROM %s", fullName))) {
 				if (rs.next()) {
 					return rs.getLong(1);
 				}
@@ -86,7 +88,7 @@ class JdbcTable implements Table {
 	@Override
 	public TableInput open() throws InputReadException {
 		try {
-			ResultSet rs = conn.createStatement().executeQuery(String.format("SELECT * FROM %s", this.name));
+			ResultSet rs = conn.createStatement().executeQuery(String.format("SELECT * FROM %s", fullName));
 			return new JdbcTableInput(rs, name);
 		} catch (SQLException e) {
 			throw new InputReadException(e);

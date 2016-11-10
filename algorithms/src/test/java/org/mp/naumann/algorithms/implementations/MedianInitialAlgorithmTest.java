@@ -17,12 +17,13 @@ public class MedianInitialAlgorithmTest {
 
     protected static final String tableName = "median";
     protected static final String columnName = "age";
+    private static final String schema = "";
 
     @BeforeClass
     public static void setUp() throws IOException {
         DatabaseHelper.prepareDataset();
         dataConnector = DatabaseHelper.getDataConnector();
-        algorithm = new MedianInitialAlgorithm(dataConnector, tableName, columnName);
+        algorithm = new MedianInitialAlgorithm(dataConnector, schema, tableName, columnName);
     }
 
     @Test

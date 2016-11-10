@@ -20,6 +20,8 @@ public class FakeBatch implements Batch {
         return null;
     }
 
+    public String getSchema() { return null; }
+
     @Override
     public List<InsertStatement> getInsertStatements() {
         return null;

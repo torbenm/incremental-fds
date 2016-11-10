@@ -15,20 +15,24 @@ import java.util.List;
 public class FDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDependency>, Object> {
 
     private final List<String> algorithms = Arrays.asList("hyfd", "tane", "fdep");
-
+    
     private final List<FunctionalDependency> functionalDependencies;
     private FunctionalDependencyAlgorithm fdAlgorithm;
+	private String schema;
+	private String tableName;
 
 
-    public FDInitialAlgorithm(String algorithm, DataConnector dataConnector, String tableName) {
+    public FDInitialAlgorithm(String algorithm, DataConnector dataConnector, String schema, String tableName) {
         if(!algorithms.contains(algorithm.toLowerCase()))
             throw new RuntimeException("Unknown Algorithm "+algorithm);
+        this.schema = schema;
+        this.tableName = tableName;
         this.functionalDependencies = new ArrayList<>();
-        initializeAlgorithm(algorithm, dataConnector, tableName);
+        initializeAlgorithm(algorithm, dataConnector);
     }
 
-    private void initializeAlgorithm(String algorithm, DataConnector dataConnector, String tableName) {
-        Table table = dataConnector.getTable(tableName);
+    private void initializeAlgorithm(String algorithm, DataConnector dataConnector) {
+    	Table table = dataConnector.getTable(schema, tableName);
         FunctionalDependencyResultReceiver resultReceiver = functionalDependencies::add;
         switch(algorithm.toLowerCase()){
             case "hyfd":
