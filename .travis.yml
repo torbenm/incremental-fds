@@ -7,7 +7,7 @@ services:
 
 before_script:
   - psql -c 'create database mpws2016n1;' -U postgres
-  - psql -F countries.sql -U postgres -d mpws2016n1
+  - psql -f countries.sql -U postgres -d mpws2016n1
 
 notifications:
   slack: hpi:80ADsgr1HVUFL8Q3IoDw3gSu
