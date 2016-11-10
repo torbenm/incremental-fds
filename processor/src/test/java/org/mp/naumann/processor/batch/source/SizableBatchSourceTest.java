@@ -15,11 +15,11 @@ public class SizableBatchSourceTest {
     private SizableBatchSource sbs;
     private static int BATCH_SIZE = 5;
     private static String TABLE_NAME = "demotable";
-
+    private static String SCHEMA = "";
 
     @Before
     public void init() {
-        sbs = new FakeSizeableBatchSource(TABLE_NAME, BATCH_SIZE);
+        sbs = new FakeSizeableBatchSource(SCHEMA, TABLE_NAME, BATCH_SIZE);
     }
 
     @Test

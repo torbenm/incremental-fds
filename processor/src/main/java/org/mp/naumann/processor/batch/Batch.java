@@ -7,4 +7,5 @@ public interface Batch extends Iterable<Statement>, StatementGroup {
 
     int getSize();
     String getTableName();
+    String getSchema();
 }
