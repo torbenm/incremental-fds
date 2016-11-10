@@ -6,7 +6,7 @@ import static org.junit.Assert.assertEquals;
 public class BatchTest {
 
 
-    public void testSize(Batch b){
+	public void checkBatchSize(Batch b){
         assertEquals(
                 b.getInsertStatements().size() +
                         b.getDeleteStatements().size() +

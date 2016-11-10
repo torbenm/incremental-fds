@@ -1,6 +1,7 @@
 package org.mp.naumann.processor.batch.source;
 
 import org.junit.Before;
+import org.junit.Test;
 
 public class CsvFileBatchSourceTest {
 
@@ -15,6 +16,7 @@ public class CsvFileBatchSourceTest {
     }
 
 
+    @Test
     public void testCreateUpdateStatement(){
 
     }

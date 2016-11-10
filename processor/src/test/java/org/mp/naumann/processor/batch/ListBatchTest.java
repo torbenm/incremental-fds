@@ -24,10 +24,10 @@ public class ListBatchTest extends BatchTest {
 
     @Test
     public void testSize(){
-        testSize(getListBatch(10, 7, 8));
-        testSize(getListBatch(0,0,0));
-        testSize(getListBatch(1, 0, 0));
-        testSize(getListBatch(1, 0, 1));
+        checkBatchSize(getListBatch(10, 7, 8));
+        checkBatchSize(getListBatch(0,0,0));
+        checkBatchSize(getListBatch(1, 0, 0));
+        checkBatchSize(getListBatch(1, 0, 1));
     }
 
 }

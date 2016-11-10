@@ -73,15 +73,16 @@ public class JdbcTableTest extends JdbcTest {
 		assertEquals(173, i);
 	}
 
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
+
 	@Test
 	public void testWrongInputIteration() throws InputReadException {
+		thrown.expect(NoSuchElementException.class);
 		try (TableInput input = table.open()) {
 			for (int i = 0; i < 174; i++) {
 				input.next();
 			}
-		} catch (NoSuchElementException e) {
-			return;
 		}
-		fail();
 	}
 }
