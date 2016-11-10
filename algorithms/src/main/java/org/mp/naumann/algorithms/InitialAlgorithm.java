@@ -1,9 +1,9 @@
 package org.mp.naumann.algorithms;
 
 import org.mp.naumann.algorithms.data.IntermediateDataStructure;
-import org.mp.naumann.algorithms.result.AlgorithmResult;
 import org.mp.naumann.algorithms.result.ResultSet;
 import org.mp.naumann.database.DataConnector;
+import org.mp.naumann.algorithms.result.AlgorithmResult;
 
 public abstract class InitialAlgorithm implements Algorithm {
 

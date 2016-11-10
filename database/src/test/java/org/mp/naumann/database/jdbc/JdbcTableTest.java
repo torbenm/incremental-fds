@@ -1,19 +1,18 @@
 package org.mp.naumann.database.jdbc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import java.util.List;
-import java.util.NoSuchElementException;
-
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
+
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Column;
+
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class JdbcTableTest extends JdbcTest {
 
@@ -85,4 +84,5 @@ public class JdbcTableTest extends JdbcTest {
 			}
 		}
 	}
+
 }

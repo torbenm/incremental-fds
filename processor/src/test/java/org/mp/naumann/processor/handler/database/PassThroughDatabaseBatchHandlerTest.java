@@ -4,6 +4,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mp.naumann.database.fake.FakeDataConnector;
+
 import org.mp.naumann.processor.fake.FakeBatch;
 
 public class PassThroughDatabaseBatchHandlerTest {

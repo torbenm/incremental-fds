@@ -1,7 +1,5 @@
 package org.mp.naumann.database.jdbc.sql;
 
-import static org.mp.naumann.database.jdbc.sql.SqlQueryBuilder.toKeyEqualsValueMap;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,9 +37,9 @@ public class UpdateStatementQueryBuilder implements StatementQueryBuilder<Update
     }
 
     protected String buildSetStatement(UpdateStatement statement){
-        return " SET "+ toKeyEqualsValueMap(statement.getValueMap(), ", ");
+        return " SET "+ SqlQueryBuilder.toKeyEqualsValueMap(statement.getValueMap(), ", ");
     }
     protected String buildWhereClause(UpdateStatement statement){
-        return " WHERE " + toKeyEqualsValueMap(statement.getOldValueMap(),  " AND ");
+        return " WHERE " + SqlQueryBuilder.toKeyEqualsValueMap(statement.getOldValueMap(),  " AND ");
     }
 }

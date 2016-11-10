@@ -7,10 +7,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mp.naumann.processor.fake.FakeBatch;
 import org.mp.naumann.processor.fake.FakeBatchSource;
-import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.testhelper.BatchArrivedException;
 import org.mp.naumann.processor.testhelper.MakeSureImLastDatabaseBatchHandler;
 import org.mp.naumann.processor.testhelper.OccurenceCountingBatchHandler;
+import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 
 public class SynchronousBatchProcessorTests extends BatchProcessorTests {
 

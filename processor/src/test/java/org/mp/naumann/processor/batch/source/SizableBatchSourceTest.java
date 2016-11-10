@@ -8,7 +8,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mp.naumann.database.fake.FakeDeleteStatement;
 import org.mp.naumann.processor.batch.source.helper.ExceptionThrowingBatchSourceListener;
-import org.mp.naumann.processor.batch.source.helper.ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException;
 import org.mp.naumann.processor.fake.FakeSizeableBatchSource;
 
 public class SizableBatchSourceTest {
@@ -48,7 +47,7 @@ public class SizableBatchSourceTest {
         assertEquals(sbs.hasEnoughToStream(), BATCH_SIZE == 1);
     }
 
-    @Test(expected= ExceptionThrowingBatchSourceListenerException.class)
+    @Test(expected= ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException.class)
     public void testWeakStreaming() {
         sbs.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
         try {
@@ -56,14 +55,14 @@ public class SizableBatchSourceTest {
                 addStatement();
                 sbs.weakStream();
             }
-        } catch (ExceptionThrowingBatchSourceListenerException e) {
+        } catch (ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException e) {
             throw new AssertionError();
         }
         addStatement();
         sbs.weakStream();
     }
 
-    @Test(expected= ExceptionThrowingBatchSourceListenerException.class)
+    @Test(expected= ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException.class)
     public void testForceStream(){
         sbs.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
         sbs.startStreaming();
@@ -75,7 +74,7 @@ public class SizableBatchSourceTest {
         sbs.forceStream();
     }
 
-    @Test(expected= ExceptionThrowingBatchSourceListenerException.class)
+    @Test(expected= ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException.class)
     public void testFinishFilling(){
         sbs.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
         sbs.startStreaming();
@@ -97,7 +96,7 @@ public class SizableBatchSourceTest {
         }
         try {
             sbs.endStreaming();
-        }catch(ExceptionThrowingBatchSourceListenerException e){
+        }catch(ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException e){
             received = true;
         }
         assertTrue(received);
@@ -113,13 +112,13 @@ public class SizableBatchSourceTest {
         for (int i = 0; i < BATCH_SIZE*10 - 1; i++) {
             try {
                 addStatement();
-            }catch(ExceptionThrowingBatchSourceListenerException e){
+            }catch(ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException e){
                 batches++;
             }
         }
         try {
             sbs.endStreaming();
-        }catch(ExceptionThrowingBatchSourceListenerException e){
+        }catch(ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException e){
             received = true;
         }
         assertEquals(batches, 9);
@@ -133,7 +132,7 @@ public class SizableBatchSourceTest {
             for (int i = 0; i < BATCH_SIZE * 10; i++) {
                 addStatement();
             }
-        } catch (ExceptionThrowingBatchSourceListenerException e) {
+        } catch (ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException e) {
             throw new AssertionError();
         }
     }

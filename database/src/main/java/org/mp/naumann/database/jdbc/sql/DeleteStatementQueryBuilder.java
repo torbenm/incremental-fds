@@ -1,7 +1,5 @@
 package org.mp.naumann.database.jdbc.sql;
 
-import static org.mp.naumann.database.jdbc.sql.SqlQueryBuilder.toKeyEqualsValueMap;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,7 +59,7 @@ public class DeleteStatementQueryBuilder implements StatementQueryBuilder<Delete
     }
 
     protected String generateKeyValueMap(DeleteStatement statement) {
-        return toKeyEqualsValueMap(statement.getValueMap(), " AND ");
+        return SqlQueryBuilder.toKeyEqualsValueMap(statement.getValueMap(), " AND ");
     }
 
     protected String createWhereClause(DeleteStatement statement) {
@@ -75,7 +73,7 @@ public class DeleteStatementQueryBuilder implements StatementQueryBuilder<Delete
         return " WHERE " + statements
                 .parallelStream()
                 .filter(n -> n.getValueMap().size() > 0)
-                .map(n -> "(" + toKeyEqualsValueMap(n.getValueMap(), " AND ") + ")")
+                .map(n -> "(" + SqlQueryBuilder.toKeyEqualsValueMap(n.getValueMap(), " AND ") + ")")
                 .collect(Collectors.joining(" OR "));
     }
 }
