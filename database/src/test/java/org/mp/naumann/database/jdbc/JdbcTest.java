@@ -2,6 +2,7 @@ package org.mp.naumann.database.jdbc;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.utils.PostgresConnection;
 
@@ -18,8 +19,8 @@ public class JdbcTest {
     }
 
     @AfterClass
-    public static void tearDownOnce() {
-        connector.disconnect();
+    public static void tearDownOnce() throws ConnectionException {
+        connector.close();
     }
 
 }

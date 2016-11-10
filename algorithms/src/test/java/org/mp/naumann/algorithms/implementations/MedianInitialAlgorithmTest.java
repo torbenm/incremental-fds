@@ -1,14 +1,13 @@
 package org.mp.naumann.algorithms.implementations;
 
+import static junit.framework.TestCase.assertEquals;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.jdbc.JdbcDataConnector;
 import org.mp.naumann.database.utils.PostgresConnection;
-
-import java.io.IOException;
-
-import static junit.framework.TestCase.assertEquals;
 
 
 public class MedianInitialAlgorithmTest {
@@ -21,7 +20,7 @@ public class MedianInitialAlgorithmTest {
     private static final String columnName = "population";
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws ClassNotFoundException, ConnectionException {
         dataConnector = new JdbcDataConnector("org.postgresql.Driver", PostgresConnection.getConnectionInfo());
         algorithm = new MedianInitialAlgorithm(dataConnector, schema, tableName, columnName);
     }

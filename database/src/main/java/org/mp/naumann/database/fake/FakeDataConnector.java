@@ -22,7 +22,7 @@ public class FakeDataConnector implements DataConnector {
     }
 
     @Override
-    public void disconnect() {
+    public void close() {
 
     }
 }
