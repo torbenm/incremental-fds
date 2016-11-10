@@ -23,6 +23,10 @@ public class JdbcDataConnector implements DataConnector {
         connect();
     }
 
+    public JdbcDataConnector(Connection connection) {
+        this.conn = connection;
+    }
+
     public List<String> getTableNames(String schema) {
         List<String> result = new ArrayList<>();
         try {
