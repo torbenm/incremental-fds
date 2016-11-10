@@ -5,7 +5,7 @@ import java.util.List;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.structures.FDTree;
 
-public class Inductor {
+class Inductor {
 
 	private FDSet negCover;
 	private FDTree posCover;
@@ -49,7 +49,7 @@ public class Inductor {
 		}
 	}
 	
-	protected int specializePositiveCover(OpenBitSet lhs, int rhs, FDList nonFds) {
+	private int specializePositiveCover(OpenBitSet lhs, int rhs, FDList nonFds) {
 		int numAttributes = this.posCover.getChildren().length;
 		int newFDs = 0;
 		List<OpenBitSet> specLhss = this.posCover.getFdAndGeneralizations(lhs, rhs);

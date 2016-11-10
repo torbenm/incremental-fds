@@ -14,12 +14,6 @@ import org.mp.naumann.algorithms.FunctionalDependencyResultReceiver;
 import org.mp.naumann.algorithms.RelationalInput;
 import org.mp.naumann.algorithms.RelationalInputGenerator;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.List;
 
 public class TaneAlgorithm {
@@ -41,15 +35,11 @@ public class TaneAlgorithm {
 		this.fdResultReceiver = resultReceiver;
 	}
 
-	public void setResultReceiver(FunctionalDependencyResultReceiver resultReceiver) {
-		this.fdResultReceiver = resultReceiver;
-	}
+	public void execute() {
 
-	public void execute() throws AlgorithmExecutionException {
-
-		level0 = new Object2ObjectOpenHashMap<OpenBitSet, CombinationHelper>();
-		level1 = new Object2ObjectOpenHashMap<OpenBitSet, CombinationHelper>();
-		prefix_blocks = new Object2ObjectOpenHashMap<OpenBitSet, ObjectArrayList<OpenBitSet>>();
+		level0 = new Object2ObjectOpenHashMap<>();
+		level1 = new Object2ObjectOpenHashMap<>();
+		prefix_blocks = new Object2ObjectOpenHashMap<>();
 
 		// Get information about table from database or csv file
 		ObjectArrayList<Object2ObjectOpenHashMap<Object, LongBigArrayBigList>> partitions = loadData();
@@ -123,10 +113,10 @@ public class TaneAlgorithm {
 			this.numberAttributes = input.numberOfColumns();
 			this.tableName = input.relationName();
 			this.columnNames = input.columnNames();
-			ObjectArrayList<Object2ObjectOpenHashMap<Object, LongBigArrayBigList>> partitions = new ObjectArrayList<Object2ObjectOpenHashMap<Object, LongBigArrayBigList>>(
+			ObjectArrayList<Object2ObjectOpenHashMap<Object, LongBigArrayBigList>> partitions = new ObjectArrayList<>(
 					this.numberAttributes);
 			for (int i = 0; i < this.numberAttributes; i++) {
-				Object2ObjectOpenHashMap<Object, LongBigArrayBigList> partition = new Object2ObjectOpenHashMap<Object, LongBigArrayBigList>();
+				Object2ObjectOpenHashMap<Object, LongBigArrayBigList> partition = new Object2ObjectOpenHashMap<>();
 				partitions.add(partition);
 			}
 			long tupleId = 0;
@@ -142,7 +132,6 @@ public class TaneAlgorithm {
 						newEqClass.add(tupleId);
 						partition.put(entry, newEqClass);
 					}
-					;
 				}
 				tupleId++;
 			}
@@ -150,7 +139,7 @@ public class TaneAlgorithm {
 			return partitions;
 		}
 
-		return new ObjectArrayList<Object2ObjectOpenHashMap<Object, LongBigArrayBigList>>(0);
+		return new ObjectArrayList<>(0);
 	}
 
 	/**
@@ -159,10 +148,10 @@ public class TaneAlgorithm {
 	private void initializeCplusForLevel() {
 		for (OpenBitSet X : level1.keySet()) {
 
-			ObjectArrayList<OpenBitSet> CxwithoutA_list = new ObjectArrayList<OpenBitSet>();
+			ObjectArrayList<OpenBitSet> CxwithoutA_list = new ObjectArrayList<>();
 
 			// clone of X for usage in the following loop
-			OpenBitSet Xclone = (OpenBitSet) X.clone();
+			OpenBitSet Xclone = X.clone();
 			for (int A = X.nextSetBit(0); A >= 0; A = X.nextSetBit(A + 1)) {
 				Xclone.clear(A);
 				OpenBitSet CxwithoutA = level0.get(Xclone).getRhsCandidates();
@@ -189,7 +178,7 @@ public class TaneAlgorithm {
 	 *
 	 * @throws AlgorithmExecutionException
 	 */
-	private void computeDependencies() throws AlgorithmExecutionException {
+	private void computeDependencies() {
 		initializeCplusForLevel();
 
 		// iterate through the combinations of the level
@@ -197,11 +186,11 @@ public class TaneAlgorithm {
 			if (level1.get(X).isValid()) {
 				// Build the intersection between X and C_plus(X)
 				OpenBitSet C_plus = level1.get(X).getRhsCandidates();
-				OpenBitSet intersection = (OpenBitSet) X.clone();
+				OpenBitSet intersection = X.clone();
 				intersection.intersect(C_plus);
 
 				// clone of X for usage in the following loop
-				OpenBitSet Xclone = (OpenBitSet) X.clone();
+				OpenBitSet Xclone = X.clone();
 
 				// iterate through all elements (A) of the intersection
 				for (int A = intersection.nextSetBit(0); A >= 0; A = intersection.nextSetBit(A + 1)) {
@@ -213,7 +202,7 @@ public class TaneAlgorithm {
 
 					if (spX.getError() == spXwithoutA.getError()) {
 						// found Dependency
-						OpenBitSet XwithoutA = (OpenBitSet) Xclone.clone();
+						OpenBitSet XwithoutA = Xclone.clone();
 						processFunctionalDependency(XwithoutA, A);
 
 						// remove A from C_plus(X)
@@ -246,8 +235,8 @@ public class TaneAlgorithm {
 	 *             if the result receiver cannot handle the functional
 	 *             dependency.
 	 */
-	private void prune() throws AlgorithmExecutionException {
-		ObjectArrayList<OpenBitSet> elementsToRemove = new ObjectArrayList<OpenBitSet>();
+	private void prune() {
+		ObjectArrayList<OpenBitSet> elementsToRemove = new ObjectArrayList<>();
 		for (OpenBitSet x : level1.keySet()) {
 			if (level1.get(x).getRhsCandidates().isEmpty()) {
 				elementsToRemove.add(x);
@@ -258,13 +247,13 @@ public class TaneAlgorithm {
 			if (level1.get(x).isValid() && level1.get(x).getPartition().getError() == 0) {
 
 				// C+(X)\X
-				OpenBitSet rhsXwithoutX = (OpenBitSet) level1.get(x).getRhsCandidates().clone();
+				OpenBitSet rhsXwithoutX = level1.get(x).getRhsCandidates().clone();
 				rhsXwithoutX.andNot(x);
 				for (int a = rhsXwithoutX.nextSetBit(0); a >= 0; a = rhsXwithoutX.nextSetBit(a + 1)) {
 					OpenBitSet intersect = new OpenBitSet();
 					intersect.set(1, numberAttributes + 1);
 
-					OpenBitSet xUnionAWithoutB = (OpenBitSet) x.clone();
+					OpenBitSet xUnionAWithoutB = x.clone();
 					xUnionAWithoutB.set(a);
 					for (int b = x.nextSetBit(0); b >= 0; b = x.nextSetBit(b + 1)) {
 						xUnionAWithoutB.clear(b);
@@ -279,7 +268,7 @@ public class TaneAlgorithm {
 					}
 
 					if (intersect.get(a)) {
-						OpenBitSet lhs = (OpenBitSet) x.clone();
+						OpenBitSet lhs = x.clone();
 						processFunctionalDependency(lhs, a);
 						level1.get(x).getRhsCandidates().clear(a);
 						level1.get(x).setInvalid();
@@ -321,11 +310,11 @@ public class TaneAlgorithm {
 	 * @return A new StrippedPartition as the product of the two given
 	 *         StrippedPartitions.
 	 */
-	public StrippedPartition multiply(StrippedPartition pt1, StrippedPartition pt2) {
-		ObjectBigArrayBigList<LongBigArrayBigList> result = new ObjectBigArrayBigList<LongBigArrayBigList>();
+	private StrippedPartition multiply(StrippedPartition pt1, StrippedPartition pt2) {
+		ObjectBigArrayBigList<LongBigArrayBigList> result = new ObjectBigArrayBigList<>();
 		ObjectBigArrayBigList<LongBigArrayBigList> pt1List = pt1.getStrippedPartition();
 		ObjectBigArrayBigList<LongBigArrayBigList> pt2List = pt2.getStrippedPartition();
-		ObjectBigArrayBigList<LongBigArrayBigList> partition = new ObjectBigArrayBigList<LongBigArrayBigList>();
+		ObjectBigArrayBigList<LongBigArrayBigList> partition = new ObjectBigArrayBigList<>();
 		long noOfElements = 0;
 		// iterate over first stripped partition and fill tTable.
 		for (long i = 0; i < pt1List.size64(); i++) {
@@ -378,7 +367,7 @@ public class TaneAlgorithm {
 	 * @return A new OpenBitSet, where the last set Bit is cleared.
 	 */
 	private OpenBitSet getPrefix(OpenBitSet bitset) {
-		OpenBitSet prefix = (OpenBitSet) bitset.clone();
+		OpenBitSet prefix = bitset.clone();
 		prefix.clear(getLastSetBitIndex(prefix));
 		return prefix;
 	}
@@ -395,7 +384,7 @@ public class TaneAlgorithm {
 			if (prefix_blocks.containsKey(prefix)) {
 				prefix_blocks.get(prefix).add(level_iter);
 			} else {
-				ObjectArrayList<OpenBitSet> list = new ObjectArrayList<OpenBitSet>();
+				ObjectArrayList<OpenBitSet> list = new ObjectArrayList<>();
 				list.add(level_iter);
 				prefix_blocks.put(prefix, list);
 			}
@@ -411,7 +400,7 @@ public class TaneAlgorithm {
 	 * @return All combinations of the OpenBitSets.
 	 */
 	private ObjectArrayList<OpenBitSet[]> getListCombinations(ObjectArrayList<OpenBitSet> list) {
-		ObjectArrayList<OpenBitSet[]> combinations = new ObjectArrayList<OpenBitSet[]>();
+		ObjectArrayList<OpenBitSet[]> combinations = new ObjectArrayList<>();
 		for (int a = 0; a < list.size(); a++) {
 			for (int b = a + 1; b < list.size(); b++) {
 				OpenBitSet[] combi = new OpenBitSet[2];
@@ -434,7 +423,7 @@ public class TaneAlgorithm {
 		boolean xIsValid = true;
 
 		// clone of X for usage in the following loop
-		OpenBitSet Xclone = (OpenBitSet) X.clone();
+		OpenBitSet Xclone = X.clone();
 
 		for (int l = X.nextSetBit(0); l >= 0; l = X.nextSetBit(l + 1)) {
 			Xclone.clear(l);
@@ -453,7 +442,7 @@ public class TaneAlgorithm {
 		level1 = null;
 		System.gc();
 
-		Object2ObjectOpenHashMap<OpenBitSet, CombinationHelper> new_level = new Object2ObjectOpenHashMap<OpenBitSet, CombinationHelper>();
+		Object2ObjectOpenHashMap<OpenBitSet, CombinationHelper> new_level = new Object2ObjectOpenHashMap<>();
 
 		buildPrefixBlocks();
 
@@ -466,7 +455,7 @@ public class TaneAlgorithm {
 
 			ObjectArrayList<OpenBitSet[]> combinations = getListCombinations(prefix_block_list);
 			for (OpenBitSet[] c : combinations) {
-				OpenBitSet X = (OpenBitSet) c[0].clone();
+				OpenBitSet X = c[0].clone();
 				X.or(c[1]);
 
 				if (checkSubsets(X)) {
@@ -512,46 +501,15 @@ public class TaneAlgorithm {
 			columns[j++] = this.columnIdentifiers.get(i - 1);
 		}
 		ColumnCombination colCombination = new ColumnCombination(columns);
-		FunctionalDependency fdResult = new FunctionalDependency(colCombination, columnIdentifiers.get((int) a - 1));
+		FunctionalDependency fdResult = new FunctionalDependency(colCombination, columnIdentifiers.get(a - 1));
 		this.fdResultReceiver.receiveResult(fdResult);
 	}
 
 	private void setColumnIdentifiers() {
-		this.columnIdentifiers = new ObjectArrayList<ColumnIdentifier>(this.columnNames.size());
+		this.columnIdentifiers = new ObjectArrayList<>(this.columnNames.size());
 		for (String column_name : this.columnNames) {
 			columnIdentifiers.add(new ColumnIdentifier(this.tableName, column_name));
 		}
 	}
 
-	public void serialize_attribute(OpenBitSet bitset, CombinationHelper ch) {
-		String file_name = bitset.toString();
-		ObjectOutputStream oos;
-		try {
-			oos = new ObjectOutputStream(new FileOutputStream(file_name));
-			oos.writeObject(ch);
-			oos.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public CombinationHelper deserialize_attribute(OpenBitSet bitset) {
-		String file_name = bitset.toString();
-		ObjectInputStream is = null;
-		CombinationHelper ch = null;
-		try {
-			is = new ObjectInputStream(new FileInputStream(file_name));
-			ch = (CombinationHelper) is.readObject();
-			is.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		return ch;
-	}
 }

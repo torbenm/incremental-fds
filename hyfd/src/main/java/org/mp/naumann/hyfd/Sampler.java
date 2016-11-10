@@ -1,11 +1,6 @@
 package org.mp.naumann.hyfd;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.PriorityQueue;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.structures.FDTree;
@@ -13,9 +8,14 @@ import org.mp.naumann.structures.IntegerPair;
 import org.mp.naumann.structures.PositionListIndex;
 import org.mp.naumann.utils.ValueComparator;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.PriorityQueue;
 
-public class Sampler {
+class Sampler {
 
 	private FDSet negCover;
 	private FDTree posCover;
@@ -69,7 +69,7 @@ public class Sampler {
 		
 			System.out.print("Running initial windows ...");
 			time = System.currentTimeMillis();
-			this.attributeRepresentants = new ArrayList<AttributeRepresentant>(numAttributes);
+			this.attributeRepresentants = new ArrayList<>(numAttributes);
 			float efficiencyFactor = (int)Math.ceil(1 / this.efficiencyThreshold);
 			for (int i = 0; i < numAttributes; i++) {
 				AttributeRepresentant attributeRepresentant = new AttributeRepresentant(this.plis.get(i).getClusters(), efficiencyFactor, this.negCover, this.posCover, this, this.memoryGuardian);
@@ -87,7 +87,7 @@ public class Sampler {
 		}
 		
 		System.out.println("Moving window over clusters ... ");
-		PriorityQueue<AttributeRepresentant> queue = new PriorityQueue<AttributeRepresentant>(this.attributeRepresentants);
+		PriorityQueue<AttributeRepresentant> queue = new PriorityQueue<>(this.attributeRepresentants);
 		while (!queue.isEmpty()) {
 			AttributeRepresentant attributeRepresentant = queue.remove();
 			if (!attributeRepresentant.runNext(newNonFds, this.compressedRecords))
@@ -131,12 +131,12 @@ public class Sampler {
 			return value2 - value1;
 		*/	
 			// Previous -> Next
-			int value1 = this.sortKeys[o1.intValue()][this.activeKey1];
-			int value2 = this.sortKeys[o2.intValue()][this.activeKey1];
+			int value1 = this.sortKeys[o1][this.activeKey1];
+			int value2 = this.sortKeys[o2][this.activeKey1];
 			int result = value2 - value1;
 			if (result == 0) {
-				value1 = this.sortKeys[o1.intValue()][this.activeKey2];
-				value2 = this.sortKeys[o2.intValue()][this.activeKey2];
+				value1 = this.sortKeys[o1][this.activeKey2];
+				value2 = this.sortKeys[o2][this.activeKey2];
 			}
 			return value2 - value1;
 			
@@ -192,7 +192,7 @@ public class Sampler {
 		}
 		
 		public AttributeRepresentant(List<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, FDTree posCover, Sampler sampler, MemoryGuardian memoryGuardian) {
-			this.clusters = new ArrayList<IntArrayList>(clusters);
+			this.clusters = new ArrayList<>(clusters);
 			this.efficiencyFactor = efficiencyFactor;
 			this.negCover = negCover;
 			this.posCover = posCover;
@@ -243,10 +243,8 @@ public class Sampler {
 			
 			this.numNewNonFds.add(numNewNonFds);
 			this.numComparisons.add(numComparisons);
-			
-			if (numComparisons == 0)
-				return false;
-			return true;
+
+			return numComparisons != 0;
 		}
 	}
 	

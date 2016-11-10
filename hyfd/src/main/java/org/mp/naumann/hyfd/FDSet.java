@@ -1,13 +1,13 @@
 package org.mp.naumann.hyfd;
 
-import java.util.ArrayList;
-import java.util.List;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 import org.apache.lucene.util.OpenBitSet;
 
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import java.util.ArrayList;
+import java.util.List;
 
-public class FDSet {
+class FDSet {
 
 	private List<ObjectOpenHashSet<OpenBitSet>> fdLevels;
 	
@@ -16,13 +16,9 @@ public class FDSet {
 	
 	public FDSet(int numAttributes, int maxDepth) {
 		this.maxDepth = maxDepth;
-		this.fdLevels = new ArrayList<ObjectOpenHashSet<OpenBitSet>>(numAttributes);
+		this.fdLevels = new ArrayList<>(numAttributes);
 		for (int i = 0; i <= numAttributes; i++)
-			this.fdLevels.add(new ObjectOpenHashSet<OpenBitSet>());
-	}
-
-	public List<ObjectOpenHashSet<OpenBitSet>> getFdLevels() {
-		return this.fdLevels;
+			this.fdLevels.add(new ObjectOpenHashSet<>());
 	}
 
 	public int getDepth() {
@@ -60,17 +56,4 @@ public class FDSet {
 		this.maxDepth = newDepth;
 	}
 
-	public void clear() {
-		int numLevels = this.fdLevels.size();
-		this.fdLevels = new ArrayList<ObjectOpenHashSet<OpenBitSet>>(numLevels);
-		for (int i = 0; i <= numLevels; i++)
-			this.fdLevels.add(new ObjectOpenHashSet<OpenBitSet>());
-	}
-
-	public int size() {
-		int size = 0;
-		for (ObjectOpenHashSet<OpenBitSet> uccs : this.fdLevels)
-			size += uccs.size();
-		return size;
-	}
 }

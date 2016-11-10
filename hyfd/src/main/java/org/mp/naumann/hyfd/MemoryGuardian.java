@@ -4,38 +4,29 @@ import java.lang.management.ManagementFactory;
 
 import org.mp.naumann.structures.FDTree;
 
-public class MemoryGuardian {
+class MemoryGuardian {
 	
 	private boolean active;
-	private final float maxMemoryUsagePercentage = 0.8f;	// Memory usage in percent from which a lattice level should be dropped
-	private final float trimMemoryUsagePercentage = 0.7f;	// If data structures must be trimmed, this is the memory percentage that they are trimmed to (trim to less than max memory usage to avoid oscillating trimming)
 	private long memoryCheckFrequency;						// Number of allocation events that cause a memory check
 	private long maxMemoryUsage;
 	private long trimMemoryUsage;
-	private long availableMemory;
 	private int allocationEventsSinceLastCheck = 0;
 
-	public void setActive(boolean active) {
-		this.active = active;
-	}
-	
-	public boolean isActive() {
-		return this.active;
-	}
-	
 	public MemoryGuardian(boolean active) {
 		this.active = active;
-		this.availableMemory = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getMax();
-		this.maxMemoryUsage = (long)(this.availableMemory * this.maxMemoryUsagePercentage);
-		this.trimMemoryUsage = (long)(this.availableMemory * this.trimMemoryUsagePercentage);
-		this.memoryCheckFrequency = (long)Math.max(Math.ceil((float)this.availableMemory / 10000000), 10);
+		long availableMemory = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getMax();
+		float maxMemoryUsagePercentage = 0.8f;
+		this.maxMemoryUsage = (long)(availableMemory * maxMemoryUsagePercentage);
+		float trimMemoryUsagePercentage = 0.7f;
+		this.trimMemoryUsage = (long)(availableMemory * trimMemoryUsagePercentage);
+		this.memoryCheckFrequency = (long)Math.max(Math.ceil((float) availableMemory / 10000000), 10);
 	}
 	
 	public void memoryChanged(int allocationEvents) {
 		this.allocationEventsSinceLastCheck += allocationEvents;
 	}
 
-	public boolean memoryExhausted(long memory) {
+	private boolean memoryExhausted(long memory) {
 		long memoryUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed();
 		return memoryUsage > memory;
 	}

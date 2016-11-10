@@ -16,7 +16,7 @@ public class StrippedPartition {
      * @param numberTuples
      */
     public StrippedPartition(long numberTuples) {
-        this.strippedPartition = new ObjectBigArrayBigList<LongBigArrayBigList>();
+        this.strippedPartition = new ObjectBigArrayBigList<>();
         this.elementCount = numberTuples;
         // StrippedPartition only contains partition with more than one elements.
         if (numberTuples > 1) {
@@ -35,7 +35,7 @@ public class StrippedPartition {
      * @param partition
      */
     public StrippedPartition(Object2ObjectOpenHashMap<Object, LongBigArrayBigList> partition) {
-        this.strippedPartition = new ObjectBigArrayBigList<LongBigArrayBigList>();
+        this.strippedPartition = new ObjectBigArrayBigList<>();
         this.elementCount = 0;
 
         //create stripped partitions -> only use equivalence classes with size > 1.
@@ -69,9 +69,4 @@ public class StrippedPartition {
         this.error = this.elementCount - this.strippedPartition.size64();
     }
 
-    public void empty() {
-        this.strippedPartition = new ObjectBigArrayBigList<LongBigArrayBigList>();
-        this.elementCount = 0;
-        this.error = 0.0;
-    }
 }

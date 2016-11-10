@@ -19,15 +19,15 @@ package org.mp.naumann.structures;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
+import org.mp.naumann.algorithms.RelationalInput;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.mp.naumann.algorithms.RelationalInput;
-
 public class PLIBuilder {
 	
-	int numRecords = 0;
+	private int numRecords = 0;
 	
 	public int getNumLastRecords() {
 		return this.numRecords;
@@ -38,10 +38,10 @@ public class PLIBuilder {
 		return this.fetchPositionListIndexes(clusterMaps, isNullEqualNull);
 	}
 
-	protected List<HashMap<String, IntArrayList>> calculateClusterMaps(RelationalInput relationalInput, int numAttributes) {
+	private List<HashMap<String, IntArrayList>> calculateClusterMaps(RelationalInput relationalInput, int numAttributes) {
 		List<HashMap<String, IntArrayList>> clusterMaps = new ArrayList<>();
 		for (int i = 0; i < numAttributes; i++)
-			clusterMaps.add(new HashMap<String, IntArrayList>());
+			clusterMaps.add(new HashMap<>());
 		
 		this.numRecords = 0;
 		while (relationalInput.hasNext()) {
@@ -70,7 +70,8 @@ public class PLIBuilder {
 		return clusterMaps;
 	}
 	
-	protected List<PositionListIndex> fetchPositionListIndexes(List<HashMap<String, IntArrayList>> clusterMaps, boolean isNullEqualNull) {
+	private List<PositionListIndex> fetchPositionListIndexes(List<HashMap<String, IntArrayList>> clusterMaps,
+			boolean isNullEqualNull) {
 		List<PositionListIndex> clustersPerAttribute = new ArrayList<>();
 		for (int columnId = 0; columnId < clusterMaps.size(); columnId++) {
 			List<IntArrayList> clusters = new ArrayList<>();
@@ -96,10 +97,11 @@ public class PLIBuilder {
 		return fetchPositionListIndexesStatic(clusterMaps, isNullEqualNull);
 	}
 
-	protected static List<HashMap<String, IntArrayList>> calculateClusterMapsStatic(ObjectArrayList<List<String>> records, int numAttributes) {
+	private static List<HashMap<String, IntArrayList>> calculateClusterMapsStatic(ObjectArrayList<List<String>> records,
+			int numAttributes) {
 		List<HashMap<String, IntArrayList>> clusterMaps = new ArrayList<>();
 		for (int i = 0; i < numAttributes; i++)
-			clusterMaps.add(new HashMap<String, IntArrayList>());
+			clusterMaps.add(new HashMap<>());
 		
 		int recordId = 0;
 		for (List<String> record : records) {
@@ -124,7 +126,8 @@ public class PLIBuilder {
 		return clusterMaps;
 	}
 	
-	protected static List<PositionListIndex> fetchPositionListIndexesStatic(List<HashMap<String, IntArrayList>> clusterMaps, boolean isNullEqualNull) {
+	private static List<PositionListIndex> fetchPositionListIndexesStatic(
+			List<HashMap<String, IntArrayList>> clusterMaps, boolean isNullEqualNull) {
 		List<PositionListIndex> clustersPerAttribute = new ArrayList<>();
 		for (int columnId = 0; columnId < clusterMaps.size(); columnId++) {
 			List<IntArrayList> clusters = new ArrayList<>();

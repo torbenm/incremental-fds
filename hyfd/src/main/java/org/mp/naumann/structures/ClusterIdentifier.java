@@ -1,26 +1,22 @@
 package org.mp.naumann.structures;
 
-public class ClusterIdentifier {
+class ClusterIdentifier {
 
 	private final int[] cluster;
 	
 	public ClusterIdentifier(final int[] cluster) {
 		this.cluster = cluster;
 	}
-	
-	public void set(int index, int clusterId) {
-		this.cluster[index] = clusterId;
-	}
-	
+
 	public int get(int index) {
 		return this.cluster[index];
 	}
 	
-	public int[] getCluster() {
+	private int[] getCluster() {
 		return this.cluster;
 	}
 	
-	public int size() {
+	private int size() {
 		return this.cluster.length;
 	}
 

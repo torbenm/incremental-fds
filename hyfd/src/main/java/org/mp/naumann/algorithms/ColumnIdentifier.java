@@ -17,7 +17,6 @@
 package org.mp.naumann.algorithms;
 
 import java.io.Serializable;
-import java.util.Map;
 
 /**
  * Represents a specific column.
@@ -26,16 +25,10 @@ public class ColumnIdentifier implements Comparable<ColumnIdentifier>, Serializa
 
   private static final long serialVersionUID = -3199299021265706919L;
 
-  public static final String TABLE_COLUMN_CONCATENATOR = ".";
-  public static final String TABLE_COLUMN_CONCATENATOR_ESC = "\\.";
+  private static final String TABLE_COLUMN_CONCATENATOR = ".";
 
-  protected String tableIdentifier;
-  protected String columnIdentifier;
-
-  public ColumnIdentifier() {
-    this.tableIdentifier = "";
-    this.columnIdentifier = "";
-  }
+  private String tableIdentifier;
+  private String columnIdentifier;
 
   /**
    * @param tableIdentifier  table's identifier
@@ -46,61 +39,11 @@ public class ColumnIdentifier implements Comparable<ColumnIdentifier>, Serializa
     this.columnIdentifier = columnIdentifier;
   }
 
-  public String getTableIdentifier() {
-    return tableIdentifier;
-  }
-
-  public void setTableIdentifier(String tableIdentifier) {
-    this.tableIdentifier = tableIdentifier;
-  }
-
-  public String getColumnIdentifier() {
-    return columnIdentifier;
-  }
-
-  public void setColumnIdentifier(String columnIdentifier) {
-    this.columnIdentifier = columnIdentifier;
-  }
-
   @Override
   public String toString() {
     if (this.tableIdentifier.isEmpty() && this.columnIdentifier.isEmpty())
       return "";
     return tableIdentifier + TABLE_COLUMN_CONCATENATOR + columnIdentifier;
-  }
-
-  /**
-   * Returns the encoded string for this column identifier.
-   * The encoded string is determined by the given mappings.
-   * @param tableMapping the table mapping
-   * @param columnMapping the column mapping
-   * @return the encoded string
-   */
-  public String toString(Map<String, String> tableMapping, Map<String, String> columnMapping) {
-    String tableValue = tableMapping.get(this.tableIdentifier);
-    String columnStr = tableValue + TABLE_COLUMN_CONCATENATOR + this.columnIdentifier;
-    return columnMapping.get(columnStr);
-  }
-
-  /**
-   * Creates a ColumnIdentifier from the given string using the given mappings.
-   * @param tableMapping the table mapping
-   * @param columnMapping the column mapping
-   * @param str the string
-   * @return a column identifier
-   */
-  public static ColumnIdentifier fromString(Map<String, String> tableMapping, Map<String, String> columnMapping, String str)
-    throws NullPointerException, IndexOutOfBoundsException {
-    if (str.isEmpty()) {
-      return new ColumnIdentifier();
-    }
-
-    String[] parts = columnMapping.get(str).split(TABLE_COLUMN_CONCATENATOR_ESC, 2);
-    String tableKey = parts[0];
-    String columnName = parts[1];
-    String tableName = tableMapping.get(tableKey);
-
-    return new ColumnIdentifier(tableName, columnName);
   }
 
   @Override

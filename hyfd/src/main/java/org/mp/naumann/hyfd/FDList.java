@@ -14,21 +14,13 @@ public class FDList {
 	
 	public FDList(int numAttributes, int maxDepth) {
 		this.maxDepth = maxDepth;
-		this.fdLevels = new ArrayList<List<OpenBitSet>>(numAttributes);
+		this.fdLevels = new ArrayList<>(numAttributes);
 		for (int i = 0; i <= numAttributes; i++)
-			this.fdLevels.add(new ArrayList<OpenBitSet>());
+			this.fdLevels.add(new ArrayList<>());
 	}
 
 	public List<List<OpenBitSet>> getFdLevels() {
 		return this.fdLevels;
-	}
-
-	public int getDepth() {
-		return this.depth;
-	}
-
-	public int getMaxDepth() {
-		return this.maxDepth;
 	}
 
 	public boolean add(OpenBitSet fd) {
@@ -47,13 +39,6 @@ public class FDList {
 		
 		this.depth = newDepth;
 		this.maxDepth = newDepth;
-	}
-
-	public void clear() {
-		int numLevels = this.fdLevels.size();
-		this.fdLevels = new ArrayList<List<OpenBitSet>>(numLevels);
-		for (int i = 0; i <= numLevels; i++)
-			this.fdLevels.add(new ArrayList<OpenBitSet>());
 	}
 
 	public int size() {

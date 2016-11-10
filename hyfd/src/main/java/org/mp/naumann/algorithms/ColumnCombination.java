@@ -16,21 +16,20 @@
 
 package org.mp.naumann.algorithms;
 
-import com.google.common.base.Joiner;
-
 import java.io.Serializable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Represents column combinations.
  */
 public class ColumnCombination implements Serializable, Comparable<Object> {
 
-  public static final String COLUMN_CONNECTOR = ",";
-
   private static final long serialVersionUID = -1675606730574675390L;
 
-  protected Set<ColumnIdentifier> columnIdentifiers;
+  private Set<ColumnIdentifier> columnIdentifiers;
 
   /**
    * Creates an empty column combination.
@@ -49,54 +48,9 @@ public class ColumnCombination implements Serializable, Comparable<Object> {
     columnIdentifiers = new TreeSet<>(Arrays.asList(columnIdentifier));
   }
 
-  /**
-   * Get column identifiers as set.
-   *
-   * @return columnIdentifiers
-   */
-  public Set<ColumnIdentifier> getColumnIdentifiers() {
-    return columnIdentifiers;
-  }
-
-  public void setColumnIdentifiers(Set<ColumnIdentifier> identifiers) {
-    this.columnIdentifiers = identifiers;
-  }
-
   @Override
   public String toString() {
     return columnIdentifiers.toString();
-  }
-
-  /**
-   * Returns a compressed string representing this column combination.
-   * @param tableMapping the table mapping
-   * @param columnMapping the column mapping
-   * @return the compressed string
-   */
-  public String toString(Map<String, String> tableMapping, Map<String, String> columnMapping) throws NullPointerException {
-    List<String> cis = new ArrayList<>();
-    for (ColumnIdentifier ci : this.columnIdentifiers) {
-      cis.add(ci.toString(tableMapping, columnMapping));
-    }
-    return Joiner.on(COLUMN_CONNECTOR).join(cis);
-  }
-
-  /**
-   * Creates a column combination from the given string using the given mapping.
-   * @param tableMapping the table mapping
-   * @param columnMapping the column mapping
-   * @param str the string
-   * @return a column combination
-   */
-  public static ColumnCombination fromString(Map<String, String> tableMapping, Map<String, String> columnMapping, String str)
-    throws NullPointerException, IndexOutOfBoundsException {
-    String[] parts = str.split(COLUMN_CONNECTOR);
-
-    ColumnIdentifier[] identifiers = new ColumnIdentifier[parts.length];
-    for (int i = 0; i < parts.length; i++) {
-      identifiers[i] = ColumnIdentifier.fromString(tableMapping, columnMapping, parts[i].trim());
-    }
-    return new ColumnCombination(identifiers);
   }
 
   @Override

@@ -30,5 +30,5 @@ public interface RelationalInputGenerator {
    * @throws InputGenerationException if no new copy could be created
    * @throws AlgorithmConfigurationException if the configuration is not correct
    */
-  public RelationalInput generateNewCopy();
+  RelationalInput generateNewCopy();
 }

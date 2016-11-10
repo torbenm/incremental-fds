@@ -1,10 +1,6 @@
 package org.mp.naumann.hyfd;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.mp.naumann.algorithms.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.ColumnCombination;
@@ -20,13 +16,13 @@ import org.mp.naumann.structures.PositionListIndex;
 import org.mp.naumann.utils.FileUtils;
 import org.mp.naumann.utils.ValueComparator;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class HyFD {
-
-	public enum Identifier {
-		INPUT_GENERATOR, NULL_EQUALS_NULL, VALIDATE_PARALLEL, ENABLE_MEMORY_GUARDIAN, MAX_DETERMINANT_SIZE
-	};
 
 	private RelationalInputGenerator inputGenerator = null;
 	private FunctionalDependencyResultReceiver resultReceiver = null;
@@ -34,16 +30,10 @@ public class HyFD {
 	private ValueComparator valueComparator;
 	private final MemoryGuardian memoryGuardian = new MemoryGuardian(true);
 
-	private boolean validateParallel = true; // The validation is the most
-												// costly part in HyFD and it
-												// can easily be parallelized
-	private int maxLhsSize = -1; // The lhss can become numAttributes - 1 large,
-									// but usually we are only interested in FDs
+	// but usually we are only interested in FDs
 									// with lhs < some threshold (otherwise they
 									// would not be useful for normalization,
 									// key discovery etc.)
-
-	private float efficiencyThreshold = 0.01f;
 
 	private String tableName;
 	private List<String> attributeNames;
@@ -54,7 +44,7 @@ public class HyFD {
 		this.resultReceiver = resultReceiver;
 	}
 
-	private void initialize(RelationalInput relationalInput) throws AlgorithmExecutionException {
+	private void initialize(RelationalInput relationalInput) {
 		this.tableName = relationalInput.relationName();
 		this.attributeNames = relationalInput.columnNames();
 		this.numAttributes = this.attributeNames.size();
@@ -130,10 +120,11 @@ public class HyFD {
 		invertedPlis = null;
 
 		// Initialize the negative cover
-		FDSet negCover = new FDSet(this.numAttributes, this.maxLhsSize);
+		int maxLhsSize = -1;
+		FDSet negCover = new FDSet(this.numAttributes, maxLhsSize);
 
 		// Initialize the positive cover
-		FDTree posCover = new FDTree(this.numAttributes, this.maxLhsSize);
+		FDTree posCover = new FDTree(this.numAttributes, maxLhsSize);
 		posCover.addMostGeneralDependencies();
 
 		//////////////////////////
@@ -142,11 +133,13 @@ public class HyFD {
 
 		// TODO: implement parallel sampling
 
-		Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, this.efficiencyThreshold,
+		float efficiencyThreshold = 0.01f;
+		Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, efficiencyThreshold,
 				this.valueComparator, this.memoryGuardian);
 		Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
+		boolean validateParallel = true;
 		Validator validator = new Validator(negCover, posCover, numRecords, compressedRecords, plis,
-				this.efficiencyThreshold, this.validateParallel, this.memoryGuardian);
+				efficiencyThreshold, validateParallel, this.memoryGuardian);
 
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 		do {
@@ -178,13 +171,8 @@ public class HyFD {
 		FileUtils.close(relationalInput);
 	}
 
-	public void setResultReceiver(FunctionalDependencyResultReceiver resultReceiver) {
-		this.resultReceiver = resultReceiver;
-	}
-
 	private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {
-		ObjectArrayList<ColumnIdentifier> columnIdentifiers = new ObjectArrayList<ColumnIdentifier>(
-				this.attributeNames.size());
+		ObjectArrayList<ColumnIdentifier> columnIdentifiers = new ObjectArrayList<>(this.attributeNames.size());
 		for (String attributeName : this.attributeNames)
 			columnIdentifiers.add(new ColumnIdentifier(this.tableName, attributeName));
 		return columnIdentifiers;

@@ -1,9 +1,7 @@
 package org.mp.naumann.fdep;
 
-import java.util.Arrays;
-import java.util.List;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
-import org.mp.naumann.algorithms.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.ColumnCombination;
 import org.mp.naumann.algorithms.ColumnIdentifier;
 import org.mp.naumann.algorithms.FunctionalDependency;
@@ -16,13 +14,10 @@ import org.mp.naumann.structures.PositionListIndex;
 import org.mp.naumann.utils.FileUtils;
 import org.mp.naumann.utils.ValueComparator;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class FDEPExecutor {
-
-	public enum Identifier {
-		INPUT_GENERATOR, NULL_EQUALS_NULL, VALIDATE_PARALLEL, ENABLE_MEMORY_GUARDIAN, MAX_DETERMINANT_SIZE
-	};
 
 	private RelationalInputGenerator inputGenerator = null;
 	private FunctionalDependencyResultReceiver resultReceiver = null;
@@ -38,11 +33,7 @@ public class FDEPExecutor {
 		this.inputGenerator = inputGenerator;
 	}
 
-	public void setResultReceiver(FunctionalDependencyResultReceiver resultReceiver) {
-		this.resultReceiver = resultReceiver;
-	}
-
-	private void initialize(RelationalInput relationalInput) throws AlgorithmExecutionException {
+	private void initialize(RelationalInput relationalInput) {
 		this.tableName = relationalInput.relationName();
 		this.attributeNames = relationalInput.columnNames();
 		this.numAttributes = this.attributeNames.size();
@@ -50,7 +41,7 @@ public class FDEPExecutor {
 			this.valueComparator = new ValueComparator(true);
 	}
 	
-	public void execute() throws AlgorithmExecutionException {
+	public void execute() {
 		long startTime = System.currentTimeMillis();
 		
 		this.executeFDEP();
@@ -58,7 +49,7 @@ public class FDEPExecutor {
 		System.out.println("Time: " + (System.currentTimeMillis() - startTime) + " ms");
 	}
 
-	private void executeFDEP() throws AlgorithmExecutionException {
+	private void executeFDEP() {
 		// Initialize
 		System.out.println("Initializing ...");
 		RelationalInput relationalInput = this.getInput();
@@ -113,8 +104,7 @@ public class FDEPExecutor {
 	}
 	
 	private RelationalInput getInput() {
-		RelationalInput relationalInput = this.inputGenerator.generateNewCopy();
-		return relationalInput;
+		return this.inputGenerator.generateNewCopy();
 	}
 	
 	private void closeInput(RelationalInput relationalInput) {
@@ -122,14 +112,14 @@ public class FDEPExecutor {
 	}
 
 	private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {
-		ObjectArrayList<ColumnIdentifier> columnIdentifiers = new ObjectArrayList<ColumnIdentifier>(this.attributeNames.size());
+		ObjectArrayList<ColumnIdentifier> columnIdentifiers = new ObjectArrayList<>(this.attributeNames.size());
 		for (String attributeName : this.attributeNames)
 			columnIdentifiers.add(new ColumnIdentifier(this.tableName, attributeName));
 		return columnIdentifiers;
 	}
 
 	private ObjectArrayList<List<String>> loadData(RelationalInput relationalInput) {
-		ObjectArrayList<List<String>> records = new ObjectArrayList<List<String>>();
+		ObjectArrayList<List<String>> records = new ObjectArrayList<>();
 		while (relationalInput.hasNext())
 			records.add(relationalInput.next());
 		return records;

@@ -15,8 +15,6 @@ package org.mp.naumann.algorithms;
  * limitations under the License.
  */
 
-import java.util.Map;
-
 /**
  * Represents a functional dependency.
  *
@@ -24,81 +22,19 @@ import java.util.Map;
  */
 public class FunctionalDependency {
 
-	public static final String FD_SEPARATOR = "->";
+	private static final String FD_SEPARATOR = "->";
 
-	protected ColumnCombination determinant;
-	protected ColumnIdentifier dependant;
-
-	public FunctionalDependency() {
-		this.dependant = new ColumnIdentifier();
-		this.determinant = new ColumnCombination();
-	}
+	private ColumnCombination determinant;
+	private ColumnIdentifier dependant;
 
 	public FunctionalDependency(ColumnCombination determinant, ColumnIdentifier dependant) {
 		this.determinant = determinant;
 		this.dependant = dependant;
 	}
 
-	/**
-	 * @return determinant
-	 */
-	public ColumnCombination getDeterminant() {
-		return determinant;
-	}
-
-	public void setDependant(ColumnIdentifier dependant) {
-		this.dependant = dependant;
-	}
-
-	/**
-	 * @return dependant
-	 */
-	public ColumnIdentifier getDependant() {
-		return dependant;
-	}
-
-	public void setDeterminant(ColumnCombination determinant) {
-		this.determinant = determinant;
-	}
-
 	@Override
 	public String toString() {
 		return determinant.toString() + FD_SEPARATOR + dependant.toString();
-	}
-
-	/**
-	 * Encodes the functional dependency as string with the given mappings.
-	 * 
-	 * @param tableMapping
-	 *            the table mapping
-	 * @param columnMapping
-	 *            the column mapping
-	 * @return the string
-	 */
-	public String toString(Map<String, String> tableMapping, Map<String, String> columnMapping) {
-		return determinant.toString(tableMapping, columnMapping) + FD_SEPARATOR
-				+ dependant.toString(tableMapping, columnMapping);
-	}
-
-	/**
-	 * Creates a functional dependency from the given string using the given
-	 * mapping.
-	 * 
-	 * @param tableMapping
-	 *            the table mapping
-	 * @param columnMapping
-	 *            the column mapping
-	 * @param str
-	 *            the string
-	 * @return a functional dependency
-	 */
-	public static FunctionalDependency fromString(Map<String, String> tableMapping, Map<String, String> columnMapping,
-			String str) throws NullPointerException, IndexOutOfBoundsException {
-		String[] parts = str.split(FD_SEPARATOR);
-		ColumnCombination determinant = ColumnCombination.fromString(tableMapping, columnMapping, parts[0]);
-		ColumnIdentifier dependant = ColumnIdentifier.fromString(tableMapping, columnMapping, parts[1]);
-
-		return new FunctionalDependency(determinant, dependant);
 	}
 
 	@Override

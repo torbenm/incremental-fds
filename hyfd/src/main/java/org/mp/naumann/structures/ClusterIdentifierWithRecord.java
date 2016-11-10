@@ -1,6 +1,6 @@
 package org.mp.naumann.structures;
 
-public class ClusterIdentifierWithRecord extends ClusterIdentifier {
+class ClusterIdentifierWithRecord extends ClusterIdentifier {
 
 	private final int record;
 	
