@@ -2,9 +2,9 @@ package org.mp.naumann.database.statement;
 
 import java.util.List;
 
-public interface StatementGroup<T extends Statement> {
+public interface StatementGroup {
 
-    List<T> getStatements();
+    List<Statement> getStatements();
     List<InsertStatement> getInsertStatements();
     List<DeleteStatement> getDeleteStatements();
     List<UpdateStatement> getUpdateStatements();

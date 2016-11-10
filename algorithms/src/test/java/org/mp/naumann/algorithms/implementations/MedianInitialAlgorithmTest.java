@@ -1,14 +1,14 @@
 package org.mp.naumann.algorithms.implementations;
 
+import static junit.framework.TestCase.assertEquals;
+
+import java.io.IOException;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mp.naumann.algorithms.implementations.helper.DatabaseHelper;
 import org.mp.naumann.algorithms.result.SimpleObjectResultSet;
 import org.mp.naumann.database.DataConnector;
-
-import java.io.IOException;
-
-import static junit.framework.TestCase.assertEquals;
 
 public class MedianInitialAlgorithmTest {
 

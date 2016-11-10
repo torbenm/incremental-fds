@@ -1,5 +1,8 @@
 package org.mp.naumann.processor;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mp.naumann.processor.fake.FakeBatch;
@@ -8,9 +11,6 @@ import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.testhelper.BatchArrivedException;
 import org.mp.naumann.processor.testhelper.MakeSureImLastDatabaseBatchHandler;
 import org.mp.naumann.processor.testhelper.OccurenceCountingBatchHandler;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class SynchronousBatchProcessorTests extends BatchProcessorTests {
 

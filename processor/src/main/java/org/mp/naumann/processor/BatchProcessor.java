@@ -1,12 +1,12 @@
 package org.mp.naumann.processor;
 
+import java.util.Collection;
+
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.source.BatchSource;
 import org.mp.naumann.processor.batch.source.BatchSourceListener;
 import org.mp.naumann.processor.handler.BatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
-
-import java.util.Collection;
 
 public abstract class BatchProcessor<BatchCollectionType extends Collection<BatchHandler>> implements BatchSourceListener {
 

@@ -1,12 +1,12 @@
 package org.mp.naumann.database.jdbc.sql;
 
-import org.mp.naumann.database.statement.DeleteStatement;
+import static org.mp.naumann.database.jdbc.sql.SqlQueryBuilder.toKeyEqualsValueMap;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.mp.naumann.database.jdbc.sql.SqlQueryBuilder.toKeyEqualsValueMap;
+import org.mp.naumann.database.statement.DeleteStatement;
 
 public class DeleteStatementQueryBuilder implements StatementQueryBuilder<DeleteStatement> {
 

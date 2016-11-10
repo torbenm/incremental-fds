@@ -1,13 +1,13 @@
 package org.mp.naumann.processor.batch;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.mp.naumann.database.statement.DeleteStatement;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.UpdateStatement;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class ListBatch implements Batch {
 

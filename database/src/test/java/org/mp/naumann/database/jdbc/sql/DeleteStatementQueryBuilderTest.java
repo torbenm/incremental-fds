@@ -1,13 +1,13 @@
 package org.mp.naumann.database.jdbc.sql;
 
-import org.junit.Test;
-import org.mp.naumann.database.jdbc.sql.helper.DeleteStatements;
-import org.mp.naumann.database.statement.DeleteStatement;
+import static junit.framework.TestCase.assertEquals;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static junit.framework.TestCase.assertEquals;
+import org.junit.Test;
+import org.mp.naumann.database.jdbc.sql.helper.DeleteStatements;
+import org.mp.naumann.database.statement.DeleteStatement;
 
 public class DeleteStatementQueryBuilderTest {
 

@@ -1,11 +1,11 @@
 package org.mp.naumann.algorithms.implementations.helper;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.commons.io.FileUtils;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.jdbc.JdbcDataConnector;
-
-import java.io.File;
-import java.io.IOException;
 
 public class DatabaseHelper {
 

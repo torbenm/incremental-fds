@@ -1,13 +1,15 @@
 package org.mp.naumann.utils;
 
-import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mp.naumann.utils.GenericHelper.cast;
+import static org.mp.naumann.utils.GenericHelper.createGenericMap;
+import static org.mp.naumann.utils.GenericHelper.isNumberCast;
 
 import java.io.Serializable;
 import java.util.HashMap;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mp.naumann.utils.GenericHelper.*;
+import org.junit.Test;
 
 public class GenericHelperTest {
 

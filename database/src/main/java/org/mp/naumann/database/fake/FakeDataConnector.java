@@ -1,9 +1,9 @@
 package org.mp.naumann.database.fake;
 
+import java.util.List;
+
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.Table;
-
-import java.util.List;
 
 public class FakeDataConnector implements DataConnector {
     @Override

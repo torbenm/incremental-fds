@@ -1,11 +1,11 @@
 package org.mp.naumann.database.jdbc.sql;
 
-import org.mp.naumann.database.statement.UpdateStatement;
+import static org.mp.naumann.database.jdbc.sql.SqlQueryBuilder.toKeyEqualsValueMap;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.mp.naumann.database.jdbc.sql.SqlQueryBuilder.toKeyEqualsValueMap;
+import org.mp.naumann.database.statement.UpdateStatement;
 
 public class UpdateStatementQueryBuilder implements StatementQueryBuilder<UpdateStatement> {
 

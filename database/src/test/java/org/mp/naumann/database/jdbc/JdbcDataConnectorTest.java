@@ -1,11 +1,11 @@
 package org.mp.naumann.database.jdbc;
 
-import org.junit.Test;
-import org.mp.naumann.database.Table;
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.mp.naumann.database.Table;
 
 public class JdbcDataConnectorTest extends JdbcTest {
 

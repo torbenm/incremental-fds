@@ -1,11 +1,10 @@
 package org.mp.naumann.database.jdbc.sql.helper;
 
-import org.mp.naumann.database.identifier.EmptyRowIdentifier;
-import org.mp.naumann.database.statement.DefaultUpdateStatement;
-import org.mp.naumann.database.statement.UpdateStatement;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.mp.naumann.database.statement.DefaultUpdateStatement;
+import org.mp.naumann.database.statement.UpdateStatement;
 
 public class UpdateStatements {
 
@@ -18,7 +17,7 @@ public class UpdateStatements {
         oldValues.put("name", "hanna");
         oldValues.put("age", "12");
 
-        return new DefaultUpdateStatement(newValues, oldValues, new EmptyRowIdentifier(), "people");
+        return new DefaultUpdateStatement(newValues, oldValues, "people");
     }
 
     public static UpdateStatement createUpdateStatementDifferentTable(){
@@ -30,6 +29,6 @@ public class UpdateStatements {
         oldValues.put("city", "Berlin");
         oldValues.put("country", "DE");
 
-        return new DefaultUpdateStatement(newValues, oldValues, new EmptyRowIdentifier(), "places");
+        return new DefaultUpdateStatement(newValues, oldValues, "places");
     }
 }

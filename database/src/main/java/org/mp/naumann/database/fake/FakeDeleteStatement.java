@@ -1,15 +1,10 @@
 package org.mp.naumann.database.fake;
 
-import org.mp.naumann.database.identifier.RowIdentifier;
-import org.mp.naumann.database.statement.DeleteStatement;
-
 import java.util.Map;
 
+import org.mp.naumann.database.statement.DeleteStatement;
+
 public class FakeDeleteStatement implements DeleteStatement {
-    @Override
-    public RowIdentifier getRowIdentifier() {
-        return null;
-    }
 
     @Override
     public String getTableName() {
