@@ -3,8 +3,8 @@ package org.mp.naumann.algorithms.implementations;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mp.naumann.algorithms.implementations.helper.DatabaseHelper;
-import org.mp.naumann.algorithms.result.SimpleObjectResultSet;
 import org.mp.naumann.database.DataConnector;
+import org.mp.naumann.algorithms.result.SimpleObjectResultSet;
 
 import java.io.IOException;
 

@@ -1,8 +1,8 @@
 package org.mp.naumann.algorithms.implementations.helper;
 
 import org.apache.commons.io.FileUtils;
-import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.jdbc.JdbcDataConnector;
+import org.mp.naumann.database.DataConnector;
 
 import java.io.File;
 import java.io.IOException;

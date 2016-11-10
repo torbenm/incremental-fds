@@ -1,8 +1,8 @@
 package org.mp.naumann.processor.handler.database;
 
 import org.junit.Test;
-import org.mp.naumann.database.fake.FakeDataConnector;
 import org.mp.naumann.processor.fake.FakeBatch;
+import org.mp.naumann.database.fake.FakeDataConnector;
 
 public class PassThroughDatabaseBatchHandlerTest {
 

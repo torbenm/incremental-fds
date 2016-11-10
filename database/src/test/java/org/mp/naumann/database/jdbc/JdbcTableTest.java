@@ -1,11 +1,12 @@
 package org.mp.naumann.database.jdbc;
 
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mp.naumann.database.Table;
 import org.mp.naumann.database.data.Column;
 import org.mp.naumann.database.data.Row;
 import org.mp.naumann.database.identifier.DefaultRowIdentifier;
+import org.mp.naumann.database.Table;
 import org.mp.naumann.database.identifier.RowIdentifier;
 
 import java.util.List;
@@ -69,7 +70,7 @@ public class JdbcTableTest extends JdbcTest {
     public void testGetRow() {
         RowIdentifier identifier = new DefaultRowIdentifier(0);
         Row row = table.getRow(identifier);
-        assertEquals(row.getRowIdentifier(), identifier);
+        Assert.assertEquals(row.getRowIdentifier(), identifier);
 
         List<String> columnNames = row.getColumnNames();
         assertEquals(columnNames.size(), 8);

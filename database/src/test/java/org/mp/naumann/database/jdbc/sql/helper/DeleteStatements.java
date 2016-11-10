@@ -1,8 +1,8 @@
 package org.mp.naumann.database.jdbc.sql.helper;
 
+import org.mp.naumann.database.statement.DeleteStatement;
 import org.mp.naumann.database.identifier.EmptyRowIdentifier;
 import org.mp.naumann.database.statement.DefaultDeleteStatement;
-import org.mp.naumann.database.statement.DeleteStatement;
 
 import java.util.HashMap;
 import java.util.Map;

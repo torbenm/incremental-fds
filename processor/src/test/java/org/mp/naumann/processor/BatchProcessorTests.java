@@ -4,8 +4,8 @@ import org.mp.naumann.processor.fake.FakeBatch;
 import org.mp.naumann.processor.fake.FakeBatchHandler;
 import org.mp.naumann.processor.handler.BatchHandler;
 import org.mp.naumann.processor.testhelper.BatchArrivedException;
-import org.mp.naumann.processor.testhelper.MakeSureImLastDatabaseBatchHandler;
 import org.mp.naumann.processor.testhelper.RegisteringBatchHandler;
+import org.mp.naumann.processor.testhelper.MakeSureImLastDatabaseBatchHandler;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

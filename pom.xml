@@ -11,7 +11,7 @@
         <module>processor</module>
         <module>utils</module>
         <module>algorithms</module>
-        <module>hyfd</module>
+        <module>algorithms-fd</module>
   </modules>
 
     <properties>

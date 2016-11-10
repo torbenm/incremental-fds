@@ -1,10 +1,10 @@
 package org.mp.naumann.processor.fake;
 
 import org.mp.naumann.database.statement.DeleteStatement;
+import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.UpdateStatement;
-import org.mp.naumann.processor.batch.Batch;
 
 import java.util.Iterator;
 import java.util.List;

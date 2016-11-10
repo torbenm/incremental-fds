@@ -1,14 +1,14 @@
 package org.mp.naumann.database.jdbc;
 
-import org.mp.naumann.database.Table;
 import org.mp.naumann.database.data.Column;
 import org.mp.naumann.database.data.GenericColumn;
 import org.mp.naumann.database.data.GenericRow;
 import org.mp.naumann.database.data.Row;
 import org.mp.naumann.database.identifier.DefaultRowIdentifier;
-import org.mp.naumann.database.identifier.RowIdentifier;
 import org.mp.naumann.database.identifier.RowIdentifierGroup;
 import org.mp.naumann.database.jdbc.sql.SqlQueryBuilder;
+import org.mp.naumann.database.Table;
+import org.mp.naumann.database.identifier.RowIdentifier;
 import org.mp.naumann.database.jdbc.sql.SqlTypeMap;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.StatementGroup;
