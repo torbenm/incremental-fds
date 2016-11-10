@@ -8,5 +8,10 @@ public class FakeSizeableBatchSource extends SizableBatchSource {
         super(tableName, batchSize);
     }
 
+	@Override
+	protected void start() {
+		
+	}
+
 
 }

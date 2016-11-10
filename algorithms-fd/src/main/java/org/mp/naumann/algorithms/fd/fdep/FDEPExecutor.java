@@ -3,7 +3,6 @@ package org.mp.naumann.algorithms.fd.fdep;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
-import org.mp.naumann.algorithms.fd.algorithms.RelationalInputGenerator;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
@@ -12,7 +11,6 @@ import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
-import org.mp.naumann.algorithms.fd.algorithms.RelationalInput;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
@@ -21,7 +19,6 @@ import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.database.data.Row;
 
 
-import java.util.Arrays;
 import java.util.List;
 
 public class FDEPExecutor implements FunctionalDependencyAlgorithm {

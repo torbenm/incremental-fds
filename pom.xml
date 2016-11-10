@@ -12,6 +12,7 @@
         <module>utils</module>
         <module>algorithms</module>
         <module>algorithms-fd</module>
+    <module>demo</module>
   </modules>
 
     <properties>

@@ -2,7 +2,7 @@ package org.mp.naumann.database.data;
 
 import java.util.Map;
 
-public interface Row extends HasColumns, Iterable<String> {
+public interface Row extends HasColumns<String>, Iterable<String> {
 
 	default String getValue(String columnName) {
 		return getValues().get(columnName);

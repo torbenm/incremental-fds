@@ -1,6 +1,6 @@
 package org.mp.naumann.algorithms.result;
 
-public interface ResultListener {
+public interface ResultListener<T> {
 
-    void receiveResult(AlgorithmResult result);
+    void receiveResult(T result);
 }

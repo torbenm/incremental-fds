@@ -28,9 +28,12 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
     public void startStreaming(){
         streaming = true;
         weakStream();
+        start();
     }
 
-    public void endStreaming(){
+    protected abstract void start();
+
+	public void endStreaming(){
         //Stream one last time
         streaming = false;
         forceStream();

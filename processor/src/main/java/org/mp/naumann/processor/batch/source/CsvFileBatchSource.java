@@ -16,61 +16,61 @@ import org.mp.naumann.database.statement.Statement;
 
 public class CsvFileBatchSource extends SizableBatchSource {
 
-    private final File csvFile;
+	private static final Charset CHARSET = Charset.defaultCharset();
 
-    private static final String ACTION_COLUMN_NAME = "::action";
-    private static final String RECORD_COLUMN_NAME = "::record";
+	private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withFirstRecordAsHeader();
 
-    public CsvFileBatchSource(String filePath, String tableName, int batchSize) {
-        this(new File(filePath), tableName, batchSize);
-    }
+	private final File csvFile;
 
-    public CsvFileBatchSource(File file, String tableName, int batchSize) {
-        super(tableName, batchSize);
-        this.csvFile = file;
-        readFile();
-    }
+	private static final String ACTION_COLUMN_NAME = "::action";
+	private static final String RECORD_COLUMN_NAME = "::record";
 
+	public CsvFileBatchSource(String filePath, String tableName, int batchSize) {
+		this(new File(filePath), tableName, batchSize);
+	}
 
-    private void readFile() {
-        CSVParser parser = null;
-        try {
-            parser = CSVParser.parse(csvFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withFirstRecordAsHeader());
+	public CsvFileBatchSource(File file, String tableName, int batchSize) {
+		super(tableName, batchSize);
+		this.csvFile = file;
+	}
 
-            for (CSVRecord csvRecord : parser) {
-                Map<String, String> values = csvRecord.toMap();
+	protected void start() {
+		try (CSVParser parser = CSVParser.parse(csvFile, CHARSET, FORMAT)) {
 
-                String action = csvRecord.get(ACTION_COLUMN_NAME);
+			for (CSVRecord csvRecord : parser) {
+				Map<String, String> values = csvRecord.toMap();
 
-                values.remove(ACTION_COLUMN_NAME);
-                values.remove(RECORD_COLUMN_NAME);
-                System.out.println(values);
-                Statement stmt = createStatement(action, values);
-                addStatement(getTableName(), stmt);
-            }
-            finishFilling();
+				String action = csvRecord.get(ACTION_COLUMN_NAME);
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+				values.remove(ACTION_COLUMN_NAME);
+				values.remove(RECORD_COLUMN_NAME);
+				System.out.println(values);
+				Statement stmt = createStatement(action, values);
+				addStatement(getTableName(), stmt);
+			}
+			finishFilling();
 
-    protected Statement createStatement(String type, Map<String, String> values){
-        switch(type.toLowerCase()){
-            case "insert":
-                return new DefaultInsertStatement(values, this.getTableName());
-            case "delete":
-                return new DefaultDeleteStatement(values, this.getTableName());
-            case "update":
-                Map<String, String> oldValues = new HashMap<>();
-                Map<String, String> newValues = new HashMap<>();
-                values.forEach((key, value) -> {
-                    oldValues.put(key, value.split("\\|")[0]);
-                    newValues.put(key, value.split("\\|")[1]);
-                });
-                return new DefaultUpdateStatement(newValues, oldValues, this.getTableName());
-            default:
-                return null; //TODO: need something better here
-        }
-    }
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	protected Statement createStatement(String type, Map<String, String> values) {
+		switch (type.toLowerCase()) {
+		case "insert":
+			return new DefaultInsertStatement(values, this.getTableName());
+		case "delete":
+			return new DefaultDeleteStatement(values, this.getTableName());
+		case "update":
+			Map<String, String> oldValues = new HashMap<>();
+			Map<String, String> newValues = new HashMap<>();
+			values.forEach((key, value) -> {
+				oldValues.put(key, value.split("\\|")[0]);
+				newValues.put(key, value.split("\\|")[1]);
+			});
+			return new DefaultUpdateStatement(newValues, oldValues, this.getTableName());
+		default:
+			return null; // TODO: need something better here
+		}
+	}
 }

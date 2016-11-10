@@ -3,24 +3,24 @@ package org.mp.naumann.algorithms.implementations;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.TreeSet;
 
 import org.mp.naumann.algorithms.InitialAlgorithm;
-import org.mp.naumann.algorithms.data.NoIntermediateDataStructure;
-import org.mp.naumann.algorithms.result.AlgorithmResult;
-import org.mp.naumann.algorithms.result.SingleResultSet;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Row;
 
-public class MedianInitialAlgorithm extends InitialAlgorithm<String, NoIntermediateDataStructure> {
+public class MedianInitialAlgorithm implements InitialAlgorithm<String, TreeSet<String>> {
 
 	private String column;
 	private String table;
+	private DataConnector dataConnector;
+	private TreeSet<String> tree;
 
 	public MedianInitialAlgorithm(DataConnector dataConnector, String table, String column) {
-		super(dataConnector);
+		this.dataConnector = dataConnector;
 		this.column = column;
 		this.table = table;
 	}
@@ -42,8 +42,8 @@ public class MedianInitialAlgorithm extends InitialAlgorithm<String, NoIntermedi
 	}
 
 	@Override
-	public AlgorithmResult<String, NoIntermediateDataStructure> execute() {
-		Table t = getDataConnector().getTable(table);
+	public String execute() {
+		Table t = dataConnector.getTable(table);
 		try (TableInput input = t.open()) {
 			return executeAlgorithm(input);
 		} catch (InputReadException e) {
@@ -51,15 +51,19 @@ public class MedianInitialAlgorithm extends InitialAlgorithm<String, NoIntermedi
 		}
 	}
 
-	protected AlgorithmResult<String, NoIntermediateDataStructure> executeAlgorithm(TableInput input) {
+	protected String executeAlgorithm(TableInput input) {
 		List<String> values = new ArrayList<>();
 		while (input.hasNext()) {
 			Row row = input.next();
 			values.add(row.getValue(column));
 		}
 		Collections.sort(values);
-		AlgorithmResult<String, NoIntermediateDataStructure> result = new AlgorithmResult<>();
-		result.setResultSet(new SingleResultSet<>(values.get(values.size() / 2)));
-		return result;
+		tree = new TreeSet<>(values);
+		return values.get(values.size() / 2);
+	}
+
+	@Override
+	public TreeSet<String> getIntermediateDataStructure() {
+		return tree;
 	}
 }
