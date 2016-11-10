@@ -13,10 +13,9 @@ public class FDDemo {
 	public static void main(String[] args) {
 
         DataConnector dc = new JdbcDataConnector("org.relique.jdbc.csv.CsvDriver", "jdbc:relique:csv:algorithms-fd/src/test/data");
-		InitialAlgorithm<FunctionalDependency, ?> hyfd = new FDInitialAlgorithm("hyfd", dc, "test");
+		InitialAlgorithm<FunctionalDependency, ?> hyfd = new FDInitialAlgorithm("hyfd", dc, "", "test");
 		ResultSet<FunctionalDependency> fds = hyfd.execute().getResultSet();
 		fds.forEach(System.out::println);
-
 	}
 
 }

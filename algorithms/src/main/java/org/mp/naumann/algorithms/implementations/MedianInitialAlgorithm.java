@@ -16,12 +16,12 @@ import org.mp.naumann.database.data.Row;
 
 public class MedianInitialAlgorithm extends InitialAlgorithm<String, NoIntermediateDataStructure> {
 
-	private String column;
-	private String table;
+	private String column, schema, table;
 
-	public MedianInitialAlgorithm(DataConnector dataConnector, String table, String column) {
+	public MedianInitialAlgorithm(DataConnector dataConnector, String schema, String table, String column) {
 		super(dataConnector);
 		this.column = column;
+		this.schema = schema;
 		this.table = table;
 	}
 
@@ -41,9 +41,13 @@ public class MedianInitialAlgorithm extends InitialAlgorithm<String, NoIntermedi
 		this.table = table;
 	}
 
+	public String getSchema() { return schema; }
+
+	public void setSchema(String Schema) { this.schema = Schema; }
+
 	@Override
 	public AlgorithmResult<String, NoIntermediateDataStructure> execute() {
-		Table t = getDataConnector().getTable(table);
+		Table t = getDataConnector().getTable(schema, table);
 		try (TableInput input = t.open()) {
 			return executeAlgorithm(input);
 		} catch (InputReadException e) {

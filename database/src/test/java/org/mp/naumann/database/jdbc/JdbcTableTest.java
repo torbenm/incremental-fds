@@ -20,8 +20,8 @@ public class JdbcTableTest extends JdbcTest {
 
 	@BeforeClass
 	public static void setUpTables() {
-		table = connector.getTable(testTableName);
-		invalidTable = connector.getTable("invalid");
+		table = connector.getTable(schema, testTableName);
+		invalidTable = connector.getTable("", "invalid");
 	}
 
 	@Test

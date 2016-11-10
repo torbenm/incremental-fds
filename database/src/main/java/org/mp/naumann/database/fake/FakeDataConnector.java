@@ -7,12 +7,12 @@ import org.mp.naumann.database.Table;
 
 public class FakeDataConnector implements DataConnector {
     @Override
-    public List<String> getTableNames() {
+    public List<String> getTableNames(String schema) {
         return null;
     }
 
     @Override
-    public Table getTable(String tableName) {
+    public Table getTable(String schema, String tableName) {
         return new FakeTable();
     }
 

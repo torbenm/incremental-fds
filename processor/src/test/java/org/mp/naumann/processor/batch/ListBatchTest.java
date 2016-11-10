@@ -19,7 +19,7 @@ public class ListBatchTest extends BatchTest {
             l.add(new FakeUpdateStatement());
         for(int i = 0; i < deletes; i++)
             l.add(new FakeDeleteStatement());
-        return new ListBatch(l,"demo");
+        return new ListBatch(l, "", "demo");
     }
 
     @Test

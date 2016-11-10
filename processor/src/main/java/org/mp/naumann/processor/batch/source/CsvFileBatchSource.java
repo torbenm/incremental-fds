@@ -21,12 +21,12 @@ public class CsvFileBatchSource extends SizableBatchSource {
     private static final String ACTION_COLUMN_NAME = "::action";
     private static final String RECORD_COLUMN_NAME = "::record";
 
-    public CsvFileBatchSource(String filePath, String tableName, int batchSize) {
-        this(new File(filePath), tableName, batchSize);
+    public CsvFileBatchSource(String filePath, String schema, String tableName, int batchSize) {
+        this(new File(filePath), schema, tableName, batchSize);
     }
 
-    public CsvFileBatchSource(File file, String tableName, int batchSize) {
-        super(tableName, batchSize);
+    public CsvFileBatchSource(File file, String schema, String tableName, int batchSize) {
+        super(schema, tableName, batchSize);
         this.csvFile = file;
         readFile();
     }

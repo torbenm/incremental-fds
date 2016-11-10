@@ -14,6 +14,7 @@ public class JdbcTest {
     private static final String testPath = "src/test/data/csv_test";
     private static final File testDir = new File(testPath);
     protected static final String testTableName = "test";
+    protected static final String schema = "";
     static DataConnector connector;
 
     @BeforeClass
