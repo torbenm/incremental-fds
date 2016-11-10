@@ -1,5 +1,6 @@
 package org.mp.naumann;
 
+import org.mp.naumann.database.jdbc.ConnectionInfo;
 import org.mp.naumann.database.jdbc.JdbcDataConnector;
 import org.mp.naumann.processor.BatchProcessor;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
@@ -22,8 +23,11 @@ public class Demo {
 
 	public static void main(String[] args) {
 		StreamableBatchSource batchSource = new CsvFileBatchSource(BATCH_FILE, SCHEMA, TABLE, BATCH_SIZE);
-		JdbcDataConnector dataConnector = new JdbcDataConnector(DRIVER_NAME,
-				"jdbc:" + PROTOCOL + "//" + HOST + ":" + PORT + "/" + DATABASE);
+		ConnectionInfo info = new ConnectionInfo();
+		info.connectionString = "jdbc:" + PROTOCOL + "//" + HOST + ":" + PORT + "/" + DATABASE;
+		info.user = "";
+		info.pass = "";
+		JdbcDataConnector dataConnector = new JdbcDataConnector(DRIVER_NAME, info);
 		DatabaseBatchHandler databaseBatchHandler = new PassThroughDatabaseBatchHandler(dataConnector);
 		BatchProcessor bp = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 		bp.addBatchHandler(null);

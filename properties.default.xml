@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment/>
+<entry key="database">mpws2016n1</entry>
+<entry key="user">postgres</entry>
+<entry key="port">5432</entry>
+<entry key="pass"></entry>
+</properties>

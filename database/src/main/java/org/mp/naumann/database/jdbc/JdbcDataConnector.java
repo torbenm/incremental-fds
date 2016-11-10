@@ -14,15 +14,15 @@ import org.mp.naumann.database.Table;
 public class JdbcDataConnector implements DataConnector {
 
     private Connection conn;
-    private String connectionString;
+    private ConnectionInfo ci;
 
-    public JdbcDataConnector(String className, String connectionString) {
+    public JdbcDataConnector(String className, ConnectionInfo connectionInfo) {
         try {
             Class.forName(className);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-        this.connectionString = connectionString;
+        this.ci = connectionInfo;
         connect();
     }
 
@@ -47,7 +47,7 @@ public class JdbcDataConnector implements DataConnector {
 
     public void connect() {
         try {
-            conn = DriverManager.getConnection(connectionString);
+            conn = DriverManager.getConnection(ci.connectionString, ci.user, ci.pass);
         } catch (SQLException e) {
             e.printStackTrace();
         }
