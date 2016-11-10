@@ -2,6 +2,7 @@ package org.mp.naumann.algorithms.fd.fdep;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
+import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.algorithms.RelationalInputGenerator;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.InputReadException;
@@ -23,7 +24,7 @@ import org.mp.naumann.database.data.Row;
 import java.util.Arrays;
 import java.util.List;
 
-public class FDEPExecutor {
+public class FDEPExecutor implements FunctionalDependencyAlgorithm {
 
 	private Table table = null;
 	private FunctionalDependencyResultReceiver resultReceiver = null;

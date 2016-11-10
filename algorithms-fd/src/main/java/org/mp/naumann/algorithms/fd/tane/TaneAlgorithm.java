@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.objects.ObjectBigArrayBigList;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.AlgorithmExecutionException;
+import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
@@ -18,7 +19,7 @@ import org.mp.naumann.database.data.Row;
 
 import java.util.List;
 
-public class TaneAlgorithm {
+public class TaneAlgorithm implements FunctionalDependencyAlgorithm {
 
 	private Table table;
 	private String tableName;

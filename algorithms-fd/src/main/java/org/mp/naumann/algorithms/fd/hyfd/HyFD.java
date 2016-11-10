@@ -3,6 +3,7 @@ package org.mp.naumann.algorithms.fd.hyfd;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.mp.naumann.algorithms.AlgorithmExecutionException;
+import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
@@ -24,7 +25,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class HyFD {
+public class HyFD implements FunctionalDependencyAlgorithm {
 
 	private Table table = null;
 	private FunctionalDependencyResultReceiver resultReceiver = null;
