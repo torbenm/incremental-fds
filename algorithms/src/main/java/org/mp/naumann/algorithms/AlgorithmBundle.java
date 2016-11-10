@@ -2,29 +2,28 @@ package org.mp.naumann.algorithms;
 
 import org.mp.naumann.processor.BatchProcessor;
 
-public abstract class AlgorithmBundle {
+public abstract class AlgorithmBundle<T, R> {
 
-    private final InitialAlgorithm initialAlgorithm;
-    private final IncrementalAlgorithm incrementalAlgorithm;
+    private final InitialAlgorithm<T, R> initialAlgorithm;
+    private final IncrementalAlgorithm<T, R> incrementalAlgorithm;
 
-    public AlgorithmBundle(InitialAlgorithm initialAlgorithm, IncrementalAlgorithm incrementalAlgorithm) {
+    public AlgorithmBundle(InitialAlgorithm<T, R> initialAlgorithm, IncrementalAlgorithm<T, R> incrementalAlgorithm) {
         this.initialAlgorithm = initialAlgorithm;
         this.incrementalAlgorithm = incrementalAlgorithm;
 
-        incrementalAlgorithm.setIntermediateDataStructure(initialAlgorithm.getIntermediateDataStructure());
-
     }
 
-    public InitialAlgorithm getInitialAlgorithm() {
+    public InitialAlgorithm<T, R> getInitialAlgorithm() {
         return initialAlgorithm;
     }
 
-    public IncrementalAlgorithm getIncrementalAlgorithm() {
+    public IncrementalAlgorithm<T, R> getIncrementalAlgorithm() {
         return incrementalAlgorithm;
     }
 
     public void executeInitialAlgorithm(){
         initialAlgorithm.execute();
+        incrementalAlgorithm.setIntermediateDataStructure(initialAlgorithm.getIntermediateDataStructure());
     }
 
     public void attachToBatchProcessor(BatchProcessor batchProcessor){

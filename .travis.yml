@@ -4,3 +4,7 @@ jdk:
 
 notifications:
   slack: hpi:80ADsgr1HVUFL8Q3IoDw3gSu
+
+cache:
+  directories:
+  - $HOME/.m2

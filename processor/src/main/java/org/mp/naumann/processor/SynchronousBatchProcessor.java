@@ -8,7 +8,7 @@ import org.mp.naumann.processor.batch.source.BatchSource;
 import org.mp.naumann.processor.handler.BatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
-public class SynchronousBatchProcessor extends BatchProcessor<List<BatchHandler>> {
+public class SynchronousBatchProcessor extends BatchProcessor {
 
     public SynchronousBatchProcessor(BatchSource batchSource, DatabaseBatchHandler databaseBatchHandler) {
         super(batchSource, databaseBatchHandler);

@@ -1,5 +1,4 @@
 package org.mp.naumann.algorithms.implementations;
-
 import com.opentable.db.postgres.embedded.DatabasePreparer;
 import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
 import com.opentable.db.postgres.junit.PreparedDbRule;
@@ -7,16 +6,16 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.mp.naumann.algorithms.result.ResultSet;
+import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.jdbc.JdbcDataConnector;
 import org.mp.naumann.database.utils.PostgresConnectionPreparer;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-
-import static junit.framework.TestCase.assertEquals;
 
 public class MedianInitialAlgorithmTest {
 
@@ -40,13 +39,13 @@ public class MedianInitialAlgorithmTest {
 
     @Test
     public void testExecute(){
-        ResultSet<String> result = algorithm.execute().getResultSet();
-        assertEquals("3286936", result.iterator().next());
+        String result = algorithm.execute();
+        assertEquals("3286936", result);
     }
 
     @AfterClass
-    public static void tearDownOnce() {
-        dataConnector.disconnect();
+    public static void tearDownOnce() throws ConnectionException {
+        dataConnector.close();
     }
 
 }

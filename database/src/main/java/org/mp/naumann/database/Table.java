@@ -6,7 +6,7 @@ import org.mp.naumann.database.data.HasName;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.StatementGroup;
 
-public interface Table extends HasName, HasColumns {
+public interface Table extends HasName, HasColumns<String> {
 
     long getRowCount();
 
