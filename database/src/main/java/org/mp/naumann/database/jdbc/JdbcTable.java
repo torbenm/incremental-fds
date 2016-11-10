@@ -1,6 +1,6 @@
 package org.mp.naumann.database.jdbc;
 
-import org.mp.naumann.database.*;
+import org.mp.naumann.database.Table;
 import org.mp.naumann.database.data.Column;
 import org.mp.naumann.database.data.GenericColumn;
 import org.mp.naumann.database.data.GenericRow;
@@ -12,14 +12,15 @@ import org.mp.naumann.database.jdbc.sql.SqlQueryBuilder;
 import org.mp.naumann.database.jdbc.sql.SqlTypeMap;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.StatementGroup;
-import static org.mp.naumann.utils.GenericHelper.cast;
-import static org.mp.naumann.utils.GenericHelper.createGenericMap;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.mp.naumann.utils.GenericHelper.cast;
+import static org.mp.naumann.utils.GenericHelper.createGenericMap;
 
 class JdbcTable implements Table {
 

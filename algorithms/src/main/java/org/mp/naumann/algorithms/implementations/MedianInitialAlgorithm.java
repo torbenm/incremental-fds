@@ -5,11 +5,9 @@ import org.mp.naumann.algorithms.result.AlgorithmResult;
 import org.mp.naumann.algorithms.result.SimpleObjectResultSet;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.data.Column;
-import org.mp.naumann.database.utils.ColumnUtils;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 public class MedianInitialAlgorithm extends InitialAlgorithm {
 

@@ -2,7 +2,6 @@ package org.mp.naumann.database.fake;
 
 import org.mp.naumann.database.identifier.RowIdentifier;
 import org.mp.naumann.database.statement.InsertStatement;
-import org.mp.naumann.database.statement.Statement;
 
 import java.util.Map;
 
