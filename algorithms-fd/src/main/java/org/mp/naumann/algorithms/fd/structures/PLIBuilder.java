@@ -38,6 +38,15 @@ public class PLIBuilder {
 		return this.fetchPositionListIndexes(clusterMaps, isNullEqualNull);
 	}
 
+	/**
+	 * Calculates the clusterMap for each column of a given relation.
+	 * A clusterMap is a mapping of attributes (by position in the relation, e.g. 0 - n)
+	 * to attribute values to record identifiers.
+	 *
+	 * @param relationalInput the iterable relation, e.g. a DB table
+	 * @param numAttributes the number of attributes in the given relation
+	 * @return the list of clusterMaps, as described above
+	 */
 	private List<HashMap<String, IntArrayList>> calculateClusterMaps(RelationalInput relationalInput, int numAttributes) {
 		List<HashMap<String, IntArrayList>> clusterMaps = new ArrayList<>();
 		for (int i = 0; i < numAttributes; i++)
@@ -113,7 +122,15 @@ public class PLIBuilder {
 		
 		return clusterMaps;
 	}
-	
+
+	/**
+	 * Creates the actual positionListIndices based on the clusterMaps calculated beforehand.
+	 * Clusters of size 1 are being discarded in the process.
+	 *
+	 * @param clusterMaps see calculateClusterMaps
+	 * @param isNullEqualNull determines how to handle NULL values in the data
+	 * @return clustersPerAttribute,
+	 */
 	private static List<PositionListIndex> fetchPositionListIndexesStatic(
 			List<HashMap<String, IntArrayList>> clusterMaps, boolean isNullEqualNull) {
 
