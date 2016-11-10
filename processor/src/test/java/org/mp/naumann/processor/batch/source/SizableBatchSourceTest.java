@@ -1,12 +1,14 @@
 package org.mp.naumann.processor.batch.source;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mp.naumann.database.fake.FakeDeleteStatement;
 import org.mp.naumann.processor.batch.source.helper.ExceptionThrowingBatchSourceListener;
 import org.mp.naumann.processor.fake.FakeSizeableBatchSource;
-
-import static org.junit.Assert.*;
 
 public class SizableBatchSourceTest {
 

@@ -1,15 +1,13 @@
 package org.mp.naumann.database.statement;
 
-import org.mp.naumann.database.identifier.RowIdentifier;
-
 import java.util.Map;
 
 public class DefaultUpdateStatement extends StatementBase implements UpdateStatement {
 
     private final Map<String, String> oldValueMap;
 
-    public DefaultUpdateStatement(Map<String, String> map, Map<String, String> oldValueMap, RowIdentifier rowIdentifier, String tableName) {
-        super(map, rowIdentifier, tableName);
+    public DefaultUpdateStatement(Map<String, String> map, Map<String, String> oldValueMap, String tableName) {
+        super(map, tableName);
         this.oldValueMap = oldValueMap;
     }
 

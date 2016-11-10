@@ -1,35 +1,26 @@
 package org.mp.naumann.database.data;
 
-import org.mp.naumann.database.identifier.RowIdentifier;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class GenericRow implements Row {
 
-    private Map<String, Object> values;
-    private RowIdentifier rowIdentifier;
+	private final Map<String, String> values;
+	private final List<Column<String>> columns;
 
-    public GenericRow(RowIdentifier rowIdentifier, Map<String, Object> values) {
-        this.rowIdentifier = rowIdentifier;
-        this.values = values;
-    }
+	public GenericRow(Map<String, String> values, List<Column<String>> columns) {
+		this.values = values;
+		this.columns = columns;
+	}
 
-    public List<String> getColumnNames() {
-        return new ArrayList<>(values.keySet());
-    }
+	@Override
+	public Map<String, String> getValues() {
+		return values;
+	}
 
-    public List<Object> toList() {
-        return new ArrayList<>(values.values());
-    }
+	@Override
+	public List<Column<String>> getColumns() {
+		return columns;
+	}
 
-    @Override
-    public Map<String, Object> getValues() {
-        return values;
-    }
-
-    public Object getValue(String id) { return values.get(id); }
-
-    public RowIdentifier getRowIdentifier() { return rowIdentifier; }
 }

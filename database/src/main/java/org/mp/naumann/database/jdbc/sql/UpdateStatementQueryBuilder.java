@@ -1,9 +1,9 @@
 package org.mp.naumann.database.jdbc.sql;
 
-import org.mp.naumann.database.statement.UpdateStatement;
-
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.mp.naumann.database.statement.UpdateStatement;
 
 public class UpdateStatementQueryBuilder implements StatementQueryBuilder<UpdateStatement> {
 

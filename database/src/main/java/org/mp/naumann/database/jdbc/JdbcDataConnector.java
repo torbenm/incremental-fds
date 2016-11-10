@@ -1,11 +1,15 @@
 package org.mp.naumann.database.jdbc;
 
-import org.mp.naumann.database.DataConnector;
-import org.mp.naumann.database.Table;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.mp.naumann.database.DataConnector;
+import org.mp.naumann.database.Table;
 
 public class JdbcDataConnector implements DataConnector {
 

@@ -1,15 +1,10 @@
 package org.mp.naumann.database.fake;
 
-import org.mp.naumann.database.identifier.RowIdentifier;
-import org.mp.naumann.database.statement.InsertStatement;
-
 import java.util.Map;
 
+import org.mp.naumann.database.statement.InsertStatement;
+
 public class FakeInsertStatement implements InsertStatement {
-    @Override
-    public RowIdentifier getRowIdentifier() {
-        return null;
-    }
 
     @Override
     public String getTableName() {

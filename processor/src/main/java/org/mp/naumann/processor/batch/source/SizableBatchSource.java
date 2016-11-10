@@ -1,11 +1,11 @@
 package org.mp.naumann.processor.batch.source;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.ListBatch;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class SizableBatchSource extends AbstractBatchSource implements StreamableBatchSource{
 

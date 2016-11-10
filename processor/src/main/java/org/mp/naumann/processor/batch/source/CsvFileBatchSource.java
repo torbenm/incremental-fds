@@ -1,20 +1,18 @@
 package org.mp.naumann.processor.batch.source;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.mp.naumann.database.identifier.DefaultRowIdentifier;
-import org.mp.naumann.database.identifier.RowIdentifier;
-import org.mp.naumann.database.statement.DefaultDeleteStatement;
-import org.mp.naumann.database.statement.DefaultInsertStatement;
-import org.mp.naumann.database.statement.DefaultUpdateStatement;
-import org.mp.naumann.database.statement.Statement;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.mp.naumann.database.statement.DefaultDeleteStatement;
+import org.mp.naumann.database.statement.DefaultInsertStatement;
+import org.mp.naumann.database.statement.DefaultUpdateStatement;
+import org.mp.naumann.database.statement.Statement;
 
 public class CsvFileBatchSource extends SizableBatchSource {
 
@@ -43,13 +41,11 @@ public class CsvFileBatchSource extends SizableBatchSource {
                 Map<String, String> values = csvRecord.toMap();
 
                 String action = csvRecord.get(ACTION_COLUMN_NAME);
-                int record = Integer.parseInt(csvRecord.get(RECORD_COLUMN_NAME));
-                RowIdentifier rowId = new DefaultRowIdentifier(record);
 
                 values.remove(ACTION_COLUMN_NAME);
                 values.remove(RECORD_COLUMN_NAME);
                 System.out.println(values);
-                Statement stmt = createStatement(action, values, rowId);
+                Statement stmt = createStatement(action, values);
                 addStatement(getTableName(), stmt);
             }
             finishFilling();
@@ -59,12 +55,12 @@ public class CsvFileBatchSource extends SizableBatchSource {
         }
     }
 
-    protected Statement createStatement(String type, Map<String, String> values, RowIdentifier rowIdentifier){
+    protected Statement createStatement(String type, Map<String, String> values){
         switch(type.toLowerCase()){
             case "insert":
-                return new DefaultInsertStatement(values, rowIdentifier, this.getTableName());
+                return new DefaultInsertStatement(values, this.getTableName());
             case "delete":
-                return new DefaultDeleteStatement(values, rowIdentifier, this.getTableName());
+                return new DefaultDeleteStatement(values, this.getTableName());
             case "update":
                 Map<String, String> oldValues = new HashMap<>();
                 Map<String, String> newValues = new HashMap<>();
@@ -72,7 +68,7 @@ public class CsvFileBatchSource extends SizableBatchSource {
                     oldValues.put(key, value.split("\\|")[0]);
                     newValues.put(key, value.split("\\|")[1]);
                 });
-                return new DefaultUpdateStatement(newValues, oldValues, rowIdentifier, this.getTableName());
+                return new DefaultUpdateStatement(newValues, oldValues, this.getTableName());
             default:
                 return null; //TODO: need something better here
         }

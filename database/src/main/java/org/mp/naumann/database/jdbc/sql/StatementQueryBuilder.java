@@ -1,8 +1,8 @@
 package org.mp.naumann.database.jdbc.sql;
 
-import org.mp.naumann.database.statement.Statement;
-
 import java.util.List;
+
+import org.mp.naumann.database.statement.Statement;
 
 public interface StatementQueryBuilder<T extends Statement> {
 

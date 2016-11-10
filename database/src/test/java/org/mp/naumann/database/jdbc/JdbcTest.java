@@ -1,13 +1,13 @@
 package org.mp.naumann.database.jdbc;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.PrintStream;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mp.naumann.database.DataConnector;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.PrintStream;
 
 @SuppressWarnings("WeakerAccess")
 public class JdbcTest {

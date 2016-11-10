@@ -1,5 +1,8 @@
 package org.mp.naumann.algorithms;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.mp.naumann.algorithms.data.IntermediateDataStructure;
 import org.mp.naumann.algorithms.result.AlgorithmResult;
 import org.mp.naumann.algorithms.result.ResultListener;
@@ -7,9 +10,6 @@ import org.mp.naumann.algorithms.result.ResultSet;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.handler.BatchHandler;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public abstract class IncrementalAlgorithm implements Algorithm, BatchHandler {
 
