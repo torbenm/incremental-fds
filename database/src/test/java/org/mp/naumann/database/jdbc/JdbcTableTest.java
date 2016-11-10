@@ -4,11 +4,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.data.Column;
+import org.mp.naumann.database.data.Row;
 import org.mp.naumann.database.identifier.DefaultRowIdentifier;
+import org.mp.naumann.database.identifier.RowIdentifier;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class JdbcTableTest extends JdbcTest {
 
@@ -60,5 +63,28 @@ public class JdbcTableTest extends JdbcTest {
         // check properties of non-existing column
         Column<?> invalidCol = table.getColumn("invalid");
         assertEquals(invalidCol, null);
+    }
+
+    @Test
+    public void testGetRow() {
+        RowIdentifier identifier = new DefaultRowIdentifier(0);
+        Row row = table.getRow(identifier);
+        assertEquals(row.getRowIdentifier(), identifier);
+
+        List<String> columnNames = row.getColumnNames();
+        assertEquals(columnNames.size(), 8);
+        assertTrue(columnNames.contains("DiscoveredBy"));
+
+        assertEquals(row.getValue("Name"), "Moon");
+        assertEquals(row.getValue("Planet"), "Earth");
+        assertEquals(row.getValues().get("Name"), "Moon");
+        assertTrue(row.toList().contains("I"));
+
+        assertEquals(table.getRow(new DefaultRowIdentifier(200)), null);
+    }
+
+    @Test
+    public void testExecute() {
+        // not implemented atm because the JDBC CSV driver only supports SELECT
     }
 }

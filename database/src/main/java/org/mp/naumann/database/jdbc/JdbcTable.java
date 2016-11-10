@@ -74,7 +74,10 @@ class JdbcTable implements Table {
                         values.put(md.getColumnName(i), rs.getObject(i));
                     }
                 }
-                return new GenericRow(rowIdentifier, values);
+                if (values.size() > 0)
+                    return new GenericRow(rowIdentifier, values);
+                else
+                    return null;
             }
         } catch (Exception e) {
             e.printStackTrace();
