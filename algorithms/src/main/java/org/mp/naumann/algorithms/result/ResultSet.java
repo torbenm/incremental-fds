@@ -1,4 +1,5 @@
 package org.mp.naumann.algorithms.result;
 
-public interface ResultSet {
+public interface ResultSet<T> extends Iterable<T> {
+
 }

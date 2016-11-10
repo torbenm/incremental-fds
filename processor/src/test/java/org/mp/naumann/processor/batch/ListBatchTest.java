@@ -19,15 +19,15 @@ public class ListBatchTest extends BatchTest {
             l.add(new FakeUpdateStatement());
         for(int i = 0; i < deletes; i++)
             l.add(new FakeDeleteStatement());
-        return new ListBatch(l,"demo");
+        return new ListBatch(l, "", "demo");
     }
 
     @Test
     public void testSize(){
-        testSize(getListBatch(10, 7, 8));
-        testSize(getListBatch(0,0,0));
-        testSize(getListBatch(1, 0, 0));
-        testSize(getListBatch(1, 0, 1));
+        checkBatchSize(getListBatch(10, 7, 8));
+        checkBatchSize(getListBatch(0,0,0));
+        checkBatchSize(getListBatch(1, 0, 0));
+        checkBatchSize(getListBatch(1, 0, 1));
     }
 
 }

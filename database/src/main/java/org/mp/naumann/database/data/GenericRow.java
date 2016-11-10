@@ -1,5 +1,6 @@
 package org.mp.naumann.database.data;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +15,11 @@ public class GenericRow implements Row {
 	}
 
 	@Override
+	public String getValue(int columnIndex) {
+		return getValue(columns.get(columnIndex));
+	}
+
+	@Override
 	public Map<String, String> getValues() {
 		return values;
 	}
@@ -23,4 +29,8 @@ public class GenericRow implements Row {
 		return columns;
 	}
 
+	@Override
+	public Iterator<String> iterator() {
+		return columns.stream().map(this::getValue).iterator();
+	}
 }

@@ -14,23 +14,23 @@ import org.mp.naumann.database.Table;
 public class JdbcDataConnector implements DataConnector {
 
     private Connection conn;
-    private String connectionString;
+    private ConnectionInfo ci;
 
-    public JdbcDataConnector(String className, String connectionString) {
+    public JdbcDataConnector(String className, ConnectionInfo connectionInfo) {
         try {
             Class.forName(className);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-        this.connectionString = connectionString;
+        this.ci = connectionInfo;
         connect();
     }
 
-    public List<String> getTableNames() {
+    public List<String> getTableNames(String schema) {
         List<String> result = new ArrayList<>();
         try {
             DatabaseMetaData md = conn.getMetaData();
-            try (ResultSet rs = md.getTables(null, null, "%", null)) {
+            try (ResultSet rs = md.getTables(null, schema, "%", null)) {
                 while (rs.next()) {
                     result.add(rs.getString(3));
                 }
@@ -41,13 +41,13 @@ public class JdbcDataConnector implements DataConnector {
         return result;
     }
 
-    public Table getTable(String tableName) {
-        return new JdbcTable(tableName, conn);
+    public Table getTable(String schema, String tableName) {
+        return new JdbcTable(schema, tableName, conn);
     }
 
     public void connect() {
         try {
-            conn = DriverManager.getConnection(connectionString);
+            conn = DriverManager.getConnection(ci.connectionString, ci.user, ci.pass);
         } catch (SQLException e) {
             e.printStackTrace();
         }

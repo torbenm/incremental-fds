@@ -2,24 +2,35 @@ package org.mp.naumann.algorithms.result;
 
 import org.mp.naumann.algorithms.data.IntermediateDataStructure;
 
-public class AlgorithmResult {
+public class AlgorithmResult<T, R extends IntermediateDataStructure> {
 
-    private ResultSet resultSet;
-    private IntermediateDataStructure intermediateDataStructure;
+    private ResultSet<T> resultSet;
+    private R intermediateDataStructure;
 
-    public ResultSet getResultSet() {
-        return resultSet;
-    }
+    public AlgorithmResult(){}
 
-    public void setResultSet(ResultSet resultSet) {
+    public AlgorithmResult(ResultSet<T> resultSet) {
         this.resultSet = resultSet;
     }
 
-    public IntermediateDataStructure getIntermediateDataStructure() {
+    public AlgorithmResult(ResultSet<T> resultSet, R intermediateDataStructure) {
+        this.resultSet = resultSet;
+        this.intermediateDataStructure = intermediateDataStructure;
+    }
+
+    public ResultSet<T> getResultSet() {
+        return resultSet;
+    }
+
+    public void setResultSet(ResultSet<T> resultSet) {
+        this.resultSet = resultSet;
+    }
+
+    public R getIntermediateDataStructure() {
         return intermediateDataStructure;
     }
 
-    public void setIntermediateDataStructure(IntermediateDataStructure intermediateDataStructure) {
+    public void setIntermediateDataStructure(R intermediateDataStructure) {
         this.intermediateDataStructure = intermediateDataStructure;
     }
 }

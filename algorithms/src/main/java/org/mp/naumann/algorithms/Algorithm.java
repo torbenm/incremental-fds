@@ -3,8 +3,8 @@ package org.mp.naumann.algorithms;
 import org.mp.naumann.algorithms.data.IntermediateDataStructure;
 import org.mp.naumann.algorithms.result.ResultSet;
 
-public interface Algorithm {
+public interface Algorithm<T, R extends IntermediateDataStructure> {
 
-    ResultSet getResultSet();
-    IntermediateDataStructure getIntermediateDataStructure();
+    ResultSet<T> getResultSet();
+    R getIntermediateDataStructure();
 }

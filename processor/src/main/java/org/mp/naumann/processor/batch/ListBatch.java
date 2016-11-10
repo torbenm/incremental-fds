@@ -12,9 +12,10 @@ import org.mp.naumann.database.statement.UpdateStatement;
 public class ListBatch implements Batch {
 
     private final List<Statement> statements;
-    private final String tableName;
+    private final String schema, tableName;
 
-    public ListBatch(List<Statement> statements, String tableName) {
+    public ListBatch(List<Statement> statements, String schema, String tableName) {
+        this.schema = schema;
         this.statements = statements;
         this.tableName = tableName;
     }
@@ -28,6 +29,8 @@ public class ListBatch implements Batch {
     public String getTableName() {
         return tableName;
     }
+
+    public String getSchema() { return schema; }
 
     @Override
     public List<InsertStatement> getInsertStatements() {

@@ -1,8 +1,9 @@
 package org.mp.naumann.database.jdbc;
 
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
-
+import org.junit.rules.ExpectedException;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
@@ -12,7 +13,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class JdbcTableTest extends JdbcTest {
 
@@ -20,34 +20,34 @@ public class JdbcTableTest extends JdbcTest {
 
 	@BeforeClass
 	public static void setUpTables() {
-		table = connector.getTable(testTableName);
-		invalidTable = connector.getTable("invalid");
+		table = connector.getTable(schema, tableName);
+		invalidTable = connector.getTable("", "invalid");
 	}
 
 	@Test
 	public void testProperties() {
-		assertEquals(table.getName(), testTableName);
+		assertEquals(table.getName(), tableName);
 	}
 
 	@Test
 	public void testGetColumnNames() {
 		List<String> columnNames = table.getColumnNames();
-		assertEquals(columnNames.size(), 8);
-		assertEquals(columnNames.get(0), "Numeral");
-		assertEquals(invalidTable.getColumnNames().size(), 0);
+		assertEquals(17, columnNames.size());
+		assertEquals("country_en", columnNames.get(0));
+		assertEquals(0, invalidTable.getColumnNames().size());
 	}
 
 	@Test
 	public void testGetRowCount() {
-		assertEquals(table.getRowCount(), 173);
+		assertEquals(table.getRowCount(), 248);
 		assertEquals(invalidTable.getRowCount(), -1);
 	}
 
 	@Test
 	public void testGetColumn() {
 		// retrieve column and check properties
-		Column<?> col = table.getColumn("Name");
-		assertEquals(col.getName(), "Name");
+		Column<?> col = table.getColumn("country_en");
+		assertEquals(col.getName(), "country_en");
 		assertEquals(col.getType(), String.class);
 
 		// check properties of non-existing column
@@ -69,19 +69,20 @@ public class JdbcTableTest extends JdbcTest {
 				i++;
 			}
 		}
-		assertEquals(173, i);
+		assertEquals(248, i);
 	}
+
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
 
 	@Test
 	public void testWrongInputIteration() throws InputReadException {
+		thrown.expect(NoSuchElementException.class);
 		try (TableInput input = table.open()) {
-			for (int i = 0; i < 174; i++) {
+			for (int i = 0; i < 249; i++) {
 				input.next();
 			}
-		} catch (NoSuchElementException e) {
-			return;
 		}
-		fail();
 	}
 
 }

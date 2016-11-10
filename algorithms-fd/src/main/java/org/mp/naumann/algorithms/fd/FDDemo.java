@@ -1,34 +1,21 @@
 package org.mp.naumann.algorithms.fd;
 
-import org.mp.naumann.algorithms.AlgorithmExecutionException;
-import org.mp.naumann.algorithms.fd.algorithms.CSVRelationalInputGenerator;
-import org.mp.naumann.algorithms.fd.algorithms.PrintResultReceiver;
-import org.mp.naumann.algorithms.fd.algorithms.RelationalInputGenerator;
-import org.mp.naumann.algorithms.fd.fdep.FDEPExecutor;
-import org.mp.naumann.algorithms.fd.hyfd.HyFD;
-import org.mp.naumann.algorithms.fd.tane.TaneAlgorithm;
+import org.mp.naumann.algorithms.InitialAlgorithm;
+import org.mp.naumann.algorithms.result.ResultSet;
+import org.mp.naumann.database.DataConnector;
+import org.mp.naumann.database.jdbc.JdbcDataConnector;
+import org.mp.naumann.database.utils.PostgresConnection;
 
-import java.io.File;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 public class FDDemo {
 
-	public static void main(String[] args) throws AlgorithmExecutionException {
-		RelationalInputGenerator inputGenerator = new CSVRelationalInputGenerator(new File("data.csv"));
-		FunctionalDependencyResultReceiver resultReceiver = new PrintResultReceiver();
-
-		System.out.println("HyFD");
-		HyFD hyfd = new HyFD(inputGenerator, resultReceiver);
-		hyfd.execute();
-		System.out.println();
-
-		System.out.println("TANE");
-		TaneAlgorithm tane = new TaneAlgorithm(inputGenerator, resultReceiver);
-		tane.execute();
-		System.out.println();
-
-		System.out.println("FDEP");
-		FDEPExecutor fdep = new FDEPExecutor(inputGenerator, resultReceiver);
-		fdep.execute();
+	public static void main(String[] args) {
+        DataConnector dc = new JdbcDataConnector("org.postgresql.Driver", PostgresConnection.getConnectionInfo());
+		InitialAlgorithm<FunctionalDependency, ?> hyfd = new FDInitialAlgorithm("hyfd", dc, "test", "countries");
+		ResultSet<FunctionalDependency> fds = hyfd.execute().getResultSet();
+		fds.forEach(System.out::println);
 	}
 
 }

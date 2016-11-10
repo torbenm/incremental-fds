@@ -5,10 +5,10 @@ import org.mp.naumann.algorithms.result.ResultSet;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.algorithms.result.AlgorithmResult;
 
-public abstract class InitialAlgorithm implements Algorithm {
+public abstract class InitialAlgorithm<T, R extends IntermediateDataStructure> implements Algorithm<T, R> {
 
-    private ResultSet resultSet;
-    private IntermediateDataStructure intermediateDataStructure;
+    private ResultSet<T> resultSet;
+    private R intermediateDataStructure;
     private final DataConnector dataConnector;
 
     public InitialAlgorithm(DataConnector dataConnector) {
@@ -19,23 +19,23 @@ public abstract class InitialAlgorithm implements Algorithm {
         return dataConnector;
     }
 
-    protected void setResultSet(ResultSet resultSet) {
+    protected void setResultSet(ResultSet<T> resultSet) {
         this.resultSet = resultSet;
     }
 
-    protected void setIntermediateDataStructure(IntermediateDataStructure intermediateDataStructure) {
+    protected void setIntermediateDataStructure(R intermediateDataStructure) {
         this.intermediateDataStructure = intermediateDataStructure;
     }
 
     @Override
-    public ResultSet getResultSet() {
+    public ResultSet<T> getResultSet() {
         return resultSet;
     }
 
     @Override
-    public IntermediateDataStructure getIntermediateDataStructure() {
+    public R getIntermediateDataStructure() {
         return intermediateDataStructure;
     }
 
-    public abstract AlgorithmResult execute();
+    public abstract AlgorithmResult<T, R> execute();
 }

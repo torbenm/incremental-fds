@@ -1,12 +1,15 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 
 class Inductor {
 
+	private final static Logger LOG = Logger.getLogger(HyFD.class.getName());
+	
 	private FDSet negCover;
 	private FDTree posCover;
 	private MemoryGuardian memoryGuardian;
@@ -18,20 +21,7 @@ class Inductor {
 	}
 
 	public void updatePositiveCover(FDList nonFds) {
-/*		if (nonFds.isEmpty())
-			return;
-		
-		// Sort the negative cover
-		System.out.println("Sorting FD-violations ...");
-		Collections.sort(nonFds, new Comparator<OpenBitSet>() {
-			@Override
-			public int compare(OpenBitSet o1, OpenBitSet o2) {
-				return (int)(o1.cardinality() - o2.cardinality());
-			}
-		});
-*/		// THE SORTING IS NOT NEEDED AS THE UCCSet SORTS THE NONUCCS BY LEVEL ALREADY
-		
-		System.out.println("Inducing FD candidates ...");
+		LOG.info("Inducing FD candidates ...");
 		for (int i = nonFds.getFdLevels().size() - 1; i >= 0; i--) {
 			if (i >= nonFds.getFdLevels().size()) // If this level has been trimmed during iteration
 				continue;
