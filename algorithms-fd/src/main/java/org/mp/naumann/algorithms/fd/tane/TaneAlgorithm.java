@@ -7,18 +7,20 @@ import it.unimi.dsi.fastutil.objects.ObjectBigArrayBigList;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
-import org.mp.naumann.algorithms.fd.algorithms.RelationalInputGenerator;
 import org.mp.naumann.algorithms.AlgorithmExecutionException;
+import org.mp.naumann.database.InputReadException;
+import org.mp.naumann.database.Table;
+import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
-import org.mp.naumann.algorithms.fd.algorithms.RelationalInput;
+import org.mp.naumann.database.data.Row;
 
 import java.util.List;
 
 public class TaneAlgorithm {
 
-	private RelationalInputGenerator relationalInputGenerator;
+	private Table table;
 	private String tableName;
 	private int numberAttributes;
 	private long numberTuples;
@@ -30,8 +32,8 @@ public class TaneAlgorithm {
 	private Object2ObjectOpenHashMap<OpenBitSet, ObjectArrayList<OpenBitSet>> prefix_blocks = null;
 	private LongBigArrayBigList tTable;
 
-	public TaneAlgorithm(RelationalInputGenerator inputGenerator, FunctionalDependencyResultReceiver resultReceiver) {
-		this.relationalInputGenerator = inputGenerator;
+	public TaneAlgorithm(Table table, FunctionalDependencyResultReceiver resultReceiver) {
+		this.table = table;
 		this.fdResultReceiver = resultReceiver;
 	}
 
@@ -100,46 +102,43 @@ public class TaneAlgorithm {
 	 * attribute a HashMap, which maps the values to a List of tuple ids.
 	 *
 	 * @return A ObjectArrayList with the HashMaps.
-	 * @throws InputGenerationException
-	 * @throws InputIterationException
-	 * @throws AlgorithmConfigurationException
 	 */
 	private ObjectArrayList<Object2ObjectOpenHashMap<Object, LongBigArrayBigList>> loadData() {
-		RelationalInput input = null;
-		if (this.relationalInputGenerator != null) {
-			input = this.relationalInputGenerator.generateNewCopy();
+		TableInput input = null;
+		if (this.table != null) {
+			try {
+				input = this.table.open();
+			} catch (InputReadException e) {
+				return new ObjectArrayList<>(0);
+			}
 		}
-		if (input != null) {
-			this.numberAttributes = input.numberOfColumns();
-			this.tableName = input.relationName();
-			this.columnNames = input.columnNames();
-			ObjectArrayList<Object2ObjectOpenHashMap<Object, LongBigArrayBigList>> partitions = new ObjectArrayList<>(
-					this.numberAttributes);
+		this.numberAttributes = input.numberOfColumns();
+		this.tableName = input.getName();
+		this.columnNames = input.getColumnNames();
+		ObjectArrayList<Object2ObjectOpenHashMap<Object, LongBigArrayBigList>> partitions = new ObjectArrayList<>(
+				this.numberAttributes);
+		for (int i = 0; i < this.numberAttributes; i++) {
+			Object2ObjectOpenHashMap<Object, LongBigArrayBigList> partition = new Object2ObjectOpenHashMap<>();
+			partitions.add(partition);
+		}
+		long tupleId = 0;
+		while (input.hasNext()) {
+			Row row = input.next();
 			for (int i = 0; i < this.numberAttributes; i++) {
-				Object2ObjectOpenHashMap<Object, LongBigArrayBigList> partition = new Object2ObjectOpenHashMap<>();
-				partitions.add(partition);
-			}
-			long tupleId = 0;
-			while (input.hasNext()) {
-				List<String> row = input.next();
-				for (int i = 0; i < this.numberAttributes; i++) {
-					Object2ObjectOpenHashMap<Object, LongBigArrayBigList> partition = partitions.get(i);
-					String entry = row.get(i);
-					if (partition.containsKey(entry)) {
-						partition.get(entry).add(tupleId);
-					} else {
-						LongBigArrayBigList newEqClass = new LongBigArrayBigList();
-						newEqClass.add(tupleId);
-						partition.put(entry, newEqClass);
-					}
+				Object2ObjectOpenHashMap<Object, LongBigArrayBigList> partition = partitions.get(i);
+				String entry = row.getValue(i);
+				if (partition.containsKey(entry)) {
+					partition.get(entry).add(tupleId);
+				} else {
+					LongBigArrayBigList newEqClass = new LongBigArrayBigList();
+					newEqClass.add(tupleId);
+					partition.put(entry, newEqClass);
 				}
-				tupleId++;
 			}
-			this.numberTuples = tupleId;
-			return partitions;
+			tupleId++;
 		}
-
-		return new ObjectArrayList<>(0);
+		this.numberTuples = tupleId;
+		return partitions;
 	}
 
 	/**
@@ -290,10 +289,6 @@ public class TaneAlgorithm {
 	 * @param a:
 	 *            dependent attribute. Possible values: 1 <= a <=
 	 *            maxAttributeNumber.
-	 * @throws CouldNotReceiveResultException
-	 *             if the result receiver cannot handle the functional
-	 *             dependency.
-	 * @throws ColumnNameMismatchException
 	 */
 	private void processFunctionalDependency(OpenBitSet lhs, int a) {
 		addDependencyToResultReceiver(lhs, a);
@@ -486,10 +481,6 @@ public class TaneAlgorithm {
 	 *            A OpenBitSet representing the Columns of the determinant.
 	 * @param a:
 	 *            The number of the dependent column (starting from 1).
-	 * @throws CouldNotReceiveResultException
-	 *             if the result receiver cannot handle the functional
-	 *             dependency.
-	 * @throws ColumnNameMismatchException
 	 */
 	private void addDependencyToResultReceiver(OpenBitSet X, int a) {
 		if (this.fdResultReceiver == null) {

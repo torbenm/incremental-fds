@@ -19,7 +19,8 @@ package org.mp.naumann.algorithms.fd.structures;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
-import org.mp.naumann.algorithms.fd.algorithms.RelationalInput;
+import org.mp.naumann.database.TableInput;
+import org.mp.naumann.database.data.Row;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,19 +34,19 @@ public class PLIBuilder {
 		return this.numRecords;
 	}
 	
-	public List<PositionListIndex> getPLIs(RelationalInput relationalInput, int numAttributes, boolean isNullEqualNull) {
-		List<HashMap<String, IntArrayList>> clusterMaps = this.calculateClusterMaps(relationalInput, numAttributes);
+	public List<PositionListIndex> getPLIs(TableInput tableInput, int numAttributes, boolean isNullEqualNull) {
+		List<HashMap<String, IntArrayList>> clusterMaps = this.calculateClusterMaps(tableInput, numAttributes);
 		return this.fetchPositionListIndexes(clusterMaps, isNullEqualNull);
 	}
 
-	private List<HashMap<String, IntArrayList>> calculateClusterMaps(RelationalInput relationalInput, int numAttributes) {
+	private List<HashMap<String, IntArrayList>> calculateClusterMaps(TableInput tableInput, int numAttributes) {
 		List<HashMap<String, IntArrayList>> clusterMaps = new ArrayList<>();
 		for (int i = 0; i < numAttributes; i++)
 			clusterMaps.add(new HashMap<>());
 		
 		this.numRecords = 0;
-		while (relationalInput.hasNext()) {
-			List<String> record = relationalInput.next();
+		while (tableInput.hasNext()) {
+			Row record = tableInput.next();
 			
 			int attributeId = 0;
 			for (String value : record) {
@@ -77,7 +78,7 @@ public class PLIBuilder {
 
 	}
 	
-	public static List<PositionListIndex> getPLIs(ObjectArrayList<List<String>> records, int numAttributes, boolean isNullEqualNull) {
+	public static List<PositionListIndex> getPLIs(ObjectArrayList<Row> records, int numAttributes, boolean isNullEqualNull) {
 		if (records.size() > Integer.MAX_VALUE)
 			throw new RuntimeException("PLI encoding into integer based PLIs is not possible, because the number of records in the dataset exceeds Integer.MAX_VALUE. Use long based plis instead! (NumRecords = " + records.size() + " and Integer.MAX_VALUE = " + Integer.MAX_VALUE);
 		
@@ -85,14 +86,14 @@ public class PLIBuilder {
 		return fetchPositionListIndexesStatic(clusterMaps, isNullEqualNull);
 	}
 
-	private static List<HashMap<String, IntArrayList>> calculateClusterMapsStatic(ObjectArrayList<List<String>> records,
+	private static List<HashMap<String, IntArrayList>> calculateClusterMapsStatic(ObjectArrayList<Row> records,
 			int numAttributes) {
 		List<HashMap<String, IntArrayList>> clusterMaps = new ArrayList<>();
 		for (int i = 0; i < numAttributes; i++)
 			clusterMaps.add(new HashMap<>());
 		
 		int recordId = 0;
-		for (List<String> record : records) {
+		for (Row record : records) {
 			int attributeId = 0;
 			for (String value : record) {
 				HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);

@@ -2,13 +2,15 @@ package org.mp.naumann.algorithms.fd.hyfd;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
-import org.mp.naumann.algorithms.fd.algorithms.RelationalInputGenerator;
 import org.mp.naumann.algorithms.AlgorithmExecutionException;
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
+import org.mp.naumann.database.InputReadException;
+import org.mp.naumann.database.Table;
+import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
-import org.mp.naumann.algorithms.fd.algorithms.RelationalInput;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
@@ -24,7 +26,7 @@ import java.util.List;
 
 public class HyFD {
 
-	private RelationalInputGenerator inputGenerator = null;
+	private Table table = null;
 	private FunctionalDependencyResultReceiver resultReceiver = null;
 
 	private ValueComparator valueComparator;
@@ -39,14 +41,14 @@ public class HyFD {
 	private List<String> attributeNames;
 	private int numAttributes;
 
-	public HyFD(RelationalInputGenerator inputGenerator, FunctionalDependencyResultReceiver resultReceiver) {
-		this.inputGenerator = inputGenerator;
+	public HyFD(Table table, FunctionalDependencyResultReceiver resultReceiver) {
+		this.table = table;
 		this.resultReceiver = resultReceiver;
 	}
 
-	private void initialize(RelationalInput relationalInput) {
-		this.tableName = relationalInput.relationName();
-		this.attributeNames = relationalInput.columnNames();
+	private void initialize(TableInput tableInput) {
+		this.tableName = tableInput.getName();
+		this.attributeNames = tableInput.getColumnNames();
 		this.numAttributes = this.attributeNames.size();
 		if (this.valueComparator == null)
 			this.valueComparator = new ValueComparator(true);
@@ -54,7 +56,7 @@ public class HyFD {
 
 	public void execute() throws AlgorithmExecutionException {
 		long startTime = System.currentTimeMillis();
-		if (this.inputGenerator == null)
+		if (this.table == null)
 			throw new IllegalStateException("No input generator set!");
 		if (this.resultReceiver == null)
 			throw new IllegalStateException("No result receiver set!");
@@ -68,8 +70,8 @@ public class HyFD {
 	private void executeHyFD() throws AlgorithmExecutionException {
 		// Initialize
 		System.out.println("Initializing ...");
-		RelationalInput relationalInput = this.getInput();
-		this.initialize(relationalInput);
+		TableInput tableInput = this.getInput();
+		this.initialize(tableInput);
 
 		///////////////////////////////////////////////////////
 		// Build data structures for sampling and validation //
@@ -78,9 +80,9 @@ public class HyFD {
 		// Calculate plis
 		System.out.println("Reading data and calculating plis ...");
 		PLIBuilder pliBuilder = new PLIBuilder();
-		List<PositionListIndex> plis = pliBuilder.getPLIs(relationalInput, this.numAttributes,
+		List<PositionListIndex> plis = pliBuilder.getPLIs(tableInput, this.numAttributes,
 				this.valueComparator.isNullEqualNull());
-		this.closeInput(relationalInput);
+		this.closeInput(tableInput);
 
 		final int numRecords = pliBuilder.getNumLastRecords();
 		pliBuilder = null;
@@ -109,7 +111,7 @@ public class HyFD {
 
 		// Calculate inverted plis
 		System.out.println("Inverting plis ...");
-		int[][] invertedPlis = this.invertPlis(plis, numRecords);
+		int[][] invertedPlis = PliUtils.invert(plis, numRecords);
 
 		// Extract the integer representations of all records from the inverted
 		// plis
@@ -160,15 +162,18 @@ public class HyFD {
 		System.out.println("... done! (" + numFDs + " FDs)");
 	}
 
-	private RelationalInput getInput() {
-		RelationalInput relationalInput = this.inputGenerator.generateNewCopy();
-		if (relationalInput == null)
-			throw new RuntimeException("Input generation failed!");
-		return relationalInput;
+	private TableInput getInput() {
+		try {
+
+			return this.table.open();
+
+		} catch (InputReadException e) {
+			throw new RuntimeException("Input generation failed!",e);
+		}
 	}
 
-	private void closeInput(RelationalInput relationalInput) {
-		FileUtils.close(relationalInput);
+	private void closeInput(TableInput tableInput) {
+		FileUtils.close(tableInput);
 	}
 
 	private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {
@@ -176,21 +181,6 @@ public class HyFD {
 		for (String attributeName : this.attributeNames)
 			columnIdentifiers.add(new ColumnIdentifier(this.tableName, attributeName));
 		return columnIdentifiers;
-	}
-
-	private int[][] invertPlis(List<PositionListIndex> plis, int numRecords) {
-		int[][] invertedPlis = new int[plis.size()][];
-		for (int attr = 0; attr < plis.size(); attr++) {
-			int[] invertedPli = new int[numRecords];
-			Arrays.fill(invertedPli, -1);
-
-			for (int clusterId = 0; clusterId < plis.get(attr).size(); clusterId++) {
-				for (int recordId : plis.get(attr).getClusters().get(clusterId))
-					invertedPli[recordId] = clusterId;
-			}
-			invertedPlis[attr] = invertedPli;
-		}
-		return invertedPlis;
 	}
 
 	private int[] fetchRecordFrom(int recordId, int[][] invertedPlis) {

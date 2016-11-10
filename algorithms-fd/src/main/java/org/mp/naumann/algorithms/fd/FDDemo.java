@@ -1,34 +1,19 @@
 package org.mp.naumann.algorithms.fd;
 
-import org.mp.naumann.algorithms.AlgorithmExecutionException;
-import org.mp.naumann.algorithms.fd.algorithms.CSVRelationalInputGenerator;
-import org.mp.naumann.algorithms.fd.algorithms.PrintResultReceiver;
-import org.mp.naumann.algorithms.fd.algorithms.RelationalInputGenerator;
-import org.mp.naumann.algorithms.fd.fdep.FDEPExecutor;
-import org.mp.naumann.algorithms.fd.hyfd.HyFD;
-import org.mp.naumann.algorithms.fd.tane.TaneAlgorithm;
-
-import java.io.File;
+import org.mp.naumann.algorithms.InitialAlgorithm;
+import org.mp.naumann.algorithms.fd.hyfd.HyFDInitialAlgorithm;
+import org.mp.naumann.algorithms.result.ResultSet;
+import org.mp.naumann.database.DataConnector;
+import org.mp.naumann.database.jdbc.JdbcDataConnector;
 
 public class FDDemo {
 
-	public static void main(String[] args) throws AlgorithmExecutionException {
-		RelationalInputGenerator inputGenerator = new CSVRelationalInputGenerator(new File("data.csv"));
-		FunctionalDependencyResultReceiver resultReceiver = new PrintResultReceiver();
+	public static void main(String[] args) {
+        DataConnector dc = new JdbcDataConnector("org.relique.jdbc.csv.CsvDriver", "jdbc:relique:csv:algorithms-fd/src/test/data");
+		InitialAlgorithm<FunctionalDependency, ?> hyfd = new HyFDInitialAlgorithm(dc, "test");
+		ResultSet<FunctionalDependency> fds = hyfd.execute().getResultSet();
+		fds.forEach(System.out::println);
 
-		System.out.println("HyFD");
-		HyFD hyfd = new HyFD(inputGenerator, resultReceiver);
-		hyfd.execute();
-		System.out.println();
-
-		System.out.println("TANE");
-		TaneAlgorithm tane = new TaneAlgorithm(inputGenerator, resultReceiver);
-		tane.execute();
-		System.out.println();
-
-		System.out.println("FDEP");
-		FDEPExecutor fdep = new FDEPExecutor(inputGenerator, resultReceiver);
-		fdep.execute();
 	}
 
 }

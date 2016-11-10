@@ -7,8 +7,9 @@ import java.io.IOException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mp.naumann.algorithms.implementations.helper.DatabaseHelper;
+import org.mp.naumann.algorithms.result.ResultSet;
 import org.mp.naumann.database.DataConnector;
-import org.mp.naumann.algorithms.result.SimpleObjectResultSet;
+
 
 public class MedianInitialAlgorithmTest {
 
@@ -29,8 +30,8 @@ public class MedianInitialAlgorithmTest {
     public void testExecute(){
         // As CSV files are loaded as String tables, this method
         // sorts the numbers alphabetically - not numberwise.
-        SimpleObjectResultSet result = (SimpleObjectResultSet)algorithm.execute().getResultSet();
-        assertEquals("19", result.getValue());
+        ResultSet<String> result = algorithm.execute().getResultSet();
+        assertEquals("19", result.iterator().next());
     }
 
 

@@ -3,6 +3,10 @@ package org.mp.naumann.algorithms.fd.fdep;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.mp.naumann.algorithms.fd.algorithms.RelationalInputGenerator;
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
+import org.mp.naumann.database.InputReadException;
+import org.mp.naumann.database.Table;
+import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
@@ -13,6 +17,7 @@ import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.utils.FileUtils;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
+import org.mp.naumann.database.data.Row;
 
 
 import java.util.Arrays;
@@ -20,7 +25,7 @@ import java.util.List;
 
 public class FDEPExecutor {
 
-	private RelationalInputGenerator inputGenerator = null;
+	private Table table = null;
 	private FunctionalDependencyResultReceiver resultReceiver = null;
 
 	private ValueComparator valueComparator;
@@ -29,14 +34,14 @@ public class FDEPExecutor {
 	private List<String> attributeNames;
 	private int numAttributes;
 
-	public FDEPExecutor(RelationalInputGenerator inputGenerator, FunctionalDependencyResultReceiver resultReceiver) {
+	public FDEPExecutor(Table table, FunctionalDependencyResultReceiver resultReceiver) {
 		this.resultReceiver = resultReceiver;
-		this.inputGenerator = inputGenerator;
+		this.table = table;
 	}
 
-	private void initialize(RelationalInput relationalInput) {
-		this.tableName = relationalInput.relationName();
-		this.attributeNames = relationalInput.columnNames();
+	private void initialize(TableInput tableInput) {
+		this.tableName = tableInput.getName();
+		this.attributeNames = tableInput.getColumnNames();
 		this.numAttributes = this.attributeNames.size();
 		if (this.valueComparator == null)
 			this.valueComparator = new ValueComparator(true);
@@ -53,13 +58,13 @@ public class FDEPExecutor {
 	private void executeFDEP() {
 		// Initialize
 		System.out.println("Initializing ...");
-		RelationalInput relationalInput = this.getInput();
-		this.initialize(relationalInput);
+		TableInput tableInput = this.getInput();
+		this.initialize(tableInput);
 		
 		// Load data
 		System.out.println("Loading data ...");
-		ObjectArrayList<List<String>> records = this.loadData(relationalInput);
-		this.closeInput(relationalInput);
+		ObjectArrayList<Row> records = this.loadData(tableInput);
+		this.closeInput(tableInput);
 		
 		// Create default output if input is empty
 		if (records.isEmpty()) {
@@ -78,7 +83,7 @@ public class FDEPExecutor {
 		
 		// Calculate inverted plis
 		System.out.println("Inverting plis ...");
-		int[][] invertedPlis = this.invertPlis(plis, numRecords);
+		int[][] invertedPlis = PliUtils.invert(plis, numRecords);
 
 		// Extract the integer representations of all records from the inverted plis
 		System.out.println("Extracting integer representations for the records ...");
@@ -104,11 +109,16 @@ public class FDEPExecutor {
 		System.out.println("... done! (" + numFDs + " FDs)");
 	}
 	
-	private RelationalInput getInput() {
-		return this.inputGenerator.generateNewCopy();
+	private TableInput getInput() {
+		try {
+			return this.table.open();
+		} catch (InputReadException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Failed to load input!", e);
+		}
 	}
 	
-	private void closeInput(RelationalInput relationalInput) {
+	private void closeInput(TableInput relationalInput) {
 		FileUtils.close(relationalInput);
 	}
 
@@ -119,27 +129,13 @@ public class FDEPExecutor {
 		return columnIdentifiers;
 	}
 
-	private ObjectArrayList<List<String>> loadData(RelationalInput relationalInput) {
-		ObjectArrayList<List<String>> records = new ObjectArrayList<>();
-		while (relationalInput.hasNext())
-			records.add(relationalInput.next());
+	private ObjectArrayList<Row> loadData(TableInput tableInput) {
+		ObjectArrayList<Row> records = new ObjectArrayList<>();
+		while (tableInput.hasNext())
+			records.add(tableInput.next());
 		return records;
 	}
 
-	private int[][] invertPlis(List<PositionListIndex> plis, int numRecords) {
-		int[][] invertedPlis = new int[plis.size()][];
-		for (int attr = 0; attr < plis.size(); attr++) {
-			int[] invertedPli = new int[numRecords];
-			Arrays.fill(invertedPli, -1);
-			
-			for (int clusterId = 0; clusterId < plis.get(attr).size(); clusterId++) {
-				for (int recordId : plis.get(attr).getClusters().get(clusterId))
-					invertedPli[recordId] = clusterId;
-			}
-			invertedPlis[attr] = invertedPli;
-		}
-		return invertedPlis;
-	}
 	
 	private int[] fetchRecordFrom(int recordId, int[][] invertedPlis) {
 		int[] record = new int[this.numAttributes];

@@ -18,19 +18,6 @@ class Inductor {
 	}
 
 	public void updatePositiveCover(FDList nonFds) {
-/*		if (nonFds.isEmpty())
-			return;
-		
-		// Sort the negative cover
-		System.out.println("Sorting FD-violations ...");
-		Collections.sort(nonFds, new Comparator<OpenBitSet>() {
-			@Override
-			public int compare(OpenBitSet o1, OpenBitSet o2) {
-				return (int)(o1.cardinality() - o2.cardinality());
-			}
-		});
-*/		// THE SORTING IS NOT NEEDED AS THE UCCSet SORTS THE NONUCCS BY LEVEL ALREADY
-		
 		System.out.println("Inducing FD candidates ...");
 		for (int i = nonFds.getFdLevels().size() - 1; i >= 0; i--) {
 			if (i >= nonFds.getFdLevels().size()) // If this level has been trimmed during iteration

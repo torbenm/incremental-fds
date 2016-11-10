@@ -11,14 +11,14 @@ import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.handler.BatchHandler;
 
-public abstract class IncrementalAlgorithm implements Algorithm, BatchHandler {
+public abstract class IncrementalAlgorithm<T, R extends IntermediateDataStructure> implements Algorithm<T, R>, BatchHandler {
 
-    private ResultSet resultSet;
-    private IntermediateDataStructure intermediateDataStructure;
+    private ResultSet<T> resultSet;
+    private R intermediateDataStructure;
     private final DataConnector dataConnector;
     private final Set<ResultListener> resultListeners = new HashSet<>();
 
-    public IncrementalAlgorithm(DataConnector dataConnector, IntermediateDataStructure intermediateDataStructure) {
+    public IncrementalAlgorithm(DataConnector dataConnector, R intermediateDataStructure) {
         this.dataConnector = dataConnector;
         this.intermediateDataStructure = intermediateDataStructure;
     }
@@ -27,21 +27,21 @@ public abstract class IncrementalAlgorithm implements Algorithm, BatchHandler {
         return dataConnector;
     }
 
-    protected void setResultSet(ResultSet resultSet) {
+    protected void setResultSet(ResultSet<T> resultSet) {
         this.resultSet = resultSet;
     }
 
-    protected void setIntermediateDataStructure(IntermediateDataStructure intermediateDataStructure) {
+    protected void setIntermediateDataStructure(R intermediateDataStructure) {
         this.intermediateDataStructure = intermediateDataStructure;
     }
 
     @Override
-    public ResultSet getResultSet() {
+    public ResultSet<T> getResultSet() {
         return resultSet;
     }
 
     @Override
-    public IntermediateDataStructure getIntermediateDataStructure() {
+    public R getIntermediateDataStructure() {
         return intermediateDataStructure;
     }
 
@@ -57,5 +57,5 @@ public abstract class IncrementalAlgorithm implements Algorithm, BatchHandler {
         resultListeners.add(listener);
     }
 
-    public abstract AlgorithmResult execute(Batch batch);
+    public abstract AlgorithmResult<T, R> execute(Batch batch);
 }
