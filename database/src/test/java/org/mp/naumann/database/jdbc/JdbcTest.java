@@ -1,9 +1,6 @@
 package org.mp.naumann.database.jdbc;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.PrintStream;
-
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -18,14 +15,12 @@ public class JdbcTest {
     private static final File testDir = new File(testPath);
     protected static final String testTableName = "test";
     static DataConnector connector;
-    protected static final ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
         FileUtils.deleteQuietly(testDir);
         FileUtils.copyDirectory(originalDir, testDir);
         connector = new JdbcDataConnector("org.relique.jdbc.csv.CsvDriver", "jdbc:relique:csv:" + testPath);
-        System.setErr(new PrintStream(errorStream));
     }
 
     @AfterClass

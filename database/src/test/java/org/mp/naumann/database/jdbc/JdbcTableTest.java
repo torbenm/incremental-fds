@@ -1,8 +1,9 @@
 package org.mp.naumann.database.jdbc;
 
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
-
+import org.junit.rules.ExpectedException;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
@@ -12,7 +13,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class JdbcTableTest extends JdbcTest {
 
@@ -72,16 +72,17 @@ public class JdbcTableTest extends JdbcTest {
 		assertEquals(173, i);
 	}
 
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
+
 	@Test
 	public void testWrongInputIteration() throws InputReadException {
+		thrown.expect(NoSuchElementException.class);
 		try (TableInput input = table.open()) {
 			for (int i = 0; i < 174; i++) {
 				input.next();
 			}
-		} catch (NoSuchElementException e) {
-			return;
 		}
-		fail();
 	}
 
 }
