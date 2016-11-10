@@ -10,7 +10,7 @@ import java.util.List;
 public abstract class SizableBatchSource extends AbstractBatchSource implements StreamableBatchSource{
 
     private final int batchSize;
-    private final List<Statement> statementList = new ArrayList<Statement>();
+    private final List<Statement> statementList = new ArrayList<>();
     private final String tableName;
     private boolean streaming = false;
     private boolean doneFilling = false;

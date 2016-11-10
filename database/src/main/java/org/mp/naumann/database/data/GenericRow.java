@@ -17,11 +17,11 @@ public class GenericRow implements Row {
     }
 
     public List<String> getColumnNames() {
-        return new ArrayList<String>(values.keySet());
+        return new ArrayList<>(values.keySet());
     }
 
     public List<Object> toList() {
-        return new ArrayList<Object>(values.values());
+        return new ArrayList<>(values.values());
     }
 
     @Override
