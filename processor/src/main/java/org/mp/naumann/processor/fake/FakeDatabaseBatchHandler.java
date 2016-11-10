@@ -1,6 +1,5 @@
 package org.mp.naumann.processor.fake;
 
-import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 

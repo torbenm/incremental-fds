@@ -7,13 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
-import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsert1;
-import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsert2;
-import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsert3;
-import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsert4Columns;
-import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsertEmpty;
-import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsertOtherOrder;
-import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsertWrongTable;
+import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.*;
 
 public class InsertStatementQueryBuilderTest {
 

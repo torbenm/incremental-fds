@@ -52,7 +52,7 @@ public class InsertStatementQueryBuilder implements StatementQueryBuilder<Insert
             queries += equalToBase.size() > 0 ? openStatement(base)
                     + buildKeyMap(base)
                     + equalToBase.parallelStream()
-                    .map(n -> buildValueMap(n))
+                    .map(this::buildValueMap)
                     .collect(Collectors.joining(", "))+";" : "";
 
             return queries;

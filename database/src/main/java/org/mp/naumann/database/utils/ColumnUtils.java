@@ -2,13 +2,10 @@ package org.mp.naumann.database.utils;
 
 import org.mp.naumann.database.data.Column;
 import org.mp.naumann.database.data.GenericColumn;
-import org.mp.naumann.database.identifier.EmptyRowIdentifier;
 import org.mp.naumann.database.identifier.RowIdentifier;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class ColumnUtils {

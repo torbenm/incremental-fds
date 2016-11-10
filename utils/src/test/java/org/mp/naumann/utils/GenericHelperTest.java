@@ -7,9 +7,7 @@ import java.util.HashMap;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mp.naumann.utils.GenericHelper.cast;
-import static org.mp.naumann.utils.GenericHelper.createGenericMap;
-import static org.mp.naumann.utils.GenericHelper.isNumberCast;
+import static org.mp.naumann.utils.GenericHelper.*;
 
 public class GenericHelperTest {
 

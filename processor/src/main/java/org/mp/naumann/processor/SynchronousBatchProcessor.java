@@ -15,7 +15,7 @@ public class SynchronousBatchProcessor extends BatchProcessor<List<BatchHandler>
     }
 
     protected List<BatchHandler> initializeBatchHandlerCollection() {
-        return new ArrayList<BatchHandler>();
+        return new ArrayList<>();
     }
 
     protected void distributeBatch(Batch batch) {

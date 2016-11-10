@@ -6,13 +6,11 @@ import org.mp.naumann.processor.batch.ListBatch;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
 
 public abstract class SizableBatchSource extends AbstractBatchSource implements StreamableBatchSource{
 
     private final int batchSize;
-    private final List<Statement> statementList = new ArrayList<Statement>();
+    private final List<Statement> statementList = new ArrayList<>();
     private final String tableName;
     private boolean streaming = false;
     private boolean doneFilling = false;
