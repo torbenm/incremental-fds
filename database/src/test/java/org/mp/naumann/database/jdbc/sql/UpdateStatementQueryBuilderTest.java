@@ -14,13 +14,13 @@ public class UpdateStatementQueryBuilderTest {
     private UpdateStatementQueryBuilder usqb = UpdateStatementQueryBuilder.get();
 
     @Test
-    public void testGenerateSingle(){
+    public void testGenerateSingle() throws QueryBuilderException {
         String expected = "UPDATE test.people SET name = 'max', age = '15' WHERE name = 'hanna' AND age = '12';";
         assertEquals(expected, usqb.generateSingle(UpdateStatements.createUpdateStatement1()));
     }
 
     @Test
-    public void testGenerateMulti(){
+    public void testGenerateMulti() throws QueryBuilderException {
         String expected = "UPDATE test.people SET name = 'max', age = '15' WHERE name = 'hanna' AND age = '12';\n" +
                 "UPDATE test.places SET country = 'US', city = 'San Francisco' WHERE country = 'DE' AND city = 'Berlin';";
 

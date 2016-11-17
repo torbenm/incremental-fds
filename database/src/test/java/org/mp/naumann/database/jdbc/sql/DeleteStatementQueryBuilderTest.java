@@ -14,21 +14,21 @@ public class DeleteStatementQueryBuilderTest {
     private DeleteStatementQueryBuilder dsqb = DeleteStatementQueryBuilder.get();
 
     @Test
-    public void testGenerateQueryForDeleteStatement(){
+    public void testGenerateQueryForDeleteStatement() throws QueryBuilderException {
         DeleteStatement statement = DeleteStatements.createDeleteStatement1();
         String expected = "DELETE FROM test.places WHERE" +
-                " country = 'DE' AND city = 'Berlin' AND street = 'Unter den Linden';";
+                " (country = 'DE' AND city = 'Berlin' AND street = 'Unter den Linden');";
         assertEquals(expected, dsqb.generateSingle(statement));
+    }
 
-
-        //TODO: Should we rather throw an error here?
-        statement = DeleteStatements.createDeleteStatementEmptyValueMap();
-        expected = "DELETE FROM test.places;";
-        assertEquals(expected, SqlQueryBuilder.generateSql(statement));
+    @Test(expected = QueryBuilderException.class)
+    public void testGenerateQueryForEmptyDeleteStatement() throws QueryBuilderException {
+        DeleteStatement statement = DeleteStatements.createDeleteStatementEmptyValueMap();
+        SqlQueryBuilder.generateSql(statement);
     }
 
     @Test
-    public void testGenerateQueryForDeleteStatementMultipleStatements(){
+    public void testGenerateQueryForDeleteStatementMultipleStatements() throws QueryBuilderException {
         List<DeleteStatement> statements = Arrays.asList(
                 DeleteStatements.createDeleteStatement1(),
                 DeleteStatements.createDeleteStatement2()
@@ -41,7 +41,7 @@ public class DeleteStatementQueryBuilderTest {
     }
 
     @Test
-    public void testGenerateQueryForDeleteStatementMultipleStatementsButDifferentColumns(){
+    public void testGenerateQueryForDeleteStatementMultipleStatementsButDifferentColumns() throws QueryBuilderException {
         List<DeleteStatement> statements = Arrays.asList(
                 DeleteStatements.createDeleteStatement1(),
                 DeleteStatements.createDeleteStatement2(),
@@ -56,18 +56,18 @@ public class DeleteStatementQueryBuilderTest {
     }
 
     @Test
-    public void testGenerateQueryForDeleteStatementMultipleStatementsButOtherTable(){
+    public void testGenerateQueryForDeleteStatementMultipleStatementsButOtherTable() throws QueryBuilderException {
         List<DeleteStatement> statements = Arrays.asList(
                 DeleteStatements.createDeleteStatement1(),
                 DeleteStatements.createDeleteStatement2(),
                 DeleteStatements.createDeleteStatementOtherTable(),
                 DeleteStatements.createDeleteStatement2Columns()
         );
-        String expected = "DELETE FROM test.persons WHERE name = 'Max' AND age = '15';\n"+
-                "DELETE FROM test.places WHERE " +
-                "(country = 'DE' AND city = 'Berlin' AND street = 'Unter den Linden')"+
-                " OR (country = 'DE' AND city = 'Potsdam' AND street = 'August-Bebel-Str.')"+
-                " OR (country = 'US' AND city = 'San Francisco');";
+        String expected = "DELETE FROM test.places WHERE " +
+                "(country = 'DE' AND city = 'Berlin' AND street = 'Unter den Linden')" +
+                " OR (country = 'DE' AND city = 'Potsdam' AND street = 'August-Bebel-Str.')" +
+                " OR (country = 'US' AND city = 'San Francisco');\n" +
+                "DELETE FROM test.persons WHERE (name = 'Max' AND age = '15');";
 
         assertEquals(expected, dsqb.generateMulti(statements));
     }

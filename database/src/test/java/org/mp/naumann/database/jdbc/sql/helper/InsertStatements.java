@@ -59,6 +59,16 @@ public class InsertStatements {
 		return new DefaultInsertStatement(insertValues, "test", "people");
 	}
 
+	public static InsertStatement createPeopleInsert4Columns2() {
+		Map<String, String> insertValues = new LinkedHashMap<>();
+		insertValues.put("name", "hanna");
+		insertValues.put("age", "29");
+		insertValues.put("sex", "f");
+		insertValues.put("birthday", "2014-12-03");
+
+		return new DefaultInsertStatement(insertValues, "test", "people");
+	}
+
 	public static InsertStatement createPeopleInsertOtherOrder() {
 		Map<String, String> insertValues = new LinkedHashMap<>();
 		insertValues.put("name", "tim");
