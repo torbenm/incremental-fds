@@ -12,8 +12,7 @@ import org.mp.naumann.database.statement.UpdateStatement;
 
 public class SqlQueryBuilder {
 
-
-    public static String generateSql(Statement stmt){
+    public static String generateSql(Statement stmt) throws QueryBuilderException {
         if (stmt instanceof InsertStatement) {
             return InsertStatementQueryBuilder.get().generateSingle((InsertStatement)stmt);
         }
@@ -26,11 +25,10 @@ public class SqlQueryBuilder {
             return UpdateStatementQueryBuilder.get().generateSingle((UpdateStatement) stmt);
         }
 
-        return "ERROR! However, this case should never occur.";
+        throw new QueryBuilderException("Statement has unknown type.");
     }
 
-
-    public static String generateSql(StatementGroup statements){
+    public static String generateSql(StatementGroup statements) throws QueryBuilderException {
         return Stream.of(
                 InsertStatementQueryBuilder.get().generateMulti(statements.getInsertStatements()),
                 DeleteStatementQueryBuilder.get().generateMulti(statements.getDeleteStatements()),
@@ -38,13 +36,15 @@ public class SqlQueryBuilder {
         ).collect(Collectors.joining("\n"));
     }
 
-
+    static String formatValue(String value) {
+        return value.replace("'", "''");
+    }
 
     static String toKeyEqualsValueMap(Map<String, String> valueMap, String seperator){
         return valueMap
                 .entrySet()
                 .parallelStream()
-                .map(n -> n.getKey() + " = '" + n.getValue()+"'")
+                .map(n -> n.getKey() + " = '" + formatValue(n.getValue()) + "'")
                 .collect(Collectors.joining(seperator));
     }
 }

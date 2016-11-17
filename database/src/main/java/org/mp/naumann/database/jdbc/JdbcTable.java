@@ -33,7 +33,7 @@ class JdbcTable implements Table {
 	public boolean execute(Statement statement) {
 		try (java.sql.Statement stmt = conn.createStatement()) {
 			return stmt.execute(SqlQueryBuilder.generateSql(statement));
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
@@ -43,7 +43,7 @@ class JdbcTable implements Table {
 	public boolean execute(StatementGroup statementGroup) {
 		try (java.sql.Statement stmt = conn.createStatement()) {
 			return stmt.execute(SqlQueryBuilder.generateSql(statementGroup));
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
@@ -80,7 +80,7 @@ class JdbcTable implements Table {
 					return rs.getLong(1);
 				}
 			}
-		} catch (SQLException e) {
+		} catch (SQLException ignored) {
 		}
 		return -1;
 	}

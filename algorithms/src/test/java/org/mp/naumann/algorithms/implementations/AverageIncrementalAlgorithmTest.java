@@ -108,20 +108,20 @@ public class AverageIncrementalAlgorithmTest {
 
 	private static List<Statement> toInsertStatements(List<String> values) {
 		Set<String> keys = Collections.singleton(COLUMN);
-		return values.stream().map(v -> new DefaultInsertStatement(Maps.asMap(keys, k -> v), TABLE))
+		return values.stream().map(v -> new DefaultInsertStatement(Maps.asMap(keys, k -> v), SCHEMA, TABLE))
 				.collect(Collectors.toList());
 	}
 
 	private static List<Statement> toDeleteStatements(List<String> values) {
 		Set<String> keys = Collections.singleton(COLUMN);
-		return values.stream().map(v -> new DefaultDeleteStatement(Maps.asMap(keys, k -> v), TABLE))
+		return values.stream().map(v -> new DefaultDeleteStatement(Maps.asMap(keys, k -> v), SCHEMA, TABLE))
 				.collect(Collectors.toList());
 	}
 
 	private static List<Statement> toUpdateStatements(List<Pair<String, String>> values) {
 		Set<String> keys = Collections.singleton(COLUMN);
 		return values.stream().map(v -> new DefaultUpdateStatement(Maps.asMap(keys, k -> v.getLeft()),
-				Maps.asMap(keys, k -> v.getRight()), TABLE)).collect(Collectors.toList());
+				Maps.asMap(keys, k -> v.getRight()), SCHEMA, TABLE)).collect(Collectors.toList());
 	}
 
 }

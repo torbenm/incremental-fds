@@ -15,7 +15,7 @@ public class InsertStatements {
 		insertValues.put("age", "15");
 		insertValues.put("birthday", "2016-11-01");
 
-		return new DefaultInsertStatement(insertValues, "persons");
+		return new DefaultInsertStatement(insertValues, "test", "persons");
 	}
 
 	public static InsertStatement createPeopleInsert1() {
@@ -24,7 +24,7 @@ public class InsertStatements {
 		insertValues.put("age", "15");
 		insertValues.put("birthday", "2016-11-01");
 
-		return new DefaultInsertStatement(insertValues, "people");
+		return new DefaultInsertStatement(insertValues, "test", "people");
 	}
 
 	public static InsertStatement createPeopleInsert2() {
@@ -33,7 +33,7 @@ public class InsertStatements {
 		insertValues.put("age", "29");
 		insertValues.put("birthday", "2014-12-03");
 
-		return new DefaultInsertStatement(insertValues, "people");
+		return new DefaultInsertStatement(insertValues, "test", "people");
 	}
 
 	public static InsertStatement createPeopleInsert3() {
@@ -42,11 +42,11 @@ public class InsertStatements {
 		insertValues.put("age", "1029");
 		insertValues.put("birthday", "1024-02-02");
 
-		return new DefaultInsertStatement(insertValues, "people");
+		return new DefaultInsertStatement(insertValues, "test", "people");
 	}
 
 	public static InsertStatement createPeopleInsertEmpty() {
-		return new DefaultInsertStatement(new HashMap<>(), "people");
+		return new DefaultInsertStatement(new HashMap<>(), "test", "people");
 	}
 
 	public static InsertStatement createPeopleInsert4Columns() {
@@ -56,7 +56,17 @@ public class InsertStatements {
 		insertValues.put("sex", "m");
 		insertValues.put("birthday", "2024-02-02");
 
-		return new DefaultInsertStatement(insertValues, "people");
+		return new DefaultInsertStatement(insertValues, "test", "people");
+	}
+
+	public static InsertStatement createPeopleInsert4Columns2() {
+		Map<String, String> insertValues = new LinkedHashMap<>();
+		insertValues.put("name", "hanna");
+		insertValues.put("age", "29");
+		insertValues.put("sex", "f");
+		insertValues.put("birthday", "2014-12-03");
+
+		return new DefaultInsertStatement(insertValues, "test", "people");
 	}
 
 	public static InsertStatement createPeopleInsertOtherOrder() {
@@ -65,6 +75,20 @@ public class InsertStatements {
 		insertValues.put("birthday", "1024-02-02");
 		insertValues.put("age", "14");
 
-		return new DefaultInsertStatement(insertValues, "people");
+		return new DefaultInsertStatement(insertValues, "test", "people");
 	}
+
+	public static InsertStatement createInsertSpacesInNames() {
+		Map<String, String> insertValues = new LinkedHashMap<>();
+		insertValues.put("name", "tim");
+
+		return new DefaultInsertStatement(insertValues, "test schema", "all people");
+	}
+
+    public static InsertStatement createInsertQuoteInValue() {
+        Map<String, String> insertValues = new LinkedHashMap<>();
+        insertValues.put("name", "Max O'Connor");
+
+        return new DefaultInsertStatement(insertValues, "test", "people");
+    }
 }
