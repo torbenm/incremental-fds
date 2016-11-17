@@ -3,9 +3,9 @@ package org.mp.naumann.algorithms;
 import java.util.Collection;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.processor.batch.Batch;
-import org.mp.naumann.processor.handler.DataAwareBatchHandler;
+import org.mp.naumann.processor.handler.BatchHandler;
 
-public interface IncrementalAlgorithm<T, R> extends DataAwareBatchHandler {
+public interface IncrementalAlgorithm<T, R> extends BatchHandler {
 
 	@Override
 	default void handleBatch(Batch batch) {
