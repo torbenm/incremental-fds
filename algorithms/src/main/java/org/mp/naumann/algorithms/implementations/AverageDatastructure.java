@@ -20,7 +20,7 @@ public class AverageDatastructure {
 	public void increaseSum(double deltaSum) {
 		this.sum += deltaSum;
 	}
-	
+
 	public void decreaseCount() {
 		decreaseCount(1);
 	}
@@ -42,8 +42,11 @@ public class AverageDatastructure {
 		}
 		this.count += deltaCount;
 	}
-	
-	public double getAverage() {
+
+	public Double getAverage() {
+		if (count == 0) {
+			return null;
+		}
 		return sum / count;
 	}
 

@@ -2,7 +2,7 @@ package org.mp.naumann;
 
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.implementations.AverageIncrementalAlgorithm;
-import org.mp.naumann.algorithms.result.PrintResultReceiver;
+import org.mp.naumann.algorithms.result.PrintResultListener;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.processor.BatchProcessor;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
@@ -23,8 +23,11 @@ public class Demo {
 		DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
 		BatchProcessor bp = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 		IncrementalAlgorithm<?, ?> batchHandler = new AverageIncrementalAlgorithm("population");
-		batchHandler.addResultListener(new PrintResultReceiver<>());
+		IncrementalAlgorithm<?, ?> batchHandler2 = new AverageIncrementalAlgorithm("area");
+		batchHandler.addResultListener(new PrintResultListener<>("population"));
+		batchHandler2.addResultListener(new PrintResultListener<>("area"));
 		bp.addBatchHandler(batchHandler);
+		bp.addBatchHandler(batchHandler2);
 		batchSource.startStreaming();
 	}
 
