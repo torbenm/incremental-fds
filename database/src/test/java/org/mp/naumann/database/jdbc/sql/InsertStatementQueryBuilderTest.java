@@ -113,22 +113,13 @@ public class InsertStatementQueryBuilderTest {
                 createPeopleInsert3(),
                 createPeopleInsertOtherOrder()
         );
-        // One of these has to be passed.
-        // TODO: How to check both and accept if one is correct?
-        String expected = "INSERT INTO test.people (name, birthday, age) VALUES "+
-                "('tim', '1024-02-02', '14');"+
-                "\n"+  "INSERT INTO people (name, age, birthday) VALUES " +
-                "('max', '15', '2016-11-01'), " +
-                "('hanna', '29', '2014-12-03'), " +
-                "('frieda', '1029', '1024-02-02');";
-
-        String expected2 = "INSERT INTO test.people (name, birthday, age) VALUES " +
+        String expected = "INSERT INTO test.people (name, birthday, age) VALUES " +
                 "('max', '2016-11-01', '15'), " +
                 "('hanna', '2014-12-03', '29'), " +
                 "('frieda', '1024-02-02', '1029'), " +
                 "('tim', '1024-02-02', '14');";
 
-        assertEquals(expected2, isqb.generateMulti(statements));
+        assertEquals(expected, isqb.generateMulti(statements));
     }
 
     @Test
