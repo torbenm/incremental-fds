@@ -9,9 +9,12 @@ public class DefaultInsertStatement extends StatementBase implements InsertState
     }
 
     @Override
-    public boolean isOfEqualSchema(InsertStatement statement) {
-        return statement.getTableName().equalsIgnoreCase(this.getTableName()) &&
-            this.getValueMap().size() == statement.getValueMap().size() &&
+    public boolean isOfEqualLayout(Statement statement) {
+        return
+                statement.getClass().equals(this.getClass()) &&
+                statement.getTableName().equalsIgnoreCase(this.getTableName()) &&
+                statement.getSchema().equalsIgnoreCase(this.getSchema()) &&
+                this.getValueMap().size() == statement.getValueMap().size() &&
                 this.getValueMap().keySet().equals(statement.getValueMap().keySet());
     }
 }

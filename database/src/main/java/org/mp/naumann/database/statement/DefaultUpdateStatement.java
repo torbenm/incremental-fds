@@ -15,5 +15,9 @@ public class DefaultUpdateStatement extends StatementBase implements UpdateState
         return oldValueMap;
     }
 
+    @Override
+    public boolean isOfEqualLayout(Statement statement) {
+        return false;
+    }
 
 }

@@ -32,4 +32,7 @@ class StatementBase implements Statement {
 	public Map<String, String> getValueMap() {
 		return map;
 	}
+
+	@Override
+	public boolean isOfEqualLayout(Statement statement) { return false; }
 }
