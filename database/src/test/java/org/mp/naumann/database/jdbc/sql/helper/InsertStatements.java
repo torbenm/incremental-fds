@@ -77,4 +77,18 @@ public class InsertStatements {
 
 		return new DefaultInsertStatement(insertValues, "test", "people");
 	}
+
+	public static InsertStatement createInsertSpacesInNames() {
+		Map<String, String> insertValues = new LinkedHashMap<>();
+		insertValues.put("name", "tim");
+
+		return new DefaultInsertStatement(insertValues, "test schema", "all people");
+	}
+
+    public static InsertStatement createInsertQuoteInValue() {
+        Map<String, String> insertValues = new LinkedHashMap<>();
+        insertValues.put("name", "Max O'Connor");
+
+        return new DefaultInsertStatement(insertValues, "test", "people");
+    }
 }

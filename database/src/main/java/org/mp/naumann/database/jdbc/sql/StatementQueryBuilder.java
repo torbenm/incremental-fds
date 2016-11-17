@@ -13,6 +13,14 @@ interface StatementQueryBuilder<T extends Statement> {
             throw new QueryBuilderException("Statement must not have an empty value list.");
     }
 
+    default String formatName(String name) {
+        return name.contains(" ") ? "\"" + name + "\"" : name;
+    }
+
+    default String getCompleteTableName(T statement) {
+        return formatName(statement.getSchema()) + "." + formatName(statement.getTableName());
+    }
+
     default String generateSingle(T statement) throws QueryBuilderException {
         validateStatement(statement);
         return openStatement(statement) + buildKeyClause(statement) + buildValueClause(statement) + ";";

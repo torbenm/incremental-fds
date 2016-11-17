@@ -19,7 +19,7 @@ class DeleteStatementQueryBuilder implements StatementQueryBuilder<DeleteStateme
 
     @Override
     public String openStatement(DeleteStatement statement) {
-        return "DELETE FROM " + statement.getSchema() + "." + statement.getTableName();
+        return "DELETE FROM " + getCompleteTableName(statement);
     }
 
     @Override
@@ -31,5 +31,5 @@ class DeleteStatementQueryBuilder implements StatementQueryBuilder<DeleteStateme
     public String buildValueClause(DeleteStatement statement) {
         return "(" + SqlQueryBuilder.toKeyEqualsValueMap(statement.getValueMap(), " AND ") + ")";
     }
-    
+
 }

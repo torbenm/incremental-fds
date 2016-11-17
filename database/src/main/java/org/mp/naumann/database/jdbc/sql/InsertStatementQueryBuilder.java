@@ -18,7 +18,7 @@ class InsertStatementQueryBuilder implements StatementQueryBuilder<InsertStateme
 
     @Override
     public String openStatement(InsertStatement statement){
-        return "INSERT INTO " + statement.getSchema() + "." + statement.getTableName() + " ";
+        return "INSERT INTO " + getCompleteTableName(statement) + " ";
     }
 
     @Override
@@ -38,7 +38,7 @@ class InsertStatementQueryBuilder implements StatementQueryBuilder<InsertStateme
                 .getValueMap()
                 .values()
                 .parallelStream()
-                        .map(n -> "'" + n + "'")
+                .map(n -> "'" + SqlQueryBuilder.formatValue(n) + "'")
                 .collect(Collectors.joining(", ")) +
                 ")";
     }

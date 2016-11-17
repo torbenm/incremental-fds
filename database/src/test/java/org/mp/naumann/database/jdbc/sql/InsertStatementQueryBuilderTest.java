@@ -53,8 +53,6 @@ public class InsertStatementQueryBuilderTest {
         assertEquals("INSERT INTO test.people ", isqb.openStatement(insertStatement));
     }
 
-
-
     @Test
     public void testGenerateQueryForInsertStatementsAllSameTable() throws QueryBuilderException {
         List<InsertStatement> statements = Arrays.asList(
@@ -131,5 +129,19 @@ public class InsertStatementQueryBuilderTest {
                 "('tim', '1024-02-02', '14');";
 
         assertEquals(isqb.generateMulti(statements), expected2);
+    }
+
+    @Test
+    public void testSpacesInNames() throws QueryBuilderException {
+        InsertStatement insertStatement = createInsertSpacesInNames();
+        String expected = "INSERT INTO \"test schema\".\"all people\" (name) VALUES ('tim');";
+        assertEquals(isqb.generateSingle(insertStatement), expected);
+    }
+
+    @Test
+    public void testQuoteInValues() throws QueryBuilderException {
+        InsertStatement insertStatement = createInsertQuoteInValue();
+        String expected = "INSERT INTO test.people (name) VALUES ('Max O''Connor');";
+        assertEquals(isqb.generateSingle(insertStatement), expected);
     }
 }

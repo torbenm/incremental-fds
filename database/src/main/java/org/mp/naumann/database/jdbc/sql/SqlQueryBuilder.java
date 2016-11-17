@@ -36,11 +36,15 @@ public class SqlQueryBuilder {
         ).collect(Collectors.joining("\n"));
     }
 
+    static String formatValue(String value) {
+        return value.replace("'", "''");
+    }
+
     static String toKeyEqualsValueMap(Map<String, String> valueMap, String seperator){
         return valueMap
                 .entrySet()
                 .parallelStream()
-                .map(n -> n.getKey() + " = '" + n.getValue()+"'")
+                .map(n -> n.getKey() + " = '" + formatValue(n.getValue()) + "'")
                 .collect(Collectors.joining(seperator));
     }
 }

@@ -24,7 +24,7 @@ class UpdateStatementQueryBuilder implements StatementQueryBuilder<UpdateStateme
 
     @Override
     public String openStatement(UpdateStatement statement){
-        return "UPDATE " + statement.getSchema() + "." + statement.getTableName();
+        return "UPDATE " + getCompleteTableName(statement);
     }
 
     @Override
