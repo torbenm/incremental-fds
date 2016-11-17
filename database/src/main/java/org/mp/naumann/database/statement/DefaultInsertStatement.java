@@ -4,8 +4,8 @@ import java.util.Map;
 
 public class DefaultInsertStatement extends StatementBase implements InsertStatement {
 
-    public DefaultInsertStatement(Map<String, String> map, String tableName) {
-        super(map, tableName);
+    public DefaultInsertStatement(Map<String, String> map, String schema, String tableName) {
+        super(map, schema, tableName);
     }
 
     @Override

@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import org.mp.naumann.database.statement.DeleteStatement;
 
-public class DeleteStatementQueryBuilder implements StatementQueryBuilder<DeleteStatement> {
+class DeleteStatementQueryBuilder implements StatementQueryBuilder<DeleteStatement> {
 
     private static DeleteStatementQueryBuilder instance;
 
@@ -16,7 +16,7 @@ public class DeleteStatementQueryBuilder implements StatementQueryBuilder<Delete
         return instance;
     }
 
-    protected  DeleteStatementQueryBuilder(){}
+    private DeleteStatementQueryBuilder() { }
 
     @Override
     public String generateSingle(DeleteStatement statement) {
@@ -54,8 +54,8 @@ public class DeleteStatementQueryBuilder implements StatementQueryBuilder<Delete
         return "";
     }
 
-    protected String openStatement(DeleteStatement statement) {
-        return "DELETE FROM " + statement.getTableName();
+    private String openStatement(DeleteStatement statement) {
+        return "DELETE FROM " + statement.getSchema() + "." + statement.getTableName();
     }
 
     protected String generateKeyValueMap(DeleteStatement statement) {

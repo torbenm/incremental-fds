@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import org.mp.naumann.database.statement.InsertStatement;
 
-public class InsertStatementQueryBuilder implements StatementQueryBuilder<InsertStatement> {
+class InsertStatementQueryBuilder implements StatementQueryBuilder<InsertStatement> {
 
     private static InsertStatementQueryBuilder instance;
 
@@ -16,9 +16,7 @@ public class InsertStatementQueryBuilder implements StatementQueryBuilder<Insert
         return instance;
     }
 
-    protected InsertStatementQueryBuilder(){
-
-    }
+    InsertStatementQueryBuilder(){ }
 
     @Override
     public String generateSingle(InsertStatement statement) {
@@ -43,7 +41,6 @@ public class InsertStatementQueryBuilder implements StatementQueryBuilder<Insert
                 }
             }
 
-
             String queries = unequalToBase.size() > 0 ? unequalToBase
                     .parallelStream()
                     .map(this::generateSingle)
@@ -61,12 +58,11 @@ public class InsertStatementQueryBuilder implements StatementQueryBuilder<Insert
         return "";
     }
 
-
-    protected String openStatement(InsertStatement statement){
-        return "INSERT INTO "+statement.getTableName()+" ";
+    String openStatement(InsertStatement statement){
+        return "INSERT INTO " + statement.getSchema() + "." + statement.getTableName() + " ";
     }
 
-    protected String buildKeyMap(InsertStatement statement){
+    String buildKeyMap(InsertStatement statement){
         return "(" +
                 statement
                     .getValueMap()
@@ -75,7 +71,7 @@ public class InsertStatementQueryBuilder implements StatementQueryBuilder<Insert
                 + ") VALUES ";
     }
 
-    protected String buildValueMap(InsertStatement statement){
+    String buildValueMap(InsertStatement statement){
         return "(" +
                 statement
                 .getValueMap()

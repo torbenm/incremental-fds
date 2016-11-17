@@ -11,18 +11,19 @@ import org.mp.naumann.database.statement.DeleteStatement;
 
 public class DeleteStatementQueryBuilderTest {
 
-    DeleteStatementQueryBuilder dsqb = DeleteStatementQueryBuilder.get();
+    private DeleteStatementQueryBuilder dsqb = DeleteStatementQueryBuilder.get();
+
     @Test
     public void testGenerateQueryForDeleteStatement(){
         DeleteStatement statement = DeleteStatements.createDeleteStatement1();
-        String expected = "DELETE FROM places WHERE" +
+        String expected = "DELETE FROM test.places WHERE" +
                 " country = 'DE' AND city = 'Berlin' AND street = 'Unter den Linden';";
         assertEquals(expected, dsqb.generateSingle(statement));
 
 
         //TODO: Should we rather throw an error here?
         statement = DeleteStatements.createDeleteStatementEmptyValueMap();
-        expected = "DELETE FROM places;";
+        expected = "DELETE FROM test.places;";
         assertEquals(expected, SqlQueryBuilder.generateSql(statement));
     }
 
@@ -32,7 +33,7 @@ public class DeleteStatementQueryBuilderTest {
                 DeleteStatements.createDeleteStatement1(),
                 DeleteStatements.createDeleteStatement2()
         );
-        String expected = "DELETE FROM places WHERE " +
+        String expected = "DELETE FROM test.places WHERE " +
                 "(country = 'DE' AND city = 'Berlin' AND street = 'Unter den Linden')"+
                 " OR (country = 'DE' AND city = 'Potsdam' AND street = 'August-Bebel-Str.');";
 
@@ -46,7 +47,7 @@ public class DeleteStatementQueryBuilderTest {
                 DeleteStatements.createDeleteStatement2(),
                 DeleteStatements.createDeleteStatement2Columns()
         );
-        String expected = "DELETE FROM places WHERE " +
+        String expected = "DELETE FROM test.places WHERE " +
                 "(country = 'DE' AND city = 'Berlin' AND street = 'Unter den Linden')"+
                 " OR (country = 'DE' AND city = 'Potsdam' AND street = 'August-Bebel-Str.')"+
                 " OR (country = 'US' AND city = 'San Francisco');";
@@ -62,8 +63,8 @@ public class DeleteStatementQueryBuilderTest {
                 DeleteStatements.createDeleteStatementOtherTable(),
                 DeleteStatements.createDeleteStatement2Columns()
         );
-        String expected = "DELETE FROM persons WHERE name = 'Max' AND age = '15';\n"+
-                "DELETE FROM places WHERE " +
+        String expected = "DELETE FROM test.persons WHERE name = 'Max' AND age = '15';\n"+
+                "DELETE FROM test.places WHERE " +
                 "(country = 'DE' AND city = 'Berlin' AND street = 'Unter den Linden')"+
                 " OR (country = 'DE' AND city = 'Potsdam' AND street = 'August-Bebel-Str.')"+
                 " OR (country = 'US' AND city = 'San Francisco');";

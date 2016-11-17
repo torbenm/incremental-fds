@@ -17,17 +17,16 @@ import org.mp.naumann.database.statement.InsertStatement;
 
 public class InsertStatementQueryBuilderTest {
 
-
     private InsertStatementQueryBuilder isqb = new InsertStatementQueryBuilder();
 
     @Test
     public void testGenerateSingle(){
         InsertStatement insertStatement = createPeopleInsert1();
-        String expected = "INSERT INTO people (name, birthday, age) VALUES ('max', '2016-11-01', '15');";
+        String expected = "INSERT INTO test.people (name, birthday, age) VALUES ('max', '2016-11-01', '15');";
         assertEquals(isqb.generateSingle(insertStatement), expected);
 
         insertStatement = createPeopleInsertEmpty();
-        expected = "INSERT INTO people () VALUES ();";
+        expected = "INSERT INTO test.people () VALUES ();";
         assertEquals(isqb.generateSingle(insertStatement), expected);
     }
 
@@ -52,10 +51,10 @@ public class InsertStatementQueryBuilderTest {
     @Test
     public void testOpenStatement(){
         InsertStatement insertStatement = createPeopleInsert1();
-        assertEquals("INSERT INTO people ", isqb.openStatement(insertStatement));
+        assertEquals("INSERT INTO test.people ", isqb.openStatement(insertStatement));
 
         insertStatement = createPeopleInsertEmpty();
-        assertEquals("INSERT INTO people ", isqb.openStatement(insertStatement));
+        assertEquals("INSERT INTO test.people ", isqb.openStatement(insertStatement));
     }
 
 
@@ -68,7 +67,7 @@ public class InsertStatementQueryBuilderTest {
                 createPeopleInsert3()
         );
 
-        String expected = "INSERT INTO people (name, birthday, age) VALUES " +
+        String expected = "INSERT INTO test.people (name, birthday, age) VALUES " +
                 "('max', '2016-11-01', '15'), " +
                 "('hanna', '2014-12-03', '29'), " +
                 "('frieda', '1024-02-02', '1029');";
@@ -84,9 +83,9 @@ public class InsertStatementQueryBuilderTest {
                 createPeopleInsert3()
 
         );
-        String expected = "INSERT INTO persons (name, birthday, age) VALUES "+
+        String expected = "INSERT INTO test.persons (name, birthday, age) VALUES "+
                 "('max', '2016-11-01', '15');"+
-                "\n"+  "INSERT INTO people (name, birthday, age) VALUES " +
+                "\n"+  "INSERT INTO test.people (name, birthday, age) VALUES " +
                 "('max', '2016-11-01', '15'), " +
                 "('hanna', '2014-12-03', '29'), " +
                 "('frieda', '1024-02-02', '1029');";
@@ -102,9 +101,9 @@ public class InsertStatementQueryBuilderTest {
                 createPeopleInsert3()
 
         );
-        String expected = "INSERT INTO people (name, birthday, age, sex) VALUES "+
+        String expected = "INSERT INTO test.people (name, birthday, age, sex) VALUES "+
                 "('fritz', '2024-02-02', '14', 'm');"+
-                "\n"+   "INSERT INTO people (name, birthday, age) VALUES " +
+                "\n"+   "INSERT INTO test.people (name, birthday, age) VALUES " +
                 "('max', '2016-11-01', '15'), " +
                 "('hanna', '2014-12-03', '29'), " +
                 "('frieda', '1024-02-02', '1029');";
@@ -121,14 +120,14 @@ public class InsertStatementQueryBuilderTest {
         );
         // One of these has to be passed.
         // TODO: How to check both and accept if one is correct?
-        String expected = "INSERT INTO people (name, birthday, age) VALUES "+
+        String expected = "INSERT INTO test.people (name, birthday, age) VALUES "+
                 "('tim', '1024-02-02', '14');"+
                 "\n"+  "INSERT INTO people (name, age, birthday) VALUES " +
                 "('max', '15', '2016-11-01'), " +
                 "('hanna', '29', '2014-12-03'), " +
                 "('frieda', '1029', '1024-02-02');";
 
-        String expected2 = "INSERT INTO people (name, birthday, age) VALUES " +
+        String expected2 = "INSERT INTO test.people (name, birthday, age) VALUES " +
                 "('max', '2016-11-01', '15'), " +
                 "('hanna', '2014-12-03', '29'), " +
                 "('frieda', '1024-02-02', '1029'), " +

@@ -6,8 +6,8 @@ public class DefaultUpdateStatement extends StatementBase implements UpdateState
 
     private final Map<String, String> oldValueMap;
 
-    public DefaultUpdateStatement(Map<String, String> map, Map<String, String> oldValueMap, String tableName) {
-        super(map, tableName);
+    public DefaultUpdateStatement(Map<String, String> map, Map<String, String> oldValueMap, String schema, String tableName) {
+        super(map, schema, tableName);
         this.oldValueMap = oldValueMap;
     }
 

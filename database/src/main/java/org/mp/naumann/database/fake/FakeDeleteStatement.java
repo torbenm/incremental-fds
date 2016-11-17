@@ -12,6 +12,11 @@ public class FakeDeleteStatement implements DeleteStatement {
     }
 
     @Override
+    public String getSchema() {
+        return null;
+    }
+
+    @Override
     public Map<String, String> getValueMap() {
         return null;
     }

@@ -12,6 +12,11 @@ public class FakeInsertStatement implements InsertStatement {
     }
 
     @Override
+    public String getSchema() {
+        return null;
+    }
+
+    @Override
     public Map<String, String> getValueMap() {
         return null;
     }

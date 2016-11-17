@@ -33,7 +33,7 @@ public class UpdateStatementQueryBuilder implements StatementQueryBuilder<Update
     }
 
     protected String openStatement(UpdateStatement statement){
-        return "UPDATE "+statement.getTableName();
+        return "UPDATE " + statement.getSchema() + "." + statement.getTableName();
     }
 
     protected String buildSetStatement(UpdateStatement statement){
