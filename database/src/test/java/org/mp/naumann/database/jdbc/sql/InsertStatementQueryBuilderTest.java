@@ -65,7 +65,7 @@ public class InsertStatementQueryBuilderTest {
                 "('max', '2016-11-01', '15'), " +
                 "('hanna', '2014-12-03', '29'), " +
                 "('frieda', '1024-02-02', '1029');";
-        assertEquals(isqb.generateMulti(statements), expected);
+        assertEquals(expected, isqb.generateMulti(statements));
     }
 
     @Test
@@ -83,7 +83,7 @@ public class InsertStatementQueryBuilderTest {
                 "('frieda', '1024-02-02', '1029');" +
                 "\n" + "INSERT INTO test.persons (name, birthday, age) VALUES "+
                 "('max', '2016-11-01', '15');";
-        assertEquals(isqb.generateMulti(statements), expected);
+        assertEquals(expected, isqb.generateMulti(statements));
     }
 
     @Test
@@ -102,7 +102,7 @@ public class InsertStatementQueryBuilderTest {
                 "\n" + "INSERT INTO test.people (name, birthday, age, sex) VALUES " +
                 "('fritz', '2024-02-02', '14', 'm'), " +
                 "('hanna', '2014-12-03', '29', 'f');";
-        assertEquals(isqb.generateMulti(statements), expected);
+        assertEquals(expected, isqb.generateMulti(statements));
     }
 
     @Test
@@ -128,20 +128,20 @@ public class InsertStatementQueryBuilderTest {
                 "('frieda', '1024-02-02', '1029'), " +
                 "('tim', '1024-02-02', '14');";
 
-        assertEquals(isqb.generateMulti(statements), expected2);
+        assertEquals(expected2, isqb.generateMulti(statements));
     }
 
     @Test
     public void testSpacesInNames() throws QueryBuilderException {
         InsertStatement insertStatement = createInsertSpacesInNames();
         String expected = "INSERT INTO \"test schema\".\"all people\" (name) VALUES ('tim');";
-        assertEquals(isqb.generateSingle(insertStatement), expected);
+        assertEquals(expected, isqb.generateSingle(insertStatement));
     }
 
     @Test
     public void testQuoteInValues() throws QueryBuilderException {
         InsertStatement insertStatement = createInsertQuoteInValue();
         String expected = "INSERT INTO test.people (name) VALUES ('Max O''Connor');";
-        assertEquals(isqb.generateSingle(insertStatement), expected);
+        assertEquals(expected, isqb.generateSingle(insertStatement));
     }
 }

@@ -24,7 +24,7 @@ public class JdbcDataConnectorTest extends JdbcTest {
 	@Test
 	public void testGetTable() {
 		Table table = connector.getTable(schema, tableName);
-		assertEquals(table.getName(), tableName);
+		assertEquals(tableName, table.getName());
 	}
 
 	@Rule

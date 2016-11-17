@@ -27,7 +27,7 @@ public class AbstractBatchSourceTest implements BatchSourceTest {
         FakeBatchSourceListener fbsl2 = new FakeBatchSourceListener();
         abs.addBatchSourceListener(fbsl);
         abs.addBatchSourceListener(fbsl2);
-        assertEquals(abs.getBatchSourceListener().size(), 2);
+        assertEquals(2, abs.getBatchSourceListener().size());
         assertTrue(abs.getBatchSourceListener().contains(fbsl));
         assertTrue(abs.getBatchSourceListener().contains(fbsl2));
     }
@@ -39,7 +39,7 @@ public class AbstractBatchSourceTest implements BatchSourceTest {
         abs.addBatchSourceListener(fbsl);
         abs.addBatchSourceListener(fbsl2);
         abs.removeBatchSourceListener(fbsl);
-        assertEquals(abs.getBatchSourceListener().size(), 1);
+        assertEquals(1, abs.getBatchSourceListener().size());
         assertFalse(abs.getBatchSourceListener().contains(fbsl));
         assertTrue(abs.getBatchSourceListener().contains(fbsl2));
     }
@@ -50,9 +50,10 @@ public class AbstractBatchSourceTest implements BatchSourceTest {
             abs.addBatchSourceListener(new FakeBatchSourceListener());
         }
         abs.notifyListener(new FakeBatch());
-        assertEquals(abs.getBatchSourceListener()
+        assertEquals(0,
+                abs.getBatchSourceListener()
                 .parallelStream()
                 .filter(n -> !((FakeBatchSourceListener)n).isReached())
-                .count(), 0);
+                .count());
     }
 }
