@@ -26,18 +26,16 @@ public class Validator {
 	private int numRecords;
 	private List<PositionListIndex> plis;
 	private int[][] compressedRecords;
-	private float efficiencyThreshold;
 	private MemoryGuardian memoryGuardian;
 	private ExecutorService executor;
 	
 	private int level;
 
-	public Validator(FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
+	public Validator(FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, boolean parallel, MemoryGuardian memoryGuardian) {
 		this.posCover = posCover;
 		this.numRecords = compressedRecords.length;
 		this.plis = plis;
 		this.compressedRecords = compressedRecords;
-		this.efficiencyThreshold = efficiencyThreshold;
 		this.memoryGuardian = memoryGuardian;
 		
 		if (parallel) {
@@ -64,7 +62,6 @@ public class Validator {
 			this.validations += other.validations;
 			this.intersections += other.intersections;
 			this.invalidFDs.addAll(other.invalidFDs);
-			this.comparisonSuggestions.addAll(other.comparisonSuggestions);
 		}
 	}
 	
@@ -176,21 +173,34 @@ public class Validator {
 	}
 	
 	public void validate(int level, List<FDTreeElementLhsPair> currentLevel) throws AlgorithmExecutionException {
-		int numAttributes = this.plis.size();
 		this.level = level;
 		
 		LOG.info("Validating FDs using plis ...");
 		
+		run(currentLevel);
+		
+		if (this.executor != null) {
+			this.executor.shutdown();
+			try {
+				this.executor.awaitTermination(365, TimeUnit.DAYS);
+			}
+			catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return;
+	}
+
+	public void run(List<FDTreeElementLhsPair> currentLevel) throws AlgorithmExecutionException {
+		int numAttributes = this.plis.size();
 		// Start the level-wise validation/discovery
-		int previousNumInvalidFds = 0;
-		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 		LOG.info("\tLevel " + this.level + ": " + currentLevel.size() + " elements; ");
 			
 		// Validate current level
 		LOG.info("(V)");
 			
 		ValidationResult validationResult = (this.executor == null) ? this.validateSequential(currentLevel) : this.validateParallel(currentLevel);
-		comparisonSuggestions.addAll(validationResult.comparisonSuggestions);
 			
 		// If the next level exceeds the predefined maximum lhs size, then we can stop here
 		if ((this.posCover.getMaxDepth() > -1) && (this.level >= this.posCover.getMaxDepth())) {
@@ -226,21 +236,6 @@ public class Validator {
 		LOG.info(validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + candidates + " new candidates; --> " + numValidFds + " FDs");
 		
 		// Decide if we continue validating the next level or if we go back into the sampling phase
-		if ((numInvalidFds > numValidFds * this.efficiencyThreshold) && (previousNumInvalidFds < numInvalidFds))
-			return;
-		previousNumInvalidFds = numInvalidFds;
-		
-		if (this.executor != null) {
-			this.executor.shutdown();
-			try {
-				this.executor.awaitTermination(365, TimeUnit.DAYS);
-			}
-			catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		return;
 	}
 	
 	private OpenBitSet extendWith(OpenBitSet lhs, int rhs, int extensionAttr) {
