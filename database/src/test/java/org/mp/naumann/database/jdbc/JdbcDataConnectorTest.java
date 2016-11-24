@@ -27,6 +27,14 @@ public class JdbcDataConnectorTest extends JdbcTest {
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
+	@Test
+	public void testGetInvalidTable() {
+		String invalidName = "invalid";
+		thrown.expect(RuntimeException.class);
+		thrown.expectMessage(String.format("Table '%s' not found in schema '%s'", invalidName, schema));
+		connector.getTable(schema, invalidName);
+	}
+
     /*
     there's a connection timeout of ~11s that I can't get rid of ...
     it's annoying to always have to wait for that, I guess let's just skip this test for now ...
