@@ -112,6 +112,8 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
         return tableName;
     }
 
+    public String getSchema() { return schema; }
+
     protected int getCurrentStatementPosition() {
         return currentStatementPosition;
     }

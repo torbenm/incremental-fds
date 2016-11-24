@@ -3,6 +3,7 @@ package org.mp.naumann.database.fake;
 import java.util.Map;
 
 import org.mp.naumann.database.statement.InsertStatement;
+import org.mp.naumann.database.statement.Statement;
 
 public class FakeInsertStatement implements InsertStatement {
 
@@ -12,12 +13,16 @@ public class FakeInsertStatement implements InsertStatement {
     }
 
     @Override
+    public String getSchema() {
+        return null;
+    }
+
+    @Override
     public Map<String, String> getValueMap() {
         return null;
     }
 
     @Override
-    public boolean isOfEqualSchema(InsertStatement statement) {
-        return false;
-    }
+    public boolean isOfEqualLayout(Statement statement) { return false; }
+
 }

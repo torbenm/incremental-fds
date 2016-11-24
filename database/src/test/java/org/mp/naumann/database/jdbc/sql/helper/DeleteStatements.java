@@ -14,7 +14,7 @@ public class DeleteStatements {
         valueMap.put("country", "DE");
         valueMap.put("city", "Berlin");
         valueMap.put("street", "Unter den Linden");
-        return new DefaultDeleteStatement(valueMap, "places");
+        return new DefaultDeleteStatement(valueMap, "test", "places");
     }
 
     public static DeleteStatement createDeleteStatement2(){
@@ -22,25 +22,25 @@ public class DeleteStatements {
         valueMap.put("country", "DE");
         valueMap.put("city", "Potsdam");
         valueMap.put("street", "August-Bebel-Str.");
-        return new DefaultDeleteStatement(valueMap, "places");
+        return new DefaultDeleteStatement(valueMap, "test", "places");
     }
     public static DeleteStatement createDeleteStatement2Columns(){
         Map<String, String> valueMap = new HashMap<>();
         valueMap.put("country", "US");
         valueMap.put("city", "San Francisco");
-        return new DefaultDeleteStatement(valueMap, "places");
+        return new DefaultDeleteStatement(valueMap, "test", "places");
     }
 
     public static DeleteStatement createDeleteStatementOtherTable(){
         Map<String, String> valueMap = new HashMap<>();
         valueMap.put("name", "Max");
         valueMap.put("age", "15");
-        return new DefaultDeleteStatement(valueMap, "persons");
+        return new DefaultDeleteStatement(valueMap, "test", "persons");
     }
 
     public static DeleteStatement createDeleteStatementEmptyValueMap(){
         Map<String, String> valueMap = new HashMap<>();
-        return new DefaultDeleteStatement(valueMap, "places");
+        return new DefaultDeleteStatement(valueMap, "test", "places");
     }
 
 }

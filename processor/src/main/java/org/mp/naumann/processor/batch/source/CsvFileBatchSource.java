@@ -57,9 +57,9 @@ public class CsvFileBatchSource extends SizableBatchSource {
 	protected Statement createStatement(String type, Map<String, String> values) {
 		switch (type.toLowerCase()) {
 		case "insert":
-			return new DefaultInsertStatement(values, this.getTableName());
+			return new DefaultInsertStatement(values, this.getSchema(), this.getTableName());
 		case "delete":
-			return new DefaultDeleteStatement(values, this.getTableName());
+			return new DefaultDeleteStatement(values, this.getSchema(), this.getTableName());
 		case "update":
 			Map<String, String> oldValues = new HashMap<>();
 			Map<String, String> newValues = new HashMap<>();
@@ -67,7 +67,7 @@ public class CsvFileBatchSource extends SizableBatchSource {
 				oldValues.put(key, value.split("\\|")[0]);
 				newValues.put(key, value.split("\\|")[1]);
 			});
-			return new DefaultUpdateStatement(newValues, oldValues, this.getTableName());
+			return new DefaultUpdateStatement(newValues, oldValues, this.getSchema(), this.getTableName());
 		default:
 			return null; // TODO: need something better here
 		}

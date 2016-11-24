@@ -33,8 +33,8 @@ public class SynchronousBatchProcessorTests extends BatchProcessorTests {
 
     @Test
     public void testMultipleBatchDistribution(){
-        assertEquals(testDistributeToMultipleBatches(batchProcessor, 10), 10L);
-        assertEquals(testDistributeToMultipleBatches(batchProcessor, 5), 15L);
+        assertEquals(10L, testDistributeToMultipleBatches(batchProcessor, 10));
+        assertEquals(15L, testDistributeToMultipleBatches(batchProcessor, 5));
     }
 
     @Test
