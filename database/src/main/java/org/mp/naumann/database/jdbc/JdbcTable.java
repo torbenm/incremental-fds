@@ -60,6 +60,15 @@ class JdbcTable implements Table {
 						columns.add(new StringColumn(rs.getString(4)));
 					}
 				}
+
+				// workaround because the csvdriver needs tablenames as "schema.table" (probably a bug?)
+				if (columns.isEmpty()) {
+                    try (ResultSet rs = meta.getColumns(null, schema, schema + "." + name, null)) {
+                        while (rs.next()) {
+                            columns.add(new StringColumn(rs.getString(4)));
+                        }
+                    }
+                }
 			} catch (SQLException e) {
 				throw new RuntimeException("Failed to retrieve columns", e);
 			}

@@ -16,12 +16,11 @@ import static org.junit.Assert.assertEquals;
 
 public class JdbcTableTest extends JdbcTest {
 
-	private static Table table, invalidTable;
+	private static Table table;
 
 	@BeforeClass
 	public static void setUpTables() {
 		table = connector.getTable(schema, tableName);
-		invalidTable = connector.getTable("", "invalid");
 	}
 
 	@Test
@@ -34,13 +33,11 @@ public class JdbcTableTest extends JdbcTest {
 		List<String> columnNames = table.getColumnNames();
 		assertEquals(17, columnNames.size());
 		assertEquals("country_en", columnNames.get(0));
-		assertEquals(0, invalidTable.getColumnNames().size());
 	}
 
 	@Test
 	public void testGetRowCount() {
 		assertEquals(248, table.getRowCount());
-		assertEquals(-1, invalidTable.getRowCount());
 	}
 
 	@Test
