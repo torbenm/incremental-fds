@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class HyFD implements FunctionalDependencyAlgorithm {
 
@@ -51,6 +52,8 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 	private List<HashMap<String, IntArrayList>> clusterMaps;
 	private int numRecords;
+
+	private List<Integer> pliSequence;
 
 	public HyFD(Table table, FunctionalDependencyResultReceiver resultReceiver) {
 		this.table = table;
@@ -175,6 +178,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		LOG.info("... done! (" + numFDs + " FDs)");
 		
 		this.posCover = posCover;
+		this.pliSequence = plis.stream().map(PositionListIndex::getAttribute).collect(Collectors.toList());
 	}
 
 	public FDTree getPosCover() {
@@ -215,5 +219,9 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 	public int getNumRecords() {
 		return numRecords;
+	}
+
+	public List<Integer> getPliSequence() {
+		return pliSequence;
 	}
 }

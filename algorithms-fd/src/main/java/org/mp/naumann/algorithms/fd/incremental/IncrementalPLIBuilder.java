@@ -8,8 +8,6 @@ import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,18 +21,20 @@ public class IncrementalPLIBuilder {
 	private List<HashMap<String, IntArrayList>> clusterMaps;
 	private List<PositionListIndex> plis;
 	private final List<String> columns;
+	private final List<Integer> pliSequence;
 	private int[][] compressedRecords;
 
-	public IncrementalPLIBuilder(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<String> columns) {
+	public IncrementalPLIBuilder(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<String> columns, List<Integer> pliSequence) {
 		this.numRecords = numRecords;
 		this.clusterMaps = clusterMaps;
 		this.columns = columns;
+		this.pliSequence = pliSequence;
 		updateDataStructures();
 	}
 
-	public List<Integer> update(Batch batch) {
+	public CompressedDiff update(Batch batch) {
 		List<InsertStatement> inserts = batch.getInsertStatements();
-		List<Integer> ids = new ArrayList<>();
+		List<Integer> insertedIds = new ArrayList<>();
 		for (InsertStatement insert : inserts) {
 			int i = 0;
 			for (String column : columns) {
@@ -49,34 +49,33 @@ public class IncrementalPLIBuilder {
 				cluster.add(numRecords);
 				i++;
 			}
-			ids.add(numRecords);
+			insertedIds.add(numRecords);
 			numRecords++;
 		}
 		updateDataStructures();
-		return ids;
+		return buildDiff(insertedIds);
+	}
+
+	private CompressedDiff buildDiff(List<Integer> insertedIds) {
+		int[][] insertedRecords = new int[insertedIds.size()][];
+		int i = 0;
+		for(int id : insertedIds) {
+			insertedRecords[i] = compressedRecords[id];
+		}
+		int[][] deletedRecords = new int[0][];
+		int[][] oldUpdatedRecords = new int[0][];
+		int[][] newUpdatedRecords = new int[0][];
+		return new CompressedDiff(insertedRecords, deletedRecords, oldUpdatedRecords, newUpdatedRecords);
 	}
 
 	private void updateDataStructures() {
 		plis = recalculatePositionListIndexes(true);
-		sortPlis();
 		compressedRecords = recalculateCompressedRecords();
-	}
-
-	public void sortPlis() {
-		Collections.sort(plis, new Comparator<PositionListIndex>() {
-
-			@Override
-			public int compare(PositionListIndex o1, PositionListIndex o2) {
-				int numClustersInO1 = numRecords - o1.getNumNonUniqueValues() + o1.getClusters().size();
-				int numClustersInO2 = numRecords - o2.getNumNonUniqueValues() + o2.getClusters().size();
-				return numClustersInO2 - numClustersInO1;
-			}
-		});
 	}
 
 	private List<PositionListIndex> recalculatePositionListIndexes(boolean isNullEqualNull) {
 		List<PositionListIndex> clustersPerAttribute = new ArrayList<>();
-        for (int columnId = 0; columnId < clusterMaps.size(); columnId++) {
+        for (int columnId : pliSequence) {
             List<IntArrayList> clusters = new ArrayList<>();
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(columnId);
 

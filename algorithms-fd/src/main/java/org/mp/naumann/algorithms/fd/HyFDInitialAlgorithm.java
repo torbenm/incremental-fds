@@ -20,7 +20,7 @@ public class HyFDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDep
 	
 	@Override
 	public FDIntermediateDatastructure getIntermediateDataStructure() {
-		return new FDIntermediateDatastructure(hyfd.getPosCover(), hyfd.getClusterMaps(), hyfd.getNumRecords());
+		return new FDIntermediateDatastructure(hyfd.getPosCover(), hyfd.getClusterMaps(), hyfd.getNumRecords(), hyfd.getPliSequence());
 	}
 
 	@Override

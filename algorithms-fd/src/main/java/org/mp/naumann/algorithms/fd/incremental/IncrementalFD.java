@@ -45,10 +45,10 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 
 	@Override
 	public List<FunctionalDependency> execute(Batch batch) {
-		List<Integer> ids = incrementalPLIBuilder.update(batch);
+		CompressedDiff diff = incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
-		CardinalitySet existingCombinations = getExistingCombinations(ids);
+		CardinalitySet existingCombinations = getExistingCombinations(diff);
 
 		boolean validateParallel = true;
 		Validator validator = new Validator(posCover, compressedRecords, plis, validateParallel, memoryGuardian);
@@ -83,12 +83,11 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 		return fds;
 	}
 
-	public CardinalitySet getExistingCombinations(List<Integer> ids) {
+	public CardinalitySet getExistingCombinations(CompressedDiff diff) {
 		int numAttributes = columns.size();
 		CardinalitySet existingCombinations = new CardinalitySet(numAttributes, numAttributes);
-		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
-		for (int id : ids) {
-			OpenBitSet existingCombination = findExistingCombinations(compressedRecords[id]);
+		for (int[] insert : diff.getInsertedRecords()) {
+			OpenBitSet existingCombination = findExistingCombinations(insert);
 			existingCombinations.add(existingCombination);
 		}
 		return existingCombinations;
@@ -132,7 +131,7 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 	public void setIntermediateDataStructure(FDIntermediateDatastructure intermediateDataStructure) {
 		this.posCover = intermediateDataStructure.getPosCover();
 		incrementalPLIBuilder = new IncrementalPLIBuilder(intermediateDataStructure.getNumRecords(),
-				intermediateDataStructure.getClusterMaps(), columns);
+				intermediateDataStructure.getClusterMaps(), columns, intermediateDataStructure.getPliSequence());
 	}
 
 	private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {

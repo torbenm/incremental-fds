@@ -12,14 +12,13 @@ public class FDIntermediateDatastructure {
 	private final FDTree posCover;
 	private final List<HashMap<String, IntArrayList>> clusterMaps;
 	private final int numRecords;
+	private final List<Integer> pliSequence;
 
-	/*
-	Do we even need the plis here when we have to recalculate them anyway after an update instruction?
-	 */
-	public FDIntermediateDatastructure(FDTree posCover, List<HashMap<String, IntArrayList>> clusterMaps, int numRecords) {
+	public FDIntermediateDatastructure(FDTree posCover, List<HashMap<String, IntArrayList>> clusterMaps, int numRecords, List<Integer> pliSequence) {
 		this.posCover = posCover;
 		this.clusterMaps = clusterMaps;
 		this.numRecords = numRecords;
+		this.pliSequence = pliSequence;
 	}
 
 	public FDTree getPosCover() {
@@ -29,4 +28,8 @@ public class FDIntermediateDatastructure {
 	public List<HashMap<String, IntArrayList>> getClusterMaps() { return clusterMaps; }
 
 	public int getNumRecords() { return numRecords; }
+
+	public List<Integer> getPliSequence() {
+		return pliSequence;
+	}
 }
