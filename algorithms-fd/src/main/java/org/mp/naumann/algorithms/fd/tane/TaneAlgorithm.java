@@ -7,7 +7,6 @@ import it.unimi.dsi.fastutil.objects.ObjectBigArrayBigList;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
-import org.mp.naumann.algorithms.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
@@ -37,6 +36,14 @@ public class TaneAlgorithm implements FunctionalDependencyAlgorithm {
 	private LongBigArrayBigList tTable;
 
 	public TaneAlgorithm(Table table, FunctionalDependencyResultReceiver resultReceiver) {
+		configure(table, resultReceiver);
+	}
+
+    public TaneAlgorithm() {
+
+    }
+
+    public void configure(Table table, FunctionalDependencyResultReceiver resultReceiver){
 		this.table = table;
 		this.fdResultReceiver = resultReceiver;
 	}

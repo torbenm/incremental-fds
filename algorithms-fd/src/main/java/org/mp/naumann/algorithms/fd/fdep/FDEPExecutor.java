@@ -35,9 +35,16 @@ public class FDEPExecutor implements FunctionalDependencyAlgorithm {
 	private List<String> attributeNames;
 	private int numAttributes;
 
+	public FDEPExecutor(){
+
+	}
+
 	public FDEPExecutor(Table table, FunctionalDependencyResultReceiver resultReceiver) {
-		this.resultReceiver = resultReceiver;
+		configure(table, resultReceiver);
+	}
+	public void configure(Table table, FunctionalDependencyResultReceiver resultReceiver){
 		this.table = table;
+		this.resultReceiver = resultReceiver;
 	}
 
 	private void initialize(TableInput tableInput) {

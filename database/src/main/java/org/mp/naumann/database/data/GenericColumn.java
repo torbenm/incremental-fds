@@ -18,4 +18,9 @@ public class GenericColumn<T> implements Column<T> {
 	public Class<T> getType() {
 		return clazz;
 	}
+
+
+	public static GenericColumn<String> StringColumn(String name){
+        return new GenericColumn<>(name, String.class);
+    }
 }

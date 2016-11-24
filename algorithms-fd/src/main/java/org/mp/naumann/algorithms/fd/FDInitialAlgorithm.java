@@ -1,7 +1,7 @@
 package org.mp.naumann.algorithms.fd;
 
-import org.mp.naumann.algorithms.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.InitialAlgorithm;
+import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.fdep.FDEPExecutor;
 import org.mp.naumann.algorithms.fd.hyfd.HyFD;
 import org.mp.naumann.algorithms.fd.tane.TaneAlgorithm;

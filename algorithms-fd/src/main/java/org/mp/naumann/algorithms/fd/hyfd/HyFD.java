@@ -2,7 +2,7 @@ package org.mp.naumann.algorithms.fd.hyfd;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
-import org.mp.naumann.algorithms.AlgorithmExecutionException;
+import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.InputReadException;
@@ -44,10 +44,16 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	private List<String> attributeNames;
 	private int numAttributes;
 
+    public HyFD(){}
+
 	public HyFD(Table table, FunctionalDependencyResultReceiver resultReceiver) {
-		this.table = table;
-		this.resultReceiver = resultReceiver;
+        configure(table, resultReceiver);
 	}
+
+	public void configure(Table table, FunctionalDependencyResultReceiver resultReceiver){
+        this.table = table;
+        this.resultReceiver = resultReceiver;
+    }
 
 	private void initialize(TableInput tableInput) {
 		this.tableName = tableInput.getName();
