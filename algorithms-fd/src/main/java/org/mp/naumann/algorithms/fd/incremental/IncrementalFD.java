@@ -3,8 +3,6 @@ package org.mp.naumann.algorithms.fd.incremental;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
@@ -16,7 +14,6 @@ import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
-import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -48,27 +45,29 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 
 	@Override
 	public List<FunctionalDependency> execute(Batch batch) {
-		List<InsertStatement> inserts = batch.getInsertStatements();
-		CardinalitySet existingCombinations = getExistingCombinations(inserts);
-
-		incrementalPLIBuilder.update(batch);
+		List<Integer> ids = incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
-		existingCombinations = reorganize(existingCombinations);
+		CardinalitySet existingCombinations = getExistingCombinations(ids);
 
 		boolean validateParallel = true;
 		Validator validator = new Validator(posCover, compressedRecords, plis, validateParallel, memoryGuardian);
 
+		int pruned = 0;
+		int validations = 0;
 		for (int level = 0; level <= posCover.getDepth(); level++) {
 			List<FDTreeElementLhsPair> currentLevel = getFdLevel(level);
 			List<FDTreeElementLhsPair> toValidate = new ArrayList<>();
 			for (FDTreeElementLhsPair fd : currentLevel) {
 				if (canBeViolated(existingCombinations, fd)) {
 					toValidate.add(fd);
+				} else {
+					pruned++;
 				}
 			}
 			System.out.println("Will validate: ");
 			toValidate.stream().map(this::toFds).flatMap(Collection::stream).forEach(System.out::println);
+			validations += toValidate.size();
 			try {
 				validator.validate(level, currentLevel);
 			} catch (AlgorithmExecutionException e) {
@@ -76,55 +75,30 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 				e.printStackTrace();
 			}
 		}
-		if (validateParallel) {
-			validator.shutdown();
-		}
+		validator.shutdown();
+		System.out.println("Pruned " + pruned + " validations");
+		System.out.println("Made " + validations + " validations");
 		List<FunctionalDependency> fds = new ArrayList<>();
 		posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
 		return fds;
 	}
 
-	private CardinalitySet reorganize(CardinalitySet existingCombinations) {
-		int numAttributes = columns.size();
-		CardinalitySet reorganized = new CardinalitySet(numAttributes, numAttributes);
-		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
-		for (int level = 0; level <= existingCombinations.getDepth(); level++) {
-			for (OpenBitSet existingCombination : existingCombinations.getLevel(level)) {
-				OpenBitSet reorganizedCombination = new OpenBitSet(numAttributes);
-				int pliId = 0;
-				for (PositionListIndex pli : plis) {
-					int id = pli.getAttribute();
-					if (existingCombination.fastGet(id)) {
-						reorganizedCombination.fastSet(pliId);
-					}
-					pliId++;
-				}
-				reorganized.add(reorganizedCombination);
-			}
-		}
-		return reorganized;
-	}
-
-	public CardinalitySet getExistingCombinations(List<InsertStatement> inserts) {
-		// TODO check within batch
+	public CardinalitySet getExistingCombinations(List<Integer> ids) {
 		int numAttributes = columns.size();
 		CardinalitySet existingCombinations = new CardinalitySet(numAttributes, numAttributes);
-		List<Set<String>> valueSets = incrementalPLIBuilder.getValueSets();
-		for (InsertStatement insert : inserts) {
-			OpenBitSet existingCombination = findExistingCombinations(numAttributes, valueSets, insert);
+		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
+		for (int id : ids) {
+			OpenBitSet existingCombination = findExistingCombinations(compressedRecords[id]);
 			existingCombinations.add(existingCombination);
 		}
 		return existingCombinations;
 	}
 
-	public OpenBitSet findExistingCombinations(int numAttributes, List<Set<String>> valueSets, InsertStatement insert) {
-		OpenBitSet existingCombination = new OpenBitSet(numAttributes);
-		Map<String, String> valueMap = insert.getValueMap();
+	public OpenBitSet findExistingCombinations(int[] compressedRecord) {
+		OpenBitSet existingCombination = new OpenBitSet(compressedRecord.length);
 		int i = 0;
-		for (String column : columns) {
-			String value = valueMap.get(column);
-			Set<String> set = valueSets.get(i);
-			if (set.contains(value)) {
+		for (int clusterId : compressedRecord) {
+			if (clusterId > -1) {
 				existingCombination.fastSet(i);
 			}
 			i++;
@@ -144,7 +118,7 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 	}
 
 	public boolean canBeViolated(CardinalitySet existingCombinations, FDTreeElementLhsPair fd) {
-		for (int i = (int) fd.getLhs().cardinality(); i <= existingCombinations.getDepth(); i++) {
+		for (int i = existingCombinations.getDepth(); i >= (int) fd.getLhs().cardinality(); i--) {
 			for (OpenBitSet ex : existingCombinations.getLevel(i)) {
 				if (BitSetUtils.isContained(fd.getLhs(), ex)) {
 					return true;

@@ -13,8 +13,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Created by dennis on 24.11.16.
@@ -34,8 +32,9 @@ public class IncrementalPLIBuilder {
 		updateDataStructures();
 	}
 
-	public void update(Batch batch) {
+	public List<Integer> update(Batch batch) {
 		List<InsertStatement> inserts = batch.getInsertStatements();
+		List<Integer> ids = new ArrayList<>();
 		for (InsertStatement insert : inserts) {
 			int i = 0;
 			for (String column : columns) {
@@ -50,9 +49,11 @@ public class IncrementalPLIBuilder {
 				cluster.add(numRecords);
 				i++;
 			}
+			ids.add(numRecords);
 			numRecords++;
 		}
 		updateDataStructures();
+		return ids;
 	}
 
 	private void updateDataStructures() {
@@ -108,10 +109,6 @@ public class IncrementalPLIBuilder {
 		for (int i = 0; i < record.length; i++)
 			record[i] = invertedPlis[i][recordId];
 		return record;
-	}
-
-	public List<Set<String>> getValueSets() {
-		return clusterMaps.stream().map(Map::keySet).collect(Collectors.toList());
 	}
 
 	public List<PositionListIndex> getPlis() {
