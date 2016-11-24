@@ -36,13 +36,6 @@ public class AverageIncrementalAlgorithm implements IncrementalAlgorithm<Double,
 		List<DeleteStatement> deletes = batch.getDeleteStatements();
 		List<UpdateStatement> updates = batch.getUpdateStatements();
 		List<InsertStatement> inserts = batch.getInsertStatements();
-		for (DeleteStatement delete : deletes) {
-			ds.decreaseCount();
-			String oldValue = delete.getValueMap().get(column);
-			if (oldValue != null && !oldValue.isEmpty()) {
-				ds.decreaseSum(Double.parseDouble(oldValue));
-			}
-		}
 		for (InsertStatement insert : inserts) {
 			ds.increaseCount();
 			String newValue = insert.getValueMap().get(column);
@@ -56,6 +49,13 @@ public class AverageIncrementalAlgorithm implements IncrementalAlgorithm<Double,
 				ds.increaseSum(Double.parseDouble(newValue));
 			}
 			String oldValue = update.getOldValueMap().get(column);
+			if (oldValue != null && !oldValue.isEmpty()) {
+				ds.decreaseSum(Double.parseDouble(oldValue));
+			}
+		}
+		for (DeleteStatement delete : deletes) {
+			ds.decreaseCount();
+			String oldValue = delete.getValueMap().get(column);
 			if (oldValue != null && !oldValue.isEmpty()) {
 				ds.decreaseSum(Double.parseDouble(oldValue));
 			}

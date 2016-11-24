@@ -1,6 +1,7 @@
 package org.mp.naumann;
 
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
+import org.mp.naumann.algorithms.implementations.AverageDatastructure;
 import org.mp.naumann.algorithms.implementations.AverageIncrementalAlgorithm;
 import org.mp.naumann.algorithms.result.PrintResultListener;
 import org.mp.naumann.database.ConnectionException;
@@ -22,12 +23,16 @@ public class Demo {
 		StreamableBatchSource batchSource = new CsvFileBatchSource(file, SCHEMA, TABLE, BATCH_SIZE);
 		DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
 		BatchProcessor bp = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
-		IncrementalAlgorithm<?, ?> batchHandler = new AverageIncrementalAlgorithm("population");
-		IncrementalAlgorithm<?, ?> batchHandler2 = new AverageIncrementalAlgorithm("area");
-		batchHandler.addResultListener(new PrintResultListener<>("population"));
-		batchHandler2.addResultListener(new PrintResultListener<>("area"));
-		bp.addBatchHandler(batchHandler);
-		bp.addBatchHandler(batchHandler2);
+		AverageDatastructure popDs = new AverageDatastructure();
+		AverageDatastructure areaDs = new AverageDatastructure();
+		IncrementalAlgorithm<Double, AverageDatastructure> popAvg = new AverageIncrementalAlgorithm("population");
+		IncrementalAlgorithm<Double, AverageDatastructure> areaAvg = new AverageIncrementalAlgorithm("area");
+		popAvg.setIntermediateDataStructure(popDs);
+		areaAvg.setIntermediateDataStructure(areaDs);
+		popAvg.addResultListener(new PrintResultListener<>("population"));
+		areaAvg.addResultListener(new PrintResultListener<>("area"));
+		bp.addBatchHandler(popAvg);
+		bp.addBatchHandler(areaAvg);
 		batchSource.startStreaming();
 	}
 
