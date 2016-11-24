@@ -22,7 +22,7 @@ import java.util.Map;
 public class IncrementalFDDemo {
 
 	public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
-		try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection("../test_data"))) {
+		try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection())) {
 			String tableName = "data";
 			String schema = "public";
 			Table table = dc.getTable(schema, tableName);

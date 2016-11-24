@@ -81,6 +81,7 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 	}
 
 	public CardinalitySet getExistingCombinations(List<InsertStatement> inserts) {
+		//TODO check within batch
 		int numAttributes = columns.size();
 		CardinalitySet existingCombinations = new CardinalitySet(numAttributes, numAttributes);
 		List<Set<String>> valueSets = incrementalPLIBuilder.getValueSets();
