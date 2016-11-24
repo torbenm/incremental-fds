@@ -46,7 +46,7 @@ public class PostgresConnectionPreparer implements DatabaseConnectionPreparer {
         }
         try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
             CSVFormat format = CSVFormat.newFormat(';').withFirstRecordAsHeader().withQuote('"');
-            CSVParser parser = format.parse(new FileReader(new File("../countries.csv")));
+            CSVParser parser = format.parse(new FileReader(new File("../test.countries.csv")));
             for (CSVRecord csvRecord : parser) {
                 for (int i = 1; i <= csvRecord.size(); i++) {
                     switch (i) {
