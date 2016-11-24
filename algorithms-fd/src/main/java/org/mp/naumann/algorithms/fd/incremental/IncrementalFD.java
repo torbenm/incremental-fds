@@ -50,14 +50,15 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 	public List<FunctionalDependency> execute(Batch batch) {
 		List<InsertStatement> inserts = batch.getInsertStatements();
 		CardinalitySet existingCombinations = getExistingCombinations(inserts);
-		
+
 		incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
-		
-		boolean validateParallel = false;
+		existingCombinations = reorganize(existingCombinations);
+
+		boolean validateParallel = true;
 		Validator validator = new Validator(posCover, compressedRecords, plis, validateParallel, memoryGuardian);
-		
+
 		for (int level = 0; level <= posCover.getDepth(); level++) {
 			List<FDTreeElementLhsPair> currentLevel = getFdLevel(level);
 			List<FDTreeElementLhsPair> toValidate = new ArrayList<>();
@@ -75,33 +76,54 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 				e.printStackTrace();
 			}
 		}
+		if (validateParallel) {
+			validator.shutdown();
+		}
 		List<FunctionalDependency> fds = new ArrayList<>();
 		posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
 		return fds;
 	}
 
+	private CardinalitySet reorganize(CardinalitySet existingCombinations) {
+		int numAttributes = columns.size();
+		CardinalitySet reorganized = new CardinalitySet(numAttributes, numAttributes);
+		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
+		for (int level = 0; level <= existingCombinations.getDepth(); level++) {
+			for (OpenBitSet existingCombination : existingCombinations.getLevel(level)) {
+				OpenBitSet reorganizedCombination = new OpenBitSet(numAttributes);
+				int pliId = 0;
+				for (PositionListIndex pli : plis) {
+					int id = pli.getAttribute();
+					if (existingCombination.fastGet(id)) {
+						reorganizedCombination.fastSet(pliId);
+					}
+					pliId++;
+				}
+				reorganized.add(reorganizedCombination);
+			}
+		}
+		return reorganized;
+	}
+
 	public CardinalitySet getExistingCombinations(List<InsertStatement> inserts) {
-		//TODO check within batch
+		// TODO check within batch
 		int numAttributes = columns.size();
 		CardinalitySet existingCombinations = new CardinalitySet(numAttributes, numAttributes);
 		List<Set<String>> valueSets = incrementalPLIBuilder.getValueSets();
-		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		for (InsertStatement insert : inserts) {
-			OpenBitSet existingCombination = findExistingCombinations(numAttributes, valueSets, plis, insert);
+			OpenBitSet existingCombination = findExistingCombinations(numAttributes, valueSets, insert);
 			existingCombinations.add(existingCombination);
 		}
 		return existingCombinations;
 	}
 
-	public OpenBitSet findExistingCombinations(int numAttributes, List<Set<String>> valueSets,
-			List<PositionListIndex> plis, InsertStatement insert) {
+	public OpenBitSet findExistingCombinations(int numAttributes, List<Set<String>> valueSets, InsertStatement insert) {
 		OpenBitSet existingCombination = new OpenBitSet(numAttributes);
 		Map<String, String> valueMap = insert.getValueMap();
 		int i = 0;
-		for (PositionListIndex pli : plis) {
-			int columnId = pli.getAttribute();
-			String value = valueMap.get(columns.get(columnId));
-			Set<String> set = valueSets.get(columnId);
+		for (String column : columns) {
+			String value = valueMap.get(column);
+			Set<String> set = valueSets.get(i);
 			if (set.contains(value)) {
 				existingCombination.fastSet(i);
 			}
