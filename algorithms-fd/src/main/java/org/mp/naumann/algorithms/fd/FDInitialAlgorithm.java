@@ -1,6 +1,7 @@
 package org.mp.naumann.algorithms.fd;
 
 import org.mp.naumann.algorithms.InitialAlgorithm;
+import org.mp.naumann.algorithms.benchmark.speed.Speed;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.fdep.FDEPExecutor;
 import org.mp.naumann.algorithms.fd.hyfd.HyFD;
@@ -29,6 +30,7 @@ public class FDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDepen
         this.tableName = tableName;
         this.functionalDependencies = new ArrayList<>();
         initializeAlgorithm(algorithm, dataConnector);
+        Speed.lap("Finished initializiation of FD Algorithm "+algorithm);
     }
 
     private void initializeAlgorithm(String algorithm, DataConnector dataConnector) {

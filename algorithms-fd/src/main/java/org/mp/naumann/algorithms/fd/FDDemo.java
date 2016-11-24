@@ -1,6 +1,7 @@
 package org.mp.naumann.algorithms.fd;
 
 import org.mp.naumann.algorithms.InitialAlgorithm;
+import org.mp.naumann.algorithms.benchmark.speed.Speed;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.jdbc.JdbcDataConnector;
@@ -12,10 +13,14 @@ public class FDDemo {
 
 	public static void main(String[] args) throws ClassNotFoundException, ConnectionException {
 		FDLogger.silence();
-        DataConnector dc = new JdbcDataConnector(ConnectionManager.getPostgresConnection());
+		Speed s = new Speed(System.out::println);
+		s.start("Start HyFD execution on countries dataset.");
+        DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection("/test", ";"));
+		Speed.lap("Loaded dataconnector");
 		InitialAlgorithm<List<FunctionalDependency>, ?> hyfd = new FDInitialAlgorithm("hyfd", dc, "test", "countries");
 		List<FunctionalDependency> fds = hyfd.execute();
-		fds.forEach(System.out::println);
+		s.end("Finished execution");
+		//fds.forEach(System.out::println);
 	}
 
 }
