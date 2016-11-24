@@ -1,27 +1,19 @@
 package org.mp.naumann.database.jdbc;
 
+import org.mp.naumann.database.ConnectionException;
+import org.mp.naumann.database.DataConnector;
+import org.mp.naumann.database.Table;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mp.naumann.database.ConnectionException;
-import org.mp.naumann.database.DataConnector;
-import org.mp.naumann.database.Table;
-
 public class JdbcDataConnector implements DataConnector {
 
     private Connection conn;
-    private ConnectionInfo ci;
-
-    public JdbcDataConnector(String className, ConnectionInfo connectionInfo) throws ClassNotFoundException, ConnectionException {
-        Class.forName(className);
-        this.ci = connectionInfo;
-        connect();
-    }
 
     public JdbcDataConnector(Connection connection) {
         this.conn = connection;
@@ -44,14 +36,6 @@ public class JdbcDataConnector implements DataConnector {
 
     public Table getTable(String schema, String tableName) {
         return new JdbcTable(schema, tableName, conn);
-    }
-
-    public void connect() throws ConnectionException {
-        try {
-            conn = DriverManager.getConnection(ci.connectionString, ci.user, ci.pass);
-        } catch (SQLException e) {
-            throw new ConnectionException(e);
-        }
     }
 
     public void close() throws ConnectionException {

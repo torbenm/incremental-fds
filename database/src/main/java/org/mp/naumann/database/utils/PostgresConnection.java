@@ -7,9 +7,9 @@ import java.io.FileInputStream;
 import java.net.URL;
 import java.util.Properties;
 
-public class PostgresConnection {
+class PostgresConnection {
 
-    public static ConnectionInfo getConnectionInfo() {
+    static ConnectionInfo getConnectionInfo() {
         ConnectionInfo ci = new ConnectionInfo();
         Properties properties = new Properties();
         URL settingsURL = ConnectionInfo.class.getClassLoader().getResource("properties.xml");

@@ -3,9 +3,7 @@ package org.mp.naumann.database.jdbc;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.Table;
-import org.mp.naumann.database.utils.PostgresConnection;
 
 import java.util.List;
 
@@ -47,9 +45,4 @@ public class JdbcDataConnectorTest extends JdbcTest {
 	}
 	*/
 
-	@Test
-	public void testMissingDriver() throws ClassNotFoundException, ConnectionException {
-		thrown.expect(ClassNotFoundException.class);
-        new JdbcDataConnector("org.postgresql.Driver2", PostgresConnection.getConnectionInfo());
-	}
 }

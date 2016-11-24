@@ -17,11 +17,6 @@ public class FakeDataConnector implements DataConnector {
     }
 
     @Override
-    public void connect() {
-
-    }
-
-    @Override
     public void close() {
 
     }
