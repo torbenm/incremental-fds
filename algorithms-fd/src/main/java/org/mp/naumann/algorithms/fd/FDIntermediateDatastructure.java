@@ -1,5 +1,8 @@
 package org.mp.naumann.algorithms.fd;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -12,6 +15,18 @@ public class FDIntermediateDatastructure {
 	private final List<Set<String>> columnValues;
 	private final List<PositionListIndex> plis;
 	private final int[][] compressedRecords;
+	private final List<HashMap<String, IntArrayList>> clusterMaps;
+
+	/*
+	Do we even need the plis here when we have to recalculate them anyway after an update instruction?
+	 */
+	public FDIntermediateDatastructure(FDTree posCover, List<Set<String>> columnValues, List<PositionListIndex> plis, int[][] compressedRecords, List<HashMap<String, IntArrayList>> clusterMaps) {
+		this.posCover = posCover;
+		this.columnValues = columnValues;
+		this.plis = plis;
+		this.compressedRecords = compressedRecords;
+		this.clusterMaps = clusterMaps;
+	}
 
 	public FDTree getPosCover() {
 		return posCover;
@@ -25,15 +40,9 @@ public class FDIntermediateDatastructure {
 		return plis;
 	}
 
-	public FDIntermediateDatastructure(FDTree posCover, List<Set<String>> columnValues, List<PositionListIndex> plis, int[][] compressedRecords) {
-		this.posCover = posCover;
-		this.columnValues = columnValues;
-		this.plis = plis;
-		this.compressedRecords = compressedRecords;
-	}
-
 	public int[][] getCompressedRecords() {
 		return compressedRecords;
 	}
 
+	public List<HashMap<String, IntArrayList>> getClusterMaps() { return clusterMaps; }
 }

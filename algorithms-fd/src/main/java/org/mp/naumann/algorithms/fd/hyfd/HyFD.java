@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.mp.naumann.algorithms.AlgorithmExecutionException;
@@ -23,6 +24,7 @@ import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -53,6 +55,8 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	private List<Set<String>> columnValues;
 
 	private int[][] compressedRecords;
+
+	private List<HashMap<String, IntArrayList>> clusterMaps;
 
 	public HyFD(Table table, FunctionalDependencyResultReceiver resultReceiver) {
 		this.table = table;
@@ -97,6 +101,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 				this.valueComparator.isNullEqualNull());
 		this.closeInput(tableInput);
 		this.columnValues = pliBuilder.getColumnValues();
+		this.clusterMaps = pliBuilder.getClusterMaps(); // get the clusterMaps here to transfer them to the incremental algorithm
 
 		final int numRecords = pliBuilder.getNumLastRecords();
 		pliBuilder = null;
@@ -224,5 +229,9 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 	public int[][] getCompressedRecords() {
 		return compressedRecords;
+	}
+
+	public List<HashMap<String,IntArrayList>> getClusterMaps() {
+		return clusterMaps;
 	}
 }

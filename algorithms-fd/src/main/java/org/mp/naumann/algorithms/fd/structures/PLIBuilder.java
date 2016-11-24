@@ -32,7 +32,12 @@ public class PLIBuilder {
 	
 	private int numRecords = 0;
 	private List<Set<String>> columnValues;
-	
+	private List<HashMap<String, IntArrayList>> clusterMaps;
+
+	public List<HashMap<String, IntArrayList>> getClusterMaps() {
+		return clusterMaps;
+	}
+
 	public int getNumLastRecords() {
 		return this.numRecords;
 	}
@@ -53,7 +58,7 @@ public class PLIBuilder {
 	 */
 	private List<HashMap<String, IntArrayList>> calculateClusterMaps(TableInput tableInput, int numAttributes) {
 		columnValues = new ArrayList<>();
-		List<HashMap<String, IntArrayList>> clusterMaps = new ArrayList<>();
+		clusterMaps = new ArrayList<>();
 		for (int i = 0; i < numAttributes; i++) {
 			clusterMaps.add(new HashMap<>());
 			columnValues.add(new HashSet<>());
