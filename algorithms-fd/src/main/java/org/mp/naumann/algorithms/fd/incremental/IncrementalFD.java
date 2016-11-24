@@ -2,6 +2,7 @@ package org.mp.naumann.algorithms.fd.incremental;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +19,7 @@ import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
@@ -31,6 +33,10 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 	private final List<ResultListener<List<FunctionalDependency>>> resultListeners = new ArrayList<>();
 	private int[][] compressedRecords;
 	private MemoryGuardian memoryGuardian = new MemoryGuardian(true);
+	private List<HashMap<String, IntArrayList>> clusterMaps;
+	private int numRecords;
+
+	private IncrementalPLIBuilder incrementalPLIBuilder;
 
 	public IncrementalFD(List<String> columns, String tableName) {
 		this.columns = columns;
@@ -69,9 +75,10 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 			}
 			existingCombinations.get((int) existingCombination.cardinality()).add(existingCombination);
 		}
-		for (InsertStatement insert : inserts) {
-			updateDataStructures(insert.getValueMap());
-		}
+		// init IncrementalPlIBuilder
+		incrementalPLIBuilder = new IncrementalPLIBuilder(numRecords, columnValues, clusterMaps, numAttributes);
+		updateDataStructures(inserts);
+
 		float efficiencyThreshold = 0.01f;
 		boolean validateParallel = true;
 		Validator validator = new Validator(posCover, compressedRecords, plis, efficiencyThreshold, validateParallel, memoryGuardian);
@@ -99,16 +106,22 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 		return fds;
 	}
 
-	private void updateDataStructures(Map<String, String> valueMap) {
-		int i = 0;
-		for (String column : columns) {
-			String value = valueMap.get(column);
-			Set<String> set = columnValues.get(i);
-			set.add(value);
-			i++;
+	private void updateDataStructures(List<InsertStatement> inserts) {
+		for (InsertStatement insert : inserts) {
+			int i = 0;
+			Map<String, String> valueMap = insert.getValueMap();
+			for (String column : columns) {
+				String value = valueMap.get(column);
+				Set<String> set = columnValues.get(i);
+				set.add(value);
+				i++;
+			}
 		}
 		// TODO update plis and compressedRecords
-		
+		incrementalPLIBuilder.updateClusterMapsWithInserts(inserts, columns);
+		plis = incrementalPLIBuilder.recalculatePositionListIndexes(true);
+		compressedRecords = incrementalPLIBuilder.recalculateCompressedRecords();
+
 	}
 
 	private boolean isLhscontained(FDTreeElementLhsPair fd, OpenBitSet ex) {
@@ -121,6 +134,8 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 		this.columnValues = intermediateDataStructure.getColumnValues();
 		this.plis = intermediateDataStructure.getPlis();
 		this.compressedRecords = intermediateDataStructure.getCompressedRecords();
+		this.clusterMaps = intermediateDataStructure.getClusterMaps();
+		this.numRecords = intermediateDataStructure.getNumRecords();
 	}
 
 	private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {

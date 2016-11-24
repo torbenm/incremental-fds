@@ -51,12 +51,10 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	private FDTree posCover;
 
 	private List<PositionListIndex> plis;
-
 	private List<Set<String>> columnValues;
-
 	private int[][] compressedRecords;
-
 	private List<HashMap<String, IntArrayList>> clusterMaps;
+	private int numRecords;
 
 	public HyFD(Table table, FunctionalDependencyResultReceiver resultReceiver) {
 		this.table = table;
@@ -102,6 +100,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		this.closeInput(tableInput);
 		this.columnValues = pliBuilder.getColumnValues();
 		this.clusterMaps = pliBuilder.getClusterMaps(); // get the clusterMaps here to transfer them to the incremental algorithm
+		this.numRecords = pliBuilder.getNumLastRecords(); // same with numRecords
 
 		final int numRecords = pliBuilder.getNumLastRecords();
 		pliBuilder = null;
@@ -233,5 +232,9 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 	public List<HashMap<String,IntArrayList>> getClusterMaps() {
 		return clusterMaps;
+	}
+
+	public int getNumRecords() {
+		return numRecords;
 	}
 }
