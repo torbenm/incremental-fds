@@ -21,7 +21,7 @@ public class MedianInitialAlgorithmTest {
     private static final String tableName = "countries";
     private static final String columnName = "population";
 
-    @BeforeClass
+   /* @BeforeClass
     public static void setUp() throws IOException {
         dataConnector = new JdbcDataConnector("org.postgresql.Driver", PostgresConnection.getConnectionInfo());
         algorithm = new MedianInitialAlgorithm(dataConnector, schema, tableName, columnName);
@@ -31,6 +31,6 @@ public class MedianInitialAlgorithmTest {
     public void testExecute(){
         ResultSet<String> result = algorithm.execute().getResultSet();
         assertEquals("3286936", result.iterator().next());
-    }
+    } */
 
 }
