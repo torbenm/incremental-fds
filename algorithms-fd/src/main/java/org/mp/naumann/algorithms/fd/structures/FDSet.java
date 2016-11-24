@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.hyfd;
+package org.mp.naumann.algorithms.fd.structures;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
@@ -7,7 +7,7 @@ import org.apache.lucene.util.OpenBitSet;
 import java.util.ArrayList;
 import java.util.List;
 
-class FDSet {
+public class FDSet {
 
 	private List<ObjectOpenHashSet<OpenBitSet>> fdLevels;
 	

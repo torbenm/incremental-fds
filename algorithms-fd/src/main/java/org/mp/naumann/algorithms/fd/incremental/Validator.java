@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.hyfd;
+package org.mp.naumann.algorithms.fd.incremental;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +12,6 @@ import java.util.logging.Logger;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.AlgorithmExecutionException;
-import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
@@ -23,7 +22,6 @@ public class Validator {
 
 	private final static Logger LOG = Logger.getLogger(Validator.class.getName());
     
-	private FDSet negCover;
 	private FDTree posCover;
 	private int numRecords;
 	private List<PositionListIndex> plis;
@@ -32,12 +30,11 @@ public class Validator {
 	private MemoryGuardian memoryGuardian;
 	private ExecutorService executor;
 	
-	private int level = 0;
+	private int level;
 
-	public Validator(FDSet negCover, FDTree posCover, int numRecords, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
-		this.negCover = negCover;
+	public Validator(FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
 		this.posCover = posCover;
-		this.numRecords = numRecords;
+		this.numRecords = compressedRecords.length;
 		this.plis = plis;
 		this.compressedRecords = compressedRecords;
 		this.efficiencyThreshold = efficiencyThreshold;
@@ -178,96 +175,60 @@ public class Validator {
 		return validationResult;
 	}
 	
-	public List<IntegerPair> validatePositiveCover() throws AlgorithmExecutionException {
+	public void validate(int level, List<FDTreeElementLhsPair> currentLevel) throws AlgorithmExecutionException {
 		int numAttributes = this.plis.size();
+		this.level = level;
 		
 		LOG.info("Validating FDs using plis ...");
-		
-		List<FDTreeElementLhsPair> currentLevel = null;
-		if (this.level == 0) {
-			currentLevel = new ArrayList<>();
-			currentLevel.add(new FDTreeElementLhsPair(this.posCover, new OpenBitSet(numAttributes)));
-		}
-		else {
-			currentLevel = this.posCover.getLevel(this.level);
-		}
 		
 		// Start the level-wise validation/discovery
 		int previousNumInvalidFds = 0;
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
-		while (!currentLevel.isEmpty()) {
-			LOG.info("\tLevel " + this.level + ": " + currentLevel.size() + " elements; ");
+		LOG.info("\tLevel " + this.level + ": " + currentLevel.size() + " elements; ");
 			
-			// Validate current level
-			LOG.info("(V)");
+		// Validate current level
+		LOG.info("(V)");
 			
-			ValidationResult validationResult = (this.executor == null) ? this.validateSequential(currentLevel) : this.validateParallel(currentLevel);
-			comparisonSuggestions.addAll(validationResult.comparisonSuggestions);
+		ValidationResult validationResult = (this.executor == null) ? this.validateSequential(currentLevel) : this.validateParallel(currentLevel);
+		comparisonSuggestions.addAll(validationResult.comparisonSuggestions);
 			
-			// If the next level exceeds the predefined maximum lhs size, then we can stop here
-			if ((this.posCover.getMaxDepth() > -1) && (this.level >= this.posCover.getMaxDepth())) {
-				int numInvalidFds = validationResult.invalidFDs.size();
-				int numValidFds = validationResult.validations - numInvalidFds;
-				LOG.info("(-)(-); " + validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + "-" + " new candidates; --> " + numValidFds + " FDs");
-				break;
-			}
-			
-			// Add all children to the next level
-			LOG.info("(C)");
-			
-			List<FDTreeElementLhsPair> nextLevel = new ArrayList<>();
-			for (FDTreeElementLhsPair elementLhsPair : currentLevel) {
-				FDTreeElement element = elementLhsPair.getElement();
-				OpenBitSet lhs = elementLhsPair.getLhs();
-
-				if (element.getChildren() == null)
-					continue;
-				
-				for (int childAttr = 0; childAttr < numAttributes; childAttr++) {
-					FDTreeElement child = element.getChildren()[childAttr];
-					
-					if (child != null) {
-						OpenBitSet childLhs = lhs.clone();
-						childLhs.set(childAttr);
-						nextLevel.add(new FDTreeElementLhsPair(child, childLhs));
-					}
-				}
-			}
-						
-			// Generate new FDs from the invalid FDs and add them to the next level as well
-			LOG.info("(G); ");
-			
-			int candidates = 0;
-			for (FD invalidFD : validationResult.invalidFDs) {
-				for (int extensionAttr = 0; extensionAttr < numAttributes; extensionAttr++) {
-					OpenBitSet childLhs = this.extendWith(invalidFD.lhs, invalidFD.rhs, extensionAttr);
-					if (childLhs != null) {
-						FDTreeElement child = this.posCover.addFunctionalDependencyGetIfNew(childLhs, invalidFD.rhs);
-						if (child != null) {
-							nextLevel.add(new FDTreeElementLhsPair(child, childLhs));
-							candidates++;
-							
-							this.memoryGuardian.memoryChanged(1);
-							this.memoryGuardian.match(this.negCover, this.posCover, null);
-						}
-					}
-				}
-				
-				if ((this.posCover.getMaxDepth() > -1) && (this.level >= this.posCover.getMaxDepth()))
-					break;
-			}
-			
-			currentLevel = nextLevel;
-			this.level++;
+		// If the next level exceeds the predefined maximum lhs size, then we can stop here
+		if ((this.posCover.getMaxDepth() > -1) && (this.level >= this.posCover.getMaxDepth())) {
 			int numInvalidFds = validationResult.invalidFDs.size();
 			int numValidFds = validationResult.validations - numInvalidFds;
-			LOG.info(validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + candidates + " new candidates; --> " + numValidFds + " FDs");
-		
-			// Decide if we continue validating the next level or if we go back into the sampling phase
-			if ((numInvalidFds > numValidFds * this.efficiencyThreshold) && (previousNumInvalidFds < numInvalidFds))
-				return comparisonSuggestions;
-			previousNumInvalidFds = numInvalidFds;
+			LOG.info("(-)(-); " + validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + "-" + " new candidates; --> " + numValidFds + " FDs");
+			return;
 		}
+						
+		// Generate new FDs from the invalid FDs and add them to the next level as well
+		LOG.info("(G); ");
+			
+		int candidates = 0;
+		for (FD invalidFD : validationResult.invalidFDs) {
+			for (int extensionAttr = 0; extensionAttr < numAttributes; extensionAttr++) {
+				OpenBitSet childLhs = this.extendWith(invalidFD.lhs, invalidFD.rhs, extensionAttr);
+				if (childLhs != null) {
+					FDTreeElement child = this.posCover.addFunctionalDependencyGetIfNew(childLhs, invalidFD.rhs);
+					if (child != null) {
+						candidates++;
+							
+						this.memoryGuardian.memoryChanged(1);
+						this.memoryGuardian.match(this.posCover);
+					}
+				}
+			}
+			
+			if ((this.posCover.getMaxDepth() > -1) && (this.level >= this.posCover.getMaxDepth()))
+				break;
+		}
+		int numInvalidFds = validationResult.invalidFDs.size();
+		int numValidFds = validationResult.validations - numInvalidFds;
+		LOG.info(validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + candidates + " new candidates; --> " + numValidFds + " FDs");
+		
+		// Decide if we continue validating the next level or if we go back into the sampling phase
+		if ((numInvalidFds > numValidFds * this.efficiencyThreshold) && (previousNumInvalidFds < numInvalidFds))
+			return;
+		previousNumInvalidFds = numInvalidFds;
 		
 		if (this.executor != null) {
 			this.executor.shutdown();
@@ -279,7 +240,7 @@ public class Validator {
 			}
 		}
 		
-		return null;
+		return;
 	}
 	
 	private OpenBitSet extendWith(OpenBitSet lhs, int rhs, int extensionAttr) {
