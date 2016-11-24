@@ -3,6 +3,7 @@ package org.mp.naumann.algorithms.fd.hyfd;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
+import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.InputReadException;
@@ -23,13 +24,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.logging.Logger;
+import java.util.logging.Level;
+
 
 public class HyFD implements FunctionalDependencyAlgorithm {
 
-    private final static Logger LOG = Logger.getLogger(HyFD.class.getName());
-
-	private Table table = null;
+    private Table table = null;
 	private FunctionalDependencyResultReceiver resultReceiver = null;
 
 	private ValueComparator valueComparator;
@@ -44,9 +44,12 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	private List<String> attributeNames;
 	private int numAttributes;
 
-    public HyFD(){}
+    public HyFD(){
+        FDLogger.setCurrentAlgorithm(this);
+    }
 
 	public HyFD(Table table, FunctionalDependencyResultReceiver resultReceiver) {
+        this();
         configure(table, resultReceiver);
 	}
 
@@ -70,15 +73,15 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		if (this.resultReceiver == null)
 			throw new IllegalStateException("No result receiver set!");
 
-		// this.executeFDEP();
+        // this.executeFDEP();
 		this.executeHyFD();
 
-		LOG.info("Time: " + (System.currentTimeMillis() - startTime) + " ms");
+		FDLogger.logln(Level.INFO,"Time: " + (System.currentTimeMillis() - startTime) + " ms");
 	}
 
 	private void executeHyFD() throws AlgorithmExecutionException {
 		// Initialize
-		LOG.info("Initializing ...");
+		FDLogger.logln(Level.INFO,"Initializing ...");
 		TableInput tableInput = this.getInput();
 		this.initialize(tableInput);
 
@@ -87,7 +90,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		///////////////////////////////////////////////////////
 
 		// Calculate plis
-		LOG.info("Reading data and calculating plis ...");
+		FDLogger.logln(Level.INFO,"Reading data and calculating plis ...");
 		PLIBuilder pliBuilder = new PLIBuilder();
 		List<PositionListIndex> plis = pliBuilder.getPLIs(tableInput, this.numAttributes,
 				this.valueComparator.isNullEqualNull());
@@ -107,7 +110,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		// Sort plis by number of clusters: For searching in the covers and for
 		// validation, it is good to have attributes with few non-unique values
 		// and many clusters left in the prefix tree
-		LOG.info("Sorting plis by number of clusters ...");
+		FDLogger.logln(Level.INFO,"Sorting plis by number of clusters ...");
 		Collections.sort(plis, new Comparator<PositionListIndex>() {
 
 			@Override
@@ -119,12 +122,12 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		});
 
 		// Calculate inverted plis
-		LOG.info("Inverting plis ...");
+		FDLogger.logln(Level.INFO,"Inverting plis ...");
 		int[][] invertedPlis = PliUtils.invert(plis, numRecords);
 
 		// Extract the integer representations of all records from the inverted
 		// plis
-		LOG.info("Extracting integer representations for the records ...");
+		FDLogger.logln(Level.INFO,"Extracting integer representations for the records ...");
 		int[][] compressedRecords = new int[numRecords][];
 		for (int recordId = 0; recordId < numRecords; recordId++)
 			compressedRecords[recordId] = this.fetchRecordFrom(recordId, invertedPlis);
@@ -161,14 +164,14 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		negCover = null;
 
 		// Output all valid FDs
-		LOG.info("Translating FD-tree into result format ...");
+		FDLogger.logln(Level.INFO,"Translating FD-tree into result format ...");
 
 		// int numFDs = posCover.writeFunctionalDependencies("HyFD_backup_" +
 		// this.tableName + "_results.txt", this.buildColumnIdentifiers(), plis,
 		// false);
 		int numFDs = posCover.addFunctionalDependenciesInto(this.resultReceiver, this.buildColumnIdentifiers(), plis);
 
-		LOG.info("... done! (" + numFDs + " FDs)");
+		FDLogger.logln(Level.INFO,"... done! (" + numFDs + " FDs)");
 	}
 
 	private TableInput getInput() {

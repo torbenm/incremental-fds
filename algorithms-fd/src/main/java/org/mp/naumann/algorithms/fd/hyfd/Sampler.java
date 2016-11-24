@@ -3,6 +3,7 @@ package org.mp.naumann.algorithms.fd.hyfd;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
@@ -15,12 +16,11 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class Sampler {
 
-	private final static Logger LOG = Logger.getLogger(HyFD.class.getName());
-	
 	private FDSet negCover;
 	private FDTree posCover;
 	private int[][] compressedRecords;
@@ -43,7 +43,7 @@ class Sampler {
 	public FDList enrichNegativeCover(List<IntegerPair> comparisonSuggestions) {
 		int numAttributes = this.compressedRecords[0].length;
 		
-		LOG.info("Investigating comparison suggestions ... ");
+		FDLogger.logln(Level.INFO, "Investigating comparison suggestions ... ");
 		FDList newNonFds = new FDList(numAttributes, this.negCover.getMaxDepth());
 		OpenBitSet equalAttrs = new OpenBitSet(this.posCover.getNumAttributes());
 		for (IntegerPair comparisonSuggestion : comparisonSuggestions) {
@@ -60,7 +60,7 @@ class Sampler {
 		}
 		
 		if (this.attributeRepresentants == null) { // if this is the first call of this method
-			LOG.info("Sorting clusters ...");
+			FDLogger.logln(Level.INFO, "Sorting clusters ...");
 			long time = System.currentTimeMillis();
 			ClusterComparator comparator = new ClusterComparator(this.compressedRecords, this.compressedRecords[0].length - 1, 1);
 			for (PositionListIndex pli : this.plis) {
@@ -69,9 +69,9 @@ class Sampler {
 				}
 				comparator.incrementActiveKey();
 			}
-			LOG.info("(" + (System.currentTimeMillis() - time) + "ms)");
+			FDLogger.logln(Level.INFO, "(" + (System.currentTimeMillis() - time) + "ms)");
 		
-			LOG.info("Running initial windows ...");
+			FDLogger.logln(Level.INFO, "Running initial windows ...");
 			time = System.currentTimeMillis();
 			this.attributeRepresentants = new ArrayList<>(numAttributes);
 			float efficiencyFactor = (int)Math.ceil(1 / this.efficiencyThreshold);
@@ -81,7 +81,7 @@ class Sampler {
 				if (attributeRepresentant.getEfficiency() != 0)
 					this.attributeRepresentants.add(attributeRepresentant);
 			}
-			LOG.info("(" + (System.currentTimeMillis() - time) + "ms)");
+			FDLogger.logln(Level.INFO, "(" + (System.currentTimeMillis() - time) + "ms)");
 		}
 		else {
 			// Lower the efficiency factor for this round
@@ -90,7 +90,7 @@ class Sampler {
 			}
 		}
 		
-		LOG.info("Moving window over clusters ... ");
+		FDLogger.logln(Level.INFO, "Moving window over clusters ... ");
 		PriorityQueue<AttributeRepresentant> queue = new PriorityQueue<>(this.attributeRepresentants);
 		while (!queue.isEmpty()) {
 			AttributeRepresentant attributeRepresentant = queue.remove();

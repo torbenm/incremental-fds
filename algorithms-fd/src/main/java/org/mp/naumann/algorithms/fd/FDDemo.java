@@ -11,6 +11,7 @@ import java.util.List;
 public class FDDemo {
 
 	public static void main(String[] args) throws ClassNotFoundException, ConnectionException {
+		FDLogger.silence();
         DataConnector dc = new JdbcDataConnector(ConnectionManager.getPostgresConnection());
 		InitialAlgorithm<List<FunctionalDependency>, ?> hyfd = new FDInitialAlgorithm("hyfd", dc, "test", "countries");
 		List<FunctionalDependency> fds = hyfd.execute();

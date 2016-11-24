@@ -41,7 +41,6 @@ public class AbaloneFixture implements AlgorithmFixture{
     public Table getInputGenerator() throws ConnectionException {
         JdbcDataConnector jdbcDataConnector = new JdbcDataConnector(ConnectionManager.getCsvConnection("/test"));
         Table t = jdbcDataConnector.getTable("test", relationName);
-        System.out.println(t.getColumnNames().size());
         return t;
     }
 
