@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd.fdep;
 
+
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;

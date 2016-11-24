@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.Table;
 
@@ -16,14 +17,14 @@ public class JdbcDataConnector implements DataConnector {
     private Connection conn;
     private ConnectionInfo ci;
 
-    public JdbcDataConnector(String className, ConnectionInfo connectionInfo) {
-        try {
-            Class.forName(className);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+    public JdbcDataConnector(String className, ConnectionInfo connectionInfo) throws ClassNotFoundException, ConnectionException {
+        Class.forName(className);
         this.ci = connectionInfo;
         connect();
+    }
+
+    public JdbcDataConnector(Connection connection) {
+        this.conn = connection;
     }
 
     public List<String> getTableNames(String schema) {
@@ -45,19 +46,19 @@ public class JdbcDataConnector implements DataConnector {
         return new JdbcTable(schema, tableName, conn);
     }
 
-    public void connect() {
+    public void connect() throws ConnectionException {
         try {
             conn = DriverManager.getConnection(ci.connectionString, ci.user, ci.pass);
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new ConnectionException(e);
         }
     }
 
-    public void disconnect() {
+    public void close() throws ConnectionException {
         try {
-            conn.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+			conn.close();
+		} catch (SQLException e) {
+			throw new ConnectionException(e);
+		}
     }
 }

@@ -2,41 +2,37 @@ package org.mp.naumann.algorithms.fd;
 
 import org.mp.naumann.algorithms.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.InitialAlgorithm;
-import org.mp.naumann.algorithms.data.NoIntermediateDataStructure;
 import org.mp.naumann.algorithms.fd.fdep.FDEPExecutor;
 import org.mp.naumann.algorithms.fd.hyfd.HyFD;
 import org.mp.naumann.algorithms.fd.tane.TaneAlgorithm;
-import org.mp.naumann.algorithms.result.AlgorithmResult;
-import org.mp.naumann.algorithms.result.ListResultSet;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.Table;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-public class FDInitialAlgorithm extends InitialAlgorithm<FunctionalDependency, NoIntermediateDataStructure> {
+public class FDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDependency>, Object> {
 
     private final List<String> algorithms = Arrays.asList("hyfd", "tane", "fdep");
-
-    private final String schema, tableName;
+    
     private final List<FunctionalDependency> functionalDependencies;
     private FunctionalDependencyAlgorithm fdAlgorithm;
+	private String schema;
+	private String tableName;
 
 
     public FDInitialAlgorithm(String algorithm, DataConnector dataConnector, String schema, String tableName) {
-        super(dataConnector);
         if(!algorithms.contains(algorithm.toLowerCase()))
             throw new RuntimeException("Unknown Algorithm "+algorithm);
         this.schema = schema;
         this.tableName = tableName;
         this.functionalDependencies = new ArrayList<>();
-        initializeAlgorithm(algorithm, dataConnector, tableName);
+        initializeAlgorithm(algorithm, dataConnector);
     }
 
-    private void initializeAlgorithm(String algorithm, DataConnector dataConnector, String tableName) {
-        Table table = getDataConnector().getTable(schema, tableName);
+    private void initializeAlgorithm(String algorithm, DataConnector dataConnector) {
+    	Table table = dataConnector.getTable(schema, tableName);
         FunctionalDependencyResultReceiver resultReceiver = functionalDependencies::add;
         switch(algorithm.toLowerCase()){
             case "hyfd":
@@ -52,13 +48,18 @@ public class FDInitialAlgorithm extends InitialAlgorithm<FunctionalDependency, N
     }
 
     @Override
-    public AlgorithmResult<FunctionalDependency, NoIntermediateDataStructure> execute() {
+    public List<FunctionalDependency> execute() {
         try {
             fdAlgorithm.execute();
-            return new AlgorithmResult<>(new ListResultSet<>(functionalDependencies));
+            return functionalDependencies;
         } catch (AlgorithmExecutionException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed while executing algorithm!", e);
         }
     }
+
+	@Override
+	public Object getIntermediateDataStructure() {
+		return null;
+	}
 }

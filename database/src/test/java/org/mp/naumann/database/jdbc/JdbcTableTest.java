@@ -24,10 +24,9 @@ public class JdbcTableTest extends JdbcTest {
 		invalidTable = connector.getTable("", "invalid");
 	}
 
-	/* Currently disabled for branch refactoring/fd-algorithms
 	@Test
 	public void testProperties() {
-		assertEquals(table.getName(), tableName);
+		assertEquals(tableName, table.getName());
 	}
 
 	@Test
@@ -40,20 +39,20 @@ public class JdbcTableTest extends JdbcTest {
 
 	@Test
 	public void testGetRowCount() {
-		assertEquals(table.getRowCount(), 248);
-		assertEquals(invalidTable.getRowCount(), -1);
+		assertEquals(248, table.getRowCount());
+		assertEquals(-1, invalidTable.getRowCount());
 	}
 
 	@Test
 	public void testGetColumn() {
 		// retrieve column and check properties
 		Column<?> col = table.getColumn("country_en");
-		assertEquals(col.getName(), "country_en");
-		assertEquals(col.getType(), String.class);
+		assertEquals("country_en", col.getName());
+		assertEquals(String.class, col.getType());
 
 		// check properties of non-existing column
 		Column<?> invalidCol = table.getColumn("invalid");
-		assertEquals(invalidCol, null);
+		assertEquals(null, invalidCol);
 	}
 
 	@Test
@@ -85,5 +84,5 @@ public class JdbcTableTest extends JdbcTest {
 			}
 		}
 	}
-	*/
+
 }

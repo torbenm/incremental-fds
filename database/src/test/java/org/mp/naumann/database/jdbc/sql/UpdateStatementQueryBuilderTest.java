@@ -11,18 +11,18 @@ import org.mp.naumann.database.statement.UpdateStatement;
 
 public class UpdateStatementQueryBuilderTest {
 
-    UpdateStatementQueryBuilder usqb = UpdateStatementQueryBuilder.get();
+    private UpdateStatementQueryBuilder usqb = UpdateStatementQueryBuilder.get();
 
     @Test
-    public void testGenerateSingle(){
-        String expected = "UPDATE people SET name = 'max', age = '15' WHERE name = 'hanna' AND age = '12';";
+    public void testGenerateSingle() throws QueryBuilderException {
+        String expected = "UPDATE test.people SET name = 'max', age = '15' WHERE name = 'hanna' AND age = '12';";
         assertEquals(expected, usqb.generateSingle(UpdateStatements.createUpdateStatement1()));
     }
 
     @Test
-    public void testGenerateMulti(){
-        String expected = "UPDATE people SET name = 'max', age = '15' WHERE name = 'hanna' AND age = '12';\n" +
-                "UPDATE places SET country = 'US', city = 'San Francisco' WHERE country = 'DE' AND city = 'Berlin';";
+    public void testGenerateMulti() throws QueryBuilderException {
+        String expected = "UPDATE test.people SET name = 'max', age = '15' WHERE name = 'hanna' AND age = '12';\n" +
+                "UPDATE test.places SET country = 'US', city = 'San Francisco' WHERE country = 'DE' AND city = 'Berlin';";
 
         List<UpdateStatement> statements = Arrays.asList(
                 UpdateStatements.createUpdateStatement1(),

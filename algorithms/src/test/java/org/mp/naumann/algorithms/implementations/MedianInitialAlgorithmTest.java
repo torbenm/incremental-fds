@@ -1,16 +1,21 @@
 package org.mp.naumann.algorithms.implementations;
-
+import com.opentable.db.postgres.embedded.DatabasePreparer;
+import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
+import com.opentable.db.postgres.junit.PreparedDbRule;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
-import org.mp.naumann.algorithms.result.ResultSet;
+import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.jdbc.JdbcDataConnector;
-import org.mp.naumann.database.utils.PostgresConnection;
+import org.mp.naumann.database.utils.PostgresConnectionPreparer;
+
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-
-import static junit.framework.TestCase.assertEquals;
-
+import java.sql.Connection;
+import java.sql.SQLException;
 
 public class MedianInitialAlgorithmTest {
 
@@ -20,17 +25,28 @@ public class MedianInitialAlgorithmTest {
     private static final String schema = "test";
     private static final String tableName = "countries";
     private static final String columnName = "population";
+    private static final DatabasePreparer preparer = new PostgresConnectionPreparer();
 
-   /* @BeforeClass
-    public static void setUp() throws IOException {
-        dataConnector = new JdbcDataConnector("org.postgresql.Driver", PostgresConnection.getConnectionInfo());
+    @ClassRule
+    static public PreparedDbRule pr = EmbeddedPostgresRules.preparedDatabase(preparer);
+
+
+    @BeforeClass
+    public static void setUp() throws IOException, SQLException {
+        Connection conn = pr.getTestDatabase().getConnection();
+        dataConnector = new JdbcDataConnector(conn);
         algorithm = new MedianInitialAlgorithm(dataConnector, schema, tableName, columnName);
     }
 
     @Test
     public void testExecute(){
-        ResultSet<String> result = algorithm.execute().getResultSet();
-        assertEquals("3286936", result.iterator().next());
-    } */
+        String result = algorithm.execute();
+        assertEquals("3286936", result);
+    }
+
+    @AfterClass
+    public static void tearDownOnce() throws ConnectionException {
+        dataConnector.close();
+    }
 
 }

@@ -11,14 +11,15 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
 
     private final int batchSize;
     private final List<Statement> statementList = new ArrayList<>();
-    private final String schema, tableName;
+    private final String schema;
+    private final String tableName;
     private boolean streaming = false;
     private boolean doneFilling = false;
     private int currentStatementPosition = 0;
 
     public SizableBatchSource(String schema, String tableName, int batchSize) {
-        this.batchSize = batchSize;
         this.schema = schema;
+    	this.batchSize = batchSize;
         this.tableName = tableName;
     }
 
@@ -29,9 +30,12 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
     public void startStreaming(){
         streaming = true;
         weakStream();
+        start();
     }
 
-    public void endStreaming(){
+    protected abstract void start();
+
+	public void endStreaming(){
         //Stream one last time
         streaming = false;
         forceStream();
@@ -107,6 +111,8 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
     public String getTableName() {
         return tableName;
     }
+
+    public String getSchema() { return schema; }
 
     protected int getCurrentStatementPosition() {
         return currentStatementPosition;

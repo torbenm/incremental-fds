@@ -6,11 +6,12 @@ import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.source.BatchSource;
 import org.mp.naumann.processor.batch.source.BatchSourceListener;
 import org.mp.naumann.processor.handler.BatchHandler;
+import org.mp.naumann.processor.handler.DataAwareBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
-public abstract class BatchProcessor<BatchCollectionType extends Collection<BatchHandler>> implements BatchSourceListener {
+public abstract class BatchProcessor implements BatchSourceListener {
 
-    private final BatchCollectionType batchHandlerCollection;
+    private final Collection<BatchHandler> batchHandlerCollection;
     private final DatabaseBatchHandler databaseBatchHandler;
 
     public BatchProcessor(BatchSource batchSource, DatabaseBatchHandler databaseBatchHandler){
@@ -19,9 +20,14 @@ public abstract class BatchProcessor<BatchCollectionType extends Collection<Batc
         batchSource.addBatchSourceListener(this);
     }
 
-    protected abstract BatchCollectionType initializeBatchHandlerCollection();
+    protected abstract Collection<BatchHandler> initializeBatchHandlerCollection();
 
     public void addBatchHandler(BatchHandler batchHandler){
+        batchHandlerCollection.add(batchHandler);
+    }
+
+    public void addDataAwareBatchHandler(DataAwareBatchHandler batchHandler){
+    	batchHandler.setDataConnector(databaseBatchHandler.getConnector());
         batchHandlerCollection.add(batchHandler);
     }
 
@@ -29,7 +35,7 @@ public abstract class BatchProcessor<BatchCollectionType extends Collection<Batc
         batchHandlerCollection.remove(batchHandler);
     }
 
-    protected BatchCollectionType getBatchHandlers(){
+    protected Collection<BatchHandler> getBatchHandlers(){
         return batchHandlerCollection;
     }
 

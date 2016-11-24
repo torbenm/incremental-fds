@@ -24,12 +24,12 @@ public class SizableBatchSourceTest {
 
     @Test
     public void testGetBatchSize() {
-        assertEquals(sbs.getBatchSize(), BATCH_SIZE);
+        assertEquals(BATCH_SIZE, sbs.getBatchSize());
     }
 
     @Test
     public void testGetTableName() {
-        assertEquals(sbs.getTableName(), TABLE_NAME);
+        assertEquals(TABLE_NAME, sbs.getTableName());
     }
 
     @Test
@@ -44,7 +44,7 @@ public class SizableBatchSourceTest {
     public void testAddStatement() {
         addStatement();
         assertTrue(sbs.hasSomethingToStream());
-        assertEquals(sbs.hasEnoughToStream(), BATCH_SIZE == 1);
+        assertEquals(BATCH_SIZE == 1, sbs.hasEnoughToStream());
     }
 
     @Test(expected= ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException.class)
@@ -121,7 +121,7 @@ public class SizableBatchSourceTest {
         }catch(ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException e){
             received = true;
         }
-        assertEquals(batches, 9);
+        assertEquals(9, batches);
         assertTrue(received);
     }
 

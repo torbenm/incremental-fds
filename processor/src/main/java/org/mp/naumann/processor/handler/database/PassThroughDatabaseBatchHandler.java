@@ -16,4 +16,9 @@ public class PassThroughDatabaseBatchHandler implements DatabaseBatchHandler {
         Table table = dataConnector.getTable(batch.getSchema(), batch.getTableName());
         table.execute(batch);
     }
+
+	@Override
+	public DataConnector getConnector() {
+		return dataConnector;
+	}
 }
