@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.hyfd;
+package org.mp.naumann.algorithms.fd.structures;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
@@ -7,7 +7,7 @@ import org.apache.lucene.util.OpenBitSet;
 import java.util.ArrayList;
 import java.util.List;
 
-class FDSet {
+public class FDSet {
 
 	private List<ObjectOpenHashSet<OpenBitSet>> fdLevels;
 	
@@ -32,7 +32,7 @@ class FDSet {
 	public boolean add(OpenBitSet fd) {
 		int length = (int) fd.cardinality();
 		
-		if ((this.maxDepth > 0) && (length > this.maxDepth))
+		if (invalidLength(length))
 			return false;
 		
 		this.depth = Math.max(this.depth, length);
@@ -41,11 +41,8 @@ class FDSet {
 
 	public boolean contains(OpenBitSet fd) {
 		int length = (int) fd.cardinality();
-		
-		if ((this.maxDepth > 0) && (length > this.maxDepth))
-			return false;
-		
-		return this.fdLevels.get(length).contains(fd);
+		return !(invalidLength(length))
+				&& this.fdLevels.get(length).contains(fd);
 	}
 	
 	public void trim(int newDepth) {
@@ -55,5 +52,9 @@ class FDSet {
 		this.depth = newDepth;
 		this.maxDepth = newDepth;
 	}
+
+	private boolean invalidLength(int length){
+        return (this.maxDepth > 0) && (length > this.maxDepth);
+    }
 
 }

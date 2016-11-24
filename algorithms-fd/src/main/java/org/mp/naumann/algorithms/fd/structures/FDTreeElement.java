@@ -3,11 +3,14 @@ package org.mp.naumann.algorithms.fd.structures;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.structures.plis.PliCollection;
+import org.mp.naumann.algorithms.fd.structures.plis.PositionListIndex;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class FDTreeElement {
@@ -15,7 +18,7 @@ public class FDTreeElement {
     FDTreeElement[] children;
     OpenBitSet rhsAttributes;
     OpenBitSet rhsFds;
-    int numAttributes;
+    final int numAttributes;
 
     FDTreeElement(int numAttributes) {
         this.rhsAttributes = new OpenBitSet(numAttributes);
@@ -93,9 +96,9 @@ public class FDTreeElement {
         }
 
         if (this.children != null)
-            for (FDTreeElement child : this.children)
-                if (child != null)
-                    child.trimRecursive(currentDepth + 1, newDepth);
+            Arrays.stream(this.children)
+                    .filter(c -> c != null)
+                    .forEach(c -> c.trimRecursive(currentDepth+1, newDepth));
     }
 
     boolean containsFdOrGeneralization(OpenBitSet lhs, int rhs, int currentLhsAttr) {
@@ -191,7 +194,7 @@ public class FDTreeElement {
     }
 
     void addFunctionalDependenciesInto(List<FunctionalDependency> functionalDependencies, OpenBitSet lhs,
-                                       ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis) {
+                                       ObjectArrayList<ColumnIdentifier> columnIdentifiers, PliCollection plis) {
 
         for (int rhs = this.rhsFds.nextSetBit(0); rhs >= 0; rhs = this.rhsFds.nextSetBit(rhs + 1)) {
             FunctionalDependency fdResult =  findFunctionDependency(lhs, rhs, columnIdentifiers, plis);
@@ -212,7 +215,7 @@ public class FDTreeElement {
     }
 
     int addFunctionalDependenciesInto(FunctionalDependencyResultReceiver resultReceiver, OpenBitSet lhs,
-                                      ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis) {
+                                      ObjectArrayList<ColumnIdentifier> columnIdentifiers, PliCollection plis) {
         int numFDs = 0;
         for (int rhs = this.rhsFds.nextSetBit(0); rhs >= 0; rhs = this.rhsFds.nextSetBit(rhs + 1)) {
             FunctionalDependency fdResult = findFunctionDependency(lhs, rhs, columnIdentifiers, plis);
@@ -236,7 +239,7 @@ public class FDTreeElement {
     }
 
     private FunctionalDependency findFunctionDependency(OpenBitSet lhs, int rhs,
-                                                        ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis){
+                                                        ObjectArrayList<ColumnIdentifier> columnIdentifiers, PliCollection plis){
         ColumnIdentifier[] columns = new ColumnIdentifier[(int) lhs.cardinality()];
         int j = 0;
         for (int i = lhs.nextSetBit(0); i >= 0; i = lhs.nextSetBit(i + 1)) {

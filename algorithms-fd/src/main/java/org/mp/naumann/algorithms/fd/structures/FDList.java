@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.hyfd;
+package org.mp.naumann.algorithms.fd.structures;
 
 import java.util.ArrayList;
 import java.util.List;

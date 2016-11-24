@@ -1,28 +1,23 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-
 import org.mp.naumann.algorithms.AlgorithmExecutionException;
-import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
-import org.mp.naumann.algorithms.fd.utils.PliUtils;
-import org.mp.naumann.database.InputReadException;
-import org.mp.naumann.database.Table;
-import org.mp.naumann.database.TableInput;
-import org.mp.naumann.database.data.ColumnCombination;
-import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
+import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
+import org.mp.naumann.algorithms.fd.hyfd.validation.ParallelValidator;
+import org.mp.naumann.algorithms.fd.hyfd.validation.Validator;
+import org.mp.naumann.algorithms.fd.structures.FDList;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
-import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.utils.FileUtils;
+import org.mp.naumann.algorithms.fd.structures.TableInputProvider;
+import org.mp.naumann.algorithms.fd.structures.plis.PliCollection;
+import org.mp.naumann.algorithms.fd.utils.MemoryGuardian;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
+import org.mp.naumann.database.Table;
+import org.mp.naumann.database.TableInput;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -30,167 +25,107 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
     private final static Logger LOG = Logger.getLogger(HyFD.class.getName());
 
-	private Table table = null;
-	private FunctionalDependencyResultReceiver resultReceiver = null;
+    private final MemoryGuardian memoryGuardian = new MemoryGuardian(true);
+    private final int MAX_LHS = -1;
+    private final float EFFICIENCY_THRESHOLD = 0.01f;
 
-	private ValueComparator valueComparator;
-	private final MemoryGuardian memoryGuardian = new MemoryGuardian(true);
-
-	// but usually we are only interested in FDs
-									// with lhs < some threshold (otherwise they
-									// would not be useful for normalization,
-									// key discovery etc.)
-
-	private String tableName;
-	private List<String> attributeNames;
-	private int numAttributes;
+    private final TableInputProvider tableInputProvider;
+	private final FunctionalDependencyResultReceiver resultReceiver;
+	private final ValueComparator valueComparator = new ValueComparator(true);
 
 	public HyFD(Table table, FunctionalDependencyResultReceiver resultReceiver) {
-		this.table = table;
+        tableInputProvider = new TableInputProvider(table);
 		this.resultReceiver = resultReceiver;
-	}
-
-	private void initialize(TableInput tableInput) {
-		this.tableName = tableInput.getName();
-		this.attributeNames = tableInput.getColumnNames();
-		this.numAttributes = this.attributeNames.size();
-		if (this.valueComparator == null)
-			this.valueComparator = new ValueComparator(true);
+        if (this.resultReceiver == null)
+            throw new IllegalStateException("No result receiver set!");
 	}
 
 	public void execute() throws AlgorithmExecutionException {
 		long startTime = System.currentTimeMillis();
-		if (this.table == null)
-			throw new IllegalStateException("No input generator set!");
-		if (this.resultReceiver == null)
-			throw new IllegalStateException("No result receiver set!");
-
-		// this.executeFDEP();
 		this.executeHyFD();
-
 		LOG.info("Time: " + (System.currentTimeMillis() - startTime) + " ms");
 	}
 
 	private void executeHyFD() throws AlgorithmExecutionException {
-		// Initialize
-		LOG.info("Initializing ...");
-		TableInput tableInput = this.getInput();
-		this.initialize(tableInput);
+        LOG.info("Intializing...");
+        if (tableInputProvider.getTable().getRowCount() == 0) {
+            informAboutAnyFD();
+            return;
+        }
 
-		///////////////////////////////////////////////////////
-		// Build data structures for sampling and validation //
-		///////////////////////////////////////////////////////
+        PliCollection plis = calculatePliCollection(initializeTableInput());
 
-		// Calculate plis
-		LOG.info("Reading data and calculating plis ...");
-		PLIBuilder pliBuilder = new PLIBuilder();
-		List<PositionListIndex> plis = pliBuilder.getPLIs(tableInput, this.numAttributes,
-				this.valueComparator.isNullEqualNull());
-		this.closeInput(tableInput);
+        //Create negative and positive cover
+        FDSet negCover = buildNegativeCover();
+        FDTree posCover = buildPositiveCover();
 
-		final int numRecords = pliBuilder.getNumLastRecords();
-		pliBuilder = null;
-
-		if (numRecords == 0) {
-			ObjectArrayList<ColumnIdentifier> columnIdentifiers = this.buildColumnIdentifiers();
-			for (int attr = 0; attr < this.numAttributes; attr++)
-				this.resultReceiver
-						.receiveResult(new FunctionalDependency(new ColumnCombination(), columnIdentifiers.get(attr)));
-			return;
-		}
-
-		// Sort plis by number of clusters: For searching in the covers and for
-		// validation, it is good to have attributes with few non-unique values
-		// and many clusters left in the prefix tree
-		LOG.info("Sorting plis by number of clusters ...");
-		Collections.sort(plis, new Comparator<PositionListIndex>() {
-
-			@Override
-			public int compare(PositionListIndex o1, PositionListIndex o2) {
-				int numClustersInO1 = numRecords - o1.getNumNonUniqueValues() + o1.getClusters().size();
-				int numClustersInO2 = numRecords - o2.getNumNonUniqueValues() + o2.getClusters().size();
-				return numClustersInO2 - numClustersInO1;
-			}
-		});
-
-		// Calculate inverted plis
-		LOG.info("Inverting plis ...");
-		int[][] invertedPlis = PliUtils.invert(plis, numRecords);
-
-		// Extract the integer representations of all records from the inverted
-		// plis
-		LOG.info("Extracting integer representations for the records ...");
-		int[][] compressedRecords = new int[numRecords][];
-		for (int recordId = 0; recordId < numRecords; recordId++)
-			compressedRecords[recordId] = this.fetchRecordFrom(recordId, invertedPlis);
-		invertedPlis = null;
-
-		// Initialize the negative cover
-		int maxLhsSize = -1;
-		FDSet negCover = new FDSet(this.numAttributes, maxLhsSize);
-
-		// Initialize the positive cover
-		FDTree posCover = new FDTree(this.numAttributes, maxLhsSize);
-		posCover.addMostGeneralDependencies();
-
-		//////////////////////////
-		// Build the components //
-		//////////////////////////
-
-		// TODO: implement parallel sampling
-
-		float efficiencyThreshold = 0.01f;
-		Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, efficiencyThreshold,
+        //Build components
+		Sampler sampler = new Sampler(negCover, posCover, plis, EFFICIENCY_THRESHOLD,
 				this.valueComparator, this.memoryGuardian);
-		Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
-		boolean validateParallel = true;
-		Validator validator = new Validator(negCover, posCover, numRecords, compressedRecords, plis,
-				efficiencyThreshold, validateParallel, this.memoryGuardian);
 
-		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
-		do {
-			FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
-			inductor.updatePositiveCover(newNonFds);
-			comparisonSuggestions = validator.validatePositiveCover();
-		} while (comparisonSuggestions != null);
-		negCover = null;
+		Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
+
+		Validator validator = new ParallelValidator(negCover, posCover, plis,
+				EFFICIENCY_THRESHOLD, this.memoryGuardian);
+
+        //calculate fds
+        calculateFDs(sampler, validator, inductor);
 
 		// Output all valid FDs
-		LOG.info("Translating FD-tree into result format ...");
-
-		// int numFDs = posCover.writeFunctionalDependencies("HyFD_backup_" +
-		// this.tableName + "_results.txt", this.buildColumnIdentifiers(), plis,
-		// false);
-		int numFDs = posCover.addFunctionalDependenciesInto(this.resultReceiver, this.buildColumnIdentifiers(), plis);
-
-		LOG.info("... done! (" + numFDs + " FDs)");
+		LOG.info("Translating OpenBitFunctionalDependency-tree into result format ...");
+		int numFDs = informAboutFDs(posCover, plis);
+        LOG.info("... done! (" + numFDs + " FDs)");
 	}
 
-	private TableInput getInput() {
-		try {
+	private PliCollection calculatePliCollection(TableInput tableInput){
+        LOG.info("Calculate plis ...");
+        PliCollection plis = readPlis(tableInput);
+        plis.sortByNumOfClusters();
+        return plis;
+    }
 
-			return this.table.open();
+	private void calculateFDs(Sampler sampler, Validator validator, Inductor inductor) throws AlgorithmExecutionException {
+        List<IntegerPair> comparisonSuggestions = new ArrayList<>();
+        do {
+            FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
+            inductor.updatePositiveCover(newNonFds);
+            comparisonSuggestions = validator.validatePositiveCover();
+        } while (comparisonSuggestions != null);
+    }
 
-		} catch (InputReadException e) {
-			throw new RuntimeException("Input generation failed!",e);
-		}
-	}
+    private PliCollection readPlis(TableInput tableInput){
+        LOG.info("Reading data");
+        PliCollection pliCollection = PliCollection.readFromTableInput(tableInput,
+                tableInputProvider.getNumberOfAttributes(), this.valueComparator);
+        tableInputProvider.closeInput();
+        return pliCollection;
+    }
 
-	private void closeInput(TableInput tableInput) {
-		FileUtils.close(tableInput);
-	}
+    private FDSet buildNegativeCover(){
+        return new FDSet(tableInputProvider.getNumberOfAttributes(), MAX_LHS);
+    }
+    private FDTree buildPositiveCover(){
+        FDTree posCover = new FDTree(tableInputProvider.getNumberOfAttributes(), MAX_LHS);
+        posCover.addMostGeneralDependencies();
+        return posCover;
+    }
 
-	private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {
-		ObjectArrayList<ColumnIdentifier> columnIdentifiers = new ObjectArrayList<>(this.attributeNames.size());
-		for (String attributeName : this.attributeNames)
-			columnIdentifiers.add(new ColumnIdentifier(this.tableName, attributeName));
-		return columnIdentifiers;
-	}
+    private void informAboutAnyFD(){
+        tableInputProvider.buildColumnIdentifiers()
+                .stream()
+                .map(FunctionalDependency::new)
+                .forEach(resultReceiver::receiveResult);
+    }
 
-	private int[] fetchRecordFrom(int recordId, int[][] invertedPlis) {
-		int[] record = new int[this.numAttributes];
-		for (int i = 0; i < this.numAttributes; i++)
-			record[i] = invertedPlis[i][recordId];
-		return record;
-	}
+    private int informAboutFDs(FDTree posCover, PliCollection plis){
+        return posCover.addFunctionalDependenciesInto(this.resultReceiver,
+                tableInputProvider.buildColumnIdentifiers(),
+                plis);
+    }
+
+	private TableInput initializeTableInput(){
+        LOG.info("Initializing ...");
+        return tableInputProvider.getInput();
+    }
+
 }

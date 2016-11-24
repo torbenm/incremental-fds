@@ -285,7 +285,7 @@ public class TaneAlgorithm implements FunctionalDependencyAlgorithm {
 	}
 
 	/**
-	 * Adds the FD lhs -> a to the resultReceiver and also prints the
+	 * Adds the OpenBitFunctionalDependency lhs -> a to the resultReceiver and also prints the
 	 * dependency.
 	 *
 	 * @param lhs:

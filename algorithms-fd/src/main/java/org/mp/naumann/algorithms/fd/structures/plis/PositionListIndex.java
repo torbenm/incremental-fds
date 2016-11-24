@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.mp.naumann.algorithms.fd.structures;
+package org.mp.naumann.algorithms.fd.structures.plis;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -22,6 +22,9 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.structures.ClusterIdentifier;
+import org.mp.naumann.algorithms.fd.structures.ClusterIdentifierWithRecord;
+import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
 import java.util.Collections;
@@ -34,7 +37,7 @@ import java.util.List;
  * stores the positions of equal values in a nested list. A column with the
  * values a, a, b, c, b, c transfers to the position list index ((0, 1), (2, 4),
  * (3, 5)). Clusters of size 1 are discarded. A position list index should be
- * created using the {@link PLIBuilder}.
+ * created using the {@link PliBuilder}.
  */
 public class PositionListIndex {
 

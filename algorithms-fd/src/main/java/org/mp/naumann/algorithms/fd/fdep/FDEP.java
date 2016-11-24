@@ -13,30 +13,22 @@ class FDEP {
 
 	private final static Logger LOG = Logger.getLogger(HyFD.class.getName());
 	
-	private int numAttributes;
-	private ValueComparator valueComparator;
+	private final int numAttributes;
+	private final ValueComparator valueComparator;
 	
 	public FDEP(int numAttributes, ValueComparator valueComparator) {
 		this.numAttributes = numAttributes;
 		this.valueComparator = valueComparator;
 	}
 
-	public FDTree execute(int[][] records) {
+	FDTree execute(int[][] records) {
+		LOG.info("Executing FDEP.");
 		FDTree negCoverTree = this.calculateNegativeCover(records);
-		//negCoverTree.filterGeneralizations(); // TODO: (= remove all generalizations) Not necessary for correctness because calculating the positive cover does the filtering automatically if there are generalizations in the negCover, but for maybe for performance (?)
-		records = null;
-		
-		//long t = System.currentTimeMillis();
-		FDTree posCoverTree = this.calculatePositiveCover(negCoverTree);
-		negCoverTree = null;
-		//LOG.info("t = " + (System.currentTimeMillis() - t));
-		
-		//posCoverTree.filterDeadElements();
-		
-		return posCoverTree;
+		return this.calculatePositiveCover(negCoverTree);
 	}
 	
 	private FDTree calculateNegativeCover(int[][] records) {
+        LOG.info("Calculating Negative Cover");
 		FDTree negCoverTree = new FDTree(this.numAttributes, -1);
 		for (int i = 0; i < records.length; i++)
 			for (int j = i + 1; j < records.length; j++)
@@ -62,6 +54,7 @@ class FDEP {
 	}
 
 	private FDTree calculatePositiveCover(FDTree negCoverTree) {
+        LOG.info("Calculating Positive Cover");
 		FDTree posCoverTree = new FDTree(this.numAttributes, -1);
 		posCoverTree.addMostGeneralDependencies();
 		OpenBitSet activePath = new OpenBitSet();
@@ -88,8 +81,7 @@ class FDEP {
 	}
 
 	private void specializePositiveCover(FDTree posCoverTree, OpenBitSet lhs, int rhs) {
-		List<OpenBitSet> specLhss = null;
-		specLhss = posCoverTree.getFdAndGeneralizations(lhs, rhs);
+		List<OpenBitSet> specLhss = posCoverTree.getFdAndGeneralizations(lhs, rhs);
 		for (OpenBitSet specLhs : specLhss) {
 			posCoverTree.removeFunctionalDependency(specLhs, rhs);
 			for (int attr = this.numAttributes - 1; attr >= 0; attr--) {

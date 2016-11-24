@@ -30,6 +30,10 @@ public class FunctionalDependency {
 	private ColumnCombination determinant;
 	private ColumnIdentifier dependant;
 
+	public FunctionalDependency(ColumnIdentifier dependant){
+		this(new ColumnCombination(), dependant);
+	}
+
 	public FunctionalDependency(ColumnCombination determinant, ColumnIdentifier dependant) {
 		this.determinant = determinant;
 		this.dependant = dependant;

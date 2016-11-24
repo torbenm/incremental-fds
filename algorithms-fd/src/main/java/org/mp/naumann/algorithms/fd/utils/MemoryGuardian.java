@@ -1,28 +1,29 @@
-package org.mp.naumann.algorithms.fd.hyfd;
+package org.mp.naumann.algorithms.fd.utils;
 
 import java.lang.management.ManagementFactory;
 import java.util.logging.Logger;
 
+import org.mp.naumann.algorithms.fd.structures.FDList;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 
-class MemoryGuardian {
+public class MemoryGuardian {
 
 	private final static Logger LOG = Logger.getLogger(MemoryGuardian.class.getName());
 
+    private final long AVAILABLE_MEMORY = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getMax();
+    private final float MAX_MEMORY_USAGE_PERCENTAGE = 0.8f;
+    private final float TRIM_MEMORY_USAGE_PERCENTAGE = 0.7f;
+
+    private final long MAX_MEMORY_USAGE = (long)(AVAILABLE_MEMORY * MAX_MEMORY_USAGE_PERCENTAGE);
+    private final long TRIM_MEMORY_USAGE = (long)(AVAILABLE_MEMORY * TRIM_MEMORY_USAGE_PERCENTAGE);
+    private final long MEMORY_CHECK_FREQUENCY = (long)Math.max(Math.ceil((float) AVAILABLE_MEMORY / 10000000), 10);
+
 	private boolean active;
-	private long memoryCheckFrequency;						// Number of allocation events that cause a memory check
-	private long maxMemoryUsage;
-	private long trimMemoryUsage;
 	private int allocationEventsSinceLastCheck = 0;
 
 	public MemoryGuardian(boolean active) {
 		this.active = active;
-		long availableMemory = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getMax();
-		float maxMemoryUsagePercentage = 0.8f;
-		this.maxMemoryUsage = (long)(availableMemory * maxMemoryUsagePercentage);
-		float trimMemoryUsagePercentage = 0.7f;
-		this.trimMemoryUsage = (long)(availableMemory * trimMemoryUsagePercentage);
-		this.memoryCheckFrequency = (long)Math.max(Math.ceil((float) availableMemory / 10000000), 10);
 	}
 	
 	public void memoryChanged(int allocationEvents) {
@@ -35,15 +36,13 @@ class MemoryGuardian {
 	}
 	
 	public void match(FDSet negCover, FDTree posCover, FDList newNonFDs) {
-		if ((!this.active) || (this.allocationEventsSinceLastCheck < this.memoryCheckFrequency))
+		if ((!this.active) || (this.allocationEventsSinceLastCheck < this.MEMORY_CHECK_FREQUENCY))
 			return;
 		
-		if (this.memoryExhausted(this.maxMemoryUsage)) {
-//			LOG.info("Memory exhausted (" + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() + "/" + this.maxMemoryUsage + ") ");
+		if (this.memoryExhausted(this.MAX_MEMORY_USAGE)) {
 			Runtime.getRuntime().gc();
-//			LOG.info("GC reduced to " + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed());
-			
-			while (this.memoryExhausted(this.trimMemoryUsage)) {
+
+			while (this.memoryExhausted(this.TRIM_MEMORY_USAGE)) {
 				int depth = Math.max(posCover.getDepth(), negCover.getDepth()) - 1;
 				if (depth < 1)
 					throw new RuntimeException("Insufficient memory to calculate any result!");

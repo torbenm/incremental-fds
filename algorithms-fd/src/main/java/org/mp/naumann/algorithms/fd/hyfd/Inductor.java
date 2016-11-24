@@ -4,7 +4,10 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.structures.FDList;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
+import org.mp.naumann.algorithms.fd.utils.MemoryGuardian;
 
 class Inductor {
 
@@ -14,14 +17,14 @@ class Inductor {
 	private FDTree posCover;
 	private MemoryGuardian memoryGuardian;
 
-	public Inductor(FDSet negCover, FDTree posCover, MemoryGuardian memoryGuardian) {
+	Inductor(FDSet negCover, FDTree posCover, MemoryGuardian memoryGuardian) {
 		this.negCover = negCover;
 		this.posCover = posCover;
 		this.memoryGuardian = memoryGuardian;
 	}
 
-	public void updatePositiveCover(FDList nonFds) {
-		LOG.info("Inducing FD candidates ...");
+	void updatePositiveCover(FDList nonFds) {
+		LOG.info("Inducing OpenBitFunctionalDependency candidates ...");
 		for (int i = nonFds.getFdLevels().size() - 1; i >= 0; i--) {
 			if (i >= nonFds.getFdLevels().size()) // If this level has been trimmed during iteration
 				continue;
@@ -42,7 +45,7 @@ class Inductor {
 	private int specializePositiveCover(OpenBitSet lhs, int rhs, FDList nonFds) {
 		int numAttributes = this.posCover.getChildren().length;
 		int newFDs = 0;
-		List<OpenBitSet> specLhss = this.posCover.getFdAndGeneralizations(lhs, rhs);
+		List<OpenBitSet> specLhss;
 		
 		if (!(specLhss = this.posCover.getFdAndGeneralizations(lhs, rhs)).isEmpty()) { // TODO: May be "while" instead of "if"?
 			for (OpenBitSet specLhs : specLhss) {
@@ -59,8 +62,7 @@ class Inductor {
 							newFDs++;
 							
 							// If dynamic memory management is enabled, frequently check the memory consumption and trim the positive cover if it does not fit anymore
-							this.memoryGuardian.memoryChanged(1);
-							this.memoryGuardian.match(this.negCover, this.posCover, nonFds);
+							notifyMemoryGuardianOfChange(nonFds);
 						}
 						specLhs.clear(attr);
 					}
@@ -69,4 +71,11 @@ class Inductor {
 		}
 		return newFDs;
 	}
+
+	private void notifyMemoryGuardianOfChange(FDList nonFds){
+		this.memoryGuardian.memoryChanged(1);
+		this.memoryGuardian.match(this.negCover, this.posCover, nonFds);
+	}
 }
+
+
