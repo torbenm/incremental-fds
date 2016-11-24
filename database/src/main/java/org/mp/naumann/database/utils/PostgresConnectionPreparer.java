@@ -7,6 +7,8 @@ import org.apache.commons.csv.CSVRecord;
 
 import java.io.File;
 import java.io.FileReader;
+import java.net.ConnectException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -46,7 +48,10 @@ public class PostgresConnectionPreparer implements DatabaseConnectionPreparer {
         }
         try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
             CSVFormat format = CSVFormat.newFormat(';').withFirstRecordAsHeader().withQuote('"');
-            CSVParser parser = format.parse(new FileReader(new File("../test.countries.csv")));
+            URL resource = getClass().getClassLoader().getResource("csv/test.countries.csv");
+            if (resource == null)
+                throw new ConnectException("Can't find csv file to instantiate embedded db");
+            CSVParser parser = format.parse(new FileReader(new File(resource.getFile())));
             for (CSVRecord csvRecord : parser) {
                 for (int i = 1; i <= csvRecord.size(); i++) {
                     switch (i) {

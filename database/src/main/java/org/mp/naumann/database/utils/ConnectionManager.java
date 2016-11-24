@@ -13,7 +13,7 @@ import java.util.Properties;
 public class ConnectionManager {
 
     private static final String defaultCsvSeparator = ",";
-    private static final String defaultCsvDir = ".";
+    private static final String defaultCsvDir = "";
 
     private static Connection getConnection(String className, ConnectionInfo ci) throws ConnectionException {
         Connection connection;
@@ -54,8 +54,11 @@ public class ConnectionManager {
     }
 
     public static Connection getCsvConnection(String csvDir, String separator) throws ConnectionException {
+        URL csvResourceURL = ConnectionManager.class.getClassLoader().getResource("csv");
+        if (csvResourceURL == null)
+            throw new ConnectionException("Can't find resource directory");
         ConnectionInfo ci = new ConnectionInfo();
-        ci.connectionString = "jdbc:relique:csv:" + csvDir + "?separator=" + separator;
+        ci.connectionString = "jdbc:relique:csv:" + csvResourceURL.getFile() + csvDir + "?separator=" + separator;
         return getConnection("org.relique.jdbc.csv.CsvDriver", ci);
     }
 
