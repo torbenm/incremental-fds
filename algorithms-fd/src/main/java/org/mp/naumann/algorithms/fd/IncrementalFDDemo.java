@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd;
 
+import org.mp.naumann.algorithms.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.result.DefaultResultListener;
 import org.mp.naumann.database.ConnectionException;
@@ -20,14 +21,15 @@ import java.util.Map;
 
 public class IncrementalFDDemo {
 
-	public static void main(String[] args) throws ClassNotFoundException, ConnectionException {
+	public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
 		try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection("../test_data"))) {
 			String tableName = "data";
 			String schema = "public";
 			Table table = dc.getTable(schema, tableName);
 			HyFDInitialAlgorithm hyfd = new HyFDInitialAlgorithm(table);
 			List<FunctionalDependency> fds = hyfd.execute();
-//			fds.forEach(System.out::println);
+			System.out.println("Original FDs");
+			fds.forEach(System.out::println);
 			FDIntermediateDatastructure ds = hyfd.getIntermediateDataStructure();
 			
 			IncrementalFD inc = new IncrementalFD(Arrays.asList("a", "b", "c", "d"), tableName);
@@ -44,8 +46,9 @@ public class IncrementalFDDemo {
 			statements.add(new DefaultInsertStatement(map, schema, tableName));
 			Batch batch = new ListBatch(statements, schema, tableName);
 			inc.handleBatch(batch);
-			
-//			listener.getResult().forEach(System.out::println);
+
+			System.out.println("Incremental FDs");
+			listener.getResult().forEach(System.out::println);
 		}
 	}
 

@@ -178,7 +178,9 @@ public class Validator {
 		LOG.info("Validating FDs using plis ...");
 		
 		run(currentLevel);
-		
+	}
+
+	public void shutdown() {
 		if (this.executor != null) {
 			this.executor.shutdown();
 			try {
@@ -188,8 +190,6 @@ public class Validator {
 				e.printStackTrace();
 			}
 		}
-		
-		return;
 	}
 
 	public void run(List<FDTreeElementLhsPair> currentLevel) throws AlgorithmExecutionException {

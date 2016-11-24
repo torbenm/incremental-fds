@@ -24,15 +24,17 @@ import org.mp.naumann.database.data.Row;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class PLIBuilder {
 	
 	private int numRecords = 0;
-	private List<Set<String>> columnValues;
-	
+	private List<HashMap<String, IntArrayList>> clusterMaps;
+
+	public List<HashMap<String, IntArrayList>> getClusterMaps() {
+		return clusterMaps;
+	}
+
 	public int getNumLastRecords() {
 		return this.numRecords;
 	}
@@ -52,11 +54,9 @@ public class PLIBuilder {
 	 * @return the list of clusterMaps, as described above
 	 */
 	private List<HashMap<String, IntArrayList>> calculateClusterMaps(TableInput tableInput, int numAttributes) {
-		columnValues = new ArrayList<>();
-		List<HashMap<String, IntArrayList>> clusterMaps = new ArrayList<>();
+		clusterMaps = new ArrayList<>();
 		for (int i = 0; i < numAttributes; i++) {
 			clusterMaps.add(new HashMap<>());
-			columnValues.add(new HashSet<>());
 		}
 		
 		this.numRecords = 0;
@@ -66,7 +66,6 @@ public class PLIBuilder {
 			int attributeId = 0;
 			for (String value : record) {
 				HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
-				columnValues.get(attributeId).add(value);
 				
 				if (clusterMap.containsKey(value)) {
 					clusterMap.get(value).add(this.numRecords);
@@ -158,9 +157,5 @@ public class PLIBuilder {
         }
         return clustersPerAttribute;
 
-	}
-
-	public List<Set<String>> getColumnValues() {
-		return columnValues;
 	}
 }

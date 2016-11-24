@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.mp.naumann.algorithms.AlgorithmExecutionException;
@@ -23,8 +24,8 @@ import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
 
 public class HyFD implements FunctionalDependencyAlgorithm {
@@ -48,11 +49,8 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 	private FDTree posCover;
 
-	private List<PositionListIndex> plis;
-
-	private List<Set<String>> columnValues;
-
-	private int[][] compressedRecords;
+	private List<HashMap<String, IntArrayList>> clusterMaps;
+	private int numRecords;
 
 	public HyFD(Table table, FunctionalDependencyResultReceiver resultReceiver) {
 		this.table = table;
@@ -96,7 +94,8 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		List<PositionListIndex> plis = pliBuilder.getPLIs(tableInput, this.numAttributes,
 				this.valueComparator.isNullEqualNull());
 		this.closeInput(tableInput);
-		this.columnValues = pliBuilder.getColumnValues();
+		this.clusterMaps = pliBuilder.getClusterMaps(); // get the clusterMaps here to transfer them to the incremental algorithm
+		this.numRecords = pliBuilder.getNumLastRecords(); // same with numRecords
 
 		final int numRecords = pliBuilder.getNumLastRecords();
 		pliBuilder = null;
@@ -130,7 +129,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		// Extract the integer representations of all records from the inverted
 		// plis
 		LOG.info("Extracting integer representations for the records ...");
-		compressedRecords = new int[numRecords][];
+		int[][] compressedRecords = new int[numRecords][];
 		for (int recordId = 0; recordId < numRecords; recordId++)
 			compressedRecords[recordId] = this.fetchRecordFrom(recordId, invertedPlis);
 		invertedPlis = null;
@@ -176,22 +175,10 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		LOG.info("... done! (" + numFDs + " FDs)");
 		
 		this.posCover = posCover;
-		this.plis = plis;
-	}
-
-	
-	
-	public List<Set<String>> getColumnValues() {
-		return columnValues;
 	}
 
 	public FDTree getPosCover() {
 		return posCover;
-	}
-
-	
-	public List<PositionListIndex> getPlis() {
-		return plis;
 	}
 
 	private TableInput getInput() {
@@ -222,7 +209,11 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		return record;
 	}
 
-	public int[][] getCompressedRecords() {
-		return compressedRecords;
+	public List<HashMap<String,IntArrayList>> getClusterMaps() {
+		return clusterMaps;
+	}
+
+	public int getNumRecords() {
+		return numRecords;
 	}
 }
