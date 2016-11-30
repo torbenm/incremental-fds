@@ -2,6 +2,7 @@ package org.mp.naumann.algorithms.fd;
 
 import org.mp.naumann.algorithms.InitialAlgorithm;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
+import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.fdep.FDEPExecutor;
 import org.mp.naumann.algorithms.fd.hyfd.HyFD;

@@ -158,6 +158,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
         SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialised Sampler, Inductor and Validator");
+        SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
         int i = 1;
 		do {
 			FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
@@ -165,7 +166,6 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 			comparisonSuggestions = validator.validatePositiveCover();
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round "+i++);
 		} while (comparisonSuggestions != null);
-		negCover = null;
 
 		// Output all valid FDs
 		FDLogger.logln(Level.INFO,"Translating FD-tree into result format ...");
