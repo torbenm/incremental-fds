@@ -3,6 +3,9 @@ package org.mp.naumann.algorithms.fd.incremental;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
@@ -11,10 +14,15 @@ import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.structures.ValueCombination;
+import org.mp.naumann.algorithms.fd.structures.ValueCombination.ColumnValue;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
+import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
+
+import com.google.common.hash.BloomFilter;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
@@ -27,6 +35,7 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 	private MemoryGuardian memoryGuardian = new MemoryGuardian(true);
 
 	private IncrementalPLIBuilder incrementalPLIBuilder;
+	private BloomFilter<Set<ColumnValue>> filter;
 
 	public IncrementalFD(List<String> columns, String tableName) {
 		this.columns = columns;
@@ -45,6 +54,13 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 
 	@Override
 	public List<FunctionalDependency> execute(Batch batch) {
+		List<InsertStatement> inserts = batch.getInsertStatements();
+		for(InsertStatement insert : inserts) {
+			ValueCombination vc = new ValueCombination();
+			for(Entry<String, String> entry : insert.getValueMap().entrySet()) {
+				vc.add(entry.getKey(), entry.getValue());
+			}
+		}
 		CompressedDiff diff = incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
@@ -130,8 +146,10 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 	@Override
 	public void setIntermediateDataStructure(FDIntermediateDatastructure intermediateDataStructure) {
 		this.posCover = intermediateDataStructure.getPosCover();
+		this.filter = intermediateDataStructure.getFilter();
 		incrementalPLIBuilder = new IncrementalPLIBuilder(intermediateDataStructure.getNumRecords(),
-				intermediateDataStructure.getClusterMaps(), columns, intermediateDataStructure.getPliSequence());
+				intermediateDataStructure.getClusterMaps(), columns, intermediateDataStructure.getPliSequence(),
+				filter);
 	}
 
 	private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {
