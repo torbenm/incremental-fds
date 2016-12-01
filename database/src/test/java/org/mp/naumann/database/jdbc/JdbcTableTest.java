@@ -8,8 +8,14 @@ import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Column;
+import org.mp.naumann.database.statement.DefaultDeleteStatement;
+import org.mp.naumann.database.statement.DefaultInsertStatement;
+import org.mp.naumann.database.statement.DeleteStatement;
+import org.mp.naumann.database.statement.InsertStatement;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import static org.junit.Assert.assertEquals;
@@ -54,7 +60,18 @@ public class JdbcTableTest extends JdbcTest {
 
 	@Test
 	public void testExecute() {
-		// not implemented atm because the JDBC CSV driver only supports SELECT
+		Map<String, String> insertValues = new LinkedHashMap<>();
+		for (String columnName: table.getColumnNames())
+			insertValues.put(columnName, null);
+		insertValues.replace("country_en", "test");
+
+		InsertStatement insert = new DefaultInsertStatement(insertValues, schema, tableName);
+		table.execute(insert);
+		assertEquals(249, table.getRowCount());
+
+		DeleteStatement delete = new DefaultDeleteStatement(insertValues, schema, tableName);
+		table.execute(delete);
+		assertEquals(248, table.getRowCount());
 	}
 
 	@Test

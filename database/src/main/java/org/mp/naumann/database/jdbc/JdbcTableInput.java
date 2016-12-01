@@ -1,20 +1,17 @@
 package org.mp.naumann.database.jdbc;
 
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Column;
 import org.mp.naumann.database.data.GenericRow;
 import org.mp.naumann.database.data.Row;
 import org.mp.naumann.database.data.StringColumn;
+
+import java.sql.JDBCType;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.*;
 
 public class JdbcTableInput implements TableInput {
 
@@ -83,7 +80,7 @@ public class JdbcTableInput implements TableInput {
 				ResultSetMetaData meta = rs.getMetaData();
 				int count = meta.getColumnCount();
 				for (int i = 1; i <= count; i++) {
-					columns.add(new StringColumn(meta.getColumnName(i)));
+					columns.add(new StringColumn(meta.getColumnName(i), JDBCType.valueOf(meta.getColumnType(i))));
 				}
 			} catch (SQLException e) {
 				throw new RuntimeException("Failed to retrieve columns", e);

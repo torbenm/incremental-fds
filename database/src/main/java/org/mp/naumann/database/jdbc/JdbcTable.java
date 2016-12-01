@@ -1,12 +1,5 @@
 package org.mp.naumann.database.jdbc;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
@@ -15,6 +8,10 @@ import org.mp.naumann.database.data.StringColumn;
 import org.mp.naumann.database.jdbc.sql.SqlQueryBuilder;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.StatementGroup;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 class JdbcTable implements Table {
 
@@ -71,7 +68,7 @@ class JdbcTable implements Table {
 				DatabaseMetaData meta = conn.getMetaData();
 				try (ResultSet rs = meta.getColumns(null, schema, name, null)) {
 					while (rs.next()) {
-						columns.add(new StringColumn(rs.getString(4)));
+						columns.add(new StringColumn(rs.getString(4), JDBCType.valueOf(rs.getInt(5))));
 					}
 				}
 
@@ -79,7 +76,7 @@ class JdbcTable implements Table {
 				if (columns.isEmpty()) {
                     try (ResultSet rs = meta.getColumns(null, schema, schema + "." + name, null)) {
                         while (rs.next()) {
-                            columns.add(new StringColumn(rs.getString(4)));
+                            columns.add(new StringColumn(rs.getString(4), JDBCType.valueOf(rs.getInt(5))));
                         }
                     }
                 }

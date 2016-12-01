@@ -1,5 +1,6 @@
 package org.mp.naumann.database.jdbc.sql.helper;
 
+import java.sql.JDBCType;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,6 +26,20 @@ public class InsertStatements {
 		insertValues.put("birthday", "2016-11-01");
 
 		return new DefaultInsertStatement(insertValues, "test", "people");
+	}
+
+	public static InsertStatement createPeopleInsertWithDifferentTypes() {
+		Map<String, String> insertValues = new LinkedHashMap<>();
+		insertValues.put("name", "max");
+		insertValues.put("age", "15");
+		insertValues.put("weight", "60.5");
+
+		Map<String, JDBCType> jdbcTypeMap = new LinkedHashMap<>();
+		jdbcTypeMap.put("name", JDBCType.VARCHAR);
+		jdbcTypeMap.put("age", JDBCType.INTEGER);
+		jdbcTypeMap.put("weight", JDBCType.FLOAT);
+
+		return new DefaultInsertStatement(insertValues, jdbcTypeMap, "test", "people");
 	}
 
 	public static InsertStatement createPeopleInsert2() {
