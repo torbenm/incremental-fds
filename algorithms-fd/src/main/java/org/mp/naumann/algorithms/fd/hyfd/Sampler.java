@@ -43,7 +43,7 @@ class Sampler {
 	public FDList enrichNegativeCover(List<IntegerPair> comparisonSuggestions) {
 		int numAttributes = this.compressedRecords[0].length;
 		
-		FDLogger.logln(Level.INFO, "Investigating comparison suggestions ... ");
+		FDLogger.log(Level.FINEST, "Investigating comparison suggestions ... ");
 		FDList newNonFds = new FDList(numAttributes, this.negCover.getMaxDepth());
 		OpenBitSet equalAttrs = new OpenBitSet(this.posCover.getNumAttributes());
 		for (IntegerPair comparisonSuggestion : comparisonSuggestions) {
@@ -60,7 +60,7 @@ class Sampler {
 		}
 		
 		if (this.attributeRepresentants == null) { // if this is the first call of this method
-			FDLogger.logln(Level.INFO, "Sorting clusters ...");
+			FDLogger.log(Level.FINEST, "Sorting clusters ...");
 			long time = System.currentTimeMillis();
 			ClusterComparator comparator = new ClusterComparator(this.compressedRecords, this.compressedRecords[0].length - 1, 1);
 			for (PositionListIndex pli : this.plis) {
@@ -69,9 +69,9 @@ class Sampler {
 				}
 				comparator.incrementActiveKey();
 			}
-			FDLogger.logln(Level.INFO, "(" + (System.currentTimeMillis() - time) + "ms)");
+			FDLogger.log(Level.FINEST, "(" + (System.currentTimeMillis() - time) + "ms)");
 		
-			FDLogger.logln(Level.INFO, "Running initial windows ...");
+			FDLogger.log(Level.FINEST, "Running initial windows ...");
 			time = System.currentTimeMillis();
 			this.attributeRepresentants = new ArrayList<>(numAttributes);
 			float efficiencyFactor = (int)Math.ceil(1 / this.efficiencyThreshold);
@@ -81,7 +81,7 @@ class Sampler {
 				if (attributeRepresentant.getEfficiency() != 0)
 					this.attributeRepresentants.add(attributeRepresentant);
 			}
-			FDLogger.logln(Level.INFO, "(" + (System.currentTimeMillis() - time) + "ms)");
+			FDLogger.log(Level.FINEST, "(" + (System.currentTimeMillis() - time) + "ms)");
 		}
 		else {
 			// Lower the efficiency factor for this round
@@ -90,7 +90,7 @@ class Sampler {
 			}
 		}
 		
-		FDLogger.logln(Level.INFO, "Moving window over clusters ... ");
+		FDLogger.log(Level.FINEST, "Moving window over clusters ... ");
 		PriorityQueue<AttributeRepresentant> queue = new PriorityQueue<>(this.attributeRepresentants);
 		while (!queue.isEmpty()) {
 			AttributeRepresentant attributeRepresentant = queue.remove();

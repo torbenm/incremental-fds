@@ -2,53 +2,61 @@ package org.mp.naumann.algorithms.fd;
 
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
-import org.mp.naumann.algorithms.result.DefaultResultListener;
+import org.mp.naumann.algorithms.fd.utils.FDListResultListener;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.jdbc.JdbcDataConnector;
-import org.mp.naumann.database.statement.DefaultInsertStatement;
-import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.utils.ConnectionManager;
-import org.mp.naumann.processor.batch.Batch;
-import org.mp.naumann.processor.batch.ListBatch;
+import org.mp.naumann.processor.BatchProcessor;
+import org.mp.naumann.processor.SynchronousBatchProcessor;
+import org.mp.naumann.processor.batch.source.CsvFileBatchSource;
+import org.mp.naumann.processor.batch.source.StreamableBatchSource;
+import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
+import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.net.URL;
 import java.util.List;
-import java.util.Map;
+import java.util.logging.Level;
 
 public class IncrementalFDDemo {
 
+	private static final String batchFileName = "csv/countries_batches.csv";
+	private static final String schema = "";
+	private static final String tableName = "countries_partial";
+	private static final int batchSize = 10;
+
 	public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
-		try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection())) {
-			String tableName = "data";
-			String schema = "public";
+		FDLogger.setLevel(Level.FINE);
+		try (DataConnector dc = new JdbcDataConnector(
+				ConnectionManager.getCsvConnection(IncrementalFDDemo.class, "", ","))) {
+
+			// execute initial algorithm
 			Table table = dc.getTable(schema, tableName);
 			HyFDInitialAlgorithm hyfd = new HyFDInitialAlgorithm(table);
 			List<FunctionalDependency> fds = hyfd.execute();
-			System.out.println("Original FDs");
-			fds.forEach(System.out::println);
+			FDLogger.log(Level.INFO, String.format("Original FDs: %s", fds.size()));
+			FDLogger.log(Level.FINER, "\n");
+			fds.forEach(fd -> FDLogger.log(Level.FINER, fd.toString()));
 			FDIntermediateDatastructure ds = hyfd.getIntermediateDataStructure();
-			
-			IncrementalFD inc = new IncrementalFD(Arrays.asList("a", "b", "c", "d"), tableName);
-			DefaultResultListener<List<FunctionalDependency>> listener = new DefaultResultListener<>();
-			inc.addResultListener(listener);
-			inc.setIntermediateDataStructure(ds);
-			
-			List<Statement> statements = new ArrayList<>();
-			Map<String, String> map = new HashMap<>();
-			map.put("a", "2");
-			map.put("b", "3");
-			map.put("c", "1");
-			map.put("d", "4");
-			statements.add(new DefaultInsertStatement(map, schema, tableName));
-			Batch batch = new ListBatch(statements, schema, tableName);
-			inc.handleBatch(batch);
 
-			System.out.println("Incremental FDs");
-			listener.getResult().forEach(System.out::println);
+			// create batch source & processor for inserts
+			URL res = IncrementalFDDemo.class.getClassLoader().getResource(batchFileName);
+			if (res == null)
+				throw new RuntimeException("Couldn't find csv file for batches.");
+			StreamableBatchSource batchSource = new CsvFileBatchSource(res.getFile(), schema, tableName, batchSize);
+			DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
+			BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
+
+			// create incremental algorithm
+			IncrementalFD algorithm = new IncrementalFD(table.getColumnNames(), tableName);
+			FDListResultListener listener = new FDListResultListener();
+			algorithm.addResultListener(listener);
+			algorithm.setIntermediateDataStructure(ds);
+
+			// process batch
+			batchProcessor.addBatchHandler(algorithm);
+			batchSource.startStreaming();
 		}
 	}
 
