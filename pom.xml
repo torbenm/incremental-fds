@@ -15,6 +15,7 @@
         <module>demo</module>
         <module>benchmarks</module>
         <module>benchmark-util</module>
+        <module>data</module>
     </modules>
 
     <properties>
