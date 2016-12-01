@@ -73,6 +73,7 @@ public class IncrementalPLIBuilder {
 		int i = 0;
 		for(int id : insertedIds) {
 			insertedRecords[i] = compressedRecords[id];
+			i++;
 		}
 		int[][] deletedRecords = new int[0][];
 		int[][] oldUpdatedRecords = new int[0][];

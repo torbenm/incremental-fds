@@ -30,6 +30,7 @@ public class MedianInitialAlgorithmTest {
     @ClassRule
     static public PreparedDbRule pr = EmbeddedPostgresRules.preparedDatabase(preparer);
 
+
     @BeforeClass
     public static void setUp() throws IOException, SQLException {
         Connection conn = pr.getTestDatabase().getConnection();

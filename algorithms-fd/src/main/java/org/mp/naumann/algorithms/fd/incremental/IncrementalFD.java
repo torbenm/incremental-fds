@@ -7,8 +7,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
+import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.structures.FDTree;

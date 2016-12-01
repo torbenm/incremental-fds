@@ -3,7 +3,10 @@ package org.mp.naumann.algorithms.fd.hyfd;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
-import org.mp.naumann.algorithms.AlgorithmExecutionException;
+import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
+import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
+import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
+import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.InputReadException;
@@ -27,18 +30,16 @@ import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.logging.Level;
+
 
 public class HyFD implements FunctionalDependencyAlgorithm {
 
-    private final static Logger LOG = Logger.getLogger(HyFD.class.getName());
-
-	private Table table = null;
+    private Table table = null;
 	private FunctionalDependencyResultReceiver resultReceiver = null;
 
 	private ValueComparator valueComparator;
@@ -59,6 +60,9 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	private int numRecords;
 
 	private List<Integer> pliSequence;
+    public HyFD(){
+        FDLogger.setCurrentAlgorithm(this);
+    }
 
 	private BloomFilter<Set<ColumnValue>> filter;
 
@@ -68,9 +72,14 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	}
 
 	public HyFD(Table table, FunctionalDependencyResultReceiver resultReceiver) {
-		this.table = table;
-		this.resultReceiver = resultReceiver;
+        this();
+        configure(table, resultReceiver);
 	}
+
+	public void configure(Table table, FunctionalDependencyResultReceiver resultReceiver){
+        this.table = table;
+        this.resultReceiver = resultReceiver;
+    }
 
 	private void initialize(TableInput tableInput) {
 		this.tableName = tableInput.getName();
@@ -87,15 +96,16 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		if (this.resultReceiver == null)
 			throw new IllegalStateException("No result receiver set!");
 
-		// this.executeFDEP();
+        // this.executeFDEP();
 		this.executeHyFD();
 
-		LOG.info("Time: " + (System.currentTimeMillis() - startTime) + " ms");
+		FDLogger.logln(Level.INFO,"Time: " + (System.currentTimeMillis() - startTime) + " ms");
 	}
 
 	private void executeHyFD() throws AlgorithmExecutionException {
 		// Initialize
-		LOG.info("Initializing ...");
+        SpeedBenchmark.begin(BenchmarkLevel.OPERATION);
+		FDLogger.logln(Level.INFO,"Initializing ...");
 		TableInput tableInput = this.getInput();
 		this.initialize(tableInput);
 
@@ -104,7 +114,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		///////////////////////////////////////////////////////
 
 		// Calculate plis
-		LOG.info("Reading data and calculating plis ...");
+		FDLogger.logln(Level.INFO,"Reading data and calculating plis ...");
 		PLIBuilder pliBuilder = new PLIBuilder();
 		List<PositionListIndex> plis = pliBuilder.getPLIs(tableInput, this.numAttributes,
 				this.valueComparator.isNullEqualNull());
@@ -123,33 +133,29 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 						.receiveResult(new FunctionalDependency(new ColumnCombination(), columnIdentifiers.get(attr)));
 			return;
 		}
-
-		// Sort plis by number of clusters: For searching in the covers and for
+        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialized Datastructures.");
+        // Sort plis by number of clusters: For searching in the covers and for
 		// validation, it is good to have attributes with few non-unique values
 		// and many clusters left in the prefix tree
-		LOG.info("Sorting plis by number of clusters ...");
-		Collections.sort(plis, new Comparator<PositionListIndex>() {
-
-			@Override
-			public int compare(PositionListIndex o1, PositionListIndex o2) {
-				int numClustersInO1 = numRecords - o1.getNumNonUniqueValues() + o1.getClusters().size();
-				int numClustersInO2 = numRecords - o2.getNumNonUniqueValues() + o2.getClusters().size();
-				return numClustersInO2 - numClustersInO1;
-			}
-		});
-
+		FDLogger.logln(Level.INFO,"Sorting plis by number of clusters ...");
+		Collections.sort(plis, (o1, o2) -> {
+            int numClustersInO1 = numRecords - o1.getNumNonUniqueValues() + o1.getClusters().size();
+            int numClustersInO2 = numRecords - o2.getNumNonUniqueValues() + o2.getClusters().size();
+            return numClustersInO2 - numClustersInO1;
+        });
+        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Sorted plis by cluster");
 		// Calculate inverted plis
-		LOG.info("Inverting plis ...");
+		FDLogger.logln(Level.INFO,"Inverting plis ...");
 		int[][] invertedPlis = PliUtils.invert(plis, numRecords);
-
+        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Inverted plis");
 		// Extract the integer representations of all records from the inverted
 		// plis
-		LOG.info("Extracting integer representations for the records ...");
+		FDLogger.logln(Level.INFO,"Extracting integer representations for the records ...");
 		int[][] compressedRecords = new int[numRecords][];
 		for (int recordId = 0; recordId < numRecords; recordId++)
 			compressedRecords[recordId] = this.fetchRecordFrom(recordId, invertedPlis);
 		invertedPlis = null;
-
+        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Compressed plis");
 		// Initialize the negative cover
 		int maxLhsSize = -1;
 		FDSet negCover = new FDSet(this.numAttributes, maxLhsSize);
@@ -157,10 +163,12 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		// Initialize the positive cover
 		FDTree posCover = new FDTree(this.numAttributes, maxLhsSize);
 		posCover.addMostGeneralDependencies();
-
+        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Calculated Negative and Positive Cover");
 		//////////////////////////
 		// Build the components //
 		//////////////////////////
+
+
 
 		// TODO: implement parallel sampling
 
@@ -173,22 +181,27 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 				efficiencyThreshold, validateParallel, this.memoryGuardian);
 
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
+
+        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialised Sampler, Inductor and Validator");
+        SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
+        int i = 1;
 		do {
 			FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
 			inductor.updatePositiveCover(newNonFds);
 			comparisonSuggestions = validator.validatePositiveCover();
+            SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round "+i++);
 		} while (comparisonSuggestions != null);
-		negCover = null;
 
 		// Output all valid FDs
-		LOG.info("Translating FD-tree into result format ...");
+		FDLogger.logln(Level.INFO,"Translating FD-tree into result format ...");
 
 		// int numFDs = posCover.writeFunctionalDependencies("HyFD_backup_" +
 		// this.tableName + "_results.txt", this.buildColumnIdentifiers(), plis,
 		// false);
 		int numFDs = posCover.addFunctionalDependenciesInto(this.resultReceiver, this.buildColumnIdentifiers(), plis);
-
-		LOG.info("... done! (" + numFDs + " FDs)");
+		
+        SpeedBenchmark.end(BenchmarkLevel.OPERATION, "Translated FD-tree into result format");
+		FDLogger.logln(Level.INFO,"... done! (" + numFDs + " FDs)");
 		
 		this.posCover = posCover;
 		this.pliSequence = plis.stream().map(PositionListIndex::getAttribute).collect(Collectors.toList());

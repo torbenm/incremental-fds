@@ -17,3 +17,4 @@ csv_test/
 .project
 .settings/
 database/src/main/resources/properties.xml
+out/

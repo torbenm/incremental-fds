@@ -1,14 +1,12 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
 import java.lang.management.ManagementFactory;
-import java.util.logging.Logger;
-
+import java.util.logging.Level;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
+import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 
 class MemoryGuardian {
-
-	private final static Logger LOG = Logger.getLogger(MemoryGuardian.class.getName());
 
 	private boolean active;
 	private long memoryCheckFrequency;						// Number of allocation events that cause a memory check
@@ -40,16 +38,16 @@ class MemoryGuardian {
 			return;
 		
 		if (this.memoryExhausted(this.maxMemoryUsage)) {
-//			LOG.info("Memory exhausted (" + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() + "/" + this.maxMemoryUsage + ") ");
+//			FDLogger.logln(Level.INFO, "Memory exhausted (" + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() + "/" + this.maxMemoryUsage + ") ");
 			Runtime.getRuntime().gc();
-//			LOG.info("GC reduced to " + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed());
+//			FDLogger.logln(Level.INFO, "GC reduced to " + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed());
 			
 			while (this.memoryExhausted(this.trimMemoryUsage)) {
 				int depth = Math.max(posCover.getDepth(), negCover.getDepth()) - 1;
 				if (depth < 1)
 					throw new RuntimeException("Insufficient memory to calculate any result!");
 				
-				LOG.info(" (trim to " + depth + ")");
+				FDLogger.logln(Level.INFO, " (trim to " + depth + ")");
 				posCover.trim(depth);
 				negCover.trim(depth);
 				if (newNonFDs != null)

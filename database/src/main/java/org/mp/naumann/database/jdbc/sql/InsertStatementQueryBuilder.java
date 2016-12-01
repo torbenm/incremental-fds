@@ -36,9 +36,9 @@ class InsertStatementQueryBuilder implements StatementQueryBuilder<InsertStateme
         return "(" +
                 statement
                 .getValueMap()
-                .values()
+                .entrySet()
                 .parallelStream()
-                .map(n -> "'" + SqlQueryBuilder.formatValue(n) + "'")
+                .map(e -> SqlQueryBuilder.formatValue(e.getValue(), statement.getJDBCType(e.getKey())))
                 .collect(Collectors.joining(", ")) +
                 ")";
     }

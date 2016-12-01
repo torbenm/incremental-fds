@@ -1,16 +1,14 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
 import java.util.List;
-import java.util.logging.Logger;
-
+import java.util.logging.Level;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
+import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 
 class Inductor {
 
-	private final static Logger LOG = Logger.getLogger(HyFD.class.getName());
-	
 	private FDSet negCover;
 	private FDTree posCover;
 	private MemoryGuardian memoryGuardian;
@@ -22,7 +20,7 @@ class Inductor {
 	}
 
 	public void updatePositiveCover(FDList nonFds) {
-		LOG.info("Inducing FD candidates ...");
+		FDLogger.logln(Level.INFO, "Inducing FD candidates ...");
 		for (int i = nonFds.getFdLevels().size() - 1; i >= 0; i--) {
 			if (i >= nonFds.getFdLevels().size()) // If this level has been trimmed during iteration
 				continue;

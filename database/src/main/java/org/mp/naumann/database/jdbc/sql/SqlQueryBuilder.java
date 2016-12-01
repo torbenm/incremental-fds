@@ -1,14 +1,11 @@
 package org.mp.naumann.database.jdbc.sql;
 
+import org.mp.naumann.database.statement.*;
+
+import java.sql.JDBCType;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.mp.naumann.database.statement.DeleteStatement;
-import org.mp.naumann.database.statement.InsertStatement;
-import org.mp.naumann.database.statement.Statement;
-import org.mp.naumann.database.statement.StatementGroup;
-import org.mp.naumann.database.statement.UpdateStatement;
 
 public class SqlQueryBuilder {
 
@@ -36,15 +33,28 @@ public class SqlQueryBuilder {
         ).collect(Collectors.joining("\n"));
     }
 
-    static String formatValue(String value) {
-        return value.replace("'", "''");
+    static String equalsSeparator(String value) {
+        return (value == null ? " IS " : " = ");
     }
 
-    static String toKeyEqualsValueMap(Map<String, String> valueMap, String seperator){
+    static String formatValue(String value, JDBCType jdbcType) {
+        if (value == null)
+            return "NULL";
+        else if (jdbcType == JDBCType.VARCHAR)
+            return "'" + value.replace("'", "''") + "'";
+        else
+            return value;
+    }
+
+    static String toKeyEqualsValueMap(Statement stmt, String separator){
+        return toKeyEqualsValueMap(stmt.getValueMap(), stmt, separator);
+    }
+
+    static String toKeyEqualsValueMap(Map<String, String> valueMap, Statement stmt, String separator){
         return valueMap
                 .entrySet()
                 .parallelStream()
-                .map(n -> n.getKey() + " = '" + formatValue(n.getValue()) + "'")
-                .collect(Collectors.joining(seperator));
+                .map(n -> n.getKey() + equalsSeparator(n.getValue()) + formatValue(n.getValue(), stmt.getJDBCType(n.getKey())))
+                .collect(Collectors.joining(separator));
     }
 }
