@@ -4,6 +4,7 @@ package org.mp.naumann;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.benchmarks.AverageAlgorithmBenchmark;
+import org.mp.naumann.benchmarks.IncrementalFDBenchmark;
 import org.mp.naumann.database.ConnectionException;
 
 public class BenchmarksApplication {
@@ -15,7 +16,7 @@ public class BenchmarksApplication {
         setUp();
 
         try {
-            runAverageAlgorithmBenchmarks();
+            runIncrementalFDBenchmarks();
         } catch (ConnectionException e) {
             SpeedBenchmark.end(BenchmarkLevel.BENCHMARK, "Benchmark crashed");
             SpeedBenchmark.disable();
@@ -28,6 +29,14 @@ public class BenchmarksApplication {
         AverageAlgorithmBenchmark benchmark = new AverageAlgorithmBenchmark();
 
         benchmark.constructTestCase("Adults file", "inserts.adult.csv", BATCH_SIZE, "c1", "adult");
+        benchmark.runInitial();
+        benchmark.runIncremental();
+    }
+
+    public static void runIncrementalFDBenchmarks() throws ConnectionException {
+        IncrementalFDBenchmark benchmark = new IncrementalFDBenchmark();
+
+        benchmark.constructTestCase("Adults file", "inserts.adult.csv", "benchmark", "adult", BATCH_SIZE);
         benchmark.runInitial();
         benchmark.runIncremental();
     }
