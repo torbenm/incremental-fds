@@ -14,6 +14,7 @@
         <module>algorithms-fd</module>
     <module>demo</module>
         <module>benchmark-util</module>
+        <module>data</module>
     </modules>
 
     <properties>
