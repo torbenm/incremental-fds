@@ -1,32 +1,27 @@
 package org.mp.naumann.algorithms.fd.fdep;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-
 import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
-import org.mp.naumann.algorithms.fd.utils.PliUtils;
-import org.mp.naumann.database.InputReadException;
-import org.mp.naumann.database.Table;
-import org.mp.naumann.database.TableInput;
-import org.mp.naumann.database.data.ColumnCombination;
-import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
+import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.utils.FileUtils;
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
+import org.mp.naumann.database.InputReadException;
+import org.mp.naumann.database.Table;
+import org.mp.naumann.database.TableInput;
+import org.mp.naumann.database.data.ColumnCombination;
+import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.database.data.Row;
-
 
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class FDEPExecutor implements FunctionalDependencyAlgorithm {
-
-    private final static Logger LOG = Logger.getLogger(FDEPExecutor.class.getName());
 
 	private Table table = null;
 	private FunctionalDependencyResultReceiver resultReceiver = null;
@@ -63,17 +58,17 @@ public class FDEPExecutor implements FunctionalDependencyAlgorithm {
 		
 		this.executeFDEP();
 		
-		FDLogger.logln(Level.INFO, "Time: " + (System.currentTimeMillis() - startTime) + " ms");
+		FDLogger.log(Level.FINEST, "Time: " + (System.currentTimeMillis() - startTime) + " ms");
 	}
 
 	private void executeFDEP() {
 		// Initialize
-		FDLogger.logln(Level.INFO, "Initializing ...");
+		FDLogger.log(Level.FINEST, "Initializing ...");
 		TableInput tableInput = this.getInput();
 		this.initialize(tableInput);
 		
 		// Load data
-		FDLogger.logln(Level.INFO, "Loading data ...");
+		FDLogger.log(Level.FINEST, "Loading data ...");
 		ObjectArrayList<Row> records = this.loadData(tableInput);
 		this.closeInput(tableInput);
 		
@@ -88,36 +83,36 @@ public class FDEPExecutor implements FunctionalDependencyAlgorithm {
 		int numRecords = records.size();
 		
 		// Calculate plis
-		FDLogger.logln(Level.INFO, "Calculating plis ...");
+		FDLogger.log(Level.FINEST, "Calculating plis ...");
 		List<PositionListIndex> plis = PLIBuilder.getPLIs(records, this.numAttributes, this.valueComparator.isNullEqualNull());
 		records = null; // we proceed with the values in the plis
 		
 		// Calculate inverted plis
-		FDLogger.logln(Level.INFO, "Inverting plis ...");
+		FDLogger.log(Level.FINEST, "Inverting plis ...");
 		int[][] invertedPlis = PliUtils.invert(plis, numRecords);
 
 		// Extract the integer representations of all records from the inverted plis
-		FDLogger.logln(Level.INFO, "Extracting integer representations for the records ...");
+		FDLogger.log(Level.FINEST, "Extracting integer representations for the records ...");
 		int[][] compressedRecords = new int[numRecords][];
 		for (int recordId = 0; recordId < numRecords; recordId++)
 			compressedRecords[recordId] = this.fetchRecordFrom(recordId, invertedPlis);
 		
 		// Execute fdep
-		FDLogger.logln(Level.INFO, "Executing fdep ...");
+		FDLogger.log(Level.FINEST, "Executing fdep ...");
 		FDEP fdep = new FDEP(this.numAttributes, this.valueComparator);
 		FDTree fds = fdep.execute(compressedRecords);
 		
 		// Output all valid FDs
-		FDLogger.logln(Level.INFO, "Translating fd-tree into result format ...");
+		FDLogger.log(Level.FINEST, "Translating fd-tree into result format ...");
 		List<FunctionalDependency> result = fds.getFunctionalDependencies(this.buildColumnIdentifiers(), plis);
 		plis = null;
 		int numFDs = 0;
 		for (FunctionalDependency fd : result) {
-			//FDLogger.logln(Level.INFO, fd);
+			//FDLogger.log(Level.FINEST, fd);
 			this.resultReceiver.receiveResult(fd);
 			numFDs++;
 		}
-		FDLogger.logln(Level.INFO, "... done! (" + numFDs + " FDs)");
+		FDLogger.log(Level.FINEST, "... done! (" + numFDs + " FDs)");
 	}
 	
 	private TableInput getInput() {

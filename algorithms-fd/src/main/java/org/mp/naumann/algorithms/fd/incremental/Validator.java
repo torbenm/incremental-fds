@@ -1,27 +1,17 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
-
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
-import org.mp.naumann.algorithms.fd.structures.FDTree;
-import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
-import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
-import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.structures.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
+import java.util.logging.Level;
 
 public class Validator {
 
-	private final static Logger LOG = Logger.getLogger(Validator.class.getName());
-    
 	private FDTree posCover;
 	private int numRecords;
 	private List<PositionListIndex> plis;
@@ -174,8 +164,8 @@ public class Validator {
 	
 	public void validate(int level, List<FDTreeElementLhsPair> currentLevel) throws AlgorithmExecutionException {
 		this.level = level;
-		
-		LOG.info("Validating FDs using plis ...");
+
+		FDLogger.log(Level.FINER, "Validating FDs using plis ...");
 		
 		run(currentLevel);
 	}
@@ -195,10 +185,10 @@ public class Validator {
 	public void run(List<FDTreeElementLhsPair> currentLevel) throws AlgorithmExecutionException {
 		int numAttributes = this.plis.size();
 		// Start the level-wise validation/discovery
-		LOG.info("\tLevel " + this.level + ": " + currentLevel.size() + " elements; ");
+		FDLogger.log(Level.FINER, "\tLevel " + this.level + ": " + currentLevel.size() + " elements; ");
 			
 		// Validate current level
-		LOG.info("(V)");
+		FDLogger.log(Level.FINER, "(V)");
 			
 		ValidationResult validationResult = (this.executor == null) ? this.validateSequential(currentLevel) : this.validateParallel(currentLevel);
 			
@@ -206,12 +196,12 @@ public class Validator {
 		if ((this.posCover.getMaxDepth() > -1) && (this.level >= this.posCover.getMaxDepth())) {
 			int numInvalidFds = validationResult.invalidFDs.size();
 			int numValidFds = validationResult.validations - numInvalidFds;
-			LOG.info("(-)(-); " + validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + "-" + " new candidates; --> " + numValidFds + " FDs");
+			FDLogger.log(Level.FINER, "(-)(-); " + validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + "-" + " new candidates; --> " + numValidFds + " FDs");
 			return;
 		}
 						
 		// Generate new FDs from the invalid FDs and add them to the next level as well
-		LOG.info("(G); ");
+		FDLogger.log(Level.FINER, "(G); ");
 			
 		int candidates = 0;
 		for (FD invalidFD : validationResult.invalidFDs) {
@@ -233,7 +223,7 @@ public class Validator {
 		}
 		int numInvalidFds = validationResult.invalidFDs.size();
 		int numValidFds = validationResult.validations - numInvalidFds;
-		LOG.info(validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + candidates + " new candidates; --> " + numValidFds + " FDs");
+		FDLogger.log(Level.FINER, validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + candidates + " new candidates; --> " + numValidFds + " FDs");
 		
 		// Decide if we continue validating the next level or if we go back into the sampling phase
 	}

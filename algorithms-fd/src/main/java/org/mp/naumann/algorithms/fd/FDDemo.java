@@ -9,11 +9,12 @@ import org.mp.naumann.database.jdbc.JdbcDataConnector;
 import org.mp.naumann.database.utils.ConnectionManager;
 
 import java.util.List;
+import java.util.logging.Level;
 
 public class FDDemo {
 
 	public static void main(String[] args) throws ClassNotFoundException, ConnectionException {
-		FDLogger.silence();
+		FDLogger.setLevel(Level.OFF);
 		SpeedBenchmark.enable();
         SpeedBenchmark.addEventListener(System.out::println);
         SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
