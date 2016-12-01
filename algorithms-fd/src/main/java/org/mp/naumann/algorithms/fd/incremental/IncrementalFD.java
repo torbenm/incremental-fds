@@ -7,6 +7,8 @@ import java.util.logging.Level;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
+import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
+import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
@@ -28,6 +30,8 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 	private final String tableName;
 	private final List<ResultListener<List<FunctionalDependency>>> resultListeners = new ArrayList<>();
 	private MemoryGuardian memoryGuardian = new MemoryGuardian(true);
+    private FDIntermediateDatastructure intermediateDatastructure;
+    private boolean initialized = false;
 
 	private IncrementalPLIBuilder incrementalPLIBuilder;
 
@@ -47,7 +51,20 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 	}
 
 	@Override
+    public void initialize(){
+        this.posCover = intermediateDatastructure.getPosCover();
+        incrementalPLIBuilder = new IncrementalPLIBuilder(intermediateDatastructure.getNumRecords(),
+                intermediateDatastructure.getClusterMaps(), columns, intermediateDatastructure.getPliSequence());
+        intermediateDatastructure = null;
+    }
+
+	@Override
 	public List<FunctionalDependency> execute(Batch batch) {
+        if(!initialized){
+            initialize();
+            initialized = true;
+        }
+        SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
 		CompressedDiff diff = incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
@@ -83,6 +100,7 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 		FDLogger.log(Level.FINE, "Made " + validations + " validations");
 		List<FunctionalDependency> fds = new ArrayList<>();
 		posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
+        SpeedBenchmark.end(BenchmarkLevel.METHOD_HIGH_LEVEL,"Processed one batch, inner measuring");
 		return fds;
 	}
 
@@ -132,9 +150,7 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 
 	@Override
 	public void setIntermediateDataStructure(FDIntermediateDatastructure intermediateDataStructure) {
-		this.posCover = intermediateDataStructure.getPosCover();
-		incrementalPLIBuilder = new IncrementalPLIBuilder(intermediateDataStructure.getNumRecords(),
-				intermediateDataStructure.getClusterMaps(), columns, intermediateDataStructure.getPliSequence());
+        this.intermediateDatastructure = intermediateDataStructure;
 	}
 
 	private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {

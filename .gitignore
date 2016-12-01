@@ -18,3 +18,4 @@ csv_test/
 .settings/
 database/src/main/resources/properties.xml
 out/
+*.log

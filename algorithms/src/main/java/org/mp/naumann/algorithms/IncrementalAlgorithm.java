@@ -19,7 +19,9 @@ public interface IncrementalAlgorithm<T, R> extends BatchHandler {
 
 	void addResultListener(ResultListener<T> listener);
 
-	T execute(Batch batch);
+    void initialize();
+
+    T execute(Batch batch);
 
 	void setIntermediateDataStructure(R intermediateDataStructure);
 }

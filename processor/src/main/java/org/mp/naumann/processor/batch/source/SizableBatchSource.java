@@ -16,11 +16,19 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
     private boolean streaming = false;
     private boolean doneFilling = false;
     private int currentStatementPosition = 0;
+    private int stopAfter = -1;
+    private int currentBatch = 0;
 
     public SizableBatchSource(String schema, String tableName, int batchSize) {
         this.schema = schema;
     	this.batchSize = batchSize;
         this.tableName = tableName;
+    }
+    public SizableBatchSource(String schema, String tableName, int batchSize, int stopAfter) {
+        this.schema = schema;
+        this.batchSize = batchSize;
+        this.tableName = tableName;
+        this.stopAfter = stopAfter;
     }
 
     public int getBatchSize() {
@@ -69,7 +77,7 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
     protected void weakStream(){
         // Streams if either their is enough to fill a batch,
         // or all the rest if filling is completed.
-        if(hasEnoughToStream()){
+        if(hasEnoughToStream() && streaming){
             stream(batchSize);
             weakStream();
         }else if(doneFilling){
@@ -90,13 +98,18 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
         }
     }
     private synchronized void stream(int size){
-        Batch batchToSend = new ListBatch(
-                statementList.subList(currentStatementPosition, currentStatementPosition+size),
-                this.schema,
-                this.tableName
-        );
-        currentStatementPosition += size;
-        notifyListener(batchToSend);
+        if(stopAfter < 0 || currentBatch < stopAfter) {
+            Batch batchToSend = new ListBatch(
+                    statementList.subList(currentStatementPosition, currentStatementPosition + size),
+                    this.schema,
+                    this.tableName
+            );
+            currentStatementPosition += size;
+            notifyListener(batchToSend);
+            currentBatch++;
+        }else{
+            streaming = false;
+        }
 
     }
 
