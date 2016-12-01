@@ -7,6 +7,8 @@ import java.util.logging.Level;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
+import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
+import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
@@ -62,6 +64,7 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
             initialize();
             initialized = true;
         }
+        SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
 		CompressedDiff diff = incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
@@ -97,6 +100,7 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 		FDLogger.log(Level.FINE, "Made " + validations + " validations");
 		List<FunctionalDependency> fds = new ArrayList<>();
 		posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
+        SpeedBenchmark.end(BenchmarkLevel.METHOD_HIGH_LEVEL,"Processed one batch, inner measuring");
 		return fds;
 	}
 

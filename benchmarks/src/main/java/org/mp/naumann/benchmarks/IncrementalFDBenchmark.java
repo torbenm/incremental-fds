@@ -30,11 +30,13 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
     private StreamableBatchSource batchSource;
     private SynchronousBatchProcessor batchProcessor;
 
-    public void constructTestCase(String testCase, String incrementalFileName, String schema, String tableName, int batchSize) throws ConnectionException {
+    public void constructTestCase(String testCase, String incrementalFileName, String schema, String tableName, int batchSize,
+                                    int stopAfter) throws ConnectionException {
+        reset();
         this.currentTestCase = testCase;
 
         String file = BenchmarksApplication.class.getResource(incrementalFileName).getPath();
-        batchSource = new CsvFileBatchSource(file, "", "", batchSize);
+        batchSource = new CsvFileBatchSource(file, "", "", batchSize, stopAfter);
         DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
 
         DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(BenchmarksApplication.class, "", ","));
@@ -45,6 +47,23 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
 
         this.batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
         this.batchProcessor.addBatchHandler(incrementalAlgorithm);
+    }
+
+    public void constructInitialOnly(String testCase, String schema, String tableName) throws ConnectionException {
+        reset();
+        this.currentTestCase = testCase;
+
+        DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(BenchmarksApplication.class, "", ","));
+        Table table = dc.getTable(schema, tableName);
+        initialAlgorithm = new HyFDInitialAlgorithm(table);
+    }
+
+    public void reset(){
+        this.incrementalAlgorithm = null;
+        this.initialAlgorithm = null;
+        this.currentTestCase = null;
+        this.batchProcessor = null;
+        this.batchSource = null;
     }
 
 

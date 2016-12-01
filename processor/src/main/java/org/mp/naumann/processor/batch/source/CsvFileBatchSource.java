@@ -30,9 +30,17 @@ public class CsvFileBatchSource extends SizableBatchSource {
     public CsvFileBatchSource(String filePath, String schema, String tableName, int batchSize) {
         this(new File(filePath), schema, tableName, batchSize);
     }
+    public CsvFileBatchSource(String filePath, String schema, String tableName, int batchSize, int stopAfter) {
+        this(new File(filePath), schema, tableName, batchSize, stopAfter);
+    }
 
     public CsvFileBatchSource(File file, String schema, String tableName, int batchSize) {
         super(schema, tableName, batchSize);
+        this.csvFile = file;
+    }
+
+    public CsvFileBatchSource(File file, String schema, String tableName, int batchSize, int stopAfter) {
+        super(schema, tableName, batchSize, stopAfter);
         this.csvFile = file;
     }
 
