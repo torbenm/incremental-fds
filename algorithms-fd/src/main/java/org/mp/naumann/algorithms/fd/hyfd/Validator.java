@@ -179,7 +179,7 @@ public class Validator {
 	public List<IntegerPair> validatePositiveCover() throws AlgorithmExecutionException {
 		int numAttributes = this.plis.size();
 		
-		FDLogger.logln(Level.INFO, "Validating FDs using plis ...");
+		FDLogger.log(Level.FINEST, "Validating FDs using plis ...");
 		
 		List<FDTreeElementLhsPair> currentLevel = null;
 		if (this.level == 0) {
@@ -194,10 +194,10 @@ public class Validator {
 		int previousNumInvalidFds = 0;
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 		while (!currentLevel.isEmpty()) {
-			FDLogger.logln(Level.INFO, "\tLevel " + this.level + ": " + currentLevel.size() + " elements; ");
+			FDLogger.log(Level.FINEST, "\tLevel " + this.level + ": " + currentLevel.size() + " elements; ");
 			
 			// Validate current level
-			FDLogger.logln(Level.INFO, "(V)");
+			FDLogger.log(Level.FINEST, "(V)");
 			
 			ValidationResult validationResult = (this.executor == null) ? this.validateSequential(currentLevel) : this.validateParallel(currentLevel);
 			comparisonSuggestions.addAll(validationResult.comparisonSuggestions);
@@ -206,12 +206,12 @@ public class Validator {
 			if ((this.posCover.getMaxDepth() > -1) && (this.level >= this.posCover.getMaxDepth())) {
 				int numInvalidFds = validationResult.invalidFDs.size();
 				int numValidFds = validationResult.validations - numInvalidFds;
-				FDLogger.logln(Level.INFO, "(-)(-); " + validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + "-" + " new candidates; --> " + numValidFds + " FDs");
+				FDLogger.log(Level.FINEST, "(-)(-); " + validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + "-" + " new candidates; --> " + numValidFds + " FDs");
 				break;
 			}
 			
 			// Add all children to the next level
-			FDLogger.logln(Level.INFO, "(C)");
+			FDLogger.log(Level.FINEST, "(C)");
 			
 			List<FDTreeElementLhsPair> nextLevel = new ArrayList<>();
 			for (FDTreeElementLhsPair elementLhsPair : currentLevel) {
@@ -233,7 +233,7 @@ public class Validator {
 			}
 						
 			// Generate new FDs from the invalid FDs and add them to the next level as well
-			FDLogger.logln(Level.INFO, "(G); ");
+			FDLogger.log(Level.FINEST, "(G); ");
 			
 			int candidates = 0;
 			for (FD invalidFD : validationResult.invalidFDs) {
@@ -259,7 +259,7 @@ public class Validator {
 			this.level++;
 			int numInvalidFds = validationResult.invalidFDs.size();
 			int numValidFds = validationResult.validations - numInvalidFds;
-			FDLogger.logln(Level.INFO, validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + candidates + " new candidates; --> " + numValidFds + " FDs");
+			FDLogger.log(Level.FINEST, validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + candidates + " new candidates; --> " + numValidFds + " FDs");
 		
 			// Decide if we continue validating the next level or if we go back into the sampling phase
 			if ((numInvalidFds > numValidFds * this.efficiencyThreshold) && (previousNumInvalidFds < numInvalidFds))

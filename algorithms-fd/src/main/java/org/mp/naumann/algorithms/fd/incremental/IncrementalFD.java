@@ -3,10 +3,13 @@ package org.mp.naumann.algorithms.fd.incremental;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
+
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
+import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
@@ -65,8 +68,8 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 					pruned++;
 				}
 			}
-			System.out.println("Will validate: ");
-			toValidate.stream().map(this::toFds).flatMap(Collection::stream).forEach(System.out::println);
+			FDLogger.log(Level.FINER, "Will validate: ");
+			toValidate.stream().map(this::toFds).flatMap(Collection::stream).forEach(v -> FDLogger.log(Level.FINER, v.toString()));
 			validations += toValidate.size();
 			try {
 				validator.validate(level, currentLevel);
@@ -76,8 +79,8 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 			}
 		}
 		validator.shutdown();
-		System.out.println("Pruned " + pruned + " validations");
-		System.out.println("Made " + validations + " validations");
+		FDLogger.log(Level.FINE, "Pruned " + pruned + " validations");
+		FDLogger.log(Level.FINE, "Made " + validations + " validations");
 		List<FunctionalDependency> fds = new ArrayList<>();
 		posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
 		return fds;
