@@ -3,6 +3,8 @@ package org.mp.naumann.benchmarks;
 import org.mp.naumann.BenchmarksApplication;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.InitialAlgorithm;
+import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
+import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.HyFDInitialAlgorithm;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.implementations.AverageIncrementalAlgorithm;
@@ -23,7 +25,7 @@ import java.util.Arrays;
 public class IncrementalFDBenchmark implements AlgorithmBenchmark {
 
     private HyFDInitialAlgorithm initialAlgorithm;
-    private AverageIncrementalAlgorithm incrementalAlgorithm;
+    private IncrementalFD incrementalAlgorithm;
     private String currentTestCase;
     private StreamableBatchSource batchSource;
     private SynchronousBatchProcessor batchProcessor;
@@ -39,8 +41,8 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
         Table table = dc.getTable(schema, tableName);
         initialAlgorithm = new HyFDInitialAlgorithm(table);
 
-        IncrementalFD inc = new IncrementalFD(((CsvFileBatchSource)batchSource).getColumnNames(), tableName);
-        inc.setIntermediateDataStructure(initialAlgorithm.getIntermediateDataStructure());
+        incrementalAlgorithm = new IncrementalFD(((CsvFileBatchSource)batchSource).getColumnNames(), tableName);
+
         this.batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
         this.batchProcessor.addBatchHandler(incrementalAlgorithm);
     }
@@ -65,5 +67,14 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
     @Override
     public IncrementalAlgorithm getIncrementalAlgorithm() {
         return incrementalAlgorithm;
+    }
+
+    @Override
+    public void runIncremental() {
+        incrementalAlgorithm.setIntermediateDataStructure(initialAlgorithm.getIntermediateDataStructure());
+        SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
+        getBatchSource().startStreaming();
+        SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Finished incremental algorithm for test case "+getCurrentTestCase());
+
     }
 }

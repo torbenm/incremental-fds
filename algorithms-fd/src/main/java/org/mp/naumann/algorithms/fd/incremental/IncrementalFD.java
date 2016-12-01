@@ -25,6 +25,8 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 	private final String tableName;
 	private final List<ResultListener<List<FunctionalDependency>>> resultListeners = new ArrayList<>();
 	private MemoryGuardian memoryGuardian = new MemoryGuardian(true);
+    private FDIntermediateDatastructure intermediateDatastructure;
+    private boolean initialized = false;
 
 	private IncrementalPLIBuilder incrementalPLIBuilder;
 
@@ -44,7 +46,19 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 	}
 
 	@Override
+    public void initialize(){
+        this.posCover = intermediateDatastructure.getPosCover();
+        incrementalPLIBuilder = new IncrementalPLIBuilder(intermediateDatastructure.getNumRecords(),
+                intermediateDatastructure.getClusterMaps(), columns, intermediateDatastructure.getPliSequence());
+        intermediateDatastructure = null;
+    }
+
+	@Override
 	public List<FunctionalDependency> execute(Batch batch) {
+        if(!initialized){
+            initialize();
+            initialized = true;
+        }
 		CompressedDiff diff = incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
@@ -129,9 +143,7 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 
 	@Override
 	public void setIntermediateDataStructure(FDIntermediateDatastructure intermediateDataStructure) {
-		this.posCover = intermediateDataStructure.getPosCover();
-		incrementalPLIBuilder = new IncrementalPLIBuilder(intermediateDataStructure.getNumRecords(),
-				intermediateDataStructure.getClusterMaps(), columns, intermediateDataStructure.getPliSequence());
+        this.intermediateDatastructure = intermediateDataStructure;
 	}
 
 	private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {
