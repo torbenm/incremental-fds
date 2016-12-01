@@ -23,8 +23,10 @@ public class Demo {
 		StreamableBatchSource batchSource = new CsvFileBatchSource(file, SCHEMA, TABLE, BATCH_SIZE);
 		DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
 		BatchProcessor bp = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
+
 		AverageDatastructure popDs = new AverageDatastructure();
 		AverageDatastructure areaDs = new AverageDatastructure();
+
 		IncrementalAlgorithm<Double, AverageDatastructure> popAvg = new AverageIncrementalAlgorithm("population");
 		IncrementalAlgorithm<Double, AverageDatastructure> areaAvg = new AverageIncrementalAlgorithm("area");
 		popAvg.setIntermediateDataStructure(popDs);
