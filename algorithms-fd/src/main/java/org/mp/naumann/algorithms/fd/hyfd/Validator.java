@@ -9,11 +9,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;

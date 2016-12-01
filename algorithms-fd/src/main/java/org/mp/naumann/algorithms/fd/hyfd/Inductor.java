@@ -2,9 +2,8 @@ package org.mp.naumann.algorithms.fd.hyfd;
 
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 
