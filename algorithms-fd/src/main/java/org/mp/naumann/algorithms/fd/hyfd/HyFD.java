@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
@@ -15,6 +16,7 @@ import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
@@ -24,7 +26,9 @@ import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.logging.Level;
 
 
@@ -45,6 +49,12 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	private List<String> attributeNames;
 	private int numAttributes;
 
+	private FDTree posCover;
+
+	private List<HashMap<String, IntArrayList>> clusterMaps;
+	private int numRecords;
+
+	private List<Integer> pliSequence;
     public HyFD(){
         FDLogger.setCurrentAlgorithm(this);
     }
@@ -97,6 +107,8 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		List<PositionListIndex> plis = pliBuilder.getPLIs(tableInput, this.numAttributes,
 				this.valueComparator.isNullEqualNull());
 		this.closeInput(tableInput);
+		this.clusterMaps = pliBuilder.getClusterMaps(); // get the clusterMaps here to transfer them to the incremental algorithm
+		this.numRecords = pliBuilder.getNumLastRecords(); // same with numRecords
 
 		final int numRecords = pliBuilder.getNumLastRecords();
 		pliBuilder = null;
@@ -174,8 +186,16 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		// this.tableName + "_results.txt", this.buildColumnIdentifiers(), plis,
 		// false);
 		int numFDs = posCover.addFunctionalDependenciesInto(this.resultReceiver, this.buildColumnIdentifiers(), plis);
+		
         SpeedBenchmark.end(BenchmarkLevel.OPERATION, "Translated FD-tree into result format");
 		FDLogger.logln(Level.INFO,"... done! (" + numFDs + " FDs)");
+		
+		this.posCover = posCover;
+		this.pliSequence = plis.stream().map(PositionListIndex::getAttribute).collect(Collectors.toList());
+	}
+
+	public FDTree getPosCover() {
+		return posCover;
 	}
 
 	private TableInput getInput() {
@@ -204,5 +224,17 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		for (int i = 0; i < this.numAttributes; i++)
 			record[i] = invertedPlis[i][recordId];
 		return record;
+	}
+
+	public List<HashMap<String,IntArrayList>> getClusterMaps() {
+		return clusterMaps;
+	}
+
+	public int getNumRecords() {
+		return numRecords;
+	}
+
+	public List<Integer> getPliSequence() {
+		return pliSequence;
 	}
 }

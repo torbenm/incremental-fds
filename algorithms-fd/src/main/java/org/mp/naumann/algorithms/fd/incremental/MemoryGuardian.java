@@ -1,12 +1,13 @@
-package org.mp.naumann.algorithms.fd.hyfd;
+package org.mp.naumann.algorithms.fd.incremental;
 
 import java.lang.management.ManagementFactory;
-import java.util.logging.Level;
-import org.mp.naumann.algorithms.fd.structures.FDSet;
-import org.mp.naumann.algorithms.fd.FDLogger;
+import java.util.logging.Logger;
+
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 
 class MemoryGuardian {
+
+	private final static Logger LOG = Logger.getLogger(MemoryGuardian.class.getName());
 
 	private boolean active;
 	private long memoryCheckFrequency;						// Number of allocation events that cause a memory check
@@ -33,25 +34,22 @@ class MemoryGuardian {
 		return memoryUsage > memory;
 	}
 	
-	public void match(FDSet negCover, FDTree posCover, FDList newNonFDs) {
+	public void match(FDTree posCover) {
 		if ((!this.active) || (this.allocationEventsSinceLastCheck < this.memoryCheckFrequency))
 			return;
 		
 		if (this.memoryExhausted(this.maxMemoryUsage)) {
-//			FDLogger.logln(Level.INFO, "Memory exhausted (" + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() + "/" + this.maxMemoryUsage + ") ");
+//			LOG.info("Memory exhausted (" + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() + "/" + this.maxMemoryUsage + ") ");
 			Runtime.getRuntime().gc();
-//			FDLogger.logln(Level.INFO, "GC reduced to " + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed());
+//			LOG.info("GC reduced to " + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed());
 			
 			while (this.memoryExhausted(this.trimMemoryUsage)) {
-				int depth = Math.max(posCover.getDepth(), negCover.getDepth()) - 1;
+				int depth = posCover.getDepth() - 1;
 				if (depth < 1)
 					throw new RuntimeException("Insufficient memory to calculate any result!");
 				
-				FDLogger.logln(Level.INFO, " (trim to " + depth + ")");
+				LOG.info(" (trim to " + depth + ")");
 				posCover.trim(depth);
-				negCover.trim(depth);
-				if (newNonFDs != null)
-					newNonFDs.trim(depth);
 				Runtime.getRuntime().gc();
 			}
 		}
