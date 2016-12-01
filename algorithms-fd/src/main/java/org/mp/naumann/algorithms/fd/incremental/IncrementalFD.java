@@ -23,12 +23,12 @@ import org.mp.naumann.processor.batch.Batch;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
-public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDependency>, FDIntermediateDatastructure> {
+public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, FDIntermediateDatastructure> {
 
 	private final List<String> columns;
 	private FDTree posCover;
 	private final String tableName;
-	private final List<ResultListener<List<FunctionalDependency>>> resultListeners = new ArrayList<>();
+	private final List<ResultListener<IncrementalFDResult>> resultListeners = new ArrayList<>();
 	private MemoryGuardian memoryGuardian = new MemoryGuardian(true);
     private FDIntermediateDatastructure intermediateDatastructure;
     private boolean initialized = false;
@@ -41,12 +41,12 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 	}
 
 	@Override
-	public Collection<ResultListener<List<FunctionalDependency>>> getResultListeners() {
+	public Collection<ResultListener<IncrementalFDResult>> getResultListeners() {
 		return resultListeners;
 	}
 
 	@Override
-	public void addResultListener(ResultListener<List<FunctionalDependency>> listener) {
+	public void addResultListener(ResultListener<IncrementalFDResult> listener) {
 		this.resultListeners.add(listener);
 	}
 
@@ -59,7 +59,7 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
     }
 
 	@Override
-	public List<FunctionalDependency> execute(Batch batch) {
+	public IncrementalFDResult execute(Batch batch) {
         if(!initialized){
             initialize();
             initialized = true;
@@ -101,7 +101,7 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 		List<FunctionalDependency> fds = new ArrayList<>();
 		posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
         SpeedBenchmark.end(BenchmarkLevel.METHOD_HIGH_LEVEL,"Processed one batch, inner measuring");
-		return fds;
+		return new IncrementalFDResult(fds, validations, pruned);
 	}
 
 	public CardinalitySet getExistingCombinations(CompressedDiff diff) {

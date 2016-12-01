@@ -2,7 +2,7 @@ package org.mp.naumann.algorithms.fd;
 
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
-import org.mp.naumann.algorithms.fd.utils.FDListResultListener;
+import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.Table;
@@ -27,7 +27,7 @@ public class IncrementalFDDemo {
 	private static final int batchSize = 10;
 
 	public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
-		FDLogger.setLevel(Level.FINE);
+		FDLogger.setLevel(Level.INFO);
 		try (DataConnector dc = new JdbcDataConnector(
 				ConnectionManager.getCsvConnection(IncrementalFDDemo.class, "", ","))) {
 
@@ -35,7 +35,8 @@ public class IncrementalFDDemo {
 			Table table = dc.getTable(schema, tableName);
 			HyFDInitialAlgorithm hyfd = new HyFDInitialAlgorithm(table);
 			List<FunctionalDependency> fds = hyfd.execute();
-			FDLogger.log(Level.INFO, String.format("Original FDs: %s", fds.size()));
+            FDLogger.log(Level.INFO, String.format("Original FD count: %s", fds.size()));
+			FDLogger.log(Level.INFO, String.format("Batch size: %s", batchSize));
 			FDLogger.log(Level.FINER, "\n");
 			fds.forEach(fd -> FDLogger.log(Level.FINER, fd.toString()));
 			FDIntermediateDatastructure ds = hyfd.getIntermediateDataStructure();
@@ -50,13 +51,18 @@ public class IncrementalFDDemo {
 
 			// create incremental algorithm
 			IncrementalFD algorithm = new IncrementalFD(table.getColumnNames(), tableName);
-			FDListResultListener listener = new FDListResultListener();
+			IncrementalFDResultListener listener = new IncrementalFDResultListener();
 			algorithm.addResultListener(listener);
 			algorithm.setIntermediateDataStructure(ds);
 
 			// process batch
 			batchProcessor.addBatchHandler(algorithm);
 			batchSource.startStreaming();
+
+            // output results
+            FDLogger.log(Level.INFO, String.format("Total performed validations: %s", listener.getValidationCount()));
+            FDLogger.log(Level.INFO, String.format("Total pruned validations: %s", listener.getPrunedCount()));
+            FDLogger.log(Level.INFO, String.format("Final FD count: %s", listener.getFDs().size()));
 		}
 	}
 
