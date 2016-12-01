@@ -3,7 +3,6 @@ package org.mp.naumann.benchmarks;
 import org.mp.naumann.BenchmarksApplication;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.InitialAlgorithm;
-import org.mp.naumann.algorithms.implementations.AverageDatastructure;
 import org.mp.naumann.algorithms.implementations.AverageIncrementalAlgorithm;
 import org.mp.naumann.algorithms.implementations.AverageInitialAlgorithm;
 import org.mp.naumann.database.ConnectionException;
