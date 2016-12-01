@@ -1,12 +1,5 @@
 package org.mp.naumann.database.jdbc;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
@@ -16,11 +9,16 @@ import org.mp.naumann.database.jdbc.sql.SqlQueryBuilder;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.StatementGroup;
 
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
 class JdbcTable implements Table {
 
 	private Connection conn;
     private String schema, name, fullName;
 	private List<Column<String>> columns;
+    private int columnCount = -1;
 
 	JdbcTable(String schema, String name, Connection conn) {
         this.schema = schema;
@@ -50,6 +48,19 @@ class JdbcTable implements Table {
 	}
 
 	@Override
+    public int numberOfColumns(){
+        if(columnCount == -1){
+            try (java.sql.Statement stmt = conn.createStatement()) {
+                try (ResultSet rs = stmt.executeQuery(String.format("SELECT * FROM %s LIMIT 1", fullName))) {
+                    columnCount = rs.getMetaData().getColumnCount();
+                }
+            } catch (SQLException ignored) {
+            }
+        }
+        return columnCount;
+    }
+
+	@Override
 	public List<Column<String>> getColumns() {
 		if (columns == null) {
 			try {
@@ -57,7 +68,7 @@ class JdbcTable implements Table {
 				DatabaseMetaData meta = conn.getMetaData();
 				try (ResultSet rs = meta.getColumns(null, schema, name, null)) {
 					while (rs.next()) {
-						columns.add(new StringColumn(rs.getString(4)));
+						columns.add(new StringColumn(rs.getString(4), JDBCType.valueOf(rs.getInt(5))));
 					}
 				}
 
@@ -65,7 +76,7 @@ class JdbcTable implements Table {
 				if (columns.isEmpty()) {
                     try (ResultSet rs = meta.getColumns(null, schema, schema + "." + name, null)) {
                         while (rs.next()) {
-                            columns.add(new StringColumn(rs.getString(4)));
+                            columns.add(new StringColumn(rs.getString(4), JDBCType.valueOf(rs.getInt(5))));
                         }
                     }
                 }

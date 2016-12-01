@@ -1,6 +1,12 @@
+os: osx
 language: java
 jdk:
   - oraclejdk8
+
+before_install:
+- brew install git-lfs
+- git-lfs pull
+
 
 notifications:
   slack: hpi:80ADsgr1HVUFL8Q3IoDw3gSu

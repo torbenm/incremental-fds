@@ -29,11 +29,11 @@ class UpdateStatementQueryBuilder implements StatementQueryBuilder<UpdateStateme
 
     @Override
     public String buildKeyClause(UpdateStatement statement){
-        return " SET "+ SqlQueryBuilder.toKeyEqualsValueMap(statement.getValueMap(), ", ");
+        return " SET "+ SqlQueryBuilder.toKeyEqualsValueMap(statement, ", ");
     }
 
     @Override
     public String buildValueClause(UpdateStatement statement){
-        return " WHERE " + SqlQueryBuilder.toKeyEqualsValueMap(statement.getOldValueMap(),  " AND ");
+        return " WHERE " + SqlQueryBuilder.toKeyEqualsValueMap(statement.getOldValueMap(), statement, " AND ");
     }
 }

@@ -13,7 +13,8 @@
         <module>algorithms</module>
         <module>algorithms-fd</module>
     <module>demo</module>
-  </modules>
+        <module>benchmark-util</module>
+    </modules>
 
     <properties>
         <java.version>1.8</java.version>

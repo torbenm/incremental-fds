@@ -46,6 +46,14 @@ public class ColumnIdentifier implements Comparable<ColumnIdentifier>, Serializa
     return tableIdentifier + TABLE_COLUMN_CONCATENATOR + columnIdentifier;
   }
 
+  public String getTableIdentifier() {
+    return tableIdentifier;
+  }
+
+  public String getColumnIdentifier() {
+    return columnIdentifier;
+  }
+
   @Override
   public int hashCode() {
     final int prime = 31;

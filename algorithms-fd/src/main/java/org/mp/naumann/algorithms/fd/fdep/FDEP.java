@@ -11,7 +11,6 @@ import java.util.logging.Logger;
 
 class FDEP {
 
-	private final static Logger LOG = Logger.getLogger(HyFD.class.getName());
 	
 	private int numAttributes;
 	private ValueComparator valueComparator;

@@ -23,13 +23,11 @@ class DeleteStatementQueryBuilder implements StatementQueryBuilder<DeleteStateme
     }
 
     @Override
-    public String buildKeyClause(DeleteStatement statement) {
-        return " WHERE ";
-    }
+    public String buildKeyClause(DeleteStatement statement) { return " WHERE "; }
 
     @Override
     public String buildValueClause(DeleteStatement statement) {
-        return "(" + SqlQueryBuilder.toKeyEqualsValueMap(statement.getValueMap(), " AND ") + ")";
+        return "(" + SqlQueryBuilder.toKeyEqualsValueMap(statement, " AND ") + ")";
     }
 
 }

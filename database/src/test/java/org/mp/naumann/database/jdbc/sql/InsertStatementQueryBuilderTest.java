@@ -20,6 +20,13 @@ public class InsertStatementQueryBuilderTest {
         assertEquals(isqb.generateSingle(insertStatement), expected);
     }
 
+    @Test
+    public void testGenerateSingleWithDifferentTypes() throws QueryBuilderException {
+        InsertStatement insertStatement = createPeopleInsertWithDifferentTypes();
+        String expected = "INSERT INTO test.people (name, weight, age) VALUES ('max', 60.5, 15);";
+        assertEquals(isqb.generateSingle(insertStatement), expected);
+    }
+    
     @Test(expected = QueryBuilderException.class)
     public void testEmptyStatement() throws QueryBuilderException {
         InsertStatement insertStatement = createPeopleInsertEmpty();

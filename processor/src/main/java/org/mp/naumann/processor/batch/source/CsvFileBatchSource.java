@@ -43,7 +43,6 @@ public class CsvFileBatchSource extends SizableBatchSource {
 
 				values.remove(ACTION_COLUMN_NAME);
 				values.remove(RECORD_COLUMN_NAME);
-				System.out.println(values);
 				Statement stmt = createStatement(action, values);
 				addStatement(getTableName(), stmt);
 			}

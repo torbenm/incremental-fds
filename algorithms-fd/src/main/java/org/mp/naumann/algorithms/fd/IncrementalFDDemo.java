@@ -1,6 +1,6 @@
 package org.mp.naumann.algorithms.fd;
 
-import org.mp.naumann.algorithms.AlgorithmExecutionException;
+import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.result.DefaultResultListener;
 import org.mp.naumann.database.ConnectionException;
