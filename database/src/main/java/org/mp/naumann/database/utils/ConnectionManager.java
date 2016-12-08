@@ -36,11 +36,12 @@ public class ConnectionManager {
             try {
                 try (FileInputStream input = new FileInputStream(settings)) {
                     properties.loadFromXML(input);
+                    String server = properties.getProperty("server");
                     int port = Integer.parseInt(properties.getProperty("port"));
                     String database = properties.getProperty("database");
                     ci.user = properties.getProperty("user");
                     ci.pass = properties.getProperty("pass");
-                    ci.connectionString = "jdbc:postgresql://localhost:" + Integer.toString(port) + "/" + database;
+                    ci.connectionString = "jdbc:postgresql://" + server + ":" + Integer.toString(port) + "/" + database;
                     return ci;
                 }
             } catch (Exception e) {
