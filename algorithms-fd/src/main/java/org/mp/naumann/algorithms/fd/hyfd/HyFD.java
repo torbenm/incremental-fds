@@ -14,6 +14,9 @@ import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
+
+import com.google.common.hash.BloomFilter;
+
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
@@ -21,6 +24,7 @@ import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.structures.ValueCombination.ColumnValue;
 import org.mp.naumann.algorithms.fd.utils.FileUtils;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
@@ -28,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.logging.Level;
 
@@ -58,6 +63,13 @@ public class HyFD implements FunctionalDependencyAlgorithm {
     public HyFD(){
         FDLogger.setCurrentAlgorithm(this);
     }
+
+	private BloomFilter<Set<ColumnValue>> filter;
+
+	
+	public BloomFilter<Set<ColumnValue>> getFilter() {
+		return filter;
+	}
 
 	public HyFD(Table table, FunctionalDependencyResultReceiver resultReceiver) {
         this();
@@ -109,6 +121,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		this.closeInput(tableInput);
 		this.clusterMaps = pliBuilder.getClusterMaps(); // get the clusterMaps here to transfer them to the incremental algorithm
 		this.numRecords = pliBuilder.getNumLastRecords(); // same with numRecords
+		this.filter = pliBuilder.getFilter();
 
 		final int numRecords = pliBuilder.getNumLastRecords();
 		pliBuilder = null;

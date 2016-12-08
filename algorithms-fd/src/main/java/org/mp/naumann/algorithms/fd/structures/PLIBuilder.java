@@ -19,17 +19,22 @@ package org.mp.naumann.algorithms.fd.structures;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
+import org.mp.naumann.algorithms.fd.structures.ValueCombination.ColumnValue;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Row;
+
+import com.google.common.hash.BloomFilter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 public class PLIBuilder {
 	
 	private int numRecords = 0;
 	private List<HashMap<String, IntArrayList>> clusterMaps;
+	private BloomFilter<Set<ColumnValue>> filter = BloomFilter.create(new ValueCombinationFunnel(), 100_000);
 
 	public List<HashMap<String, IntArrayList>> getClusterMaps() {
 		return clusterMaps;
@@ -62,9 +67,11 @@ public class PLIBuilder {
 		this.numRecords = 0;
 		while (tableInput.hasNext()) {
 			Row record = tableInput.next();
+			ValueCombination vc = new ValueCombination();
 			
 			int attributeId = 0;
 			for (String value : record) {
+				vc.add(record.getColumnNames().get(attributeId), value);
 				HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
 				
 				if (clusterMap.containsKey(value)) {
@@ -81,11 +88,19 @@ public class PLIBuilder {
 			this.numRecords++;
 			if (this.numRecords == Integer.MAX_VALUE - 1)
 				throw new RuntimeException("PLI encoding into integer based PLIs is not possible, because the number of records in the dataset exceeds Integer.MAX_VALUE. Use long based plis instead! (NumRecords = " + this.numRecords + " and Integer.MAX_VALUE = " + Integer.MAX_VALUE);
+			for(Set<ColumnValue> combination : vc.getPowerSet(2)) {
+				filter.put(combination);
+			}
 		}
 		
 		return clusterMaps;
 	}
 	
+	
+	public BloomFilter<Set<ColumnValue>> getFilter() {
+		return filter;
+	}
+
 	private List<PositionListIndex> fetchPositionListIndexes(List<HashMap<String, IntArrayList>> clusterMaps,
 			boolean isNullEqualNull) {
 

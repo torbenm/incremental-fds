@@ -14,10 +14,10 @@ class CardinalitySet {
 	private int depth = 0;
 	private int maxDepth;
 	
-	public CardinalitySet(int numAttributes, int maxDepth) {
+	public CardinalitySet(int maxDepth) {
 		this.maxDepth = maxDepth;
-		this.levels = new ArrayList<>(numAttributes);
-		for (int i = 0; i <= numAttributes; i++)
+		this.levels = new ArrayList<>(maxDepth);
+		for (int i = 0; i <= maxDepth; i++)
 			this.levels.add(new ObjectOpenHashSet<>());
 	}
 
