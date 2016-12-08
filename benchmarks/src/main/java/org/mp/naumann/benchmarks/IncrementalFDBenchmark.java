@@ -7,8 +7,7 @@ import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.HyFDInitialAlgorithm;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
-import org.mp.naumann.algorithms.implementations.AverageIncrementalAlgorithm;
-import org.mp.naumann.algorithms.implementations.AverageInitialAlgorithm;
+import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.Table;
@@ -20,7 +19,7 @@ import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
-import java.util.Arrays;
+import java.sql.Connection;
 
 public class IncrementalFDBenchmark implements AlgorithmBenchmark {
 
@@ -29,17 +28,17 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
     private String currentTestCase;
     private StreamableBatchSource batchSource;
     private SynchronousBatchProcessor batchProcessor;
+    private IncrementalFDResultListener resultListener;
 
-    public void constructTestCase(String testCase, String incrementalFileName, String schema, String tableName, int batchSize,
-                                    int stopAfter) throws ConnectionException {
+    public void constructTestCase(String testCase, String incrementalFilePath, Connection csvConnection, String schema, String tableName, int batchSize,
+                                  int stopAfter) throws ConnectionException {
         reset();
         this.currentTestCase = testCase;
 
-        String file = BenchmarksApplication.class.getResource(incrementalFileName).getPath();
-        batchSource = new CsvFileBatchSource(file, "", "", batchSize, stopAfter);
+        batchSource = new CsvFileBatchSource(incrementalFilePath, "", "", batchSize, stopAfter);
         DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
 
-        DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(BenchmarksApplication.class, "", ","));
+        DataConnector dc = new JdbcDataConnector(csvConnection);
         Table table = dc.getTable(schema, tableName);
         initialAlgorithm = new HyFDInitialAlgorithm(table);
 
@@ -49,21 +48,29 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
         this.batchProcessor.addBatchHandler(incrementalAlgorithm);
     }
 
-    public void constructInitialOnly(String testCase, String schema, String tableName) throws ConnectionException {
+    public void constructInitialOnly(String testCase, Connection csvConnection, String schema, String tableName) throws ConnectionException {
         reset();
         this.currentTestCase = testCase;
 
-        DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(BenchmarksApplication.class, "", ","));
+        DataConnector dc = new JdbcDataConnector(csvConnection);
         Table table = dc.getTable(schema, tableName);
         initialAlgorithm = new HyFDInitialAlgorithm(table);
     }
 
-    public void reset(){
+    private void reset(){
         this.incrementalAlgorithm = null;
         this.initialAlgorithm = null;
         this.currentTestCase = null;
         this.batchProcessor = null;
         this.batchSource = null;
+    }
+
+    public void setIncrementalFDResultListener(IncrementalFDResultListener resultListener){
+        this.resultListener = resultListener;
+    }
+
+    public String getVersion(){
+        return "v0.1";
     }
 
 
@@ -91,6 +98,7 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
     @Override
     public void runIncremental() {
         incrementalAlgorithm.setIntermediateDataStructure(initialAlgorithm.getIntermediateDataStructure());
+        incrementalAlgorithm.addResultListener(resultListener);
         SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
         getBatchSource().startStreaming();
         SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Finished incremental algorithm for test case "+getCurrentTestCase());

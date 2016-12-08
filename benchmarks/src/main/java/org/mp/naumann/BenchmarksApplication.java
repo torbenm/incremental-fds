@@ -7,26 +7,54 @@ import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.benchmarks.AverageAlgorithmBenchmark;
 import org.mp.naumann.benchmarks.IncrementalFDBenchmark;
 import org.mp.naumann.database.ConnectionException;
+import org.mp.naumann.reporter.GoogleSheetsReporter;
+import org.mp.naumann.testcases.InitialAndIncrementalOneBatch;
+import org.mp.naumann.testcases.TestCase;
 
+import java.io.IOException;
 import java.util.logging.Level;
 
 public class BenchmarksApplication {
 
     private static final int BATCH_SIZE = 100;
+    private static GoogleSheetsReporter googleSheetsReporter;
 
-	public static void main(String[] args) {
+    static {
+        try {
+            googleSheetsReporter = new GoogleSheetsReporter();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
         FDLogger.setLevel(Level.OFF);
         setUp();
 
         try {
-            runIncrementalFDBenchmarks();
+            TestCase t = new InitialAndIncrementalOneBatch(15000,
+                    BATCH_SIZE,
+                    "benchmark.adultfull.csv",
+                    new IncrementalFDBenchmark()
+            );
+            t.execute();
+            googleSheetsReporter.writeNewLine(
+                    t.sheetName(),
+                    t.sheetValues()
+            );
+
         } catch (ConnectionException e) {
             SpeedBenchmark.end(BenchmarkLevel.BENCHMARK, "Benchmark crashed");
             SpeedBenchmark.disable();
-        }finally {
+        } catch (IOException e) {
+            SpeedBenchmark.end(BenchmarkLevel.BENCHMARK, "Writing to GoogleSheets crashed");
+            SpeedBenchmark.disable();
+        } finally {
             tearDown();
         }
 	}
+
+
 
 	public static void runAverageAlgorithmBenchmarks() throws ConnectionException {
         AverageAlgorithmBenchmark benchmark = new AverageAlgorithmBenchmark();
@@ -36,23 +64,6 @@ public class BenchmarksApplication {
         benchmark.runIncremental();
     }
 
-    public static void runIncrementalFDBenchmarks() throws ConnectionException {
-        IncrementalFDBenchmark benchmark = new IncrementalFDBenchmark();
-
-        benchmark.constructInitialOnly("Adults file 15k - initial only", "benchmark", "adult");
-        benchmark.runInitial();
-
-        benchmark.constructInitialOnly("Adults file 15k + 100 - initial only", "benchmark", "adult15a1");
-        benchmark.runInitial();
-
-        benchmark.constructTestCase("Adults file", "inserts.adult.csv", "benchmark", "adult", BATCH_SIZE, -1);
-        benchmark.runInitial();
-        benchmark.runIncremental();
-
-
-
-
-    }
 
 	public static void setUp(){
         SpeedBenchmark.enable();
