@@ -2,7 +2,9 @@ package org.mp.naumann.algorithms.exceptions;
 
 public class AlgorithmException extends Exception {
 
-    public AlgorithmException() {
+    private static final long serialVersionUID = 663943568188782865L;
+
+	public AlgorithmException() {
     }
 
     public AlgorithmException(String message) {

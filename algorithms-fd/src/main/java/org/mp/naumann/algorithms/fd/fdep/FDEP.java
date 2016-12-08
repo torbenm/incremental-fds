@@ -1,13 +1,11 @@
 package org.mp.naumann.algorithms.fd.fdep;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.hyfd.HyFD;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 class FDEP {
 
