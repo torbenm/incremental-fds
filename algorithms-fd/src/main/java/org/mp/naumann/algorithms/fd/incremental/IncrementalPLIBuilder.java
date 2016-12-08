@@ -3,14 +3,19 @@ package org.mp.naumann.algorithms.fd.incremental;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.structures.ValueCombination;
+import org.mp.naumann.algorithms.fd.structures.ValueCombination.ColumnValue;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
+
+import com.google.common.hash.BloomFilter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by dennis on 24.11.16.
@@ -23,12 +28,14 @@ public class IncrementalPLIBuilder {
 	private final List<String> columns;
 	private final List<Integer> pliSequence;
 	private int[][] compressedRecords;
+	private BloomFilter<Set<ColumnValue>> filter;
 
-	public IncrementalPLIBuilder(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<String> columns, List<Integer> pliSequence) {
+	public IncrementalPLIBuilder(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<String> columns, List<Integer> pliSequence, BloomFilter<Set<ColumnValue>> filter) {
 		this.numRecords = numRecords;
 		this.clusterMaps = clusterMaps;
 		this.columns = columns;
 		this.pliSequence = pliSequence;
+		this.filter = filter;
 		updateDataStructures();
 	}
 
@@ -37,10 +44,12 @@ public class IncrementalPLIBuilder {
 		List<Integer> insertedIds = new ArrayList<>();
 		for (InsertStatement insert : inserts) {
 			int i = 0;
+			ValueCombination vc = new ValueCombination();
 			for (String column : columns) {
 				Map<String, String> valueMap = insert.getValueMap();
 				HashMap<String, IntArrayList> clusterMap = clusterMaps.get(i);
 				String value = valueMap.get(column);
+				vc.add(column, value);
 				IntArrayList cluster = clusterMap.get(value);
 				if (cluster == null) {
 					cluster = new IntArrayList();
@@ -51,6 +60,9 @@ public class IncrementalPLIBuilder {
 			}
 			insertedIds.add(numRecords);
 			numRecords++;
+			for(Set<ColumnValue> combination : vc.getPowerSet(2)) {
+				filter.put(combination);
+			}
 		}
 		updateDataStructures();
 		return buildDiff(insertedIds);
