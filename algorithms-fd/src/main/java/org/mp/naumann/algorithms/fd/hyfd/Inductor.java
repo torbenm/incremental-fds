@@ -20,7 +20,7 @@ class Inductor {
 	}
 
 	public void updatePositiveCover(FDList nonFds) {
-		FDLogger.logln(Level.INFO, "Inducing FD candidates ...");
+		FDLogger.log(Level.FINER, "Inducing FD candidates ...");
 		for (int i = nonFds.getFdLevels().size() - 1; i >= 0; i--) {
 			if (i >= nonFds.getFdLevels().size()) // If this level has been trimmed during iteration
 				continue;

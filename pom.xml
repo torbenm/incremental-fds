@@ -12,8 +12,10 @@
         <module>utils</module>
         <module>algorithms</module>
         <module>algorithms-fd</module>
-    <module>demo</module>
+        <module>demo</module>
+        <module>benchmarks</module>
         <module>benchmark-util</module>
+        <module>data</module>
     </modules>
 
     <properties>

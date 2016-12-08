@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -23,9 +25,13 @@ public class CsvFileBatchSource extends SizableBatchSource {
 
 	private static final String ACTION_COLUMN_NAME = "::action";
 	private static final String RECORD_COLUMN_NAME = "::record";
+    private CSVParser csvParser;
 	
     public CsvFileBatchSource(String filePath, String schema, String tableName, int batchSize) {
         this(new File(filePath), schema, tableName, batchSize);
+    }
+    public CsvFileBatchSource(String filePath, String schema, String tableName, int batchSize, int stopAfter) {
+        this(new File(filePath), schema, tableName, batchSize, stopAfter);
     }
 
     public CsvFileBatchSource(File file, String schema, String tableName, int batchSize) {
@@ -33,25 +39,48 @@ public class CsvFileBatchSource extends SizableBatchSource {
         this.csvFile = file;
     }
 
+    public CsvFileBatchSource(File file, String schema, String tableName, int batchSize, int stopAfter) {
+        super(schema, tableName, batchSize, stopAfter);
+        this.csvFile = file;
+    }
+
 	protected void start() {
-		try (CSVParser parser = CSVParser.parse(csvFile, CHARSET, FORMAT)) {
+        if(csvParser == null){
+            try {
+                csvParser = CSVParser.parse(csvFile, CHARSET, FORMAT);
+            } catch (IOException e) {
+                return;
+            }
+        }
+        for (CSVRecord csvRecord : csvParser) {
+            Map<String, String> values = csvRecord.toMap();
 
-			for (CSVRecord csvRecord : parser) {
-				Map<String, String> values = csvRecord.toMap();
+            String action = csvRecord.get(ACTION_COLUMN_NAME);
 
-				String action = csvRecord.get(ACTION_COLUMN_NAME);
-
-				values.remove(ACTION_COLUMN_NAME);
-				values.remove(RECORD_COLUMN_NAME);
-				Statement stmt = createStatement(action, values);
-				addStatement(getTableName(), stmt);
-			}
-			finishFilling();
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+            values.remove(ACTION_COLUMN_NAME);
+            values.remove(RECORD_COLUMN_NAME);
+            Statement stmt = createStatement(action, values);
+            addStatement(getTableName(), stmt);
+        }
+        finishFilling();
 	}
+
+	public List<String> getColumnNames(){
+        if(csvParser == null){
+            try {
+               csvParser = CSVParser.parse(csvFile, CHARSET, FORMAT);
+            } catch (IOException e) {
+                return null;
+            }
+        }
+        return csvParser.getHeaderMap()
+                        .entrySet()
+                        .parallelStream()
+                        .sorted(Map.Entry.comparingByValue())
+                        .map(Map.Entry::getKey)
+                        .filter(s -> !(s.equals(ACTION_COLUMN_NAME) || s.equals(RECORD_COLUMN_NAME)))
+                        .collect(Collectors.toList());
+    }
 
 	protected Statement createStatement(String type, Map<String, String> values) {
 		switch (type.toLowerCase()) {

@@ -50,6 +50,7 @@ public class SizableBatchSourceTest {
     @Test(expected= ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException.class)
     public void testWeakStreaming() {
         sbs.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
+        sbs.startStreaming();
         try {
             for (int i = 0; i < BATCH_SIZE - 1; i++) {
                 addStatement();

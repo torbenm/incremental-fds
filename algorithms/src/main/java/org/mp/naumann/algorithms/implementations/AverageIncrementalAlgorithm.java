@@ -31,7 +31,12 @@ public class AverageIncrementalAlgorithm implements IncrementalAlgorithm<Double,
 		this.resultListeners.add(listener);
 	}
 
-	@Override
+    @Override
+    public void initialize() {
+
+    }
+
+    @Override
 	public Double execute(Batch batch) {
 		List<DeleteStatement> deletes = batch.getDeleteStatements();
 		List<UpdateStatement> updates = batch.getUpdateStatements();

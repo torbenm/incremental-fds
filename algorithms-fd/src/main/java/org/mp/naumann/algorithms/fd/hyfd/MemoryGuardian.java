@@ -38,16 +38,16 @@ class MemoryGuardian {
 			return;
 		
 		if (this.memoryExhausted(this.maxMemoryUsage)) {
-//			FDLogger.logln(Level.INFO, "Memory exhausted (" + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() + "/" + this.maxMemoryUsage + ") ");
+//			FDLogger.log(Level.FINEST, "Memory exhausted (" + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() + "/" + this.maxMemoryUsage + ") ");
 			Runtime.getRuntime().gc();
-//			FDLogger.logln(Level.INFO, "GC reduced to " + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed());
+//			FDLogger.log(Level.FINEST, "GC reduced to " + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed());
 			
 			while (this.memoryExhausted(this.trimMemoryUsage)) {
 				int depth = Math.max(posCover.getDepth(), negCover.getDepth()) - 1;
 				if (depth < 1)
 					throw new RuntimeException("Insufficient memory to calculate any result!");
 				
-				FDLogger.logln(Level.INFO, " (trim to " + depth + ")");
+				FDLogger.log(Level.FINEST, " (trim to " + depth + ")");
 				posCover.trim(depth);
 				negCover.trim(depth);
 				if (newNonFDs != null)

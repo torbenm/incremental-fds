@@ -99,13 +99,13 @@ public class HyFD implements FunctionalDependencyAlgorithm {
         // this.executeFDEP();
 		this.executeHyFD();
 
-		FDLogger.logln(Level.INFO,"Time: " + (System.currentTimeMillis() - startTime) + " ms");
+		FDLogger.log(Level.FINER, "Time: " + (System.currentTimeMillis() - startTime) + " ms");
 	}
 
 	private void executeHyFD() throws AlgorithmExecutionException {
 		// Initialize
         SpeedBenchmark.begin(BenchmarkLevel.OPERATION);
-		FDLogger.logln(Level.INFO,"Initializing ...");
+		FDLogger.log(Level.FINER, "Initializing ...");
 		TableInput tableInput = this.getInput();
 		this.initialize(tableInput);
 
@@ -114,7 +114,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		///////////////////////////////////////////////////////
 
 		// Calculate plis
-		FDLogger.logln(Level.INFO,"Reading data and calculating plis ...");
+		FDLogger.log(Level.FINER, "Reading data and calculating plis ...");
 		PLIBuilder pliBuilder = new PLIBuilder();
 		List<PositionListIndex> plis = pliBuilder.getPLIs(tableInput, this.numAttributes,
 				this.valueComparator.isNullEqualNull());
@@ -137,7 +137,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
         // Sort plis by number of clusters: For searching in the covers and for
 		// validation, it is good to have attributes with few non-unique values
 		// and many clusters left in the prefix tree
-		FDLogger.logln(Level.INFO,"Sorting plis by number of clusters ...");
+		FDLogger.log(Level.FINER, "Sorting plis by number of clusters ...");
 		Collections.sort(plis, (o1, o2) -> {
             int numClustersInO1 = numRecords - o1.getNumNonUniqueValues() + o1.getClusters().size();
             int numClustersInO2 = numRecords - o2.getNumNonUniqueValues() + o2.getClusters().size();
@@ -145,12 +145,12 @@ public class HyFD implements FunctionalDependencyAlgorithm {
         });
         SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Sorted plis by cluster");
 		// Calculate inverted plis
-		FDLogger.logln(Level.INFO,"Inverting plis ...");
+		FDLogger.log(Level.FINER, "Inverting plis ...");
 		int[][] invertedPlis = PliUtils.invert(plis, numRecords);
         SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Inverted plis");
 		// Extract the integer representations of all records from the inverted
 		// plis
-		FDLogger.logln(Level.INFO,"Extracting integer representations for the records ...");
+		FDLogger.log(Level.FINER, "Extracting integer representations for the records ...");
 		int[][] compressedRecords = new int[numRecords][];
 		for (int recordId = 0; recordId < numRecords; recordId++)
 			compressedRecords[recordId] = this.fetchRecordFrom(recordId, invertedPlis);
@@ -193,7 +193,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		} while (comparisonSuggestions != null);
 
 		// Output all valid FDs
-		FDLogger.logln(Level.INFO,"Translating FD-tree into result format ...");
+		FDLogger.log(Level.FINER, "Translating FD-tree into result format ...");
 
 		// int numFDs = posCover.writeFunctionalDependencies("HyFD_backup_" +
 		// this.tableName + "_results.txt", this.buildColumnIdentifiers(), plis,
@@ -201,7 +201,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		int numFDs = posCover.addFunctionalDependenciesInto(this.resultReceiver, this.buildColumnIdentifiers(), plis);
 		
         SpeedBenchmark.end(BenchmarkLevel.OPERATION, "Translated FD-tree into result format");
-		FDLogger.logln(Level.INFO,"... done! (" + numFDs + " FDs)");
+		FDLogger.log(Level.FINER, "... done! (" + numFDs + " FDs)");
 		
 		this.posCover = posCover;
 		this.pliSequence = plis.stream().map(PositionListIndex::getAttribute).collect(Collectors.toList());

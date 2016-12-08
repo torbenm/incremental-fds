@@ -8,11 +8,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.Set;
+import java.util.logging.Level;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
+import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
+import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
+import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
@@ -29,13 +33,21 @@ import com.google.common.hash.BloomFilter;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
-public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDependency>, FDIntermediateDatastructure> {
+public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, FDIntermediateDatastructure> {
+
+	private enum Type {
+		SIMPLE, BLOOM, NONE
+	}
+
+	private static final Type TYPE = Type.BLOOM;
 
 	private final List<String> columns;
 	private FDTree posCover;
 	private final String tableName;
-	private final List<ResultListener<List<FunctionalDependency>>> resultListeners = new ArrayList<>();
+	private final List<ResultListener<IncrementalFDResult>> resultListeners = new ArrayList<>();
 	private MemoryGuardian memoryGuardian = new MemoryGuardian(true);
+	private FDIntermediateDatastructure intermediateDatastructure;
+	private boolean initialized = false;
 
 	private IncrementalPLIBuilder incrementalPLIBuilder;
 	private BloomFilter<Set<ColumnValue>> filter;
@@ -47,18 +59,82 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 	}
 
 	@Override
-	public Collection<ResultListener<List<FunctionalDependency>>> getResultListeners() {
+	public Collection<ResultListener<IncrementalFDResult>> getResultListeners() {
 		return resultListeners;
 	}
 
 	@Override
-	public void addResultListener(ResultListener<List<FunctionalDependency>> listener) {
+	public void addResultListener(ResultListener<IncrementalFDResult> listener) {
 		this.resultListeners.add(listener);
 	}
 
+	public void initialize() {
+		this.posCover = intermediateDatastructure.getPosCover();
+		this.filter = intermediateDatastructure.getFilter();
+		incrementalPLIBuilder = new IncrementalPLIBuilder(intermediateDatastructure.getNumRecords(),
+				intermediateDatastructure.getClusterMaps(), columns, intermediateDatastructure.getPliSequence(),
+				filter);
+		int i = 0;
+		for (PositionListIndex pli : incrementalPLIBuilder.getPlis()) {
+			columnsToId.put(columns.get(pli.getAttribute()), i++);
+		}
+	}
+
 	@Override
-	public List<FunctionalDependency> execute(Batch batch) {
-		CardinalitySet bloomExistingCombinations = new CardinalitySet(2);
+	public IncrementalFDResult execute(Batch batch) {
+		if (!initialized) {
+			initialize();
+			initialized = true;
+		}
+		SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
+		CardinalitySet existingCombinations = null;
+		if (TYPE == Type.BLOOM) {
+			existingCombinations = getExistingCombinationsWithBloom(batch);
+		}
+		CompressedDiff diff = incrementalPLIBuilder.update(batch);
+		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
+		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
+		if (TYPE == Type.SIMPLE) {
+			existingCombinations = getExistingCombinationsSimple(diff);
+		}
+		boolean validateParallel = true;
+		Validator validator = new Validator(posCover, compressedRecords, plis, validateParallel, memoryGuardian);
+
+		int pruned = 0;
+		int validations = 0;
+		for (int level = 0; level <= posCover.getDepth(); level++) {
+			List<FDTreeElementLhsPair> currentLevel = getFdLevel(level);
+			List<FDTreeElementLhsPair> toValidate = new ArrayList<>();
+			for (FDTreeElementLhsPair fd : currentLevel) {
+				if (existingCombinations == null || canBeViolated(existingCombinations, fd)) {
+					toValidate.add(fd);
+				} else {
+					pruned++;
+				}
+			}
+			FDLogger.log(Level.FINER, "Will validate: ");
+			toValidate.stream().map(this::toFds).flatMap(Collection::stream)
+					.forEach(v -> FDLogger.log(Level.FINER, v.toString()));
+			validations += toValidate.size();
+			try {
+				validator.validate(level, currentLevel);
+			} catch (AlgorithmExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		validator.shutdown();
+		FDLogger.log(Level.FINE, "Pruned " + pruned + " validations");
+		FDLogger.log(Level.FINE, "Made " + validations + " validations");
+		List<FunctionalDependency> fds = new ArrayList<>();
+		posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
+		SpeedBenchmark.end(BenchmarkLevel.METHOD_HIGH_LEVEL, "Processed one batch, inner measuring");
+		return new IncrementalFDResult(fds, validations, pruned);
+	}
+
+	public CardinalitySet getExistingCombinationsWithBloom(Batch batch) {
+		CardinalitySet existingCombinations;
+		existingCombinations = new CardinalitySet(2);
 		List<InsertStatement> inserts = batch.getInsertStatements();
 		Set<Set<ColumnValue>> innerDoubleCombinations = innerCombinationsToCheck(batch);
 		for (InsertStatement insert : inserts) {
@@ -72,46 +148,11 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 					for (ColumnValue value : combination) {
 						existing.fastSet(columnsToId.get(value.getColumn()));
 					}
-					bloomExistingCombinations.add(existing);
+					existingCombinations.add(existing);
 				}
 			}
 		}
-		CompressedDiff diff = incrementalPLIBuilder.update(batch);
-		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
-		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
-		CardinalitySet existingCombinations = bloomExistingCombinations;
-
-		boolean validateParallel = true;
-		Validator validator = new Validator(posCover, compressedRecords, plis, validateParallel, memoryGuardian);
-
-		int pruned = 0;
-		int validations = 0;
-		for (int level = 0; level <= posCover.getDepth(); level++) {
-			List<FDTreeElementLhsPair> currentLevel = getFdLevel(level);
-			List<FDTreeElementLhsPair> toValidate = new ArrayList<>();
-			for (FDTreeElementLhsPair fd : currentLevel) {
-				if (canBeViolated(existingCombinations, fd)) {
-					toValidate.add(fd);
-				} else {
-					pruned++;
-				}
-			}
-			System.out.println("Will validate: ");
-			toValidate.stream().map(this::toFds).flatMap(Collection::stream).forEach(System.out::println);
-			validations += toValidate.size();
-			try {
-				validator.validate(level, currentLevel);
-			} catch (AlgorithmExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		validator.shutdown();
-		System.out.println("Pruned " + pruned + " validations");
-		System.out.println("Made " + validations + " validations");
-		List<FunctionalDependency> fds = new ArrayList<>();
-		posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
-		return fds;
+		return existingCombinations;
 	}
 
 	public Set<Set<ColumnValue>> innerCombinationsToCheck(Batch batch) {
@@ -131,7 +172,7 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 		return innerDoubleCombinations;
 	}
 
-	public CardinalitySet getExistingCombinations(CompressedDiff diff) {
+	public CardinalitySet getExistingCombinationsSimple(CompressedDiff diff) {
 		int numAttributes = columns.size();
 		CardinalitySet existingCombinations = new CardinalitySet(numAttributes);
 		for (int[] insert : diff.getInsertedRecords()) {
@@ -177,15 +218,7 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 
 	@Override
 	public void setIntermediateDataStructure(FDIntermediateDatastructure intermediateDataStructure) {
-		this.posCover = intermediateDataStructure.getPosCover();
-		this.filter = intermediateDataStructure.getFilter();
-		incrementalPLIBuilder = new IncrementalPLIBuilder(intermediateDataStructure.getNumRecords(),
-				intermediateDataStructure.getClusterMaps(), columns, intermediateDataStructure.getPliSequence(),
-				filter);
-		int i = 0;
-		for (PositionListIndex pli : incrementalPLIBuilder.getPlis()) {
-			columnsToId.put(columns.get(pli.getAttribute()), i++);
-		}
+		this.intermediateDatastructure = intermediateDataStructure;
 	}
 
 	private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {
