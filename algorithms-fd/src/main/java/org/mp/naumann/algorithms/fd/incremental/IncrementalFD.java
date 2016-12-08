@@ -2,8 +2,11 @@ package org.mp.naumann.algorithms.fd.incremental;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.Set;
 
 import org.apache.lucene.util.OpenBitSet;
@@ -36,6 +39,7 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 
 	private IncrementalPLIBuilder incrementalPLIBuilder;
 	private BloomFilter<Set<ColumnValue>> filter;
+	private final Map<String, Integer> columnsToId = new HashMap<>();
 
 	public IncrementalFD(List<String> columns, String tableName) {
 		this.columns = columns;
@@ -54,17 +58,28 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 
 	@Override
 	public List<FunctionalDependency> execute(Batch batch) {
+		CardinalitySet bloomExistingCombinations = new CardinalitySet(2);
 		List<InsertStatement> inserts = batch.getInsertStatements();
-		for(InsertStatement insert : inserts) {
+		Set<Set<ColumnValue>> innerDoubleCombinations = innerCombinationsToCheck(batch);
+		for (InsertStatement insert : inserts) {
 			ValueCombination vc = new ValueCombination();
-			for(Entry<String, String> entry : insert.getValueMap().entrySet()) {
+			for (Entry<String, String> entry : insert.getValueMap().entrySet()) {
 				vc.add(entry.getKey(), entry.getValue());
+			}
+			for (Set<ColumnValue> combination : vc.getPowerSet(2)) {
+				if (innerDoubleCombinations.contains(combination) || filter.mightContain(combination)) {
+					OpenBitSet existing = new OpenBitSet(columns.size());
+					for (ColumnValue value : combination) {
+						existing.fastSet(columnsToId.get(value.getColumn()));
+					}
+					bloomExistingCombinations.add(existing);
+				}
 			}
 		}
 		CompressedDiff diff = incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
-		CardinalitySet existingCombinations = getExistingCombinations(diff);
+		CardinalitySet existingCombinations = bloomExistingCombinations;
 
 		boolean validateParallel = true;
 		Validator validator = new Validator(posCover, compressedRecords, plis, validateParallel, memoryGuardian);
@@ -99,9 +114,26 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 		return fds;
 	}
 
+	public Set<Set<ColumnValue>> innerCombinationsToCheck(Batch batch) {
+		List<InsertStatement> inserts = batch.getInsertStatements();
+		Map<Set<ColumnValue>, Integer> innerCombinations = new HashMap<>();
+		for (InsertStatement insert : inserts) {
+			ValueCombination vc = new ValueCombination();
+			for (Entry<String, String> entry : insert.getValueMap().entrySet()) {
+				vc.add(entry.getKey(), entry.getValue());
+			}
+			for (Set<ColumnValue> combination : vc.getPowerSet(2)) {
+				innerCombinations.merge(combination, 1, Integer::sum);
+			}
+		}
+		Set<Set<ColumnValue>> innerDoubleCombinations = innerCombinations.entrySet().stream()
+				.filter(e -> e.getValue() > 1).map(Entry::getKey).collect(Collectors.toSet());
+		return innerDoubleCombinations;
+	}
+
 	public CardinalitySet getExistingCombinations(CompressedDiff diff) {
 		int numAttributes = columns.size();
-		CardinalitySet existingCombinations = new CardinalitySet(numAttributes, numAttributes);
+		CardinalitySet existingCombinations = new CardinalitySet(numAttributes);
 		for (int[] insert : diff.getInsertedRecords()) {
 			OpenBitSet existingCombination = findExistingCombinations(insert);
 			existingCombinations.add(existingCombination);
@@ -150,6 +182,10 @@ public class IncrementalFD implements IncrementalAlgorithm<List<FunctionalDepend
 		incrementalPLIBuilder = new IncrementalPLIBuilder(intermediateDataStructure.getNumRecords(),
 				intermediateDataStructure.getClusterMaps(), columns, intermediateDataStructure.getPliSequence(),
 				filter);
+		int i = 0;
+		for (PositionListIndex pli : incrementalPLIBuilder.getPlis()) {
+			columnsToId.put(columns.get(pli.getAttribute()), i++);
+		}
 	}
 
 	private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {
