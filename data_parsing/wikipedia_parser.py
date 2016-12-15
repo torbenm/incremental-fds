@@ -184,7 +184,7 @@ def getAttributes(attributes_list):
 
 	return attributes
 
-def groupDataIntoBaselineAndUpdates(target_infobox_type):
+def groupDataIntoBaselineAndUpdates(target_infobox_type, attributes, detectAttributes):
 	data_by_title = {}
 
 	with open("files_by_infobox_type/" + target_infobox_type, 'r', encoding = 'utf-8') as infile:
@@ -201,6 +201,9 @@ def groupDataIntoBaselineAndUpdates(target_infobox_type):
 			for update in data["attribute"]:
 				update_id = update["id"]
 
+				if detectAttributes:
+					attributes.add(update["key"].replace("\n", "").replace("\t", "").lower())
+
 				if update_id not in updates_by_id:
 					updates_by_id[update_id] = []
 				updates_by_id[update_id].append(update)
@@ -210,7 +213,7 @@ def groupDataIntoBaselineAndUpdates(target_infobox_type):
 			data_by_title[article_title]["baseline"] = updates_by_id.pop(ordered_update_ids[0])
 			data_by_title[article_title]["updates"] = updates_by_id
 
-	return data_by_title
+	return data_by_title, attributes
 
 def createBaselineAndUpdateDummies(attributes):
 	baseline_data_entry_dummy = collections.OrderedDict()
@@ -237,7 +240,7 @@ def transformDataIntoRecords(data_by_title, baseline_data_entry_dummy, update_st
 	update_statements = []
 
 	for article in data_by_title:
-		# print(article)
+		print(article)
 		baseline_data_entry = copy.deepcopy(baseline_data_entry_dummy)
 		baseline_data_entry["id"] = current_id
 		baseline_data_entry["article_title"] = article.replace("\"", "\"\"")
@@ -289,10 +292,13 @@ def transformDataIntoRecords(data_by_title, baseline_data_entry_dummy, update_st
 
 def parse_specific_data_to_csv(infobox_config, toBeParsed):
 	for target_infobox_type, attributes_list in infobox_config.items():
-		attributes = getAttributes(attributes_list)
+		detectAttributes = len(attributes_list) == 0
+		attributes = set()
+		if not detectAttributes:
+			attributes = getAttributes(attributes_list)
 		
 		print("Now parsing " + target_infobox_type + "...")
-		data_by_title = groupDataIntoBaselineAndUpdates(target_infobox_type)
+		data_by_title, attributes = groupDataIntoBaselineAndUpdates(target_infobox_type, attributes, detectAttributes)
 
 		## baseline data from baseline articles
 
@@ -308,8 +314,7 @@ def parse_specific_data_to_csv(infobox_config, toBeParsed):
 		if not os.path.exists("data/inserts/"):
 			os.makedirs("data/inserts/")
 
-		# write_to_csv(target_infobox_type, baseline_data, update_statements)
-		# write_to_csv_force_inserts(target_infobox_type, baseline_data, update_statements)
+		print("Grouping data...")
 
 		# split baseline in half, so we actually have update statements
 		baseline_inserts = baseline_data[int(len(baseline_data)/2):len(baseline_data)]
@@ -317,8 +322,6 @@ def parse_specific_data_to_csv(infobox_config, toBeParsed):
 
 		#transform into update_statements
 		inserts = []
-		# keys = list(baseline_inserts[0].keys())
-		# print(keys)
 		keys = list(attributes)
 		for baseline_insert in baseline_inserts:
 			insert = copy.deepcopy(update_statements_entry_dummy)
@@ -340,11 +343,10 @@ def parse_specific_data_to_csv(infobox_config, toBeParsed):
 
 		write_to_csv(target_infobox_type, baseline_data, filteredUpdates, attributes)
 
-## IRGENDWAS GEHT HIER NOCH KRASS SCHIEF (TODO)
 def insertInto(updates_and_inserts, insert, update_statements, last_update_index, count):
 	for i in range(last_update_index, len(update_statements)):
 		if int(insert["refers_to"]) <= int(update_statements[i]["refers_to"]):
-			updates_and_inserts.insert(i+count, insert)
+			updates_and_inserts.insert(i + count, insert)
 			count += 1
 			return i, count
 		else:
@@ -494,6 +496,8 @@ def write_to_csv_force_inserts(target_infobox_type, baseline_data, update_statem
 if __name__ == "__main__":
 	# infobox config is a mapping of infobox name (i.e. name of the file to be parsed) to the attributes in this infobox
 	# these attributes have to be manually copied from the corresponding wikipedia page (wikipedia.org/wiki/Template:Infobox_Name)
+	# you can also leave the list empty, then attributes will be detected automatically. 
+	# THIS WILL SRSLY IMPEDE RUNTIME AND DATA QUALITY, THOUGH! better just don't do it...
 
 	infobox_config = {
 		# "infobox disease" : [
@@ -510,90 +514,91 @@ if __name__ == "__main__":
 			# "eMedicineTopic",
 			# "MeshID",
 		# ],
-		"infobox actor" : [
-			"honorific_prefix",
-			"name",
-			"honorific_suffix",
-			"image",
-			"image_upright",
-			"image_size",
-			"alt",
-			"caption",
-			"native_name",
-			"native_name_lang",
-			"pronunciation",
-			"birth_name",
-			"birth_date",
-			"birth_place",
-			"baptised",
-			"disappeared_date",
-			"disappeared_place",
-			"disappeared_status",
-			"death_date",
-			"death_place",
-			"death_cause",
-			"body_discovered",
-			"resting_place",
-			"resting_place_coordinates",
-			"burial_place",
-			"burial_coordinates",
-			"monuments",
-			"residence",
-			"nationality",
-			"other_names",
-			"citizenship",
-			"education",
-			"alma_mater",
-			"occupation",
-			"years_active",
-			"era",
-			"employer",
-			"organization",
-			"agent",
-			"known_for",
-			"notable_works",
-			"style",
-			"home_town",
-			"salary",
-			"net_worth",
-			"height",
-			"weight",
-			"television",
-			"title",
-			"term",
-			"predecessor",
-			"successor",
-			"party",
-			"movement",
-			"opponents",
-			"boards",
-			"religion",
-			"denomination",
-			"criminal_charge",
-			"criminal_penalty",
-			"criminal_status",
-			"spouse",
-			"partner",
-			"children",
-			"parents",
-			"mother",
-			"father",
-			"relatives",
-			"family",
-			"callsign",
-			"awards",
-			"website",
-			"module",
-			"module2",
-			"module3",
-			"module4",
-			"module5",
-			"module6",
-			"signature",
-			"signature_size",
-			"signature_alt",
-			"footnotes",
-		],
+		# "infobox actor" : [
+		# 	"honorific_prefix",
+		# 	"name",
+		# 	"honorific_suffix",
+		# 	"image",
+		# 	"image_upright",
+		# 	"image_size",
+		# 	"alt",
+		# 	"caption",
+		# 	"native_name",
+		# 	"native_name_lang",
+		# 	"pronunciation",
+		# 	"birth_name",
+		# 	"birth_date",
+		# 	"birth_place",
+		# 	"baptised",
+		# 	"disappeared_date",
+		# 	"disappeared_place",
+		# 	"disappeared_status",
+		# 	"death_date",
+		# 	"death_place",
+		# 	"death_cause",
+		# 	"body_discovered",
+		# 	"resting_place",
+		# 	"resting_place_coordinates",
+		# 	"burial_place",
+		# 	"burial_coordinates",
+		# 	"monuments",
+		# 	"residence",
+		# 	"nationality",
+		# 	"other_names",
+		# 	"citizenship",
+		# 	"education",
+		# 	"alma_mater",
+		# 	"occupation",
+		# 	"years_active",
+		# 	"era",
+		# 	"employer",
+		# 	"organization",
+		# 	"agent",
+		# 	"known_for",
+		# 	"notable_works",
+		# 	"style",
+		# 	"home_town",
+		# 	"salary",
+		# 	"net_worth",
+		# 	"height",
+		# 	"weight",
+		# 	"television",
+		# 	"title",
+		# 	"term",
+		# 	"predecessor",
+		# 	"successor",
+		# 	"party",
+		# 	"movement",
+		# 	"opponents",
+		# 	"boards",
+		# 	"religion",
+		# 	"denomination",
+		# 	"criminal_charge",
+		# 	"criminal_penalty",
+		# 	"criminal_status",
+		# 	"spouse",
+		# 	"partner",
+		# 	"children",
+		# 	"parents",
+		# 	"mother",
+		# 	"father",
+		# 	"relatives",
+		# 	"family",
+		# 	"callsign",
+		# 	"awards",
+		# 	"website",
+		# 	"module",
+		# 	"module2",
+		# 	"module3",
+		# 	"module4",
+		# 	"module5",
+		# 	"module6",
+		# 	"signature",
+		# 	"signature_size",
+		# 	"signature_alt",
+		# 	"footnotes",
+		# ],
+		"infobox actor" : [],
 	}
 
 	# select what types of update statements you want
