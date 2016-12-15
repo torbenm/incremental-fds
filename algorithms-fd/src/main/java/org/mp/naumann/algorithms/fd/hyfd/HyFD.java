@@ -8,6 +8,7 @@ import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
@@ -36,6 +37,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.logging.Level;
 
+import static org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion.LATEST;
+
 
 public class HyFD implements FunctionalDependencyAlgorithm {
 
@@ -60,8 +63,15 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	private int numRecords;
 
 	private List<Integer> pliSequence;
+    private final IncrementalFDVersion version;
+
     public HyFD(){
+        this(LATEST);
         FDLogger.setCurrentAlgorithm(this);
+    }
+
+    public HyFD(IncrementalFDVersion version){
+        this.version = version;
     }
 
 	private BloomFilter<Set<ColumnValue>> filter;
@@ -72,9 +82,13 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	}
 
 	public HyFD(Table table, FunctionalDependencyResultReceiver resultReceiver) {
-        this();
+        this(LATEST, table, resultReceiver);
         configure(table, resultReceiver);
 	}
+    public HyFD(IncrementalFDVersion version, Table table, FunctionalDependencyResultReceiver resultReceiver) {
+        this(version);
+        configure(table, resultReceiver);
+    }
 
 	public void configure(Table table, FunctionalDependencyResultReceiver resultReceiver){
         this.table = table;
@@ -115,7 +129,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 		// Calculate plis
 		FDLogger.log(Level.FINER, "Reading data and calculating plis ...");
-		PLIBuilder pliBuilder = new PLIBuilder();
+		PLIBuilder pliBuilder = new PLIBuilder(this.version);
 		List<PositionListIndex> plis = pliBuilder.getPLIs(tableInput, this.numAttributes,
 				this.valueComparator.isNullEqualNull());
 		this.closeInput(tableInput);

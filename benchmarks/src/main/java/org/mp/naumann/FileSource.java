@@ -1,7 +1,6 @@
 package org.mp.naumann;
 
 import org.apache.commons.io.FileUtils;
-import org.mp.naumann.processor.batch.source.BatchSource;
 import org.mp.naumann.processor.batch.source.CsvFileBatchSource;
 
 import java.io.BufferedReader;
@@ -11,7 +10,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.math.BigInteger;
-import java.nio.file.Files;
 import java.security.SecureRandom;
 
 import ResourceConnection.ResourceConnector;
@@ -79,10 +77,13 @@ public class FileSource {
             bufferedReader.close();
             stream.close();
             hasSplit = true;
+            System.out.println("Finished preparing files.");
         }
+
     }
 
     public void cleanup() throws IOException {
         FileUtils.deleteDirectory(new File(TEMP_DIR));
+        System.out.println("Finished deleting files.");
     }
 }

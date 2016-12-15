@@ -5,6 +5,7 @@ import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedEvent;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedEventListener;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.benchmarks.IncrementalFDBenchmark;
 import org.mp.naumann.database.ConnectionException;
@@ -21,6 +22,7 @@ public class InitialAndIncrementalOneBatch implements TestCase, SpeedEventListen
     private final long splitLine;
     private final int batchSize;
     private final String filename;
+    private int stopAfter;
     private final IncrementalFDResultListener resultListener = new IncrementalFDResultListener();
     private SpeedEvent initialOverAll, initialForIncremental;
     private final LinkedList<SpeedEvent> batchEvents;
@@ -29,10 +31,11 @@ public class InitialAndIncrementalOneBatch implements TestCase, SpeedEventListen
 
     private final IncrementalFDBenchmark benchmark;
 
-    public InitialAndIncrementalOneBatch(long splitLine, int batchSize, String filename, IncrementalFDBenchmark benchmark) {
+    public InitialAndIncrementalOneBatch(long splitLine, int batchSize, String filename, IncrementalFDBenchmark benchmark, int stopAfter) {
         this.splitLine = splitLine;
         this.batchSize = batchSize;
         this.filename = filename;
+        this.stopAfter = stopAfter;
         this.batchEvents = new LinkedList<>();
         this.benchmark = benchmark;
         SpeedBenchmark.addEventListener(this);
@@ -53,7 +56,7 @@ public class InitialAndIncrementalOneBatch implements TestCase, SpeedEventListen
         benchmark.runInitial();
 
         status = 1;
-        benchmark.constructInitialOnly(
+        benchmark.constructInitialOnly(IncrementalFDVersion.HYFD_ORIGINAL,
                 "Initial algorithm for Baseline + 1 Batch",
                 ConnectionManager.getCsvConnectionFromAbsolutePath(FileSource.TEMP_DIR, ","),
                 "benchmark",
@@ -67,7 +70,8 @@ public class InitialAndIncrementalOneBatch implements TestCase, SpeedEventListen
                 ConnectionManager.getCsvConnectionFromAbsolutePath(FileSource.TEMP_DIR, ","),
                 "benchmark",
                 "baseline",
-                batchSize, -1);
+                batchSize,
+                stopAfter);
         benchmark.runInitial();
         status = 3;
         benchmark.runIncremental();
@@ -84,16 +88,19 @@ public class InitialAndIncrementalOneBatch implements TestCase, SpeedEventListen
         return new Object[]{
                 new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
                 filename,
-                benchmark.getVersion(),
+                benchmark.getVersionCode(),
+                benchmark.getVersionName(),
                 splitLine,
                 batchSize,
-                initialOverAll.getDuration() + " ms",
-                initialForIncremental.getDuration() + " ms",
-                batchEvents.peek().getDuration() + " ms",
+                initialOverAll.getDuration(),
+                initialForIncremental.getDuration(),
+                batchEvents.peek().getDuration(),
                 batchEvents.size(),
-                getAverageTime() + " ms",
+                getAverageTime(),
+                getMedianTime(),
                 resultListener.getValidationCount(),
-                resultListener.getPrunedCount()
+                resultListener.getPrunedCount(),
+                resultListener.getFDs().size()
         };
     }
 
@@ -109,8 +116,20 @@ public class InitialAndIncrementalOneBatch implements TestCase, SpeedEventListen
     }
 
     private long getAverageTime(){
-        long sum = batchEvents.stream().mapToLong(SpeedEvent::getDuration).sum();
-        return sum/batchEvents.size();
+        return (long)batchEvents
+                .stream()
+                .mapToLong(SpeedEvent::getDuration)
+                .average()
+                .orElse(-1);
+    }
+    private long getMedianTime(){
+        return batchEvents
+                .stream()
+                .mapToLong(SpeedEvent::getDuration)
+                .sorted()
+                .skip(batchEvents.size() / 2)
+                .findFirst()
+                .orElse(-1);
     }
 
 }
