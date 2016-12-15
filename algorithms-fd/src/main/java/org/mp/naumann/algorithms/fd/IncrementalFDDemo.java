@@ -37,8 +37,8 @@ public class IncrementalFDDemo {
 			List<FunctionalDependency> fds = hyfd.execute();
             FDLogger.log(Level.INFO, String.format("Original FD count: %s", fds.size()));
 			FDLogger.log(Level.INFO, String.format("Batch size: %s", batchSize));
-			FDLogger.log(Level.FINER, "\n");
-			fds.forEach(fd -> FDLogger.log(Level.FINER, fd.toString()));
+			FDLogger.log(Level.FINEST, "\n");
+			fds.forEach(fd -> FDLogger.log(Level.FINEST, fd.toString()));
 			FDIntermediateDatastructure ds = hyfd.getIntermediateDataStructure();
 
 			// create batch source & processor for inserts

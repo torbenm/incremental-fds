@@ -82,6 +82,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
 	@Override
 	public IncrementalFDResult execute(Batch batch) {
+		FDLogger.log(Level.FINE, "Started IncrementalFD for new Batch");
 		if (!initialized) {
 			initialize();
 			initialized = true;
@@ -97,6 +98,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		if (TYPE == Type.SIMPLE) {
 			existingCombinations = getExistingCombinationsSimple(diff);
 		}
+		FDLogger.log(Level.FINE, "Finished collecting existing combinations");
 		boolean validateParallel = true;
 		Validator validator = new Validator(posCover, compressedRecords, plis, validateParallel, memoryGuardian);
 
@@ -112,9 +114,9 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 					pruned++;
 				}
 			}
-			FDLogger.log(Level.FINER, "Will validate: ");
+			FDLogger.log(Level.FINEST, "Will validate: ");
 			toValidate.stream().map(this::toFds).flatMap(Collection::stream)
-					.forEach(v -> FDLogger.log(Level.FINER, v.toString()));
+					.forEach(v -> FDLogger.log(Level.FINEST, v.toString()));
 			validations += toValidate.size();
 			try {
 				validator.validate(level, currentLevel);

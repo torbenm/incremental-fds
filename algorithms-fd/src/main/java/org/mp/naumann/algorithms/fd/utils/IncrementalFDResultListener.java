@@ -17,7 +17,7 @@ public class IncrementalFDResultListener implements ResultListener<IncrementalFD
     public void receiveResult(IncrementalFDResult result) {
         fds = result.getFDs();
         FDLogger.log(Level.FINE, String.format("New FD count: %s", fds.size()));
-        fds.forEach(fd -> FDLogger.log(Level.FINER, fd.toString()));
+        fds.forEach(fd -> FDLogger.log(Level.FINEST, fd.toString()));
         validationCount += result.getValidationCount();
         prunedCount += result.getPrunedCount();
     }
