@@ -77,9 +77,11 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getClusterMaps();
 		if(VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM){
 			bloomPruning = new SimpleBloomPruningStrategy(columns, numRecords, pliSequence, clusterMaps);
+			bloomPruning.initialize();
 		}
 		if(VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED){
 			advancedBloomPruning = new AdvancedBloomPruningStrategy(columns, numRecords, pliSequence, clusterMaps, posCover);
+			advancedBloomPruning.initialize();
 		}
 		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
 			simplePruning = new SimplePruningStrategy(columns);

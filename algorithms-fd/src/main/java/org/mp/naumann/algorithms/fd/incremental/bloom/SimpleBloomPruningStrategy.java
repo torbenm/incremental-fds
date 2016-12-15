@@ -4,11 +4,13 @@ import com.google.common.hash.BloomFilter;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
+import org.mp.naumann.algorithms.fd.utils.PowerSet;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -75,5 +77,20 @@ public class SimpleBloomPruningStrategy extends BloomPruningStrategy {
         }
         return innerCombinations.entrySet().stream()
                 .filter(e -> e.getValue() > 1).map(Entry::getKey).collect(Collectors.toSet());
+    }
+
+    private static class ValueCombination {
+
+        private final Set<ColumnValue> values = new HashSet<>();
+
+        private ValueCombination add(String columnName, String value) {
+            values.add(new ColumnValue(columnName, value));
+            return this;
+        }
+
+        private Set<Set<ColumnValue>> getPowerSet(int maxSize) {
+            return PowerSet.getPowerSet(values, maxSize);
+        }
+
     }
 }
