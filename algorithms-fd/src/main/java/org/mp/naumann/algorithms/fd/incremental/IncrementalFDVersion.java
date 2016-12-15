@@ -8,16 +8,16 @@ public enum IncrementalFDVersion {
 
     private final PruningStrategy pruningStrategy;
     private final String versionName;
-    private final int shortid;
+    private final int id;
 
 
     public static final IncrementalFDVersion LATEST = V0_2;
     public static final IncrementalFDVersion HYFD_ORIGINAL = V0_0;
 
-    IncrementalFDVersion(PruningStrategy pruningStrategy, String versionName, int shortid) {
+    IncrementalFDVersion(PruningStrategy pruningStrategy, String versionName, int id) {
         this.pruningStrategy = pruningStrategy;
         this.versionName = versionName;
-        this.shortid = shortid;
+        this.id = id;
     }
 
 
@@ -25,8 +25,15 @@ public enum IncrementalFDVersion {
         return versionName;
     }
 
-    public int getShortId() {
-        return shortid;
+    public int getId() {
+        return id;
+    }
+
+    public static IncrementalFDVersion valueOf(int shortid){
+        for(IncrementalFDVersion ifdv : IncrementalFDVersion.values())
+            if(ifdv.id == shortid)
+                return ifdv;
+        return LATEST; // Fallback to latest
     }
 
     public PruningStrategy getPruningStrategy() {
@@ -37,10 +44,4 @@ public enum IncrementalFDVersion {
         NONE, SIMPLE, BLOOM
     }
 
-    public static IncrementalFDVersion fromShortId(int shortid){
-        for(IncrementalFDVersion ifdv : IncrementalFDVersion.values())
-            if(ifdv.shortid == shortid)
-                return ifdv;
-        return LATEST; // Fallback to latest
-    }
 }

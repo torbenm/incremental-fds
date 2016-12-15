@@ -12,7 +12,6 @@ import org.mp.naumann.testcases.InitialAndIncrementalOneBatch;
 import org.mp.naumann.testcases.TestCase;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.logging.Level;
 
 public class BenchmarksApplication {
@@ -42,7 +41,7 @@ public class BenchmarksApplication {
             TestCase t = new InitialAndIncrementalOneBatch(splitLine,
                     batchSize,
                     dataSet,
-                    new IncrementalFDBenchmark(IncrementalFDVersion.fromShortId(version)),
+                    new IncrementalFDBenchmark(IncrementalFDVersion.valueOf(version)),
                     stopAfter
             );
             t.execute();

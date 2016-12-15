@@ -36,7 +36,8 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, FDIntermediateDatastructure> {
 
 
-	private IncrementalFDVersion VERSION = IncrementalFDVersion.LATEST;
+	private final IncrementalFDVersion VERSION;
+    private final boolean VALIDATE_PARALLEL = true;
 
 	private final List<String> columns;
 	private FDTree posCover;
@@ -51,13 +52,13 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 	private final Map<String, Integer> columnsToId = new HashMap<>();
 
     public IncrementalFD(List<String> columns, String tableName, IncrementalFDVersion version){
-        this(columns, tableName);
+        this.columns = columns;
+        this.tableName = tableName;
         this.VERSION = version;
     }
 
 	public IncrementalFD(List<String> columns, String tableName) {
-		this.columns = columns;
-		this.tableName = tableName;
+		this(columns, tableName, IncrementalFDVersion.LATEST);
 	}
 
 	@Override
@@ -99,8 +100,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
 			existingCombinations = getExistingCombinationsSimple(diff);
 		}
-		boolean validateParallel = true;
-		Validator validator = new Validator(posCover, compressedRecords, plis, validateParallel, memoryGuardian);
+		Validator validator = new Validator(posCover, compressedRecords, plis, VALIDATE_PARALLEL, memoryGuardian);
 
 		int pruned = 0;
 		int validations = 0;
