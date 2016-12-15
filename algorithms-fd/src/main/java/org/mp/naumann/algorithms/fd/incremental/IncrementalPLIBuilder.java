@@ -23,6 +23,7 @@ import java.util.Set;
 public class IncrementalPLIBuilder {
 
 	private int numRecords;
+    private IncrementalFDVersion version;
 	private List<HashMap<String, IntArrayList>> clusterMaps;
 	private List<PositionListIndex> plis;
 	private final List<String> columns;
@@ -30,12 +31,13 @@ public class IncrementalPLIBuilder {
 	private int[][] compressedRecords;
 	private BloomFilter<Set<ColumnValue>> filter;
 
-	public IncrementalPLIBuilder(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<String> columns, List<Integer> pliSequence, BloomFilter<Set<ColumnValue>> filter) {
+	public IncrementalPLIBuilder(IncrementalFDVersion version, int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<String> columns, List<Integer> pliSequence, BloomFilter<Set<ColumnValue>> filter) {
 		this.numRecords = numRecords;
 		this.clusterMaps = clusterMaps;
 		this.columns = columns;
 		this.pliSequence = pliSequence;
 		this.filter = filter;
+        this.version = version;
 		updateDataStructures();
 	}
 
@@ -60,9 +62,11 @@ public class IncrementalPLIBuilder {
 			}
 			insertedIds.add(numRecords);
 			numRecords++;
-			for(Set<ColumnValue> combination : vc.getPowerSet(2)) {
-				filter.put(combination);
-			}
+            if(version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM){
+                for(Set<ColumnValue> combination : vc.getPowerSet(2)) {
+                    filter.put(combination);
+                }
+            }
 		}
 		updateDataStructures();
 		return buildDiff(insertedIds);
@@ -71,10 +75,12 @@ public class IncrementalPLIBuilder {
 	private CompressedDiff buildDiff(List<Integer> insertedIds) {
 		int[][] insertedRecords = new int[insertedIds.size()][];
 		int i = 0;
-		for(int id : insertedIds) {
-			insertedRecords[i] = compressedRecords[id];
-			i++;
-		}
+        if(this.version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE){
+            for(int id : insertedIds) {
+                insertedRecords[i] = compressedRecords[id];
+                i++;
+            }
+        }
 		int[][] deletedRecords = new int[0][];
 		int[][] oldUpdatedRecords = new int[0][];
 		int[][] newUpdatedRecords = new int[0][];

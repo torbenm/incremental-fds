@@ -67,6 +67,12 @@ public class ConnectionManager {
         return getConnection("org.relique.jdbc.csv.CsvDriver", ci);
     }
 
+    public static Connection getCsvConnectionFromAbsolutePath(String absoluteFilePath, String separator) throws ConnectionException {
+        ConnectionInfo ci = new ConnectionInfo();
+        ci.connectionString = "jdbc:relique:csv:" + absoluteFilePath + "?separator=" + separator;
+        return getConnection("org.relique.jdbc.csv.CsvDriver", ci);
+    }
+
     public static Connection getCsvConnection(String csvDir) throws ConnectionException {
         return getCsvConnection(csvDir, defaultCsvSeparator);
     }
