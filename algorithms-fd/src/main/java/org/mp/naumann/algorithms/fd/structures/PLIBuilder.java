@@ -19,7 +19,6 @@ package org.mp.naumann.algorithms.fd.structures;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
 import org.mp.naumann.algorithms.fd.structures.ValueCombination.ColumnValue;
 import org.mp.naumann.database.TableInput;
@@ -44,7 +43,7 @@ public class PLIBuilder {
 
     public PLIBuilder(IncrementalFDVersion version) {
         this.version = version;
-        if(version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM){
+        if(version.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.BLOOM){
             filter = BloomFilter.create(new ValueCombinationFunnel(), 100_000);
         }else{
             filter = null;
@@ -104,7 +103,7 @@ public class PLIBuilder {
 			if (this.numRecords == Integer.MAX_VALUE - 1)
 				throw new RuntimeException("PLI encoding into integer based PLIs is not possible, because the number of records in the dataset exceeds Integer.MAX_VALUE. Use long based plis instead! (NumRecords = " + this.numRecords + " and Integer.MAX_VALUE = " + Integer.MAX_VALUE);
 
-            if(version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM){
+            if(version.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.BLOOM){
                 for(Set<ColumnValue> combination : vc.getPowerSet(2)) {
                     filter.put(combination);
                 }

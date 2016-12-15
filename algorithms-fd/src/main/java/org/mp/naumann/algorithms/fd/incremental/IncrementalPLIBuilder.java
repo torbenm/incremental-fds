@@ -60,7 +60,7 @@ public class IncrementalPLIBuilder {
                 i++;
             }
             insertedIds.add(numRecords++);
-            if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
+            if (version.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.BLOOM) {
                 for (Set<ColumnValue> combination : vc.getPowerSet(2)) {
                     filter.put(combination);
                 }
@@ -73,7 +73,7 @@ public class IncrementalPLIBuilder {
     private CompressedDiff buildDiff(List<Integer> insertedIds) {
         int[][] insertedRecords = new int[insertedIds.size()][];
         int i = 0;
-        if (this.version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
+        if (this.version.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.SIMPLE) {
             for (int id : insertedIds) {
                 insertedRecords[i] = compressedRecords[id];
                 i++;

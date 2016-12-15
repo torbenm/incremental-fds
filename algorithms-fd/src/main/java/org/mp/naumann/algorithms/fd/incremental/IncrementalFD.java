@@ -91,13 +91,13 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		}
 		SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
 		CardinalitySet existingCombinations = null;
-		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
+		if (VERSION.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.BLOOM) {
 			existingCombinations = getExistingCombinationsWithBloom(batch);
 		}
 		CompressedDiff diff = incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
-		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
+		if (VERSION.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.SIMPLE) {
 			existingCombinations = getExistingCombinationsSimple(diff);
 		}
 		Validator validator = new Validator(posCover, compressedRecords, plis, VALIDATE_PARALLEL, memoryGuardian);
