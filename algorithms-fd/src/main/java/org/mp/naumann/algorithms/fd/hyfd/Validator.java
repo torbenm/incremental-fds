@@ -1,7 +1,10 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -12,12 +15,14 @@ import java.util.logging.Level;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.incremental.BitSetUtils;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.utils.PrintUtils;
 
 public class Validator {
 
@@ -29,10 +34,11 @@ public class Validator {
 	private float efficiencyThreshold;
 	private MemoryGuardian memoryGuardian;
 	private ExecutorService executor;
-	
+    private final Map<OpenBitSet, List<Set<Integer>>> invalidationsMap;
+
 	private int level = 0;
 
-	public Validator(FDSet negCover, FDTree posCover, int numRecords, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
+	public Validator(FDSet negCover, FDTree posCover, int numRecords, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian, Map<OpenBitSet, List<Set<Integer>>> invalidationsMap) {
 		this.negCover = negCover;
 		this.posCover = posCover;
 		this.numRecords = numRecords;
@@ -40,8 +46,9 @@ public class Validator {
 		this.compressedRecords = compressedRecords;
 		this.efficiencyThreshold = efficiencyThreshold;
 		this.memoryGuardian = memoryGuardian;
-		
-		if (parallel) {
+        this.invalidationsMap = invalidationsMap;
+
+        if (parallel) {
 			int numThreads = Runtime.getRuntime().availableProcessors();
 			this.executor = Executors.newFixedThreadPool(numThreads);
 		}
@@ -94,7 +101,8 @@ public class Validator {
 				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
 					if (!Validator.this.plis.get(rhsAttr).isConstant(Validator.this.numRecords)) {
 						element.removeFd(rhsAttr);
-						result.invalidFDs.add(new FD(lhs, rhsAttr));
+                        //TODO: we could dive in here
+                        result.invalidFDs.add(new FD(lhs, rhsAttr));
 					}
 					result.intersections++;
 				}
@@ -105,6 +113,9 @@ public class Validator {
 				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
 					if (!Validator.this.plis.get(lhsAttribute).refines(Validator.this.compressedRecords, rhsAttr)) {
 						element.removeFd(rhsAttr);
+                        PrintUtils.print(BitSetUtils.toString(lhs));
+
+                        //TODO: we could dive in here
 						result.invalidFDs.add(new FD(lhs, rhsAttr));
 					}
 					result.intersections++;
@@ -122,9 +133,13 @@ public class Validator {
 				
 				rhs.andNot(validRhs); // Now contains all invalid FDs
 				element.setFds(validRhs); // Sets the valid FDs in the FD tree
-				
-				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1))
-					result.invalidFDs.add(new FD(lhs, rhsAttr));
+
+                //TODO: we could dive in here.
+				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
+                    PrintUtils.print(BitSetUtils.toString(lhs));
+
+                    result.invalidFDs.add(new FD(lhs, rhsAttr));
+                }
 			}
 			return result;
 		}
@@ -300,5 +315,16 @@ public class Validator {
 		
 		return childLhs;
 	}
+
+    private void addInvalidation(OpenBitSet attrs, List<Integer> invalidatingValues){
+        if(!this.invalidationsMap.containsKey(attrs)) {
+            this.invalidationsMap.put(attrs, new ArrayList<>());
+        }
+        while(this.invalidationsMap.get(attrs).size() < invalidatingValues.size())
+            this.invalidationsMap.get(attrs).add(new HashSet<>());
+        for(int i = 0; i < invalidatingValues.size(); i++){
+            this.invalidationsMap.get(attrs).get(i).add(invalidatingValues.get(i));
+        }
+    }
 
 }

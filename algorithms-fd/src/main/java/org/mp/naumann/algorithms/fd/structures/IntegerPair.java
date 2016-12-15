@@ -17,4 +17,9 @@ public class IntegerPair {
 	public int b() {
 		return this.b;
 	}
+
+	@Override
+	public String toString(){
+        return "[a: "+a+", b: "+b+"]";
+    }
 }

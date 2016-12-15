@@ -3,14 +3,17 @@ package org.mp.naumann.algorithms.fd.hyfd;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
+import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
+import org.mp.naumann.algorithms.fd.incremental.BitSetUtils;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
-import org.mp.naumann.algorithms.fd.structures.FDViolation;
+import org.mp.naumann.algorithms.fd.structures.IntColumnValue;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
+import org.mp.naumann.algorithms.fd.utils.PrintUtils;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
@@ -33,6 +36,7 @@ import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,7 +70,9 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 	private List<Integer> pliSequence;
     private final IncrementalFDVersion version;
-    private Map<Integer, List<FDViolation>> violations;
+    private final Map<OpenBitSet, List<Set<Integer>>> invalidationsMap = new HashMap<>();
+    private Map<IntColumnValue, Set<OpenBitSet>> violatingValues;
+
 
     public HyFD(){
         this(LATEST);
@@ -191,11 +197,11 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 		float efficiencyThreshold = 0.01f;
 		Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, efficiencyThreshold,
-				this.valueComparator, this.memoryGuardian);
+				this.valueComparator, this.memoryGuardian, invalidationsMap);
 		Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
 		boolean validateParallel = true;
 		Validator validator = new Validator(negCover, posCover, numRecords, compressedRecords, plis,
-				efficiencyThreshold, validateParallel, this.memoryGuardian);
+				efficiencyThreshold, validateParallel, this.memoryGuardian, invalidationsMap);
 
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
@@ -209,7 +215,16 @@ public class HyFD implements FunctionalDependencyAlgorithm {
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round "+i++);
 		} while (comparisonSuggestions != null);
 
-		// Output all valid FDs
+        this.violatingValues = buildViolatingValues();
+       /* sampler.getInvalidationsMap().entrySet().stream().map(e -> BitSetUtils.toString(e.getKey())+": "+e.getValue()).forEach(PrintUtils::print);
+        PrintUtils.print("==================");
+        for(Map.Entry<IntColumnValue, Set<OpenBitSet>> obs : violatingValues.entrySet()){
+            PrintUtils.print(obs.getKey());
+            obs.getValue().stream().map(BitSetUtils::toString).forEach(PrintUtils::print);
+        } */
+
+
+        // Output all valid FDs
 		FDLogger.log(Level.FINER, "Translating FD-tree into result format ...");
 
 		// int numFDs = posCover.writeFunctionalDependencies("HyFD_backup_" +
@@ -238,6 +253,24 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		}
 	}
 
+	private Map<IntColumnValue, Set<OpenBitSet>> buildViolatingValues(){
+        Map<IntColumnValue, Set<OpenBitSet>> violatingValues = new HashMap<>();
+        for(Map.Entry<OpenBitSet, List<Set<Integer>>> entries : invalidationsMap.entrySet()){
+            int column = -1;
+            for(Set<Integer> colvalues : entries.getValue()){
+                column = entries.getKey().nextSetBit(column+1);
+                for(int value : colvalues){
+                    IntColumnValue colval = new IntColumnValue(column, value);
+
+                    if(!violatingValues.containsKey(colval))
+                        violatingValues.put(colval, new HashSet<>());
+                    violatingValues.get(colval).add(entries.getKey());
+                }
+            }
+        }
+        return violatingValues;
+    }
+
 	private void closeInput(TableInput tableInput) {
 		FileUtils.close(tableInput);
 	}
@@ -256,7 +289,11 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		return record;
 	}
 
-	public List<HashMap<String,IntArrayList>> getClusterMaps() {
+    public Map<IntColumnValue, Set<OpenBitSet>> getViolatingValues() {
+        return violatingValues;
+    }
+
+    public List<HashMap<String,IntArrayList>> getClusterMaps() {
 		return clusterMaps;
 	}
 
@@ -268,7 +305,4 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		return pliSequence;
 	}
 
-    public Map<Integer, List<FDViolation>> getViolations() {
-        return violations;
-    }
 }

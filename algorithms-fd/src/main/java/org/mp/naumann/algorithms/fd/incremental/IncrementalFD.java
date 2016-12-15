@@ -1,6 +1,7 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
+import org.mp.naumann.algorithms.fd.structures.IntColumnValue;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.ValueCombination;
 import org.mp.naumann.algorithms.fd.structures.ValueCombination.ColumnValue;
@@ -46,6 +48,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 	private MemoryGuardian memoryGuardian = new MemoryGuardian(true);
 	private FDIntermediateDatastructure intermediateDatastructure;
 	private boolean initialized = false;
+    private Map<IntColumnValue, Set<OpenBitSet>> violatingValues;
 
 	private IncrementalPLIBuilder incrementalPLIBuilder;
 	private BloomFilter<Set<ColumnValue>> filter;
@@ -66,6 +69,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		return resultListeners;
 	}
 
+
 	@Override
 	public void addResultListener(ResultListener<IncrementalFDResult> listener) {
 		this.resultListeners.add(listener);
@@ -74,6 +78,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 	public void initialize() {
 		this.posCover = intermediateDatastructure.getPosCover();
 		this.filter = intermediateDatastructure.getFilter();
+        this.violatingValues = intermediateDatastructure.getViolatingValues();
 		incrementalPLIBuilder = new IncrementalPLIBuilder(this.VERSION, intermediateDatastructure.getNumRecords(),
 				intermediateDatastructure.getClusterMaps(), columns, intermediateDatastructure.getPliSequence(),
 				filter);
@@ -100,6 +105,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		if (VERSION.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.SIMPLE) {
 			existingCombinations = getExistingCombinationsSimple(diff);
 		}
+
 		Validator validator = new Validator(posCover, compressedRecords, plis, VALIDATE_PARALLEL, memoryGuardian);
 
 		int pruned = 0;

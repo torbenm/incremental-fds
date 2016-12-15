@@ -3,6 +3,7 @@ package org.mp.naumann.algorithms.fd.structures;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.incremental.BitSetUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,5 +56,14 @@ public class FDSet {
 		this.depth = newDepth;
 		this.maxDepth = newDepth;
 	}
+
+	public String toString(){
+        for(ObjectOpenHashSet<OpenBitSet> obs : this.fdLevels){
+            for(OpenBitSet o : obs){
+                System.out.println(BitSetUtils.toString(o));
+            }
+        }
+        return "";
+    }
 
 }

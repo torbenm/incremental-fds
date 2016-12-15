@@ -3,20 +3,24 @@ package org.mp.naumann.algorithms.fd.hyfd;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.utils.PrintUtils;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
-
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.logging.Level;
 
 class Sampler {
@@ -29,8 +33,10 @@ class Sampler {
 	private ValueComparator valueComparator;
 	private List<AttributeRepresentant> attributeRepresentants = null;
 	private MemoryGuardian memoryGuardian;
+    private final IncrementalFDVersion version;
+    private final Map<OpenBitSet, List<Set<Integer>>> invalidationsMap;
 
-	public Sampler(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian) {
+	public Sampler(IncrementalFDVersion version, FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian, Map<OpenBitSet, List<Set<Integer>>> invalidationsMap) {
 		this.negCover = negCover;
 		this.posCover = posCover;
 		this.compressedRecords = compressedRecords;
@@ -38,7 +44,12 @@ class Sampler {
 		this.efficiencyThreshold = efficiencyThreshold;
 		this.valueComparator = valueComparator;
 		this.memoryGuardian = memoryGuardian;
-	}
+        this.version = version;
+        this.invalidationsMap = invalidationsMap;
+    }
+    public Sampler(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian, Map<OpenBitSet, List<Set<Integer>>> invalidationsMap) {
+        this(IncrementalFDVersion.LATEST, negCover, posCover, compressedRecords, plis, efficiencyThreshold, valueComparator, memoryGuardian, invalidationsMap);
+    }
 
 	public FDList enrichNegativeCover(List<IntegerPair> comparisonSuggestions) {
 		int numAttributes = this.compressedRecords[0].length;
@@ -47,8 +58,9 @@ class Sampler {
 		FDList newNonFds = new FDList(numAttributes, this.negCover.getMaxDepth());
 		OpenBitSet equalAttrs = new OpenBitSet(this.posCover.getNumAttributes());
 		for (IntegerPair comparisonSuggestion : comparisonSuggestions) {
-			this.match(equalAttrs, comparisonSuggestion.a(), comparisonSuggestion.b());
-			
+
+			this.match(equalAttrs,comparisonSuggestion.a(), comparisonSuggestion.b());
+
 			if (!this.negCover.contains(equalAttrs)) {
 				OpenBitSet equalAttrsCopy = equalAttrs.clone();
 				this.negCover.add(equalAttrsCopy);
@@ -100,7 +112,6 @@ class Sampler {
 			if (attributeRepresentant.getEfficiency() != 0)
 				queue.add(attributeRepresentant);
 		}
-		
 		return newNonFds;
 	}
 
@@ -231,7 +242,6 @@ class Sampler {
 					int partnerRecordId = cluster.getInt(recordIndex + this.windowDistance);
 					
 					this.sampler.match(equalAttrs, compressedRecords[recordId], compressedRecords[partnerRecordId]);
-					
 					if (!this.negCover.contains(equalAttrs)) {
 						OpenBitSet equalAttrsCopy = equalAttrs.clone();
 						this.negCover.add(equalAttrsCopy);
@@ -251,15 +261,53 @@ class Sampler {
 			return numComparisons != 0;
 		}
 	}
-	
-	private void match(OpenBitSet equalAttrs, int t1, int t2) {
-		this.match(equalAttrs, this.compressedRecords[t1], this.compressedRecords[t2]);
+
+    public Map<OpenBitSet, List<Set<Integer>>> getInvalidationsMap() {
+        return invalidationsMap;
+    }
+
+    private void match(OpenBitSet equalAttrs, int t1, int t2) {
+		    this.match(equalAttrs, this.compressedRecords[t1], this.compressedRecords[t2]);
 	}
+
+    private void match(OpenBitSet equalAttrs,  int[] t1, int[] t2) {
+       if(version.getDeletePruningStrategy() == IncrementalFDVersion.DeletePruningStrategy.ANNOTATION)
+           this.matchAnnotationPruning(equalAttrs, t1, t2);
+        else
+            this.matchNoPruning(equalAttrs, t1, t2);
+    }
 	
-	private void match(OpenBitSet equalAttrs, int[] t1, int[] t2) {
-		equalAttrs.clear(0, t1.length);
-		for (int i = 0; i < t1.length; i++)
-			if (this.valueComparator.isEqual(t1[i], t2[i]))
-				equalAttrs.set(i);
+	private void matchNoPruning(OpenBitSet equalAttrs,  int[] t1, int[] t2) {
+        equalAttrs.clear(0, t1.length);
+		for (int i = 0; i < t1.length; i++) {
+            if (this.valueComparator.isEqual(t1[i], t2[i])) {
+                equalAttrs.set(i);
+            }
+        }
 	}
+    private void matchAnnotationPruning(OpenBitSet equalAttrs, int[] t1, int[] t2) {
+        List<Integer> invalidatingValues = new ArrayList<>();
+        equalAttrs.clear(0, t1.length);
+        for (int i = 0; i < t1.length; i++) {
+            if (this.valueComparator.isEqual(t1[i], t2[i])) {
+                equalAttrs.set(i);
+                invalidatingValues.add(t1[i]);
+            }
+        }
+        addInvalidation(equalAttrs, invalidatingValues);
+    }
+
+	private void addInvalidation(OpenBitSet attrsorg, List<Integer> invalidatingValues){
+        OpenBitSet attrs = attrsorg.clone();
+        if(!this.invalidationsMap.containsKey(attrs)) {
+            this.invalidationsMap.put(attrs, new ArrayList<>());
+        }
+        while(this.invalidationsMap.get(attrs).size() < invalidatingValues.size())
+            this.invalidationsMap.get(attrs).add(new HashSet<>());
+        for(int i = 0; i < invalidatingValues.size(); i++){
+            this.invalidationsMap.get(attrs).get(i).add(invalidatingValues.get(i));
+        }
+    }
+
+
 }

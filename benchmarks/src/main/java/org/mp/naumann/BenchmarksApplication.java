@@ -27,7 +27,7 @@ public class BenchmarksApplication {
     }
 
     public static void main(String[] args) {
-        int version = args.length >= 1 ? Integer.valueOf(args[0]) : 1;
+        int version = args.length >= 1 ? Integer.valueOf(args[0]) : 2;
         int batchSize = args.length >= 2 ? Integer.valueOf(args[1]) : 100;
         long splitLine = args.length >= 3 ? Long.valueOf(args[2]) : 15000;
         String dataSet = args.length >= 4 ? args[3] : "benchmark.adultfull.csv";

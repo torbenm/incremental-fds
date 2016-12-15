@@ -31,7 +31,7 @@ public class HyFDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDep
                 hyfd.getNumRecords(),
                 hyfd.getPliSequence(),
                 hyfd.getFilter(),
-                hyfd.getViolations());
+                hyfd.getViolatingValues());
 	}
 
 	@Override

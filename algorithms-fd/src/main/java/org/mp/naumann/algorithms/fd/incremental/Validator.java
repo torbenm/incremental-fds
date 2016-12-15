@@ -4,6 +4,7 @@ import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.structures.*;
+import org.mp.naumann.algorithms.fd.utils.PrintUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +91,7 @@ public class Validator {
 				int lhsAttribute = lhs.nextSetBit(0);
 				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
 					if (!Validator.this.plis.get(lhsAttribute).refines(Validator.this.compressedRecords, rhsAttr)) {
-						element.removeFd(rhsAttr);
+                        element.removeFd(rhsAttr);
 						result.invalidFDs.add(new FD(lhs, rhsAttr));
 					}
 					result.intersections++;
