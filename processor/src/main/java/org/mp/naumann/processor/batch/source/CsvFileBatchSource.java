@@ -23,8 +23,8 @@ public class CsvFileBatchSource extends SizableBatchSource {
 	private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withFirstRecordAsHeader();
 	private final File csvFile;
 
-	public static final String ACTION_COLUMN_NAME = "::action";
-	private static final String RECORD_COLUMN_NAME = "::record";
+	public static final String ACTION_COLUMN_NAME = "statement_type";
+	private static final String RECORD_COLUMN_NAME = "refers_to";
     private CSVParser csvParser;
 	
     public CsvFileBatchSource(String filePath, String schema, String tableName, int batchSize) {

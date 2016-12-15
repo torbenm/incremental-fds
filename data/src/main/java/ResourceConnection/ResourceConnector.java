@@ -1,5 +1,6 @@
 package ResourceConnection;
 
+import java.io.File;
 import java.io.InputStream;
 
 /**
@@ -25,4 +26,13 @@ public class ResourceConnector {
     public static String getResourcePath(ResourceType type, String filename) {
         return ResourceConnector.class.getResource(type.getPath() + filename).getPath();
     }
+
+    public static String getDirectoryPathForResource(ResourceType type, String filename) {
+        String path = ResourceConnector.class.getResource(type.getPath() + filename).getPath();
+        return path.substring(0, path.length() - filename.length());
+    }
+
+//    public static String getPathForResourceType(ResourceType type) {
+//        return new File(type.getPath()).getAbsolutePath();
+//    }
 }
