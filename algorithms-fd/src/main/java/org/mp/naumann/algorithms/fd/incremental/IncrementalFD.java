@@ -35,8 +35,9 @@ import java.util.logging.Level;
 
 public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, FDIntermediateDatastructure> {
 
-
-	private IncrementalFDVersion VERSION = IncrementalFDVersion.LATEST;
+    private static final boolean VALIDATE_PARALLEL = true;
+    private static final float EFFICIENCY_THRESHOLD = 0.01f;
+    private IncrementalFDVersion version = IncrementalFDVersion.LATEST;
 
 	private final List<String> columns;
 	private FDTree posCover;
@@ -55,7 +56,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
 	public IncrementalFD(List<String> columns, String tableName, IncrementalFDVersion version){
         this(columns, tableName);
-        this.VERSION = version;
+        this.version = version;
     }
 
 	public IncrementalFD(List<String> columns, String tableName) {
@@ -80,19 +81,19 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		int numRecords = intermediateDatastructure.getNumRecords();
 		List<Integer> pliSequence = intermediateDatastructure.getPliSequence();
 		List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getClusterMaps();
-		if(VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM){
+		if(version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM){
 			bloomPruning = new SimpleBloomPruningStrategy(columns, numRecords, pliSequence, clusterMaps);
 			bloomPruning.initialize();
 		}
-		if(VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED){
+		if(version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED){
 			advancedBloomPruning = new AdvancedBloomPruningStrategy(columns, numRecords, pliSequence, clusterMaps, posCover);
 			advancedBloomPruning.initialize();
 		}
-		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
+		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
 			simplePruning = new SimplePruningStrategy(columns);
 		}
 		this.valueComparator = intermediateDatastructure.getValueComparator();
-		incrementalPLIBuilder = new IncrementalPLIBuilder(this.VERSION, numRecords,
+		incrementalPLIBuilder = new IncrementalPLIBuilder(this.version, numRecords,
 				clusterMaps, columns, pliSequence, valueComparator.isNullEqualNull());
 	}
 
@@ -106,23 +107,21 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		FDLogger.log(Level.FINE, "Started IncrementalFD for new Batch");
 		SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
 		CardinalitySet existingCombinations = null;
-		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
+		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
 			existingCombinations = bloomPruning.getExistingCombinations(batch);
 		}
-		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED) {
+		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED) {
 			existingCombinations = advancedBloomPruning.getExistingCombinations(batch);
 		}
 		CompressedDiff diff = incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
-		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
+		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
 			existingCombinations = simplePruning.getExistingCombinations(diff);
 		}
 		FDLogger.log(Level.FINE, "Finished collecting existing combinations");
-		boolean validateParallel = true;
-		float efficiencyThreshold = 0.01f;
-		Validator validator = new Validator(negCover, posCover, compressedRecords, plis, validateParallel, memoryGuardian);
-		Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, efficiencyThreshold,
+		Validator validator = new Validator(negCover, posCover, compressedRecords, plis, VALIDATE_PARALLEL, memoryGuardian);
+		Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
 				this.valueComparator, this.memoryGuardian);
 		Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
 
