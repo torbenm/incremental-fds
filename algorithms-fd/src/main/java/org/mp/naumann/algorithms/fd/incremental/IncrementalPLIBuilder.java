@@ -5,8 +5,6 @@ import com.google.common.hash.BloomFilter;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.structures.ValueCombination;
-import org.mp.naumann.algorithms.fd.structures.ValueCombination.ColumnValue;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
@@ -15,66 +13,55 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class IncrementalPLIBuilder {
 
     private int numRecords;
     private IncrementalFDVersion version;
-    private List<HashMap<String, IntArrayList>> clusterMaps;
-    private List<PositionListIndex> plis;
-    private final List<String> columns;
-    private final List<Integer> pliSequence;
-    private int[][] compressedRecords;
-    private BloomFilter<Set<ColumnValue>> filter;
+	private List<HashMap<String, IntArrayList>> clusterMaps;
+	private List<PositionListIndex> plis;
+	private final List<String> columns;
+	private final List<Integer> pliSequence;
+	private int[][] compressedRecords;
 
-    public IncrementalPLIBuilder(IncrementalFDVersion version, int numRecords,
-                                 List<HashMap<String, IntArrayList>> clusterMaps, List<String> columns,
-                                 List<Integer> pliSequence, BloomFilter<Set<ColumnValue>> filter) {
-        this.numRecords = numRecords;
-        this.clusterMaps = clusterMaps;
-        this.columns = columns;
-        this.pliSequence = pliSequence;
-        this.filter = filter;
+	public IncrementalPLIBuilder(IncrementalFDVersion version, int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<String> columns, List<Integer> pliSequence) {
+		this.numRecords = numRecords;
+		this.clusterMaps = clusterMaps;
+		this.columns = columns;
+		this.pliSequence = pliSequence;
         this.version = version;
-        updateDataStructures();
-    }
+		updateDataStructures();
+	}
 
-    public CompressedDiff update(Batch batch) {
-        List<InsertStatement> inserts = batch.getInsertStatements();
-        List<Integer> insertedIds = new ArrayList<>();
-        for (InsertStatement insert : inserts) {
-            int i = 0;
-            ValueCombination vc = new ValueCombination();
-            Map<String, String> valueMap = insert.getValueMap();
-            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(i);
-            for (String column : columns) {
-                String value = valueMap.get(column);
-                vc.add(column, value);
-                IntArrayList cluster = clusterMap.get(value);
-                if (cluster == null) {
-                    cluster = new IntArrayList();
-                    clusterMap.put(value, cluster);
-                }
-                cluster.add(numRecords);
-                i++;
-            }
-            insertedIds.add(numRecords++);
-            if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
-                for (Set<ColumnValue> combination : vc.getPowerSet(2)) {
-                    filter.put(combination);
-                }
-            }
-        }
-        updateDataStructures();
-        return buildDiff(insertedIds);
-    }
+	public CompressedDiff update(Batch batch) {
+		List<InsertStatement> inserts = batch.getInsertStatements();
+		List<Integer> insertedIds = new ArrayList<>();
+		for (InsertStatement insert : inserts) {
+			int i = 0;
+			for (String column : columns) {
+				Map<String, String> valueMap = insert.getValueMap();
+				HashMap<String, IntArrayList> clusterMap = clusterMaps.get(i);
+				String value = valueMap.get(column);
+				IntArrayList cluster = clusterMap.get(value);
+				if (cluster == null) {
+					cluster = new IntArrayList();
+					clusterMap.put(value, cluster);
+				}
+				cluster.add(numRecords);
+				i++;
+			}
+			insertedIds.add(numRecords);
+			numRecords++;
+		}
+		updateDataStructures();
+		return buildDiff(insertedIds);
+	}
 
-    private CompressedDiff buildDiff(List<Integer> insertedIds) {
-        int[][] insertedRecords = new int[insertedIds.size()][];
-        int i = 0;
-        if (this.version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
-            for (int id : insertedIds) {
+	private CompressedDiff buildDiff(List<Integer> insertedIds) {
+		int[][] insertedRecords = new int[insertedIds.size()][];
+		int i = 0;
+        if(this.version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE){
+            for(int id : insertedIds) {
                 insertedRecords[i] = compressedRecords[id];
                 i++;
             }

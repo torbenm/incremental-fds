@@ -1,13 +1,12 @@
 package org.mp.naumann.algorithms.fd;
 
+import org.mp.naumann.algorithms.InitialAlgorithm;
+import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
+import org.mp.naumann.algorithms.fd.hyfd.HyFD;
+import org.mp.naumann.database.Table;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
-import org.mp.naumann.algorithms.InitialAlgorithm;
-import org.mp.naumann.algorithms.fd.hyfd.HyFD;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
-import org.mp.naumann.database.Table;
 
 public class HyFDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDependency>, FDIntermediateDatastructure> {
 
@@ -19,14 +18,10 @@ public class HyFDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDep
 	public HyFDInitialAlgorithm(Table table) {
 		hyfd = new HyFD(table, fds::add);
 	}
-
-    public HyFDInitialAlgorithm(IncrementalFDVersion version, Table table) {
-        hyfd = new HyFD(version, table, fds::add);
-    }
 	
 	@Override
 	public FDIntermediateDatastructure getIntermediateDataStructure() {
-		return new FDIntermediateDatastructure(hyfd.getPosCover(), hyfd.getClusterMaps(), hyfd.getNumRecords(), hyfd.getPliSequence(), hyfd.getFilter());
+		return new FDIntermediateDatastructure(hyfd.getPosCover(), hyfd.getClusterMaps(), hyfd.getNumRecords(), hyfd.getPliSequence());
 	}
 
 	@Override

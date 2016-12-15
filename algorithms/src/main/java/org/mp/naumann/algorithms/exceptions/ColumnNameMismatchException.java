@@ -1,7 +1,9 @@
 package org.mp.naumann.algorithms.exceptions;
 
 public class ColumnNameMismatchException extends AlgorithmException {
-    public ColumnNameMismatchException() {
+    private static final long serialVersionUID = -4427439983848962041L;
+
+	public ColumnNameMismatchException() {
     }
 
     public ColumnNameMismatchException(String message) {

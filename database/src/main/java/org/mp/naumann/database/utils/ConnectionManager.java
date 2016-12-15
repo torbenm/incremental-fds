@@ -58,7 +58,7 @@ public class ConnectionManager {
         return getCsvConnection(ConnectionManager.class, csvDir, separator);
     }
 
-    public static Connection getCsvConnection(Class clazz, String csvDir, String separator) throws ConnectionException {
+    public static Connection getCsvConnection(Class<?> clazz, String csvDir, String separator) throws ConnectionException {
         URL csvResourceURL = clazz.getClassLoader().getResource("csv");
         if (csvResourceURL == null)
             throw new ConnectionException("Can't find resource directory");

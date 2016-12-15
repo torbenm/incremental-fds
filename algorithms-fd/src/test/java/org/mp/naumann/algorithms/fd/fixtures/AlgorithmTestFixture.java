@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.mp.naumann.algorithms.exceptions.AlgorithmConfigurationException;
 import org.mp.naumann.algorithms.exceptions.ColumnNameMismatchException;
 import org.mp.naumann.algorithms.exceptions.CouldNotReceiveResultException;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;

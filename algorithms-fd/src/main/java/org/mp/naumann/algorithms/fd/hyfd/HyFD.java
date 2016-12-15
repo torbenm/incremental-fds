@@ -7,37 +7,29 @@ import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
-import org.mp.naumann.algorithms.fd.utils.PliUtils;
-import org.mp.naumann.database.InputReadException;
-import org.mp.naumann.database.Table;
-import org.mp.naumann.database.TableInput;
-import org.mp.naumann.database.data.ColumnCombination;
-import org.mp.naumann.database.data.ColumnIdentifier;
-
-import com.google.common.hash.BloomFilter;
-
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
+import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.structures.ValueCombination.ColumnValue;
 import org.mp.naumann.algorithms.fd.utils.FileUtils;
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
+import org.mp.naumann.database.InputReadException;
+import org.mp.naumann.database.Table;
+import org.mp.naumann.database.TableInput;
+import org.mp.naumann.database.data.ColumnCombination;
+import org.mp.naumann.database.data.ColumnIdentifier;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.logging.Level;
-
-import static org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion.LATEST;
+import java.util.stream.Collectors;
 
 
 public class HyFD implements FunctionalDependencyAlgorithm {
@@ -63,32 +55,14 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	private int numRecords;
 
 	private List<Integer> pliSequence;
-    private final IncrementalFDVersion version;
 
     public HyFD(){
-        this(LATEST);
         FDLogger.setCurrentAlgorithm(this);
     }
 
-    public HyFD(IncrementalFDVersion version){
-        this.version = version;
-    }
-
-	private BloomFilter<Set<ColumnValue>> filter;
-
-	
-	public BloomFilter<Set<ColumnValue>> getFilter() {
-		return filter;
-	}
-
 	public HyFD(Table table, FunctionalDependencyResultReceiver resultReceiver) {
-        this(LATEST, table, resultReceiver);
         configure(table, resultReceiver);
 	}
-    public HyFD(IncrementalFDVersion version, Table table, FunctionalDependencyResultReceiver resultReceiver) {
-        this(version);
-        configure(table, resultReceiver);
-    }
 
 	public void configure(Table table, FunctionalDependencyResultReceiver resultReceiver){
         this.table = table;
@@ -129,13 +103,12 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 		// Calculate plis
 		FDLogger.log(Level.FINER, "Reading data and calculating plis ...");
-		PLIBuilder pliBuilder = new PLIBuilder(this.version);
+		PLIBuilder pliBuilder = new PLIBuilder();
 		List<PositionListIndex> plis = pliBuilder.getPLIs(tableInput, this.numAttributes,
 				this.valueComparator.isNullEqualNull());
 		this.closeInput(tableInput);
 		this.clusterMaps = pliBuilder.getClusterMaps(); // get the clusterMaps here to transfer them to the incremental algorithm
 		this.numRecords = pliBuilder.getNumLastRecords(); // same with numRecords
-		this.filter = pliBuilder.getFilter();
 
 		final int numRecords = pliBuilder.getNumLastRecords();
 		pliBuilder = null;
@@ -200,8 +173,12 @@ public class HyFD implements FunctionalDependencyAlgorithm {
         SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
         int i = 1;
 		do {
+			FDLogger.log(Level.FINE, "Started round " + i);
+			FDLogger.log(Level.FINE, "Enriching negative cover");
 			FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
+			FDLogger.log(Level.FINE, "Updating positive cover");
 			inductor.updatePositiveCover(newNonFds);
+			FDLogger.log(Level.FINE, "Validating positive cover");
 			comparisonSuggestions = validator.validatePositiveCover();
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round "+i++);
 		} while (comparisonSuggestions != null);

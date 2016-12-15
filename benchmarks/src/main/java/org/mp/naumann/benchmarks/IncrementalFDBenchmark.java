@@ -44,7 +44,7 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
 
         DataConnector dc = new JdbcDataConnector(csvConnection);
         Table table = dc.getTable(schema, tableName);
-        initialAlgorithm = new HyFDInitialAlgorithm(version, table);
+        initialAlgorithm = new HyFDInitialAlgorithm(table);
 
         incrementalAlgorithm = new IncrementalFD(((CsvFileBatchSource)batchSource).getColumnNames(), tableName, version);
 
@@ -58,7 +58,7 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
 
         DataConnector dc = new JdbcDataConnector(csvConnection);
         Table table = dc.getTable(schema, tableName);
-        initialAlgorithm = new HyFDInitialAlgorithm(version, table);
+        initialAlgorithm = new HyFDInitialAlgorithm(table);
     }
 
     public void constructInitialOnly(String testCase, Connection csvConnection, String schema, String tableName) throws ConnectionException {
