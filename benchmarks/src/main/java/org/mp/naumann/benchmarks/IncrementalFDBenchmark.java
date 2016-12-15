@@ -82,7 +82,7 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
     }
 
     public int getVersionCode(){
-        return version.getShortId();
+        return version.getId();
     }
 
 
