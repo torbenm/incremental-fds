@@ -12,11 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by dennis on 24.11.16.
- */
 public class IncrementalPLIBuilder {
 
+	private final boolean isNullEqualNull;
 	private int numRecords;
     private IncrementalFDVersion version;
 	private List<HashMap<String, IntArrayList>> clusterMaps;
@@ -25,12 +23,13 @@ public class IncrementalPLIBuilder {
 	private final List<Integer> pliSequence;
 	private int[][] compressedRecords;
 
-	public IncrementalPLIBuilder(IncrementalFDVersion version, int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<String> columns, List<Integer> pliSequence) {
+	public IncrementalPLIBuilder(IncrementalFDVersion version, int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<String> columns, List<Integer> pliSequence, boolean isNullEqualNull) {
 		this.numRecords = numRecords;
 		this.clusterMaps = clusterMaps;
 		this.columns = columns;
 		this.pliSequence = pliSequence;
         this.version = version;
+        this.isNullEqualNull = isNullEqualNull;
 		updateDataStructures();
 	}
 
@@ -74,11 +73,11 @@ public class IncrementalPLIBuilder {
 	}
 
 	private void updateDataStructures() {
-		plis = recalculatePositionListIndexes(true);
+		plis = recalculatePositionListIndexes();
 		compressedRecords = recalculateCompressedRecords();
 	}
 
-	private List<PositionListIndex> recalculatePositionListIndexes(boolean isNullEqualNull) {
+	private List<PositionListIndex> recalculatePositionListIndexes() {
 		List<PositionListIndex> clustersPerAttribute = new ArrayList<>();
         for (int columnId : pliSequence) {
             List<IntArrayList> clusters = new ArrayList<>();

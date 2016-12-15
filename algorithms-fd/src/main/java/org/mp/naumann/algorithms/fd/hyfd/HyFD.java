@@ -55,8 +55,9 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	private int numRecords;
 
 	private List<Integer> pliSequence;
+	private FDSet negCover;
 
-    public HyFD(){
+	public HyFD(){
         FDLogger.setCurrentAlgorithm(this);
     }
 
@@ -195,7 +196,12 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		FDLogger.log(Level.FINER, "... done! (" + numFDs + " FDs)");
 		
 		this.posCover = posCover;
+		this.negCover = negCover;
 		this.pliSequence = plis.stream().map(PositionListIndex::getAttribute).collect(Collectors.toList());
+	}
+
+	public ValueComparator getValueComparator() {
+		return valueComparator;
 	}
 
 	public FDTree getPosCover() {
@@ -240,5 +246,9 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 	public List<Integer> getPliSequence() {
 		return pliSequence;
+	}
+
+	public FDSet getNegCover() {
+		return negCover;
 	}
 }

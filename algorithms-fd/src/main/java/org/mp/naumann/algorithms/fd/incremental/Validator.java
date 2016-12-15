@@ -12,6 +12,7 @@ import java.util.logging.Level;
 
 public class Validator {
 
+	private final FDSet negCover;
 	private FDTree posCover;
 	private int numRecords;
 	private List<PositionListIndex> plis;
@@ -21,7 +22,8 @@ public class Validator {
 	
 	private int level;
 
-	public Validator(FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, boolean parallel, MemoryGuardian memoryGuardian) {
+	public Validator(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, boolean parallel, MemoryGuardian memoryGuardian) {
+		this.negCover = negCover;
 		this.posCover = posCover;
 		this.numRecords = compressedRecords.length;
 		this.plis = plis;
@@ -213,7 +215,7 @@ public class Validator {
 						candidates++;
 							
 						this.memoryGuardian.memoryChanged(1);
-						this.memoryGuardian.match(this.posCover);
+						this.memoryGuardian.match(this.negCover, this.posCover, null);
 					}
 				}
 			}

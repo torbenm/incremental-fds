@@ -15,11 +15,13 @@ import org.mp.naumann.algorithms.fd.incremental.bloom.AdvancedBloomPruningStrate
 import org.mp.naumann.algorithms.fd.incremental.bloom.BloomPruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.bloom.SimpleBloomPruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.simple.SimplePruningStrategy;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
+import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
@@ -48,6 +50,8 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 	private BloomPruningStrategy advancedBloomPruning;
 	private SimplePruningStrategy simplePruning;
 	private BloomPruningStrategy bloomPruning;
+	private FDSet negCover;
+	private ValueComparator valueComparator;
 
 	public IncrementalFD(List<String> columns, String tableName, IncrementalFDVersion version){
         this(columns, tableName);
@@ -72,6 +76,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 	@Override
 	public void initialize() {
 		this.posCover = intermediateDatastructure.getPosCover();
+		this.negCover = intermediateDatastructure.getNegCover();
 		int numRecords = intermediateDatastructure.getNumRecords();
 		List<Integer> pliSequence = intermediateDatastructure.getPliSequence();
 		List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getClusterMaps();
@@ -86,8 +91,9 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
 			simplePruning = new SimplePruningStrategy(columns);
 		}
+		this.valueComparator = intermediateDatastructure.getValueComparator();
 		incrementalPLIBuilder = new IncrementalPLIBuilder(this.VERSION, numRecords,
-				clusterMaps, columns, pliSequence);
+				clusterMaps, columns, pliSequence, valueComparator.isNullEqualNull());
 	}
 
 	@Override
@@ -114,7 +120,11 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		}
 		FDLogger.log(Level.FINE, "Finished collecting existing combinations");
 		boolean validateParallel = true;
-		Validator validator = new Validator(posCover, compressedRecords, plis, validateParallel, memoryGuardian);
+		float efficiencyThreshold = 0.01f;
+		Validator validator = new Validator(negCover, posCover, compressedRecords, plis, validateParallel, memoryGuardian);
+		Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, efficiencyThreshold,
+				this.valueComparator, this.memoryGuardian);
+		Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
 
 		int pruned = 0;
 		int validations = 0;
