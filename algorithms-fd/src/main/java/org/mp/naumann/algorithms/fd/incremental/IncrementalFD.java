@@ -35,11 +35,8 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, FDIntermediateDatastructure> {
 
-	private enum Type {
-		SIMPLE, BLOOM, NONE
-	}
 
-	private static final Type TYPE = Type.BLOOM;
+	private IncrementalFDVersion VERSION = IncrementalFDVersion.LATEST;
 
 	private final List<String> columns;
 	private FDTree posCover;
@@ -52,6 +49,11 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 	private IncrementalPLIBuilder incrementalPLIBuilder;
 	private BloomFilter<Set<ColumnValue>> filter;
 	private final Map<String, Integer> columnsToId = new HashMap<>();
+
+    public IncrementalFD(List<String> columns, String tableName, IncrementalFDVersion version){
+        this(columns, tableName);
+        this.VERSION = version;
+    }
 
 	public IncrementalFD(List<String> columns, String tableName) {
 		this.columns = columns;
@@ -71,7 +73,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 	public void initialize() {
 		this.posCover = intermediateDatastructure.getPosCover();
 		this.filter = intermediateDatastructure.getFilter();
-		incrementalPLIBuilder = new IncrementalPLIBuilder(intermediateDatastructure.getNumRecords(),
+		incrementalPLIBuilder = new IncrementalPLIBuilder(this.VERSION, intermediateDatastructure.getNumRecords(),
 				intermediateDatastructure.getClusterMaps(), columns, intermediateDatastructure.getPliSequence(),
 				filter);
 		int i = 0;
@@ -89,13 +91,13 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		}
 		SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
 		CardinalitySet existingCombinations = null;
-		if (TYPE == Type.BLOOM) {
+		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
 			existingCombinations = getExistingCombinationsWithBloom(batch);
 		}
 		CompressedDiff diff = incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
-		if (TYPE == Type.SIMPLE) {
+		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
 			existingCombinations = getExistingCombinationsSimple(diff);
 		}
 		FDLogger.log(Level.FINE, "Finished collecting existing combinations");

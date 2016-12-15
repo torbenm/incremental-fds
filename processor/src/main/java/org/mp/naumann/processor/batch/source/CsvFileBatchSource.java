@@ -23,7 +23,7 @@ public class CsvFileBatchSource extends SizableBatchSource {
 	private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withFirstRecordAsHeader();
 	private final File csvFile;
 
-	private static final String ACTION_COLUMN_NAME = "::action";
+	public static final String ACTION_COLUMN_NAME = "::action";
 	private static final String RECORD_COLUMN_NAME = "::record";
     private CSVParser csvParser;
 	
