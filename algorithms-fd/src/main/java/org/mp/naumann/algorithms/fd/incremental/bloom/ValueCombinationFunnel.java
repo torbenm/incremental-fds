@@ -1,13 +1,11 @@
-package org.mp.naumann.algorithms.fd.structures;
+package org.mp.naumann.algorithms.fd.incremental.bloom;
+
+import com.google.common.hash.Funnel;
+import com.google.common.hash.PrimitiveSink;
 
 import java.nio.charset.Charset;
 import java.util.Set;
 import java.util.TreeSet;
-
-import org.mp.naumann.algorithms.fd.structures.ValueCombination.ColumnValue;
-
-import com.google.common.hash.Funnel;
-import com.google.common.hash.PrimitiveSink;
 
 public final class ValueCombinationFunnel implements Funnel<Set<ColumnValue>> {
 

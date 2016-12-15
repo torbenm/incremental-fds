@@ -3,7 +3,8 @@ package org.mp.naumann.algorithms.fd.incremental;
 public enum IncrementalFDVersion {
     V0_0(PruningStrategy.NONE, "Original hyfd version", 0),
     V0_1(PruningStrategy.SIMPLE, "Simple incremental pruning", 1),
-    V0_2(PruningStrategy.BLOOM, "Improved pruning with bloom", 2);
+    V0_2(PruningStrategy.BLOOM, "Improved pruning with bloom", 2),
+    V0_3(PruningStrategy.BLOOM_ADVANCED, "Improved pruning with bloom based on initial FDs", 3);
 
 
     private final PruningStrategy pruningStrategy;
@@ -11,7 +12,7 @@ public enum IncrementalFDVersion {
     private final int shortid;
 
 
-    public static final IncrementalFDVersion LATEST = V0_2;
+    public static final IncrementalFDVersion LATEST = V0_3;
     public static final IncrementalFDVersion HYFD_ORIGINAL = V0_0;
 
     IncrementalFDVersion(PruningStrategy pruningStrategy, String versionName, int shortid) {
@@ -34,7 +35,7 @@ public enum IncrementalFDVersion {
     }
 
     public enum PruningStrategy {
-        NONE, SIMPLE, BLOOM
+        NONE, SIMPLE, BLOOM, BLOOM_ADVANCED
     }
 
     public static IncrementalFDVersion fromShortId(int shortid){

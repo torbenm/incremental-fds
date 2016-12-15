@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.junit.Test;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
 public class BitSetUtilsTest {
 	

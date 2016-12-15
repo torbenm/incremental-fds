@@ -1,14 +1,7 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
-import java.util.Set;
-import java.util.logging.Level;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
@@ -18,20 +11,25 @@ import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
+import org.mp.naumann.algorithms.fd.incremental.bloom.AdvancedBloomPruningStrategy;
+import org.mp.naumann.algorithms.fd.incremental.bloom.BloomPruningStrategy;
+import org.mp.naumann.algorithms.fd.incremental.bloom.SimpleBloomPruningStrategy;
+import org.mp.naumann.algorithms.fd.incremental.simple.SimplePruningStrategy;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.structures.ValueCombination;
-import org.mp.naumann.algorithms.fd.structures.ValueCombination.ColumnValue;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
+import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
-import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
 
-import com.google.common.hash.BloomFilter;
-
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.logging.Level;
 
 public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, FDIntermediateDatastructure> {
 
@@ -47,10 +45,11 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 	private boolean initialized = false;
 
 	private IncrementalPLIBuilder incrementalPLIBuilder;
-	private BloomFilter<Set<ColumnValue>> filter;
-	private final Map<String, Integer> columnsToId = new HashMap<>();
+	private BloomPruningStrategy advancedBloomPruning;
+	private SimplePruningStrategy simplePruning;
+	private BloomPruningStrategy bloomPruning;
 
-    public IncrementalFD(List<String> columns, String tableName, IncrementalFDVersion version){
+	public IncrementalFD(List<String> columns, String tableName, IncrementalFDVersion version){
         this(columns, tableName);
         this.VERSION = version;
     }
@@ -70,35 +69,46 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		this.resultListeners.add(listener);
 	}
 
+	@Override
 	public void initialize() {
 		this.posCover = intermediateDatastructure.getPosCover();
-		this.filter = intermediateDatastructure.getFilter();
-		incrementalPLIBuilder = new IncrementalPLIBuilder(this.VERSION, intermediateDatastructure.getNumRecords(),
-				intermediateDatastructure.getClusterMaps(), columns, intermediateDatastructure.getPliSequence(),
-				filter);
-		int i = 0;
-		for (PositionListIndex pli : incrementalPLIBuilder.getPlis()) {
-			columnsToId.put(columns.get(pli.getAttribute()), i++);
+		int numRecords = intermediateDatastructure.getNumRecords();
+		List<Integer> pliSequence = intermediateDatastructure.getPliSequence();
+		List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getClusterMaps();
+		if(VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM){
+			bloomPruning = new SimpleBloomPruningStrategy(columns, numRecords, pliSequence, clusterMaps);
 		}
+		if(VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED){
+			advancedBloomPruning = new AdvancedBloomPruningStrategy(columns, numRecords, pliSequence, clusterMaps, posCover);
+		}
+		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
+			simplePruning = new SimplePruningStrategy(columns);
+		}
+		incrementalPLIBuilder = new IncrementalPLIBuilder(this.VERSION, numRecords,
+				clusterMaps, columns, pliSequence);
 	}
 
 	@Override
 	public IncrementalFDResult execute(Batch batch) {
-		FDLogger.log(Level.FINE, "Started IncrementalFD for new Batch");
 		if (!initialized) {
+			FDLogger.log(Level.FINE, "Initializing IncrementalFD");
 			initialize();
 			initialized = true;
 		}
+		FDLogger.log(Level.FINE, "Started IncrementalFD for new Batch");
 		SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
 		CardinalitySet existingCombinations = null;
 		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
-			existingCombinations = getExistingCombinationsWithBloom(batch);
+			existingCombinations = bloomPruning.getExistingCombinations(batch);
+		}
+		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED) {
+			existingCombinations = advancedBloomPruning.getExistingCombinations(batch);
 		}
 		CompressedDiff diff = incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
 		if (VERSION.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
-			existingCombinations = getExistingCombinationsSimple(diff);
+			existingCombinations = simplePruning.getExistingCombinations(diff);
 		}
 		FDLogger.log(Level.FINE, "Finished collecting existing combinations");
 		boolean validateParallel = true;
@@ -107,7 +117,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		int pruned = 0;
 		int validations = 0;
 		for (int level = 0; level <= posCover.getDepth(); level++) {
-			List<FDTreeElementLhsPair> currentLevel = getFdLevel(level);
+			List<FDTreeElementLhsPair> currentLevel = FDTreeUtils.getFdLevel(posCover, level);
 			List<FDTreeElementLhsPair> toValidate = new ArrayList<>();
 			for (FDTreeElementLhsPair fd : currentLevel) {
 				if (existingCombinations == null || canBeViolated(existingCombinations, fd)) {
@@ -136,80 +146,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		return new IncrementalFDResult(fds, validations, pruned);
 	}
 
-	public CardinalitySet getExistingCombinationsWithBloom(Batch batch) {
-		CardinalitySet existingCombinations;
-		existingCombinations = new CardinalitySet(2);
-		List<InsertStatement> inserts = batch.getInsertStatements();
-		Set<Set<ColumnValue>> innerDoubleCombinations = innerCombinationsToCheck(batch);
-		for (InsertStatement insert : inserts) {
-			ValueCombination vc = new ValueCombination();
-			for (Entry<String, String> entry : insert.getValueMap().entrySet()) {
-				vc.add(entry.getKey(), entry.getValue());
-			}
-			for (Set<ColumnValue> combination : vc.getPowerSet(2)) {
-				if (innerDoubleCombinations.contains(combination) || filter.mightContain(combination)) {
-					OpenBitSet existing = new OpenBitSet(columns.size());
-					for (ColumnValue value : combination) {
-						existing.fastSet(columnsToId.get(value.getColumn()));
-					}
-					existingCombinations.add(existing);
-				}
-			}
-		}
-		return existingCombinations;
-	}
-
-	public Set<Set<ColumnValue>> innerCombinationsToCheck(Batch batch) {
-		List<InsertStatement> inserts = batch.getInsertStatements();
-		Map<Set<ColumnValue>, Integer> innerCombinations = new HashMap<>();
-		for (InsertStatement insert : inserts) {
-			ValueCombination vc = new ValueCombination();
-			for (Entry<String, String> entry : insert.getValueMap().entrySet()) {
-				vc.add(entry.getKey(), entry.getValue());
-			}
-			for (Set<ColumnValue> combination : vc.getPowerSet(2)) {
-				innerCombinations.merge(combination, 1, Integer::sum);
-			}
-		}
-		Set<Set<ColumnValue>> innerDoubleCombinations = innerCombinations.entrySet().stream()
-				.filter(e -> e.getValue() > 1).map(Entry::getKey).collect(Collectors.toSet());
-		return innerDoubleCombinations;
-	}
-
-	public CardinalitySet getExistingCombinationsSimple(CompressedDiff diff) {
-		int numAttributes = columns.size();
-		CardinalitySet existingCombinations = new CardinalitySet(numAttributes);
-		for (int[] insert : diff.getInsertedRecords()) {
-			OpenBitSet existingCombination = findExistingCombinations(insert);
-			existingCombinations.add(existingCombination);
-		}
-		return existingCombinations;
-	}
-
-	public OpenBitSet findExistingCombinations(int[] compressedRecord) {
-		OpenBitSet existingCombination = new OpenBitSet(compressedRecord.length);
-		int i = 0;
-		for (int clusterId : compressedRecord) {
-			if (clusterId > -1) {
-				existingCombination.fastSet(i);
-			}
-			i++;
-		}
-		return existingCombination;
-	}
-
-	public List<FDTreeElementLhsPair> getFdLevel(int level) {
-		final List<FDTreeElementLhsPair> currentLevel;
-		if (level == 0) {
-			currentLevel = new ArrayList<>();
-			currentLevel.add(new FDTreeElementLhsPair(this.posCover, new OpenBitSet(columns.size())));
-		} else {
-			currentLevel = this.posCover.getLevel(level);
-		}
-		return currentLevel;
-	}
-
-	public boolean canBeViolated(CardinalitySet existingCombinations, FDTreeElementLhsPair fd) {
+	private boolean canBeViolated(CardinalitySet existingCombinations, FDTreeElementLhsPair fd) {
 		for (int i = existingCombinations.getDepth(); i >= (int) fd.getLhs().cardinality(); i--) {
 			for (OpenBitSet ex : existingCombinations.getLevel(i)) {
 				if (BitSetUtils.isContained(fd.getLhs(), ex)) {
