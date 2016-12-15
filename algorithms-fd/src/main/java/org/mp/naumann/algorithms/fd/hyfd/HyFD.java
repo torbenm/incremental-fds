@@ -9,6 +9,7 @@ import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
+import org.mp.naumann.algorithms.fd.structures.FDViolation;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.logging.Level;
@@ -64,6 +66,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 	private List<Integer> pliSequence;
     private final IncrementalFDVersion version;
+    private Map<Integer, List<FDViolation>> violations;
 
     public HyFD(){
         this(LATEST);
@@ -264,4 +267,8 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	public List<Integer> getPliSequence() {
 		return pliSequence;
 	}
+
+    public Map<Integer, List<FDViolation>> getViolations() {
+        return violations;
+    }
 }
