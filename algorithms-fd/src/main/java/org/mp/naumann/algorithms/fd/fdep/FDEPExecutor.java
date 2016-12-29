@@ -84,7 +84,10 @@ public class FDEPExecutor implements FunctionalDependencyAlgorithm {
 		
 		// Calculate plis
 		FDLogger.log(Level.FINEST, "Calculating plis ...");
-		List<PositionListIndex> plis = PLIBuilder.getPLIs(records, this.numAttributes, this.valueComparator.isNullEqualNull());
+		PLIBuilder pliBuilder = new PLIBuilder(this.numAttributes, this.valueComparator.isNullEqualNull());
+		pliBuilder.addRecords(records);
+		List<PositionListIndex> plis = pliBuilder.getPLIs();
+		pliBuilder = null;
 		records = null; // we proceed with the values in the plis
 		
 		// Calculate inverted plis

@@ -11,6 +11,7 @@ import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
+import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.incremental.bloom.AdvancedBloomPruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.bloom.BloomPruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.bloom.SimpleBloomPruningStrategy;
@@ -21,9 +22,6 @@ import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
-import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
-import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
@@ -35,7 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 
-public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, FDIntermediateDatastructure> {
+public class IncrementalFD2 implements IncrementalAlgorithm<IncrementalFDResult, FDIntermediateDatastructure> {
 
     private static final boolean VALIDATE_PARALLEL = true;
     private static final float EFFICIENCY_THRESHOLD = 0.01f;
@@ -54,14 +52,13 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 	private SimplePruningStrategy simplePruning;
 	private BloomPruningStrategy bloomPruning;
 	private FDSet negCover;
-	private ValueComparator valueComparator;
 
-	public IncrementalFD(List<String> columns, String tableName, IncrementalFDVersion version){
+	public IncrementalFD2(List<String> columns, String tableName, IncrementalFDVersion version){
         this(columns, tableName);
         this.version = version;
     }
 
-	public IncrementalFD(List<String> columns, String tableName) {
+	public IncrementalFD2(List<String> columns, String tableName) {
 		this.columns = columns;
 		this.tableName = tableName;
 	}
@@ -120,51 +117,33 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 			existingCombinations = simplePruning.getExistingCombinations(diff);
 		}
 		FDLogger.log(Level.FINE, "Finished collecting existing combinations");
-		Validator validator = new Validator(negCover, posCover, compressedRecords, plis, VALIDATE_PARALLEL, memoryGuardian);
+		Validator2 validator = new Validator2(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
 		Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
-				this.valueComparator, this.memoryGuardian);
+				intermediateDatastructure.getValueComparator(), this.memoryGuardian);
 		Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
 
         List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
-		int pruned = 0;
-		int validations = 0;
-		for (int level = 0; level <= posCover.getDepth(); level++) {
-			List<FDTreeElementLhsPair> currentLevel = FDTreeUtils.getFdLevel(posCover, level);
-			List<FDTreeElementLhsPair> toValidate = new ArrayList<>();
-			for (FDTreeElementLhsPair fd : currentLevel) {
-				if (existingCombinations == null || canBeViolated(existingCombinations, fd)) {
-					toValidate.add(fd);
-				} else {
-					pruned++;
-				}
-			}
-			FDLogger.log(Level.FINEST, "Will validate: ");
-			toValidate.stream().map(this::toFds).flatMap(Collection::stream)
-					.forEach(v -> FDLogger.log(Level.FINEST, v.toString()));
-			validations += toValidate.size();
-			if(validator.validate(level, currentLevel) < 0) {
-				break;
-			}
-		}
-		validator.shutdown();
+        validator.setExistingCombinations(existingCombinations);
+		int i = 1;
+		do {
+			FDLogger.log(Level.FINE, "Started round " + i);
+			FDLogger.log(Level.FINE, "Enriching negative cover");
+			FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
+			FDLogger.log(Level.FINE, "Updating positive cover");
+			inductor.updatePositiveCover(newNonFds);
+			FDLogger.log(Level.FINE, "Validating positive cover");
+			comparisonSuggestions = validator.validatePositiveCover();
+			SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round "+i++);
+		} while (comparisonSuggestions != null);
+		int pruned = validator.getPruned();
+		int validations = validator.getValidations();
 		FDLogger.log(Level.FINE, "Pruned " + pruned + " validations");
 		FDLogger.log(Level.FINE, "Made " + validations + " validations");
 		List<FunctionalDependency> fds = new ArrayList<>();
 		posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
 		SpeedBenchmark.end(BenchmarkLevel.METHOD_HIGH_LEVEL, "Processed one batch, inner measuring");
 		return new IncrementalFDResult(fds, validations, pruned);
-	}
-
-	private boolean canBeViolated(CardinalitySet existingCombinations, FDTreeElementLhsPair fd) {
-		for (int i = existingCombinations.getDepth(); i >= (int) fd.getLhs().cardinality(); i--) {
-			for (OpenBitSet ex : existingCombinations.getLevel(i)) {
-				if (BitSetUtils.isContained(fd.getLhs(), ex)) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	@Override

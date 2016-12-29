@@ -164,12 +164,12 @@ public class Validator {
 		return validationResult;
 	}
 	
-	public void validate(int level, List<FDTreeElementLhsPair> currentLevel) throws AlgorithmExecutionException {
+	public int validate(int level, List<FDTreeElementLhsPair> currentLevel) throws AlgorithmExecutionException {
 		this.level = level;
 
 		FDLogger.log(Level.FINER, "Validating FDs using plis ...");
 		
-		run(currentLevel);
+		return run(currentLevel);
 	}
 
 	public void shutdown() {
@@ -184,7 +184,7 @@ public class Validator {
 		}
 	}
 
-	public void run(List<FDTreeElementLhsPair> currentLevel) throws AlgorithmExecutionException {
+	public int run(List<FDTreeElementLhsPair> currentLevel) throws AlgorithmExecutionException {
 		int numAttributes = this.plis.size();
 		// Start the level-wise validation/discovery
 		FDLogger.log(Level.FINER, "\tLevel " + this.level + ": " + currentLevel.size() + " elements; ");
@@ -199,7 +199,7 @@ public class Validator {
 			int numInvalidFds = validationResult.invalidFDs.size();
 			int numValidFds = validationResult.validations - numInvalidFds;
 			FDLogger.log(Level.FINER, "(-)(-); " + validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + "-" + " new candidates; --> " + numValidFds + " FDs");
-			return;
+			return -1;
 		}
 						
 		// Generate new FDs from the invalid FDs and add them to the next level as well
@@ -228,6 +228,7 @@ public class Validator {
 		FDLogger.log(Level.FINER, validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + candidates + " new candidates; --> " + numValidFds + " FDs");
 		
 		// Decide if we continue validating the next level or if we go back into the sampling phase
+		return 0;
 	}
 	
 	private OpenBitSet extendWith(OpenBitSet lhs, int rhs, int extensionAttr) {
