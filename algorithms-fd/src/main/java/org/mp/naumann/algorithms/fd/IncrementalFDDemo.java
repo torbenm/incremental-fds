@@ -22,49 +22,49 @@ import java.util.logging.Level;
 
 public class IncrementalFDDemo {
 
-	private static final String batchFileName = "csv/inserts.adult.csv";
-	private static final String schema = "";
-	private static final String tableName = "benchmark.adult";
-	private static final int batchSize = 100;
+    private static final String batchFileName = "csv/simple_batches.csv";
+    private static final String schema = "";
+    private static final String tableName = "simple_base";
+    private static final int batchSize = 10;
 
-	public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
-		FDLogger.setLevel(Level.FINE);
-		try (DataConnector dc = new JdbcDataConnector(
-				ConnectionManager.getCsvConnection(IncrementalFDDemo.class, "", ","))) {
+    public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
+        FDLogger.setLevel(Level.FINE);
+        try (DataConnector dc = new JdbcDataConnector(
+                ConnectionManager.getCsvConnection(IncrementalFDDemo.class, "", ","))) {
 
-			// execute initial algorithm
-			Table table = dc.getTable(schema, tableName);
-			HyFDInitialAlgorithm hyfd = new HyFDInitialAlgorithm(table);
-			List<FunctionalDependency> fds = hyfd.execute();
+            // execute initial algorithm
+            Table table = dc.getTable(schema, tableName);
+            HyFDInitialAlgorithm hyfd = new HyFDInitialAlgorithm(table);
+            List<FunctionalDependency> fds = hyfd.execute();
             FDLogger.log(Level.INFO, String.format("Original FD count: %s", fds.size()));
-			FDLogger.log(Level.INFO, String.format("Batch size: %s", batchSize));
-			FDLogger.log(Level.FINEST, "\n");
-			fds.forEach(fd -> FDLogger.log(Level.FINEST, fd.toString()));
-			FDIntermediateDatastructure ds = hyfd.getIntermediateDataStructure();
+            FDLogger.log(Level.INFO, String.format("Batch size: %s", batchSize));
+            FDLogger.log(Level.FINEST, "\n");
+            fds.forEach(fd -> FDLogger.log(Level.FINEST, fd.toString()));
+            FDIntermediateDatastructure ds = hyfd.getIntermediateDataStructure();
 
-			// create batch source & processor for inserts
-			URL res = IncrementalFDDemo.class.getClassLoader().getResource(batchFileName);
-			if (res == null)
-				throw new RuntimeException("Couldn't find csv file for batches.");
-			StreamableBatchSource batchSource = new CsvFileBatchSource(res.getFile(), schema, tableName, batchSize);
-			DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
-			BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
+            // create batch source & processor for inserts
+            URL res = IncrementalFDDemo.class.getClassLoader().getResource(batchFileName);
+            if (res == null)
+                throw new RuntimeException("Couldn't find csv file for batches.");
+            StreamableBatchSource batchSource = new CsvFileBatchSource(res.getFile(), schema, tableName, batchSize);
+            DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
+            BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 
-			// create incremental algorithm
-			IncrementalFD algorithm = new IncrementalFD(table.getColumnNames(), tableName, IncrementalFDVersion.V0_2);
-			IncrementalFDResultListener listener = new IncrementalFDResultListener();
-			algorithm.addResultListener(listener);
-			algorithm.setIntermediateDataStructure(ds);
+            // create incremental algorithm
+            IncrementalFD algorithm = new IncrementalFD(table.getColumnNames(), tableName, IncrementalFDVersion.V0_1);
+            IncrementalFDResultListener listener = new IncrementalFDResultListener();
+            algorithm.addResultListener(listener);
+            algorithm.setIntermediateDataStructure(ds);
 
-			// process batch
-			batchProcessor.addBatchHandler(algorithm);
-			batchSource.startStreaming();
+            // process batch
+            batchProcessor.addBatchHandler(algorithm);
+            batchSource.startStreaming();
 
             // output results
             FDLogger.log(Level.INFO, String.format("Total performed validations: %s", listener.getValidationCount()));
             FDLogger.log(Level.INFO, String.format("Total pruned validations: %s", listener.getPrunedCount()));
             FDLogger.log(Level.INFO, String.format("Final FD count: %s", listener.getFDs().size()));
-		}
-	}
+        }
+    }
 
 }

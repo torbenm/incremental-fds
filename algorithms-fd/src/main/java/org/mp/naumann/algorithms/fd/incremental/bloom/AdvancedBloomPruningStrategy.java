@@ -2,8 +2,6 @@ package org.mp.naumann.algorithms.fd.incremental.bloom;
 
 import com.google.common.hash.BloomFilter;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
@@ -29,8 +27,8 @@ public class AdvancedBloomPruningStrategy extends BloomPruningStrategy {
     private final List<List<String>> bloomFds = new ArrayList<>();
     private final FDTree posCover;
 
-    public AdvancedBloomPruningStrategy(List<String> columns, int numRecords, List<Integer> pliSequence, List<HashMap<String, IntArrayList>> clusterMaps, FDTree posCover) {
-        super(columns, numRecords, clusterMaps, pliSequence, MAX_LEVEL);
+    public AdvancedBloomPruningStrategy(List<String> columns, int numRecords, List<Integer> pliSequence, FDTree posCover) {
+        super(columns, numRecords, pliSequence, MAX_LEVEL);
         this.posCover = posCover;
         int i = 0;
         for (int id : pliSequence) {

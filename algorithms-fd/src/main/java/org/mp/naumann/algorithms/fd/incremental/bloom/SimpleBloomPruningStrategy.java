@@ -2,8 +2,6 @@ package org.mp.naumann.algorithms.fd.incremental.bloom;
 
 import com.google.common.hash.BloomFilter;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-
 import org.mp.naumann.algorithms.fd.utils.PowerSet;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
@@ -21,8 +19,8 @@ public class SimpleBloomPruningStrategy extends BloomPruningStrategy {
 
     private static final int MAX_LEVEL = 2;
 
-    public SimpleBloomPruningStrategy(List<String> columns, int numRecords, List<Integer> pliSequence, List<HashMap<String, IntArrayList>> clusterMaps) {
-        super(columns, numRecords, clusterMaps, pliSequence, MAX_LEVEL);
+    public SimpleBloomPruningStrategy(List<String> columns, int numRecords, List<Integer> pliSequence) {
+        super(columns, numRecords, pliSequence, MAX_LEVEL);
     }
 
     @Override

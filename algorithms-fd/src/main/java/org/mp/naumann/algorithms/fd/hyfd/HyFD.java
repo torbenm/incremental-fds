@@ -99,7 +99,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		FDLogger.log(Level.FINER, "Reading data and calculating plis ...");
 		this.pliBuilder = new PLIBuilder(this.numAttributes, this.valueComparator.isNullEqualNull());
 		pliBuilder.addRecords(tableInput);
-		List<PositionListIndex> plis = pliBuilder.getPLIs();
+		List<PositionListIndex> plis = pliBuilder.fetchPositionListIndexes();
 		this.closeInput(tableInput);
 
 		final int numRecords = pliBuilder.getNumLastRecords();

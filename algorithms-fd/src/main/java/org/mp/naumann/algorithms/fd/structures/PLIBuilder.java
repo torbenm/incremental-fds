@@ -58,17 +58,13 @@ public class PLIBuilder {
         clusterMapBuilder.addRecords(tableInput);
     }
 
-    public List<PositionListIndex> getPLIs() {
-        return this.fetchPositionListIndexes();
-    }
-
     /**
      * Creates the actual positionListIndices based on the clusterMaps calculated beforehand.
      * Clusters of size 1 are being discarded in the process.
      *
      * @return clustersPerAttribute,
      */
-    private List<PositionListIndex> fetchPositionListIndexes() {
+    public List<PositionListIndex> fetchPositionListIndexes() {
         List<HashMap<String, IntArrayList>> clusterMaps = clusterMapBuilder.getClusterMaps();
         List<PositionListIndex> clustersPerAttribute = new ArrayList<>();
         for (int columnId = 0; columnId < clusterMaps.size(); columnId++) {

@@ -1,6 +1,7 @@
 package org.mp.naumann.algorithms.fd.fdep;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
@@ -8,8 +9,8 @@ import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.structures.RecordCompressor;
 import org.mp.naumann.algorithms.fd.utils.FileUtils;
-import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
@@ -86,19 +87,11 @@ public class FDEPExecutor implements FunctionalDependencyAlgorithm {
 		FDLogger.log(Level.FINEST, "Calculating plis ...");
 		PLIBuilder pliBuilder = new PLIBuilder(this.numAttributes, this.valueComparator.isNullEqualNull());
 		pliBuilder.addRecords(records);
-		List<PositionListIndex> plis = pliBuilder.getPLIs();
+		List<PositionListIndex> plis = pliBuilder.fetchPositionListIndexes();
 		pliBuilder = null;
 		records = null; // we proceed with the values in the plis
-		
-		// Calculate inverted plis
-		FDLogger.log(Level.FINEST, "Inverting plis ...");
-		int[][] invertedPlis = PliUtils.invert(plis, numRecords);
 
-		// Extract the integer representations of all records from the inverted plis
-		FDLogger.log(Level.FINEST, "Extracting integer representations for the records ...");
-		int[][] compressedRecords = new int[numRecords][];
-		for (int recordId = 0; recordId < numRecords; recordId++)
-			compressedRecords[recordId] = this.fetchRecordFrom(recordId, invertedPlis);
+		int[][] compressedRecords = RecordCompressor.fetchCompressedRecords(plis, numRecords);
 		
 		// Execute fdep
 		FDLogger.log(Level.FINEST, "Executing fdep ...");

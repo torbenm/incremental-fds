@@ -52,7 +52,7 @@ public class IncrementalPLIBuilder {
 	}
 
 	private void updateDataStructures() {
-		plis = pliBuilder.getPLIs();
+		plis = pliBuilder.fetchPositionListIndexes();
 		compressedRecords = RecordCompressor.fetchCompressedRecords(plis, pliBuilder.getNumLastRecords());
 	}
 

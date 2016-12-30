@@ -29,7 +29,7 @@ import java.util.List;
 public class ClusterMapBuilder {
 	
 	private int numRecords = 0;
-	private List<HashMap<String, IntArrayList>> clusterMaps;
+	private final List<HashMap<String, IntArrayList>> clusterMaps;
 
     public List<HashMap<String, IntArrayList>> getClusterMaps() {
 		return clusterMaps;
@@ -68,7 +68,6 @@ public class ClusterMapBuilder {
 		int attributeId = 0;
 		for (String value : record) {
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
-
             if (clusterMap.containsKey(value)) {
                 clusterMap.get(value).add(this.numRecords);
             }

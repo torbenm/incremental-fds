@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -26,13 +27,11 @@ public abstract class BloomPruningStrategy {
     private final List<Integer> pliSequence;
     private final int numRecords;
     private BloomFilter<Set<ColumnValue>> filter;
-    private final List<HashMap<String, IntArrayList>> clusterMaps;
     private int puts = 0;
     private int requests = 0;
 
-    protected BloomPruningStrategy(List<String> columns, int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<Integer> pliSequence, int maxLevel) {
+    protected BloomPruningStrategy(List<String> columns, int numRecords, List<Integer> pliSequence, int maxLevel) {
         this.columns = columns;
-        this.clusterMaps = clusterMaps;
         this.numRecords = numRecords;
         this.pliSequence = pliSequence;
         this.maxLevel = maxLevel;
@@ -46,7 +45,7 @@ public abstract class BloomPruningStrategy {
         int i = 0;
         for (HashMap<String, IntArrayList> clusterMap : clusterMaps) {
             String column = columns.get(i++);
-            for (Map.Entry<String, IntArrayList> entry : clusterMap.entrySet()) {
+            for (Entry<String, IntArrayList> entry : clusterMap.entrySet()) {
                 String value = entry.getKey();
                 for (int id : entry.getValue()) {
                     invertedRecords.get(id).put(column, value);
@@ -89,7 +88,7 @@ public abstract class BloomPruningStrategy {
         return filter.mightContain(combination);
     }
 
-    public void initialize() {
+    public void initialize(List<HashMap<String, IntArrayList>> clusterMaps) {
         int i = 0;
         for (int id : pliSequence) {
             String column = columns.get(id);
