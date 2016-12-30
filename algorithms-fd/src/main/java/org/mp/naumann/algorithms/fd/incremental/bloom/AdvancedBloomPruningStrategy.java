@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 public class AdvancedBloomPruningStrategy extends BloomPruningStrategy {
 
-    private static final int MAX_LEVEL = 2;
+    private static final int MAX_LEVEL = 13;
 
     private final Map<Integer, String> idsToColumn = new HashMap<>();
     private final List<List<String>> bloomFds = new ArrayList<>();
@@ -39,7 +39,7 @@ public class AdvancedBloomPruningStrategy extends BloomPruningStrategy {
 
     @Override
     protected BloomFilter<Set<ColumnValue>> initializeFilter(List<Map<String, String>> invertedRecords) {
-        BloomFilter<Set<ColumnValue>> filter = BloomFilter.create(new ValueCombinationFunnel(), 100_000);
+        BloomFilter<Set<ColumnValue>> filter = BloomFilter.create(new ValueCombinationFunnel(), 100_000_000);
         for (int level = 0; level <= maxLevel; level++) {
             List<FDTreeElementLhsPair> currentLevel = FDTreeUtils.getFdLevel(posCover, level);
             for (FDTreeElementLhsPair fd : currentLevel) {

@@ -34,7 +34,7 @@ public abstract class BloomPruningStrategy {
         this.columns = columns;
         this.numRecords = numRecords;
         this.pliSequence = pliSequence;
-        this.maxLevel = maxLevel;
+        this.maxLevel = Math.min(columns.size(), maxLevel);
     }
 
     private List<Map<String, String>> invertRecords(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps) {

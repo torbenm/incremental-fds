@@ -203,6 +203,9 @@ public class Validator {
 	}
 
 	private boolean canBeViolated(CardinalitySet existingCombinations, FDTreeElementLhsPair fd) {
+		if(fd.getLhs().cardinality() > existingCombinations.getDepth()) {
+			return true;
+		}
 		for (int i = existingCombinations.getDepth(); i >= (int) fd.getLhs().cardinality(); i--) {
 			for (OpenBitSet ex : existingCombinations.getLevel(i)) {
 				if (BitSetUtils.isContained(fd.getLhs(), ex)) {
