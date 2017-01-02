@@ -9,11 +9,17 @@ public class BitSetUtils {
 	}
 	
 	public static String toString(OpenBitSet a) {
-		StringBuilder s = new StringBuilder();
-		for(int i = 0; i < a.length(); i++) {
-			s.append(a.fastGet(i) ? 1 : 0);
-		}
-		return s.toString();
+		try {
+            StringBuilder s = new StringBuilder();
+
+            for (int i = 0; i < a.length(); i++) {
+                System.out.print(i);
+                s.append(a.fastGet(i) ? 1 : 0);
+            }
+            return s.toString();
+        }catch(AssertionError e){
+            return "";
+        }
 	}
 
 }
