@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, FDIntermediateDatastructure> {
 
@@ -77,14 +78,15 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		this.negCover = intermediateDatastructure.getNegCover();
 		PLIBuilder pliBuilder = intermediateDatastructure.getPliBuilder();
 		List<Integer> pliSequence = pliBuilder.getPliOrder();
+		List<String> orderedColumns = pliSequence.stream().map(columns::get).collect(Collectors.toList());
 		List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
 		if(version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM){
-			bloomPruning = new SimpleBloomPruningStrategyBuilder(columns, pliBuilder.getNumLastRecords(), pliSequence);
-			bloomPruning.initialize(clusterMaps);
+			bloomPruning = new SimpleBloomPruningStrategyBuilder(orderedColumns);
+			bloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliSequence);
 		}
 		if(version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED){
-			advancedBloomPruning = new AdvancedBloomPruningStrategyBuilder(columns, pliBuilder.getNumLastRecords(), pliSequence, posCover);
-			advancedBloomPruning.initialize(clusterMaps);
+			advancedBloomPruning = new AdvancedBloomPruningStrategyBuilder(orderedColumns, posCover);
+			advancedBloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliSequence);
 		}
 		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
 			simplePruning = new SimplePruningStrategyBuilder(columns);

@@ -28,10 +28,6 @@ import java.util.stream.Collectors;
 public abstract class BloomPruningStrategyBuilder {
 
     private final List<String> columns;
-    private final Map<Integer, String> idsToColumn = new HashMap<>();
-    private final Map<String, Integer> columnsToId = new HashMap<>();
-    private final List<Integer> pliSequence;
-    private final int numRecords;
     private BloomFilter<Set<ColumnValue>> filter;
 
     private int puts = 0;
@@ -40,20 +36,19 @@ public abstract class BloomPruningStrategyBuilder {
     private int bloomViolations = 0;
     private int innerViolations = 0;
 
-    protected BloomPruningStrategyBuilder(List<String> columns, int numRecords, List<Integer> pliSequence) {
+    protected BloomPruningStrategyBuilder(List<String> columns) {
         this.columns = columns;
-        this.numRecords = numRecords;
-        this.pliSequence = pliSequence;
     }
 
-    private List<Map<String, String>> invertRecords(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps) {
+    private List<Map<String, String>> invertRecords(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<Integer> pliSequence) {
         FDLogger.log(Level.FINER, "Inverting records...");
         List<Map<String, String>> invertedRecords = new ArrayList<>(numRecords);
         for (int i = 0; i < numRecords; i++) {
             invertedRecords.add(new HashMap<>());
         }
         int i = 0;
-        for (HashMap<String, IntArrayList> clusterMap : clusterMaps) {
+        for (int columnId : pliSequence) {
+            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(columnId);
             String column = columns.get(i++);
             for (Entry<String, IntArrayList> entry : clusterMap.entrySet()) {
                 String value = entry.getKey();
@@ -64,10 +59,6 @@ public abstract class BloomPruningStrategyBuilder {
         }
         FDLogger.log(Level.FINER, "Finished inverting records");
         return invertedRecords;
-    }
-
-    protected int getId(String column) {
-        return columnsToId.get(column);
     }
 
     public PruningStrategy buildStrategy(Batch batch) {
@@ -129,32 +120,30 @@ public abstract class BloomPruningStrategyBuilder {
         int next;
         List<String> cols = new ArrayList<>();
         while ((next = combination.nextSetBit(currIndex)) != -1) {
-            cols.add(idsToColumn.get(next));
+            cols.add(columns.get(next));
             currIndex = next + 1;
         }
         return cols;
     }
 
-    protected abstract Set<OpenBitSet> generateCombinations(List<String> columns);
+    protected abstract Set<OpenBitSet> generateCombinations();
 
     private boolean mightContain(Set<ColumnValue> combination) {
         requests++;
         return filter.mightContain(combination);
     }
 
-    public void initialize(List<HashMap<String, IntArrayList>> clusterMaps) {
-        int i = 0;
-        for (int id : pliSequence) {
-            String column = columns.get(id);
-            idsToColumn.put(i, column);
-            columnsToId.put(column, i);
-            i++;
-        }
-        List<Map<String, String>> invertedRecords = invertRecords(numRecords, clusterMaps);
-        combinations = toMap(generateCombinations(columns));
-        FDLogger.log(Level.FINER, "Keeping track of " + combinations.size() + " column combinations");
+    public void initialize(List<HashMap<String, IntArrayList>> clusterMaps, int numRecords, List<Integer> pliSequence) {
+        Collection<Map<String, String>> invertedRecords = invertRecords(numRecords, clusterMaps, pliSequence);
+        initialize(invertedRecords);
+    }
+
+    public void initialize(Collection<Map<String, String>> invertedRecords) {
+        combinations = toMap(generateCombinations());
+        int numCombinations = combinations.size();
+        FDLogger.log(Level.FINER, "Keeping track of " + numCombinations + " column combinations");
         FDLogger.log(Level.FINER, "Initializing bloom filter...");
-        filter = createFilter();
+        filter = BloomFilter.create(new ValueCombinationFunnel(), 100_000_000);
         for (List<String> combination : combinations.values()) {
             for (Map<String, String> record : invertedRecords) {
                 updateFilter(combination, record);
@@ -170,8 +159,6 @@ public abstract class BloomPruningStrategyBuilder {
     private void updateFilter(List<String> cols, Map<String, String> record) {
         put(getColumnCombination(cols, record));
     }
-
-    protected abstract BloomFilter<Set<ColumnValue>> createFilter();
 
     private Set<ColumnValue> getColumnCombination(Collection<String> cols, Map<String, String> record) {
         Set<ColumnValue> set = new HashSet<>();

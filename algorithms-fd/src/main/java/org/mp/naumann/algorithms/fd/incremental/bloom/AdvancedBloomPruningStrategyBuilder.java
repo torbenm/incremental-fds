@@ -1,7 +1,5 @@
 package org.mp.naumann.algorithms.fd.incremental.bloom;
 
-import com.google.common.hash.BloomFilter;
-
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
@@ -15,16 +13,22 @@ public class AdvancedBloomPruningStrategyBuilder extends BloomPruningStrategyBui
 
     private static final int MAX_LEVEL = 13;
     private final FDTree posCover;
+    private int maxLevel;
 
-    public AdvancedBloomPruningStrategyBuilder(List<String> columns, int numRecords, List<Integer> pliSequence, FDTree posCover) {
-        super(columns, numRecords, pliSequence);
+    public AdvancedBloomPruningStrategyBuilder(List<String> columns, FDTree posCover, int maxLevel) {
+        super(columns);
         this.posCover = posCover;
+        this.maxLevel = maxLevel;
+    }
+
+    public AdvancedBloomPruningStrategyBuilder(List<String> columns, FDTree posCover) {
+        this(columns, posCover, MAX_LEVEL);
     }
 
     @Override
-    protected Set<OpenBitSet> generateCombinations(List<String> cols) {
+    protected Set<OpenBitSet> generateCombinations() {
         Set<OpenBitSet> bloomFds = new HashSet<>();
-        int maxLevel = Math.min(cols.size(), MAX_LEVEL);
+        int maxLevel = Math.min(posCover.getDepth(), this.maxLevel);
         for (int level = 0; level <= maxLevel; level++) {
             List<FDTreeElementLhsPair> currentLevel = FDTreeUtils.getFdLevel(posCover, level);
             for (FDTreeElementLhsPair fd : currentLevel) {
@@ -32,10 +36,5 @@ public class AdvancedBloomPruningStrategyBuilder extends BloomPruningStrategyBui
             }
         }
         return bloomFds;
-    }
-
-    @Override
-    protected BloomFilter<Set<ColumnValue>> createFilter() {
-        return BloomFilter.create(new ValueCombinationFunnel(), 100_000_000);
     }
 }
