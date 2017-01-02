@@ -17,7 +17,7 @@ public class SimplePruningStrategyBuilder {
         this.columns = columns;
     }
 
-    public PruningStrategy preparePruning(CompressedDiff diff) {
+    public PruningStrategy buildStrategy(CompressedDiff diff) {
         int numAttributes = columns.size();
         CardinalitySet existingCombinations = new CardinalitySet(numAttributes);
         for (int[] insert : diff.getInsertedRecords()) {

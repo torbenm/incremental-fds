@@ -42,10 +42,10 @@ public class Validator {
 	private int pruned = 0;
 	private int validations = 0;
 	private final IncrementalFD alg;
-	private PruningStrategy pruningStrategy;
+	private final List<PruningStrategy> pruningStrategies = new ArrayList<>();
 
-	public void setPruningStrategy(PruningStrategy pruningStrategy) {
-		this.pruningStrategy = pruningStrategy;
+	public void addPruningStrategy(PruningStrategy pruningStrategy) {
+		pruningStrategies.add(pruningStrategy);
 	}
 
 	public Validator(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian, IncrementalFD alg) {
@@ -279,7 +279,7 @@ public class Validator {
 	protected List<FDTreeElementLhsPair> pruneLevel(List<FDTreeElementLhsPair> lvl) {
 		List<FDTreeElementLhsPair> currentLevel = new ArrayList<>();
 		for (FDTreeElementLhsPair fd : lvl) {
-			if (pruningStrategy == null || pruningStrategy.canBeViolated(fd)) {
+			if (pruningStrategies.stream().anyMatch(ps -> ps.canBeViolated(fd))) {
 				currentLevel.add(fd);
 			} else {
 				pruned++;

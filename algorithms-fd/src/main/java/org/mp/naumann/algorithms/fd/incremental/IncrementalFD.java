@@ -103,16 +103,16 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
 		PruningStrategy pruningStrategy = null;
 		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
-			pruningStrategy = bloomPruning.preparePruning(batch);
+			pruningStrategy = bloomPruning.buildStrategy(batch);
 		}
 		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED) {
-			pruningStrategy = advancedBloomPruning.preparePruning(batch);
+			pruningStrategy = advancedBloomPruning.buildStrategy(batch);
 		}
 		CompressedDiff diff = incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
 		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
-			pruningStrategy = simplePruning.preparePruning(diff);
+			pruningStrategy = simplePruning.buildStrategy(diff);
 		}
 		FDLogger.log(Level.FINE, "Finished collecting existing combinations");
 		Validator validator = new Validator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian, this);
@@ -122,7 +122,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
         List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
-        validator.setPruningStrategy(pruningStrategy);
+        validator.addPruningStrategy(pruningStrategy);
 		int i = 1;
 		do {
 			FDLogger.log(Level.FINE, "Started round " + i);

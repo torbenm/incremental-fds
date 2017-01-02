@@ -25,10 +25,10 @@ public class IncrementalFDDemo {
     private static final String batchFileName = "csv/inserts.adult.csv";
     private static final String schema = "";
     private static final String tableName = "benchmark.adult";
-    private static final int batchSize = 1000;
+    private static final int batchSize = 10;
 
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
-        FDLogger.setLevel(Level.FINE);
+        FDLogger.setLevel(Level.FINER);
         try (DataConnector dc = new JdbcDataConnector(
                 ConnectionManager.getCsvConnection(IncrementalFDDemo.class, "", ","))) {
 
@@ -51,7 +51,7 @@ public class IncrementalFDDemo {
             BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 
             // create incremental algorithm
-            IncrementalFD algorithm = new IncrementalFD(table.getColumnNames(), tableName, IncrementalFDVersion.V0_3);
+            IncrementalFD algorithm = new IncrementalFD(table.getColumnNames(), tableName, IncrementalFDVersion.V0_2);
             IncrementalFDResultListener listener = new IncrementalFDResultListener();
             algorithm.addResultListener(listener);
             algorithm.setIntermediateDataStructure(ds);
