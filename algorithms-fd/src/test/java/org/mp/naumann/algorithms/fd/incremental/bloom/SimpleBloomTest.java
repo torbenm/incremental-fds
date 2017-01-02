@@ -89,4 +89,25 @@ public class SimpleBloomTest {
         assertFalse(strategy.cannotBeViolated(new FDTreeElementLhsPair(null, lhs)));
     }
 
+    @Test
+    public void testInnerCombination() {
+        List<String> columns = Arrays.asList("a");
+        SimpleBloomPruningStrategyBuilder builder = new SimpleBloomPruningStrategyBuilder(columns, 1);
+        List<Map<String, String>> records = new ArrayList<>();
+        builder.initialize(records);
+        String schema = "";
+        String tableName = "";
+        List<Statement> statements = new ArrayList<>();
+        Map<String, String> record = new HashMap<>();
+        record.put("a", "0");
+        Statement statement = new DefaultInsertStatement(record, schema, tableName);
+        statements.add(statement);
+        statements.add(statement);
+        Batch batch = new ListBatch(statements, schema, tableName);
+        PruningStrategy strategy = builder.buildStrategy(batch);
+        OpenBitSet lhs = new OpenBitSet(columns.size());
+        lhs.fastSet(0);
+        assertFalse(strategy.cannotBeViolated(new FDTreeElementLhsPair(null, lhs)));
+    }
+
 }

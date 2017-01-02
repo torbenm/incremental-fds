@@ -68,24 +68,23 @@ public abstract class BloomPruningStrategyBuilder {
         int oldInnerViolations = innerViolations;
         CardinalitySet nonViolations = new CardinalitySet(columns.size());
         for (Entry<OpenBitSet, List<String>> combination : combinations.entrySet()) {
-            boolean canBeViolated = false;
+            boolean isUniqueCombination = true;
             Set<Set<ColumnValue>> inner = new HashSet<>();
             for (InsertStatement insert : inserts) {
                 Set<ColumnValue> vc = getValues(insert.getValueMap(), combination.getValue());
-                boolean innerViolation = inner.contains(vc);
-                boolean bloomViolation = mightContain(vc);
-                if (innerViolation) {
+                if (inner.contains(vc)) {
                     innerViolations++;
-                } else if (bloomViolation) {
+                    isUniqueCombination = false;
+                } else if (mightContain(vc)) {
                     bloomViolations++;
+                    isUniqueCombination = false;
                 }
-                if (innerViolation || bloomViolation) {
-                    canBeViolated = true;
+                if (!isUniqueCombination) {
                     break;
                 }
                 inner.add(vc);
             }
-            if (!canBeViolated) {
+            if (isUniqueCombination) {
                 nonViolations.add(combination.getKey());
                 FDLogger.log(Level.FINEST, "All combinations new for columns " + combination.getValue());
             }
@@ -157,15 +156,7 @@ public abstract class BloomPruningStrategyBuilder {
     }
 
     private void updateFilter(List<String> cols, Map<String, String> record) {
-        put(getColumnCombination(cols, record));
-    }
-
-    private Set<ColumnValue> getColumnCombination(Collection<String> cols, Map<String, String> record) {
-        Set<ColumnValue> set = new HashSet<>();
-        for (String column : cols) {
-            set.add(new ColumnValue(column, record.get(column)));
-        }
-        return set;
+        put(getValues(record, cols));
     }
 
     private void put(Set<ColumnValue> combination) {
