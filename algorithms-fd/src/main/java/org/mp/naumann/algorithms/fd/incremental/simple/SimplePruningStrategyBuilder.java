@@ -48,18 +48,18 @@ public class SimplePruningStrategyBuilder {
         }
 
         @Override
-        public boolean canBeViolated(FDTreeElementLhsPair fd) {
+        public boolean cannotBeViolated(FDTreeElementLhsPair fd) {
             if(fd.getLhs().cardinality() > existingCombinations.getDepth()) {
-                return true;
+                return false;
             }
             for (int i = existingCombinations.getDepth(); i >= (int) fd.getLhs().cardinality(); i--) {
                 for (OpenBitSet ex : existingCombinations.getLevel(i)) {
                     if (BitSetUtils.isContained(fd.getLhs(), ex)) {
-                        return true;
+                        return false;
                     }
                 }
             }
-            return false;
+            return true;
         }
     }
 }

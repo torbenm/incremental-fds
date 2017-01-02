@@ -182,19 +182,19 @@ public abstract class BloomPruningStrategyBuilder {
         }
 
         @Override
-        public boolean canBeViolated(FDTreeElementLhsPair fd) {
+        public boolean cannotBeViolated(FDTreeElementLhsPair fd) {
             OpenBitSet toDo = fd.getLhs().clone();
             for (int level = nonViolations.getDepth(); level >= 0; level--) {
                 for (OpenBitSet nonViolation : nonViolations.getLevel(level)) {
                     if (BitSetUtils.isContained(nonViolation, fd.getLhs())) {
                         toDo.andNot(nonViolation);
                         if (toDo.cardinality() == 0) {
-                            return false;
+                            return true;
                         }
                     }
                 }
             }
-            return true;
+            return false;
         }
 
     }

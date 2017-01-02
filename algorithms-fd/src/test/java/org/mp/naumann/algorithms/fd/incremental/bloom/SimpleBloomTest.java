@@ -63,8 +63,8 @@ public class SimpleBloomTest {
         lhs.fastSet(0);
         lhs.fastSet(1);
         lhs.fastSet(2);
-        assertFalse(strategy2.canBeViolated(new FDTreeElementLhsPair(null, lhs)));
-        assertTrue(strategy1.canBeViolated(new FDTreeElementLhsPair(null, lhs)));
+        assertTrue(strategy2.cannotBeViolated(new FDTreeElementLhsPair(null, lhs)));
+        assertFalse(strategy1.cannotBeViolated(new FDTreeElementLhsPair(null, lhs)));
     }
 
     @Test
@@ -84,9 +84,9 @@ public class SimpleBloomTest {
         PruningStrategy strategy = builder.buildStrategy(batch);
         OpenBitSet lhs = new OpenBitSet(columns.size());
         lhs.fastSet(0);
-        assertFalse(strategy.canBeViolated(new FDTreeElementLhsPair(null, lhs)));
+        assertTrue(strategy.cannotBeViolated(new FDTreeElementLhsPair(null, lhs)));
         strategy = builder.buildStrategy(batch);
-        assertTrue(strategy.canBeViolated(new FDTreeElementLhsPair(null, lhs)));
+        assertFalse(strategy.cannotBeViolated(new FDTreeElementLhsPair(null, lhs)));
     }
 
 }

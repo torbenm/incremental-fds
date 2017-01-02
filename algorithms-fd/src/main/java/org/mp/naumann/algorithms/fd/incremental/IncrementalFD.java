@@ -103,28 +103,25 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		}
 		FDLogger.log(Level.FINE, "Started IncrementalFD for new Batch");
 		SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
-		PruningStrategy pruningStrategy = null;
-		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
-			pruningStrategy = bloomPruning.buildStrategy(batch);
-		}
-		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED) {
-			pruningStrategy = advancedBloomPruning.buildStrategy(batch);
-		}
 		CompressedDiff diff = incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
-		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
-			pruningStrategy = simplePruning.buildStrategy(diff);
-		}
-		FDLogger.log(Level.FINE, "Finished collecting existing combinations");
 		Validator validator = new Validator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian, this);
 		Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
 				intermediateDatastructure.getValueComparator(), this.memoryGuardian);
 		Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
+		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
+			validator.addPruningStrategy(bloomPruning.buildStrategy(batch));
+		}
+		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED) {
+			validator.addPruningStrategy(advancedBloomPruning.buildStrategy(batch));
+		}
+		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
+			validator.addPruningStrategy(simplePruning.buildStrategy(diff));
+		}
+		FDLogger.log(Level.FINE, "Finished building pruning strategies");
 
         List<IntegerPair> comparisonSuggestions = new ArrayList<>();
-
-        validator.addPruningStrategy(pruningStrategy);
 		int i = 1;
 		do {
 			FDLogger.log(Level.FINE, "Started round " + i);

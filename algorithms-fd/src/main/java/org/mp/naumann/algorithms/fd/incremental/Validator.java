@@ -279,10 +279,10 @@ public class Validator {
 	protected List<FDTreeElementLhsPair> pruneLevel(List<FDTreeElementLhsPair> lvl) {
 		List<FDTreeElementLhsPair> currentLevel = new ArrayList<>();
 		for (FDTreeElementLhsPair fd : lvl) {
-			if (pruningStrategies.stream().anyMatch(ps -> ps.canBeViolated(fd))) {
-				currentLevel.add(fd);
-			} else {
+			if (pruningStrategies.stream().anyMatch(ps -> ps.cannotBeViolated(fd))) {
 				pruned++;
+			} else {
+				currentLevel.add(fd);
 			}
 		}
 		FDLogger.log(Level.FINEST, "Will validate: ");

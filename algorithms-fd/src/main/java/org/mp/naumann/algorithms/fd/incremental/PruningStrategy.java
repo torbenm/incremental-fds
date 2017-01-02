@@ -4,6 +4,6 @@ import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 
 public interface PruningStrategy {
 
-    boolean canBeViolated(FDTreeElementLhsPair fd);
+    boolean cannotBeViolated(FDTreeElementLhsPair fd);
 
 }
