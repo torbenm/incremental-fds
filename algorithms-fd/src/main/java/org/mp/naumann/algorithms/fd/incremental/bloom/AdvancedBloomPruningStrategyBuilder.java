@@ -19,15 +19,15 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class AdvancedBloomPruningStrategy extends BloomPruningStrategy {
+public class AdvancedBloomPruningStrategyBuilder extends BloomPruningStrategyBuilder {
 
     private static final int MAX_LEVEL = 13;
 
     private final Map<Integer, String> idsToColumn = new HashMap<>();
-    private final List<List<String>> bloomFds = new ArrayList<>();
+    private final Map<OpenBitSet, List<String>> bloomFds = new HashMap<>();
     private final FDTree posCover;
 
-    public AdvancedBloomPruningStrategy(List<String> columns, int numRecords, List<Integer> pliSequence, FDTree posCover) {
+    public AdvancedBloomPruningStrategyBuilder(List<String> columns, int numRecords, List<Integer> pliSequence, FDTree posCover) {
         super(columns, numRecords, pliSequence, MAX_LEVEL);
         this.posCover = posCover;
         int i = 0;
@@ -44,7 +44,7 @@ public class AdvancedBloomPruningStrategy extends BloomPruningStrategy {
             List<FDTreeElementLhsPair> currentLevel = FDTreeUtils.getFdLevel(posCover, level);
             for (FDTreeElementLhsPair fd : currentLevel) {
                 List<String> fdLhs = getColumns(fd);
-                bloomFds.add(fdLhs);
+                bloomFds.put(fd.getLhs(), fdLhs);
                 for (Map<String, String> record : invertedRecords) {
                     Set<ColumnValue> combination = getColumnCombination(fdLhs, record);
                     filter.put(combination);
@@ -77,7 +77,7 @@ public class AdvancedBloomPruningStrategy extends BloomPruningStrategy {
     @Override
     protected Collection<Set<ColumnValue>> getCombinationsToCheck(InsertStatement insert) {
         List<Set<ColumnValue>> toCheck = new ArrayList<>();
-        for (List<String> fdLhs : bloomFds) {
+        for (List<String> fdLhs : bloomFds.values()) {
             Set<ColumnValue> combination = getColumnCombination(fdLhs, insert.getValueMap());
             toCheck.add(combination);
         }
@@ -86,7 +86,7 @@ public class AdvancedBloomPruningStrategy extends BloomPruningStrategy {
 
     @Override
     protected void updateFilter(InsertStatement insert) {
-        for (List<String> fdLhs : bloomFds) {
+        for (List<String> fdLhs : bloomFds.values()) {
             Set<ColumnValue> combination = getColumnCombination(fdLhs, insert.getValueMap());
             put(combination);
         }
@@ -97,12 +97,17 @@ public class AdvancedBloomPruningStrategy extends BloomPruningStrategy {
         List<InsertStatement> inserts = batch.getInsertStatements();
         Map<Set<ColumnValue>, Integer> innerCombinations = new HashMap<>();
         for (InsertStatement insert : inserts) {
-            for (List<String> fdLhs : bloomFds) {
+            for (List<String> fdLhs : bloomFds.values()) {
                 Set<ColumnValue> combination = getColumnCombination(fdLhs, insert.getValueMap());
                 innerCombinations.merge(combination, 1, Integer::sum);
             }
         }
         return innerCombinations.entrySet().stream()
                 .filter(e -> e.getValue() > 1).map(Entry::getKey).collect(Collectors.toSet());
+    }
+
+    @Override
+    protected boolean isInFilter(FDTreeElementLhsPair fd) {
+        return bloomFds.containsKey(fd.getLhs());
     }
 }

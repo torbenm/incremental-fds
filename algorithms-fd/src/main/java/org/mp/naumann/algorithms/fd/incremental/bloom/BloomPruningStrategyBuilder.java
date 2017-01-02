@@ -7,6 +7,9 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.CardinalitySet;
+import org.mp.naumann.algorithms.fd.incremental.PruningStrategy;
+import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
 
@@ -19,7 +22,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 
-public abstract class BloomPruningStrategy {
+public abstract class BloomPruningStrategyBuilder {
 
     protected final int maxLevel;
     private final List<String> columns;
@@ -30,7 +33,7 @@ public abstract class BloomPruningStrategy {
     private int puts = 0;
     private int requests = 0;
 
-    protected BloomPruningStrategy(List<String> columns, int numRecords, List<Integer> pliSequence, int maxLevel) {
+    protected BloomPruningStrategyBuilder(List<String> columns, int numRecords, List<Integer> pliSequence, int maxLevel) {
         this.columns = columns;
         this.numRecords = numRecords;
         this.pliSequence = pliSequence;
@@ -55,7 +58,7 @@ public abstract class BloomPruningStrategy {
         return invertedRecords;
     }
 
-    public CardinalitySet getExistingCombinations(Batch batch) {
+    public PruningStrategy preparePruning(Batch batch) {
         CardinalitySet existingCombinations = new CardinalitySet(maxLevel);
         List<InsertStatement> inserts = batch.getInsertStatements();
         Set<Set<ColumnValue>> innerDoubleCombinations = innerCombinationsToCheck(batch);
@@ -80,7 +83,7 @@ public abstract class BloomPruningStrategy {
         FDLogger.log(Level.FINER, "Made " + (puts - oldPuts) + " puts on filter");
         FDLogger.log(Level.FINER, "Made " + requests + " total requests on filter");
         FDLogger.log(Level.FINER, "Made " + puts + " total puts on filter");
-        return existingCombinations;
+        return new BloomPruningStrategy(existingCombinations);
     }
 
     protected boolean mightContain(Set<ColumnValue> combination) {
@@ -110,4 +113,34 @@ public abstract class BloomPruningStrategy {
     protected abstract void updateFilter(InsertStatement insert);
 
     protected abstract Set<Set<ColumnValue>> innerCombinationsToCheck(Batch batch);
+
+    private class BloomPruningStrategy implements PruningStrategy {
+
+        private final CardinalitySet existingCombinations;
+
+        private BloomPruningStrategy(CardinalitySet existingCombinations) {
+            this.existingCombinations = existingCombinations;
+        }
+
+        @Override
+        public boolean canBeViolated(FDTreeElementLhsPair fd) {
+            if (isInFilter(fd)) {
+                if (fd.getLhs().cardinality() > existingCombinations.getDepth()) {
+                    return true;
+                }
+                for (int i = existingCombinations.getDepth(); i >= (int) fd.getLhs().cardinality(); i--) {
+                    for (OpenBitSet ex : existingCombinations.getLevel(i)) {
+                        if (BitSetUtils.isContained(fd.getLhs(), ex)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            return true;
+        }
+
+    }
+
+    protected abstract boolean isInFilter(FDTreeElementLhsPair fd);
 }

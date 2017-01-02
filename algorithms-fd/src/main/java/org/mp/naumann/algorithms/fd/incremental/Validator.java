@@ -12,7 +12,6 @@ import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
@@ -40,10 +39,14 @@ public class Validator {
 	private ExecutorService executor;
 
 	private int level = 0;
-	private CardinalitySet existingCombinations;
 	private int pruned = 0;
 	private int validations = 0;
 	private final IncrementalFD alg;
+	private PruningStrategy pruningStrategy;
+
+	public void setPruningStrategy(PruningStrategy pruningStrategy) {
+		this.pruningStrategy = pruningStrategy;
+	}
 
 	public Validator(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian, IncrementalFD alg) {
 		this.negCover = negCover;
@@ -197,24 +200,6 @@ public class Validator {
 		
 		return validationResult;
 	}
-
-	public void setExistingCombinations(CardinalitySet existingCombinations) {
-		this.existingCombinations = existingCombinations;
-	}
-
-	private boolean canBeViolated(CardinalitySet existingCombinations, FDTreeElementLhsPair fd) {
-		if(fd.getLhs().cardinality() > existingCombinations.getDepth()) {
-			return true;
-		}
-		for (int i = existingCombinations.getDepth(); i >= (int) fd.getLhs().cardinality(); i--) {
-			for (OpenBitSet ex : existingCombinations.getLevel(i)) {
-				if (BitSetUtils.isContained(fd.getLhs(), ex)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
 	
 	public List<IntegerPair> validatePositiveCover() throws AlgorithmExecutionException {
 		int numAttributes = this.plis.size();
@@ -294,7 +279,7 @@ public class Validator {
 	protected List<FDTreeElementLhsPair> pruneLevel(List<FDTreeElementLhsPair> lvl) {
 		List<FDTreeElementLhsPair> currentLevel = new ArrayList<>();
 		for (FDTreeElementLhsPair fd : lvl) {
-			if (existingCombinations == null || canBeViolated(existingCombinations, fd)) {
+			if (pruningStrategy == null || pruningStrategy.canBeViolated(fd)) {
 				currentLevel.add(fd);
 			} else {
 				pruned++;

@@ -2,6 +2,7 @@ package org.mp.naumann.algorithms.fd.incremental.bloom;
 
 import com.google.common.hash.BloomFilter;
 
+import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.utils.PowerSet;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
@@ -15,17 +16,17 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class SimpleBloomPruningStrategy extends BloomPruningStrategy {
+public class SimpleBloomPruningStrategyBuilder extends BloomPruningStrategyBuilder {
 
     private static final int MAX_LEVEL = 2;
 
-    public SimpleBloomPruningStrategy(List<String> columns, int numRecords, List<Integer> pliSequence) {
+    public SimpleBloomPruningStrategyBuilder(List<String> columns, int numRecords, List<Integer> pliSequence) {
         super(columns, numRecords, pliSequence, MAX_LEVEL);
     }
 
     @Override
     protected BloomFilter<Set<ColumnValue>> initializeFilter(List<Map<String, String>> invertedRecords) {
-        BloomFilter<Set<ColumnValue>> filter = BloomFilter.create(new ValueCombinationFunnel(), 100_000);
+        BloomFilter<Set<ColumnValue>> filter = BloomFilter.create(new ValueCombinationFunnel(), 100_00_000);
         for (int level = 0; level <= maxLevel; level++) {
             for (Map<String, String> record : invertedRecords) {
                 ValueCombination vc = new ValueCombination();
@@ -75,6 +76,11 @@ public class SimpleBloomPruningStrategy extends BloomPruningStrategy {
         }
         return innerCombinations.entrySet().stream()
                 .filter(e -> e.getValue() > 1).map(Entry::getKey).collect(Collectors.toSet());
+    }
+
+    @Override
+    protected boolean isInFilter(FDTreeElementLhsPair fd) {
+        return fd.getLhs().cardinality() <= maxLevel;
     }
 
     private static class ValueCombination {

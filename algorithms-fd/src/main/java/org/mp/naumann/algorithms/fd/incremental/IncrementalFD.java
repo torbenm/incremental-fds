@@ -11,10 +11,10 @@ import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
-import org.mp.naumann.algorithms.fd.incremental.bloom.AdvancedBloomPruningStrategy;
-import org.mp.naumann.algorithms.fd.incremental.bloom.BloomPruningStrategy;
-import org.mp.naumann.algorithms.fd.incremental.bloom.SimpleBloomPruningStrategy;
-import org.mp.naumann.algorithms.fd.incremental.simple.SimplePruningStrategy;
+import org.mp.naumann.algorithms.fd.incremental.bloom.AdvancedBloomPruningStrategyBuilder;
+import org.mp.naumann.algorithms.fd.incremental.bloom.BloomPruningStrategyBuilder;
+import org.mp.naumann.algorithms.fd.incremental.bloom.SimpleBloomPruningStrategyBuilder;
+import org.mp.naumann.algorithms.fd.incremental.simple.SimplePruningStrategyBuilder;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
@@ -46,9 +46,9 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 	private boolean initialized = false;
 
 	private IncrementalPLIBuilder incrementalPLIBuilder;
-	private BloomPruningStrategy advancedBloomPruning;
-	private SimplePruningStrategy simplePruning;
-	private BloomPruningStrategy bloomPruning;
+	private BloomPruningStrategyBuilder advancedBloomPruning;
+	private SimplePruningStrategyBuilder simplePruning;
+	private BloomPruningStrategyBuilder bloomPruning;
 	private FDSet negCover;
 
 	public IncrementalFD(List<String> columns, String tableName, IncrementalFDVersion version){
@@ -79,15 +79,15 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		List<Integer> pliSequence = pliBuilder.getPliOrder();
 		List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
 		if(version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM){
-			bloomPruning = new SimpleBloomPruningStrategy(columns, pliBuilder.getNumLastRecords(), pliSequence);
+			bloomPruning = new SimpleBloomPruningStrategyBuilder(columns, pliBuilder.getNumLastRecords(), pliSequence);
 			bloomPruning.initialize(clusterMaps);
 		}
 		if(version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED){
-			advancedBloomPruning = new AdvancedBloomPruningStrategy(columns, pliBuilder.getNumLastRecords(), pliSequence, posCover);
+			advancedBloomPruning = new AdvancedBloomPruningStrategyBuilder(columns, pliBuilder.getNumLastRecords(), pliSequence, posCover);
 			advancedBloomPruning.initialize(clusterMaps);
 		}
 		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
-			simplePruning = new SimplePruningStrategy(columns);
+			simplePruning = new SimplePruningStrategyBuilder(columns);
 		}
 		incrementalPLIBuilder = new IncrementalPLIBuilder(pliBuilder, this.version, this.columns);
 	}
@@ -101,18 +101,18 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		}
 		FDLogger.log(Level.FINE, "Started IncrementalFD for new Batch");
 		SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
-		CardinalitySet existingCombinations = null;
+		PruningStrategy pruningStrategy = null;
 		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
-			existingCombinations = bloomPruning.getExistingCombinations(batch);
+			pruningStrategy = bloomPruning.preparePruning(batch);
 		}
 		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED) {
-			existingCombinations = advancedBloomPruning.getExistingCombinations(batch);
+			pruningStrategy = advancedBloomPruning.preparePruning(batch);
 		}
 		CompressedDiff diff = incrementalPLIBuilder.update(batch);
 		List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
 		int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
 		if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
-			existingCombinations = simplePruning.getExistingCombinations(diff);
+			pruningStrategy = simplePruning.preparePruning(diff);
 		}
 		FDLogger.log(Level.FINE, "Finished collecting existing combinations");
 		Validator validator = new Validator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian, this);
@@ -122,7 +122,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
         List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
-        validator.setExistingCombinations(existingCombinations);
+        validator.setPruningStrategy(pruningStrategy);
 		int i = 1;
 		do {
 			FDLogger.log(Level.FINE, "Started round " + i);

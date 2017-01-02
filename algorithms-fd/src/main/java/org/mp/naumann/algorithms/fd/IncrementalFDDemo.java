@@ -25,7 +25,7 @@ public class IncrementalFDDemo {
     private static final String batchFileName = "csv/inserts.adult.csv";
     private static final String schema = "";
     private static final String tableName = "benchmark.adult";
-    private static final int batchSize = 100;
+    private static final int batchSize = 1000;
 
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
         FDLogger.setLevel(Level.FINE);
