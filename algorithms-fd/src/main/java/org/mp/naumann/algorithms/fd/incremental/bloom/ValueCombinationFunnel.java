@@ -4,18 +4,16 @@ import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 
 import java.nio.charset.Charset;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.Collection;
 
-public final class ValueCombinationFunnel implements Funnel<Set<ColumnValue>> {
+public final class ValueCombinationFunnel implements Funnel<Collection<ColumnValue>> {
 
 	private static final Charset CHARSET = Charset.defaultCharset();
 	private static final long serialVersionUID = 5774622439859844362L;
 
 	@Override
-	public void funnel(Set<ColumnValue> from, PrimitiveSink into) {
-		Set<ColumnValue> set = new TreeSet<>(from);
-		for(ColumnValue entry : set) {
+	public void funnel(Collection<ColumnValue> from, PrimitiveSink into) {
+		for(ColumnValue entry : from) {
 			into.putInt(entry.getColumn());
 			into.putString(entry.getValue(), CHARSET);
 		}

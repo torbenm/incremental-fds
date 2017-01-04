@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class IncrementalPLIBuilder {
+class IncrementalPLIBuilder {
 
 	private final PLIBuilder pliBuilder;
 	private final IncrementalFDVersion version;

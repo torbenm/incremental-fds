@@ -2,7 +2,7 @@ package org.mp.naumann.algorithms.fd.incremental.bloom;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.junit.Test;
-import org.mp.naumann.algorithms.fd.incremental.PruningStrategy;
+import org.mp.naumann.algorithms.fd.incremental.ValidationPruner;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.database.statement.DefaultInsertStatement;
 import org.mp.naumann.database.statement.Statement;
@@ -23,8 +23,8 @@ public class SimpleBloomTest {
     @Test
     public void testDifferentLevels() {
         List<String> columns = Arrays.asList("a", "b", "c", "d");
-        BloomPruningStrategyBuilder builder1 = new BloomPruningStrategyBuilder(columns).addGenerator(new SimpleBloomGenerator(1));
-        BloomPruningStrategyBuilder builder2 = new BloomPruningStrategyBuilder(columns).addGenerator(new SimpleBloomGenerator(2));
+        BloomPruningStrategy builder1 = new BloomPruningStrategy(columns).addGenerator(new AllCombinationsBloomGenerator(1));
+        BloomPruningStrategy builder2 = new BloomPruningStrategy(columns).addGenerator(new AllCombinationsBloomGenerator(2));
         List<String[]> records = new ArrayList<>();
         records.add(new String[] {"1", "1", "3", "1"});
         records.add(new String[] {"1", "2", "1", "1"});
@@ -42,8 +42,8 @@ public class SimpleBloomTest {
         Statement statement = new DefaultInsertStatement(record, schema, tableName);
         statements.add(statement);
         Batch batch = new ListBatch(statements, schema, tableName);
-        PruningStrategy strategy2 = builder2.buildStrategy(batch);
-        PruningStrategy strategy1 = builder1.buildStrategy(batch);
+        ValidationPruner strategy2 = builder2.analyzeBatch(batch);
+        ValidationPruner strategy1 = builder1.analyzeBatch(batch);
         OpenBitSet lhs = new OpenBitSet(columns.size());
         lhs.fastSet(0);
         lhs.fastSet(1);
@@ -55,7 +55,7 @@ public class SimpleBloomTest {
     @Test
     public void testUpdate() {
         List<String> columns = Arrays.asList("a");
-        BloomPruningStrategyBuilder builder = new BloomPruningStrategyBuilder(columns).addGenerator(new SimpleBloomGenerator(1));
+        BloomPruningStrategy builder = new BloomPruningStrategy(columns).addGenerator(new AllCombinationsBloomGenerator(1));
         List<String[]> records = new ArrayList<>();
         builder.initialize(records);
         String schema = "";
@@ -66,18 +66,18 @@ public class SimpleBloomTest {
         Statement statement = new DefaultInsertStatement(record, schema, tableName);
         statements.add(statement);
         Batch batch = new ListBatch(statements, schema, tableName);
-        PruningStrategy strategy = builder.buildStrategy(batch);
+        ValidationPruner strategy = builder.analyzeBatch(batch);
         OpenBitSet lhs = new OpenBitSet(columns.size());
         lhs.fastSet(0);
         assertTrue(strategy.cannotBeViolated(new FDTreeElementLhsPair(null, lhs)));
-        strategy = builder.buildStrategy(batch);
+        strategy = builder.analyzeBatch(batch);
         assertFalse(strategy.cannotBeViolated(new FDTreeElementLhsPair(null, lhs)));
     }
 
     @Test
     public void testInnerCombination() {
         List<String> columns = Arrays.asList("a");
-        BloomPruningStrategyBuilder builder = new BloomPruningStrategyBuilder(columns).addGenerator(new SimpleBloomGenerator(1));
+        BloomPruningStrategy builder = new BloomPruningStrategy(columns).addGenerator(new AllCombinationsBloomGenerator(1));
         List<String[]> records = new ArrayList<>();
         builder.initialize(records);
         String schema = "";
@@ -89,7 +89,7 @@ public class SimpleBloomTest {
         statements.add(statement);
         statements.add(statement);
         Batch batch = new ListBatch(statements, schema, tableName);
-        PruningStrategy strategy = builder.buildStrategy(batch);
+        ValidationPruner strategy = builder.analyzeBatch(batch);
         OpenBitSet lhs = new OpenBitSet(columns.size());
         lhs.fastSet(0);
         assertFalse(strategy.cannotBeViolated(new FDTreeElementLhsPair(null, lhs)));

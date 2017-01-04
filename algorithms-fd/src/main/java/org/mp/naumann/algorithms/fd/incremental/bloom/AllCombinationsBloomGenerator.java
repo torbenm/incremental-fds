@@ -9,17 +9,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class SimpleBloomGenerator implements BloomGenerator {
+public class AllCombinationsBloomGenerator implements BloomGenerator {
 
     private static final int MAX_LEVEL = 2;
     private final int maxLevel;
     private int numAttributes;
 
-    public SimpleBloomGenerator(int maxLevel) {
+    public AllCombinationsBloomGenerator(int maxLevel) {
         this.maxLevel = maxLevel;
     }
 
-    public SimpleBloomGenerator() {
+    public AllCombinationsBloomGenerator() {
         this(MAX_LEVEL);
     }
 

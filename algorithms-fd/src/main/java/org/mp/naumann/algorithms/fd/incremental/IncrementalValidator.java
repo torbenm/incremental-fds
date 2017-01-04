@@ -1,23 +1,18 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
-import org.mp.naumann.database.data.ColumnCombination;
-import org.mp.naumann.database.data.ColumnIdentifier;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -27,7 +22,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-public class Validator {
+public class IncrementalValidator {
 
 	private FDSet negCover;
 	private FDTree posCover;
@@ -41,14 +36,13 @@ public class Validator {
 	private int level = 0;
 	private int pruned = 0;
 	private int validations = 0;
-	private final IncrementalFD alg;
-	private final List<PruningStrategy> pruningStrategies = new ArrayList<>();
+	private final List<ValidationPruner> validationPruners = new ArrayList<>();
 
-	public void addPruningStrategy(PruningStrategy pruningStrategy) {
-		pruningStrategies.add(pruningStrategy);
+	public void addValidationPruner(ValidationPruner ValidationPruner) {
+		validationPruners.add(ValidationPruner);
 	}
 
-	public Validator(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian, IncrementalFD alg) {
+	public IncrementalValidator(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
 		this.negCover = negCover;
 		this.posCover = posCover;
 		this.numRecords = compressedRecords.length;
@@ -56,7 +50,6 @@ public class Validator {
 		this.compressedRecords = compressedRecords;
 		this.efficiencyThreshold = efficiencyThreshold;
 		this.memoryGuardian = memoryGuardian;
-		this.alg = alg;
 		
 		if (parallel) {
 			int numThreads = Runtime.getRuntime().availableProcessors();
@@ -114,21 +107,21 @@ public class Validator {
 				return result;
 			result.validations = result.validations + rhsSize;
 			
-			if (Validator.this.level == 0) {
+			if (IncrementalValidator.this.level == 0) {
 				// Check if rhs is unique
 				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
-					if (!Validator.this.plis.get(rhsAttr).isConstant(Validator.this.numRecords)) {
+					if (!IncrementalValidator.this.plis.get(rhsAttr).isConstant(IncrementalValidator.this.numRecords)) {
 						element.removeFd(rhsAttr);
 						result.invalidFDs.add(new FD(lhs, rhsAttr));
 					}
 					result.intersections++;
 				}
 			}
-			else if (Validator.this.level == 1) {
+			else if (IncrementalValidator.this.level == 1) {
 				// Check if lhs from plis refines rhs
 				int lhsAttribute = lhs.nextSetBit(0);
 				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
-					if (!Validator.this.plis.get(lhsAttribute).refines(Validator.this.compressedRecords, rhsAttr)) {
+					if (!IncrementalValidator.this.plis.get(lhsAttribute).refines(IncrementalValidator.this.compressedRecords, rhsAttr)) {
 						element.removeFd(rhsAttr);
 						result.invalidFDs.add(new FD(lhs, rhsAttr));
 					}
@@ -140,7 +133,7 @@ public class Validator {
 				int firstLhsAttr = lhs.nextSetBit(0);
 				
 				lhs.clear(firstLhsAttr);
-				OpenBitSet validRhs = Validator.this.plis.get(firstLhsAttr).refines(Validator.this.compressedRecords, lhs, rhs, result.comparisonSuggestions);
+				OpenBitSet validRhs = IncrementalValidator.this.plis.get(firstLhsAttr).refines(IncrementalValidator.this.compressedRecords, lhs, rhs, result.comparisonSuggestions);
 				lhs.set(firstLhsAttr);
 				
 				result.intersections++;
@@ -276,17 +269,17 @@ public class Validator {
 		return null;
 	}
 
-	protected List<FDTreeElementLhsPair> pruneLevel(List<FDTreeElementLhsPair> lvl) {
+	private List<FDTreeElementLhsPair> pruneLevel(List<FDTreeElementLhsPair> lvl) {
 		List<FDTreeElementLhsPair> currentLevel = new ArrayList<>();
 		for (FDTreeElementLhsPair fd : lvl) {
-			if (pruningStrategies.stream().anyMatch(ps -> ps.cannotBeViolated(fd))) {
+			if (validationPruners.stream().anyMatch(ps -> ps.cannotBeViolated(fd))) {
 				pruned++;
 			} else {
 				currentLevel.add(fd);
 			}
 		}
 		FDLogger.log(Level.FINEST, "Will validate: ");
-		currentLevel.stream().map(this::toFds).flatMap(Collection::stream)
+		currentLevel.stream().map(FDTreeElementLhsPair::getLhs).map(BitSetUtils::collectSetBits)
 				.forEach(v -> FDLogger.log(Level.FINEST, v.toString()));
 		return currentLevel;
 	}
@@ -310,32 +303,6 @@ public class Validator {
 			return null;
 		
 		return childLhs;
-	}
-
-	private List<FunctionalDependency> toFds(FDTreeElementLhsPair fd) {
-		OpenBitSet lhs = fd.getLhs();
-		OpenBitSet rhsFds = fd.getElement().getFds();
-		List<FunctionalDependency> fds = new ArrayList<>();
-		for (int rhs = rhsFds.nextSetBit(0); rhs >= 0; rhs = rhsFds.nextSetBit(rhs + 1)) {
-			FunctionalDependency fdResult = findFunctionDependency(lhs, rhs, alg.buildColumnIdentifiers(),
-					plis);
-			fds.add(fdResult);
-		}
-		return fds;
-	}
-
-	private FunctionalDependency findFunctionDependency(OpenBitSet lhs, int rhs,
-														ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis) {
-		ColumnIdentifier[] columns = new ColumnIdentifier[(int) lhs.cardinality()];
-		int j = 0;
-		for (int i = lhs.nextSetBit(0); i >= 0; i = lhs.nextSetBit(i + 1)) {
-			int columnId = plis.get(i).getAttribute(); // Here we translate the column i back to the real column i before the sorting
-			columns[j++] = columnIdentifiers.get(columnId);
-		}
-
-		ColumnCombination colCombination = new ColumnCombination(columns);
-		int rhsId = plis.get(rhs).getAttribute(); // Here we translate the column rhs back to the real column rhs before the sorting
-		return new FunctionalDependency(colCombination, columnIdentifiers.get(rhsId));
 	}
 
 }

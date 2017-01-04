@@ -8,7 +8,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.CardinalitySet;
-import org.mp.naumann.algorithms.fd.incremental.PruningStrategy;
+import org.mp.naumann.algorithms.fd.incremental.ValidationPruner;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.database.statement.InsertStatement;
@@ -25,10 +25,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-public class BloomPruningStrategyBuilder {
+public class BloomPruningStrategy {
 
     private final List<String> columns;
-    private BloomFilter<Set<ColumnValue>> filter;
+    private BloomFilter<Collection<ColumnValue>> filter;
     private final Collection<BloomGenerator> generators = new ArrayList<>();
 
     private int puts = 0;
@@ -37,7 +37,7 @@ public class BloomPruningStrategyBuilder {
     private int bloomViolations = 0;
     private int innerViolations = 0;
 
-    public BloomPruningStrategyBuilder(List<String> columns) {
+    public BloomPruningStrategy(List<String> columns) {
         this.columns = columns;
     }
 
@@ -62,12 +62,12 @@ public class BloomPruningStrategyBuilder {
         return invertedRecords;
     }
 
-    public BloomPruningStrategyBuilder addGenerator(BloomGenerator generator) {
+    public BloomPruningStrategy addGenerator(BloomGenerator generator) {
         generators.add(generator);
         return this;
     }
 
-    public PruningStrategy buildStrategy(Batch batch) {
+    public ValidationPruner analyzeBatch(Batch batch) {
         List<InsertStatement> inserts = batch.getInsertStatements();
         int oldRequest = requests;
         int oldBloomViolations = bloomViolations;
@@ -75,9 +75,9 @@ public class BloomPruningStrategyBuilder {
         CardinalitySet nonViolations = new CardinalitySet(columns.size());
         for (Entry<OpenBitSet, List<Integer>> combination : combinations.entrySet()) {
             boolean isUniqueCombination = true;
-            Set<Set<ColumnValue>> inner = new HashSet<>();
+            Set<Collection<ColumnValue>> inner = new HashSet<>();
             for (InsertStatement insert : inserts) {
-                Set<ColumnValue> vc = getValues(toArray(insert.getValueMap()), combination.getValue());
+                Collection<ColumnValue> vc = getValues(toArray(insert.getValueMap()), combination.getValue());
                 if (inner.contains(vc)) {
                     innerViolations++;
                     isUniqueCombination = false;
@@ -109,33 +109,22 @@ public class BloomPruningStrategyBuilder {
         FDLogger.log(Level.FINER, "Found " + (innerViolations - oldInnerViolations) + " inner violations");
         FDLogger.log(Level.FINER, "Found " + bloomViolations + " total violations in filter");
         FDLogger.log(Level.FINER, "Found " + innerViolations + " total inner violations");
-        return new BloomPruningStrategy(nonViolations);
+        return new BloomValidationPruner(nonViolations);
     }
 
     private String[] toArray(Map<String, String> record) {
         return columns.stream().map(record::get).toArray(String[]::new);
     }
 
-    private Set<ColumnValue> getValues(String[] record, List<Integer> combination) {
-        Set<ColumnValue> set = new HashSet<>();
+    private Collection<ColumnValue> getValues(String[] record, List<Integer> combination) {
+        Collection<ColumnValue> list = new ArrayList<>();
         for (Integer column : combination) {
-            set.add(new ColumnValue(column, record[column]));
+            list.add(new ColumnValue(column, record[column]));
         }
-        return set;
+        return list;
     }
 
-    private List<Integer> getColumns(OpenBitSet combination) {
-        int currIndex = 0;
-        int next;
-        List<Integer> cols = new ArrayList<>();
-        while ((next = combination.nextSetBit(currIndex)) != -1) {
-            cols.add(next);
-            currIndex = next + 1;
-        }
-        return cols;
-    }
-
-    private boolean mightContain(Set<ColumnValue> combination) {
+    private boolean mightContain(Collection<ColumnValue> combination) {
         requests++;
         return filter.mightContain(combination);
     }
@@ -162,23 +151,23 @@ public class BloomPruningStrategyBuilder {
     }
 
     private Map<OpenBitSet, List<Integer>> toMap(Set<OpenBitSet> fds) {
-        return fds.stream().map(bits -> Pair.of(bits, getColumns(bits))).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+        return fds.stream().map(bits -> Pair.of(bits, BitSetUtils.collectSetBits(bits))).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
     }
 
     private void updateFilter(List<Integer> cols, String[] record) {
         put(getValues(record, cols));
     }
 
-    private void put(Set<ColumnValue> combination) {
+    private void put(Collection<ColumnValue> combination) {
         filter.put(combination);
         puts++;
     }
 
-    private static class BloomPruningStrategy implements PruningStrategy {
+    private static class BloomValidationPruner implements ValidationPruner {
 
         private final CardinalitySet nonViolations;
 
-        private BloomPruningStrategy(CardinalitySet nonViolations) {
+        private BloomValidationPruner(CardinalitySet nonViolations) {
             this.nonViolations = nonViolations;
         }
 

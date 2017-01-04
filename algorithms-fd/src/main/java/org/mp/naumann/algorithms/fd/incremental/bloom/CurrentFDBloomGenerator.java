@@ -9,18 +9,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class AdvancedBloomGenerator implements BloomGenerator {
+public class CurrentFDBloomGenerator implements BloomGenerator {
 
     private static final int MAX_LEVEL = Integer.MAX_VALUE;
     private final FDTree posCover;
     private final int maxLevel;
 
-    public AdvancedBloomGenerator(FDTree posCover, int maxLevel) {
+    public CurrentFDBloomGenerator(FDTree posCover, int maxLevel) {
         this.posCover = posCover;
         this.maxLevel = maxLevel;
     }
 
-    public AdvancedBloomGenerator(FDTree posCover) {
+    public CurrentFDBloomGenerator(FDTree posCover) {
         this(posCover, MAX_LEVEL);
     }
 

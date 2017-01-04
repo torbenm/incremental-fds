@@ -11,10 +11,10 @@ import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
-import org.mp.naumann.algorithms.fd.incremental.bloom.AdvancedBloomGenerator;
-import org.mp.naumann.algorithms.fd.incremental.bloom.BloomPruningStrategyBuilder;
-import org.mp.naumann.algorithms.fd.incremental.bloom.SimpleBloomGenerator;
-import org.mp.naumann.algorithms.fd.incremental.simple.SimplePruningStrategyBuilder;
+import org.mp.naumann.algorithms.fd.incremental.bloom.CurrentFDBloomGenerator;
+import org.mp.naumann.algorithms.fd.incremental.bloom.BloomPruningStrategy;
+import org.mp.naumann.algorithms.fd.incremental.bloom.AllCombinationsBloomGenerator;
+import org.mp.naumann.algorithms.fd.incremental.simple.ExistingValuesPruningStrategy;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
@@ -47,9 +47,9 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     private boolean initialized = false;
 
     private IncrementalPLIBuilder incrementalPLIBuilder;
-    private BloomPruningStrategyBuilder advancedBloomPruning;
-    private SimplePruningStrategyBuilder simplePruning;
-    private BloomPruningStrategyBuilder bloomPruning;
+    private BloomPruningStrategy advancedBloomPruning;
+    private ExistingValuesPruningStrategy simplePruning;
+    private BloomPruningStrategy bloomPruning;
     private FDSet negCover;
 
     public IncrementalFD(List<String> columns, String tableName, IncrementalFDVersion version) {
@@ -81,16 +81,16 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         List<String> orderedColumns = pliSequence.stream().map(columns::get).collect(Collectors.toList());
         List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
         if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
-            bloomPruning = new BloomPruningStrategyBuilder(orderedColumns).addGenerator(new SimpleBloomGenerator(2));
+            bloomPruning = new BloomPruningStrategy(orderedColumns).addGenerator(new AllCombinationsBloomGenerator(2));
             bloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliSequence);
         }
         if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED) {
-            advancedBloomPruning = new BloomPruningStrategyBuilder(orderedColumns)
-                    .addGenerator(new AdvancedBloomGenerator(posCover));
+            advancedBloomPruning = new BloomPruningStrategy(orderedColumns)
+                    .addGenerator(new CurrentFDBloomGenerator(posCover));
             advancedBloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliSequence);
         }
         if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
-            simplePruning = new SimplePruningStrategyBuilder(columns);
+            simplePruning = new ExistingValuesPruningStrategy(columns);
         }
         incrementalPLIBuilder = new IncrementalPLIBuilder(pliBuilder, this.version, this.columns);
     }
@@ -107,18 +107,18 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         CompressedDiff diff = incrementalPLIBuilder.update(batch);
         List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
         int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
-        Validator validator = new Validator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian, this);
+        IncrementalValidator validator = new IncrementalValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
         Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
                 intermediateDatastructure.getValueComparator(), this.memoryGuardian);
         Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
         if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
-            validator.addPruningStrategy(bloomPruning.buildStrategy(batch));
+            validator.addValidationPruner(bloomPruning.analyzeBatch(batch));
         }
         if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED) {
-            validator.addPruningStrategy(advancedBloomPruning.buildStrategy(batch));
+            validator.addValidationPruner(advancedBloomPruning.analyzeBatch(batch));
         }
         if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
-            validator.addPruningStrategy(simplePruning.buildStrategy(diff));
+            validator.addValidationPruner(simplePruning.analyzeDiff(diff));
         }
         FDLogger.log(Level.FINE, "Finished building pruning strategies");
 
@@ -151,7 +151,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         this.intermediateDatastructure = intermediateDataStructure;
     }
 
-    protected ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {
+    private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {
         ObjectArrayList<ColumnIdentifier> columnIdentifiers = new ObjectArrayList<>(this.columns.size());
         for (String attributeName : this.columns)
             columnIdentifiers.add(new ColumnIdentifier(this.tableName, attributeName));

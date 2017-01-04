@@ -4,8 +4,8 @@ import com.google.common.hash.BloomFilter;
 
 import org.junit.Test;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
@@ -13,14 +13,10 @@ public class ValueCombinationTest {
 
     @Test
     public void test() {
-        BloomFilter<Set<ColumnValue>> filter = BloomFilter.create(new ValueCombinationFunnel(), 100_000);
-        Set<ColumnValue> s = new HashSet<>();
-        s.add(new ColumnValue(1, "1"));
-        s.add(new ColumnValue(2, "3"));
+        BloomFilter<List<ColumnValue>> filter = BloomFilter.create(new ValueCombinationFunnel(), 100_000);
+        List<ColumnValue> s = Arrays.asList(new ColumnValue(1, "1"), new ColumnValue(2, "3"));
         filter.put(s);
-        Set<ColumnValue> s2 = new HashSet<>();
-        s2.add(new ColumnValue(1, "1"));
-        s2.add(new ColumnValue(2, "3"));
+        List<ColumnValue> s2 = Arrays.asList(new ColumnValue(1, "1"), new ColumnValue(2, "3"));
         assertTrue(filter.mightContain(s2));
     }
 }
