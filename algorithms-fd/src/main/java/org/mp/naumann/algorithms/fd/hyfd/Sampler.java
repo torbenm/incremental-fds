@@ -5,17 +5,16 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
+import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.utils.PrintUtils;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -34,9 +33,9 @@ class Sampler {
 	private List<AttributeRepresentant> attributeRepresentants = null;
 	private MemoryGuardian memoryGuardian;
     private final IncrementalFDVersion version;
-    private final Map<OpenBitSet, List<Set<Integer>>> invalidationsMap;
+    private final ViolationCollection violationCollection;
 
-	public Sampler(IncrementalFDVersion version, FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian, Map<OpenBitSet, List<Set<Integer>>> invalidationsMap) {
+	public Sampler(IncrementalFDVersion version, FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian, ViolationCollection violationCollection) {
 		this.negCover = negCover;
 		this.posCover = posCover;
 		this.compressedRecords = compressedRecords;
@@ -45,10 +44,10 @@ class Sampler {
 		this.valueComparator = valueComparator;
 		this.memoryGuardian = memoryGuardian;
         this.version = version;
-        this.invalidationsMap = invalidationsMap;
+        this.violationCollection = violationCollection;
     }
-    public Sampler(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian, Map<OpenBitSet, List<Set<Integer>>> invalidationsMap) {
-        this(IncrementalFDVersion.LATEST, negCover, posCover, compressedRecords, plis, efficiencyThreshold, valueComparator, memoryGuardian, invalidationsMap);
+    public Sampler(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian, ViolationCollection violationCollection) {
+        this(IncrementalFDVersion.LATEST, negCover, posCover, compressedRecords, plis, efficiencyThreshold, valueComparator, memoryGuardian, violationCollection);
     }
 
 	public FDList enrichNegativeCover(List<IntegerPair> comparisonSuggestions) {
@@ -135,16 +134,6 @@ class Sampler {
 		
 		@Override
 		public int compare(Integer o1, Integer o2) {
-			// Next
-		/*	int value1 = this.sortKeys[o1.intValue()][this.activeKey2];
-			int value2 = this.sortKeys[o2.intValue()][this.activeKey2];
-			return value2 - value1;
-		*/	
-			// Previous
-		/*	int value1 = this.sortKeys[o1.intValue()][this.activeKey1];
-			int value2 = this.sortKeys[o2.intValue()][this.activeKey1];
-			return value2 - value1;
-		*/	
 			// Previous -> Next
 			int value1 = this.sortKeys[o1][this.activeKey1];
 			int value2 = this.sortKeys[o2][this.activeKey1];
@@ -154,17 +143,7 @@ class Sampler {
 				value2 = this.sortKeys[o2][this.activeKey2];
 			}
 			return value2 - value1;
-			
-			// Next -> Previous
-		/*	int value1 = this.sortKeys[o1.intValue()][this.activeKey2];
-			int value2 = this.sortKeys[o2.intValue()][this.activeKey2];
-			int result = value2 - value1;
-			if (result == 0) {
-				value1 = this.sortKeys[o1.intValue()][this.activeKey1];
-				value2 = this.sortKeys[o2.intValue()][this.activeKey1];
-			}
-			return value2 - value1;
-		*/	
+
 		}
 		
 		private int increment(int number) {
@@ -262,8 +241,8 @@ class Sampler {
 		}
 	}
 
-    public Map<OpenBitSet, List<Set<Integer>>> getInvalidationsMap() {
-        return invalidationsMap;
+    public ViolationCollection getViolationCollection() {
+	    return violationCollection;
     }
 
     private void match(OpenBitSet equalAttrs, int t1, int t2) {
@@ -294,20 +273,10 @@ class Sampler {
                 invalidatingValues.add(t1[i]);
             }
         }
-        addInvalidation(equalAttrs, invalidatingValues);
+        violationCollection.addViolationOfNegativeCover(equalAttrs, invalidatingValues);
     }
 
-	private void addInvalidation(OpenBitSet attrsorg, List<Integer> invalidatingValues){
-        OpenBitSet attrs = attrsorg.clone();
-        if(!this.invalidationsMap.containsKey(attrs)) {
-            this.invalidationsMap.put(attrs, new ArrayList<>());
-        }
-        while(this.invalidationsMap.get(attrs).size() < invalidatingValues.size())
-            this.invalidationsMap.get(attrs).add(new HashSet<>());
-        for(int i = 0; i < invalidatingValues.size(); i++){
-            this.invalidationsMap.get(attrs).get(i).add(invalidatingValues.get(i));
-        }
-    }
+
 
 
 }

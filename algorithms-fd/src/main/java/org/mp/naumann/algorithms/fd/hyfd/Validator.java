@@ -16,6 +16,7 @@ import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.BitSetUtils;
+import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
@@ -34,11 +35,11 @@ public class Validator {
 	private float efficiencyThreshold;
 	private MemoryGuardian memoryGuardian;
 	private ExecutorService executor;
-    private final Map<OpenBitSet, List<Set<Integer>>> invalidationsMap;
+    private final ViolationCollection violationCollection;
 
 	private int level = 0;
 
-	public Validator(FDSet negCover, FDTree posCover, int numRecords, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian, Map<OpenBitSet, List<Set<Integer>>> invalidationsMap) {
+	public Validator(FDSet negCover, FDTree posCover, int numRecords, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian, ViolationCollection violationCollection) {
 		this.negCover = negCover;
 		this.posCover = posCover;
 		this.numRecords = numRecords;
@@ -46,7 +47,7 @@ public class Validator {
 		this.compressedRecords = compressedRecords;
 		this.efficiencyThreshold = efficiencyThreshold;
 		this.memoryGuardian = memoryGuardian;
-        this.invalidationsMap = invalidationsMap;
+        this.violationCollection = violationCollection;
 
         if (parallel) {
 			int numThreads = Runtime.getRuntime().availableProcessors();
@@ -315,7 +316,8 @@ public class Validator {
 		
 		return childLhs;
 	}
-
+	//TODO:
+/*
     private void addInvalidation(OpenBitSet attrs, List<Integer> invalidatingValues){
         if(!this.invalidationsMap.containsKey(attrs)) {
             this.invalidationsMap.put(attrs, new ArrayList<>());
@@ -325,6 +327,6 @@ public class Validator {
         for(int i = 0; i < invalidatingValues.size(); i++){
             this.invalidationsMap.get(attrs).get(i).add(invalidatingValues.get(i));
         }
-    }
+    } */
 
 }
