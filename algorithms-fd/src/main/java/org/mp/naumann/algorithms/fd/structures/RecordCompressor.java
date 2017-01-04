@@ -12,6 +12,7 @@ public class RecordCompressor {
 
     public static int[][] fetchCompressedRecords(List<PositionListIndex> plis, int numRecords) {
         // Calculate inverted plis
+        SpeedBenchmark.begin(BenchmarkLevel.OPERATION);
         FDLogger.log(Level.FINER, "Inverting plis ...");
         int[][] invertedPlis = PliUtils.invert(plis, numRecords);
         SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Inverted plis");

@@ -23,33 +23,18 @@ public class SimpleBloomTest {
     @Test
     public void testDifferentLevels() {
         List<String> columns = Arrays.asList("a", "b", "c", "d");
-        SimpleBloomPruningStrategyBuilder builder1 = new SimpleBloomPruningStrategyBuilder(columns, 1);
-        SimpleBloomPruningStrategyBuilder builder2 = new SimpleBloomPruningStrategyBuilder(columns, 2);
-        List<Map<String, String>> records = new ArrayList<>();
-        Map<String, String> record = new HashMap<>();
-        record.put("a", "1");
-        record.put("b", "1");
-        record.put("c", "3");
-        record.put("d", "1");
-        records.add(record);
-        record = new HashMap<>();
-        record.put("a", "1");
-        record.put("b", "2");
-        record.put("c", "1");
-        record.put("d", "1");
-        records.add(record);
-        record = new HashMap<>();
-        record.put("a", "0");
-        record.put("b", "1");
-        record.put("c", "1");
-        record.put("d", "1");
-        records.add(record);
+        BloomPruningStrategyBuilder builder1 = new BloomPruningStrategyBuilder(columns).addGenerator(new SimpleBloomGenerator(1));
+        BloomPruningStrategyBuilder builder2 = new BloomPruningStrategyBuilder(columns).addGenerator(new SimpleBloomGenerator(2));
+        List<String[]> records = new ArrayList<>();
+        records.add(new String[] {"1", "1", "3", "1"});
+        records.add(new String[] {"1", "2", "1", "1"});
+        records.add(new String[] {"0", "1", "1", "1"});
         builder1.initialize(records);
         builder2.initialize(records);
         String schema = "";
         String tableName = "";
         List<Statement> statements = new ArrayList<>();
-        record = new HashMap<>();
+        Map<String, String> record = new HashMap<>();
         record.put("a", "0");
         record.put("b", "2");
         record.put("c", "3");
@@ -70,8 +55,8 @@ public class SimpleBloomTest {
     @Test
     public void testUpdate() {
         List<String> columns = Arrays.asList("a");
-        SimpleBloomPruningStrategyBuilder builder = new SimpleBloomPruningStrategyBuilder(columns, 1);
-        List<Map<String, String>> records = new ArrayList<>();
+        BloomPruningStrategyBuilder builder = new BloomPruningStrategyBuilder(columns).addGenerator(new SimpleBloomGenerator(1));
+        List<String[]> records = new ArrayList<>();
         builder.initialize(records);
         String schema = "";
         String tableName = "";
@@ -92,8 +77,8 @@ public class SimpleBloomTest {
     @Test
     public void testInnerCombination() {
         List<String> columns = Arrays.asList("a");
-        SimpleBloomPruningStrategyBuilder builder = new SimpleBloomPruningStrategyBuilder(columns, 1);
-        List<Map<String, String>> records = new ArrayList<>();
+        BloomPruningStrategyBuilder builder = new BloomPruningStrategyBuilder(columns).addGenerator(new SimpleBloomGenerator(1));
+        List<String[]> records = new ArrayList<>();
         builder.initialize(records);
         String schema = "";
         String tableName = "";

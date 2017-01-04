@@ -25,40 +25,46 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-public abstract class BloomPruningStrategyBuilder {
+public class BloomPruningStrategyBuilder {
 
     private final List<String> columns;
     private BloomFilter<Set<ColumnValue>> filter;
+    private final Collection<BloomGenerator> generators = new ArrayList<>();
 
     private int puts = 0;
     private int requests = 0;
-    private Map<OpenBitSet, List<String>> combinations;
+    private Map<OpenBitSet, List<Integer>> combinations;
     private int bloomViolations = 0;
     private int innerViolations = 0;
 
-    protected BloomPruningStrategyBuilder(List<String> columns) {
+    public BloomPruningStrategyBuilder(List<String> columns) {
         this.columns = columns;
     }
 
-    private List<Map<String, String>> invertRecords(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<Integer> pliSequence) {
+    private List<String[]> invertRecords(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<Integer> pliSequence) {
         FDLogger.log(Level.FINER, "Inverting records...");
-        List<Map<String, String>> invertedRecords = new ArrayList<>(numRecords);
+        List<String[]> invertedRecords = new ArrayList<>(numRecords);
         for (int i = 0; i < numRecords; i++) {
-            invertedRecords.add(new HashMap<>());
+            invertedRecords.add(new String[columns.size()]);
         }
         int i = 0;
         for (int columnId : pliSequence) {
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(columnId);
-            String column = columns.get(i++);
             for (Entry<String, IntArrayList> entry : clusterMap.entrySet()) {
                 String value = entry.getKey();
                 for (int id : entry.getValue()) {
-                    invertedRecords.get(id).put(column, value);
+                    invertedRecords.get(id)[i] = value;
                 }
             }
+            i++;
         }
         FDLogger.log(Level.FINER, "Finished inverting records");
         return invertedRecords;
+    }
+
+    public BloomPruningStrategyBuilder addGenerator(BloomGenerator generator) {
+        generators.add(generator);
+        return this;
     }
 
     public PruningStrategy buildStrategy(Batch batch) {
@@ -67,11 +73,11 @@ public abstract class BloomPruningStrategyBuilder {
         int oldBloomViolations = bloomViolations;
         int oldInnerViolations = innerViolations;
         CardinalitySet nonViolations = new CardinalitySet(columns.size());
-        for (Entry<OpenBitSet, List<String>> combination : combinations.entrySet()) {
+        for (Entry<OpenBitSet, List<Integer>> combination : combinations.entrySet()) {
             boolean isUniqueCombination = true;
             Set<Set<ColumnValue>> inner = new HashSet<>();
             for (InsertStatement insert : inserts) {
-                Set<ColumnValue> vc = getValues(insert.getValueMap(), combination.getValue());
+                Set<ColumnValue> vc = getValues(toArray(insert.getValueMap()), combination.getValue());
                 if (inner.contains(vc)) {
                     innerViolations++;
                     isUniqueCombination = false;
@@ -90,9 +96,9 @@ public abstract class BloomPruningStrategyBuilder {
             }
         }
         int oldPuts = puts;
-        for (List<String> fd : combinations.values()) {
+        for (List<Integer> fd : combinations.values()) {
             for (InsertStatement insert : inserts) {
-                updateFilter(fd, insert.getValueMap());
+                updateFilter(fd, toArray(insert.getValueMap()));
             }
         }
         FDLogger.log(Level.FINER, "Made " + (requests - oldRequest) + " requests on filter");
@@ -106,26 +112,28 @@ public abstract class BloomPruningStrategyBuilder {
         return new BloomPruningStrategy(nonViolations);
     }
 
-    private Set<ColumnValue> getValues(Map<String, String> record, List<String> combination) {
+    private String[] toArray(Map<String, String> record) {
+        return columns.stream().map(record::get).toArray(String[]::new);
+    }
+
+    private Set<ColumnValue> getValues(String[] record, List<Integer> combination) {
         Set<ColumnValue> set = new HashSet<>();
-        for (String column : combination) {
-            set.add(new ColumnValue(column, record.get(column)));
+        for (Integer column : combination) {
+            set.add(new ColumnValue(column, record[column]));
         }
         return set;
     }
 
-    private List<String> getColumns(OpenBitSet combination) {
+    private List<Integer> getColumns(OpenBitSet combination) {
         int currIndex = 0;
         int next;
-        List<String> cols = new ArrayList<>();
+        List<Integer> cols = new ArrayList<>();
         while ((next = combination.nextSetBit(currIndex)) != -1) {
-            cols.add(columns.get(next));
+            cols.add(next);
             currIndex = next + 1;
         }
         return cols;
     }
-
-    protected abstract Set<OpenBitSet> generateCombinations();
 
     private boolean mightContain(Set<ColumnValue> combination) {
         requests++;
@@ -133,29 +141,31 @@ public abstract class BloomPruningStrategyBuilder {
     }
 
     public void initialize(List<HashMap<String, IntArrayList>> clusterMaps, int numRecords, List<Integer> pliSequence) {
-        Collection<Map<String, String>> invertedRecords = invertRecords(numRecords, clusterMaps, pliSequence);
+        Collection<String[]> invertedRecords = invertRecords(numRecords, clusterMaps, pliSequence);
         initialize(invertedRecords);
     }
 
-    public void initialize(Collection<Map<String, String>> invertedRecords) {
-        combinations = toMap(generateCombinations());
+    public void initialize(Iterable<String[]> invertedRecords) {
+        combinations = toMap(generators.stream().flatMap(g -> g.generateCombinations(columns).stream()).collect(Collectors.toSet()));
         int numCombinations = combinations.size();
         FDLogger.log(Level.FINER, "Keeping track of " + numCombinations + " column combinations");
         FDLogger.log(Level.FINER, "Initializing bloom filter...");
-        filter = BloomFilter.create(new ValueCombinationFunnel(), 100_000_000);
-        for (List<String> combination : combinations.values()) {
-            for (Map<String, String> record : invertedRecords) {
+        int expectedInsertions = 100_000_000;
+        filter = BloomFilter.create(new ValueCombinationFunnel(), expectedInsertions);
+        for (List<Integer> combination : combinations.values()) {
+            for (String[] record : invertedRecords) {
                 updateFilter(combination, record);
             }
         }
+        puts = 0;
         FDLogger.log(Level.FINER, "Finished initializing bloom filter");
     }
 
-    private Map<OpenBitSet, List<String>> toMap(Set<OpenBitSet> fds) {
+    private Map<OpenBitSet, List<Integer>> toMap(Set<OpenBitSet> fds) {
         return fds.stream().map(bits -> Pair.of(bits, getColumns(bits))).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
     }
 
-    private void updateFilter(List<String> cols, Map<String, String> record) {
+    private void updateFilter(List<Integer> cols, String[] record) {
         put(getValues(record, cols));
     }
 
@@ -174,12 +184,13 @@ public abstract class BloomPruningStrategyBuilder {
 
         @Override
         public boolean cannotBeViolated(FDTreeElementLhsPair fd) {
-            OpenBitSet toDo = fd.getLhs().clone();
-            for (int level = nonViolations.getDepth(); level >= 0; level--) {
+            OpenBitSet canBeViolated = fd.getLhs().clone();
+            int depth = Math.min(nonViolations.getDepth(), (int) fd.getLhs().cardinality());
+            for (int level = depth; level >= 0; level--) {
                 for (OpenBitSet nonViolation : nonViolations.getLevel(level)) {
                     if (BitSetUtils.isContained(nonViolation, fd.getLhs())) {
-                        toDo.andNot(nonViolation);
-                        if (toDo.cardinality() == 0) {
+                        canBeViolated.andNot(nonViolation);
+                        if (canBeViolated.isEmpty()) {
                             return true;
                         }
                     }

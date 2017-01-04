@@ -9,24 +9,23 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class AdvancedBloomPruningStrategyBuilder extends BloomPruningStrategyBuilder {
+public class AdvancedBloomGenerator implements BloomGenerator {
 
-    private static final int MAX_LEVEL = 13;
+    private static final int MAX_LEVEL = Integer.MAX_VALUE;
     private final FDTree posCover;
-    private int maxLevel;
+    private final int maxLevel;
 
-    public AdvancedBloomPruningStrategyBuilder(List<String> columns, FDTree posCover, int maxLevel) {
-        super(columns);
+    public AdvancedBloomGenerator(FDTree posCover, int maxLevel) {
         this.posCover = posCover;
         this.maxLevel = maxLevel;
     }
 
-    public AdvancedBloomPruningStrategyBuilder(List<String> columns, FDTree posCover) {
-        this(columns, posCover, MAX_LEVEL);
+    public AdvancedBloomGenerator(FDTree posCover) {
+        this(posCover, MAX_LEVEL);
     }
 
     @Override
-    protected Set<OpenBitSet> generateCombinations() {
+    public Set<OpenBitSet> generateCombinations(List<String> columns) {
         Set<OpenBitSet> bloomFds = new HashSet<>();
         int maxLevel = Math.min(posCover.getDepth(), this.maxLevel);
         for (int level = 0; level <= maxLevel; level++) {

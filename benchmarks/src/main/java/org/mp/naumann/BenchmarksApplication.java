@@ -27,7 +27,7 @@ public class BenchmarksApplication {
     }
 
     public static void main(String[] args) {
-        int version = args.length >= 1 ? Integer.valueOf(args[0]) : 1;
+        int version = args.length >= 1 ? Integer.valueOf(args[0]) : 3;
         int batchSize = args.length >= 2 ? Integer.valueOf(args[1]) : 100;
         long splitLine = args.length >= 3 ? Long.valueOf(args[2]) : 15000;
         String dataSet = args.length >= 4 ? args[3] : "benchmark.adultfull.csv";
@@ -45,15 +45,18 @@ public class BenchmarksApplication {
                     stopAfter
             );
             t.execute();
+
             googleSheetsReporter.writeNewLine(
                     t.sheetName(),
                     t.sheetValues()
             );
 
         } catch (ConnectionException e) {
+            e.printStackTrace();
             SpeedBenchmark.end(BenchmarkLevel.BENCHMARK, "Benchmark crashed");
             SpeedBenchmark.disable();
         } catch (IOException e) {
+            e.printStackTrace();
             SpeedBenchmark.end(BenchmarkLevel.BENCHMARK, "Writing to GoogleSheets crashed");
             SpeedBenchmark.disable();
         } finally {

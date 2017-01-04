@@ -16,7 +16,7 @@ public final class ValueCombinationFunnel implements Funnel<Set<ColumnValue>> {
 	public void funnel(Set<ColumnValue> from, PrimitiveSink into) {
 		Set<ColumnValue> set = new TreeSet<>(from);
 		for(ColumnValue entry : set) {
-			into.putString(entry.getColumn(), CHARSET);
+			into.putInt(entry.getColumn());
 			into.putString(entry.getValue(), CHARSET);
 		}
 	}

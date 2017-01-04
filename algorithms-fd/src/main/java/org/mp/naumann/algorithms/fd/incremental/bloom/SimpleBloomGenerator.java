@@ -9,24 +9,23 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class SimpleBloomPruningStrategyBuilder extends BloomPruningStrategyBuilder {
+public class SimpleBloomGenerator implements BloomGenerator {
 
-    private static final int MAX_LEVEL = 4;
+    private static final int MAX_LEVEL = 2;
     private final int maxLevel;
-    private final int numAttributes;
+    private int numAttributes;
 
-    public SimpleBloomPruningStrategyBuilder(List<String> columns, int maxLevel) {
-        super(columns);
+    public SimpleBloomGenerator(int maxLevel) {
         this.maxLevel = maxLevel;
-        this.numAttributes = columns.size();
     }
 
-    public SimpleBloomPruningStrategyBuilder(List<String> columns) {
-        this(columns, MAX_LEVEL);
+    public SimpleBloomGenerator() {
+        this(MAX_LEVEL);
     }
 
     @Override
-    protected Set<OpenBitSet> generateCombinations() {
+    public Set<OpenBitSet> generateCombinations(List<String> columns) {
+        this.numAttributes = columns.size();
         Set<Integer> columnSet = IntStream.range(0, numAttributes).boxed().collect(Collectors.toSet());
         int maxLevel = Math.min(numAttributes, this.maxLevel);
         return PowerSet.getPowerSet(columnSet, maxLevel).stream().map(this::toBitSet).collect(Collectors.toSet());

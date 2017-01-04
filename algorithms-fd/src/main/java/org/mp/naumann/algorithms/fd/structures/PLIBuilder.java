@@ -65,6 +65,7 @@ public class PLIBuilder {
      * @return clustersPerAttribute,
      */
     public List<PositionListIndex> fetchPositionListIndexes() {
+        SpeedBenchmark.begin(BenchmarkLevel.OPERATION);
         List<HashMap<String, IntArrayList>> clusterMaps = clusterMapBuilder.getClusterMaps();
         List<PositionListIndex> clustersPerAttribute = new ArrayList<>();
         for (int columnId = 0; columnId < clusterMaps.size(); columnId++) {

@@ -2,15 +2,15 @@ package org.mp.naumann.algorithms.fd.incremental.bloom;
 
 class ColumnValue implements Comparable<ColumnValue> {
 
-    private final String column;
+    private final int column;
     private final String value;
 
-    public ColumnValue(String column, String value) {
+    public ColumnValue(int column, String value) {
         this.column = column;
         this.value = value;
     }
 
-    public String getColumn() {
+    public int getColumn() {
         return column;
     }
 
@@ -20,7 +20,7 @@ class ColumnValue implements Comparable<ColumnValue> {
 
     @Override
     public int compareTo(ColumnValue o) {
-        return column.compareTo(o.column);
+        return Integer.compare(column, o.column);
     }
 
     @Override
@@ -32,14 +32,14 @@ class ColumnValue implements Comparable<ColumnValue> {
             return false;
         }
         ColumnValue other = (ColumnValue) obj;
-        return this.column.equals(other.column) && this.value.equals(other.value);
+        return this.column == other.column && this.value.equals(other.value);
     }
 
     @Override
     public int hashCode() {
         final int prime = 37;
         int result = 1;
-        result = prime * result + ((column == null) ? 0 : column.hashCode());
+        result = prime * result + Integer.hashCode(column);
         result = prime * result + ((value == null) ? 0 : value.hashCode());
         return result;
     }

@@ -15,12 +15,12 @@ public class ValueCombinationTest {
     public void test() {
         BloomFilter<Set<ColumnValue>> filter = BloomFilter.create(new ValueCombinationFunnel(), 100_000);
         Set<ColumnValue> s = new HashSet<>();
-        s.add(new ColumnValue("c1", "1"));
-        s.add(new ColumnValue("c2", "3"));
+        s.add(new ColumnValue(1, "1"));
+        s.add(new ColumnValue(2, "3"));
         filter.put(s);
         Set<ColumnValue> s2 = new HashSet<>();
-        s2.add(new ColumnValue("c1", "1"));
-        s2.add(new ColumnValue("c2", "3"));
+        s2.add(new ColumnValue(1, "1"));
+        s2.add(new ColumnValue(2, "3"));
         assertTrue(filter.mightContain(s2));
     }
 }
