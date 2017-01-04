@@ -109,7 +109,7 @@ public class PLIBuilder {
         clusterMapBuilder.addRecords(records);
     }
 
-    public void addRecord(Iterable<String> record) {
-        clusterMapBuilder.addRecord(record);
+    public int addRecord(Iterable<String> record) {
+        return clusterMapBuilder.addRecord(record);
     }
 }

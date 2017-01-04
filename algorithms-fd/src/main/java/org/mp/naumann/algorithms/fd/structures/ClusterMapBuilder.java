@@ -64,22 +64,24 @@ public class ClusterMapBuilder {
 		}
 	}
 
-	public void addRecord(Iterable<String> record) {
+	public int addRecord(Iterable<String> record) {
+		int recId = this.numRecords;
 		int attributeId = 0;
 		for (String value : record) {
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
             if (clusterMap.containsKey(value)) {
-                clusterMap.get(value).add(this.numRecords);
+                clusterMap.get(value).add(recId);
             }
             else {
                 IntArrayList newCluster = new IntArrayList();
-                newCluster.add(this.numRecords);
+                newCluster.add(recId);
                 clusterMap.put(value, newCluster);
             }
 
             attributeId++;
         }
 		this.numRecords++;
+		return recId;
 	}
 
 	public void addRecords(ObjectArrayList<Row> records) {

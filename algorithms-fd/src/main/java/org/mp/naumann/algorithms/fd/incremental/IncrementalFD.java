@@ -35,7 +35,6 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
     private static final boolean VALIDATE_PARALLEL = true;
     private static final float EFFICIENCY_THRESHOLD = 0.01f;
-    private static final boolean SAMPLING = true;
     private IncrementalFDVersion version = IncrementalFDVersion.LATEST;
 
     private final List<String> columns;
@@ -126,7 +125,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         int i = 1;
         do {
             FDLogger.log(Level.FINE, "Started round " + i);
-            if (SAMPLING) {
+            if (version.useSampling()) {
                 FDLogger.log(Level.FINE, "Enriching negative cover");
                 FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
                 FDLogger.log(Level.FINE, "Updating positive cover");
