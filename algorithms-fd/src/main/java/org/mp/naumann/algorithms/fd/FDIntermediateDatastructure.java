@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntColumnValue;
 import org.mp.naumann.algorithms.fd.structures.ValueCombination.ColumnValue;
@@ -21,9 +22,9 @@ public class FDIntermediateDatastructure {
 	private final int numRecords;
 	private final List<Integer> pliSequence;
 	private final BloomFilter<Set<ColumnValue>> filter;
-    private final Map<IntColumnValue, Set<OpenBitSet>> violatingValues;
+    private final ViolationCollection violatingValues;
 
-	public FDIntermediateDatastructure(FDTree posCover, List<HashMap<String, IntArrayList>> clusterMaps, int numRecords, List<Integer> pliSequence, BloomFilter<Set<ColumnValue>> filter, Map<IntColumnValue, Set<OpenBitSet>> violatingValues) {
+	public FDIntermediateDatastructure(FDTree posCover, List<HashMap<String, IntArrayList>> clusterMaps, int numRecords, List<Integer> pliSequence, BloomFilter<Set<ColumnValue>> filter, ViolationCollection violatingValues) {
 		this.posCover = posCover;
 		this.clusterMaps = clusterMaps;
 		this.numRecords = numRecords;
@@ -48,7 +49,7 @@ public class FDIntermediateDatastructure {
 		return filter;
 	}
 
-    public Map<IntColumnValue, Set<OpenBitSet>> getViolatingValues() {
+    public ViolationCollection getViolatingValues() {
         return violatingValues;
     }
 }
