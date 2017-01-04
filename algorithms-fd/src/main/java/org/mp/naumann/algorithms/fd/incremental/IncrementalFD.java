@@ -19,6 +19,7 @@ import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
+import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.IntColumnValue;
@@ -48,7 +49,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 	private MemoryGuardian memoryGuardian = new MemoryGuardian(true);
 	private FDIntermediateDatastructure intermediateDatastructure;
 	private boolean initialized = false;
-    private Map<IntColumnValue, Set<OpenBitSet>> violatingValues;
+    private ViolationCollection violatingValues;
 
 	private IncrementalPLIBuilder incrementalPLIBuilder;
 	private BloomFilter<Set<ColumnValue>> filter;
