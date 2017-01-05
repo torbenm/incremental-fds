@@ -41,7 +41,9 @@ public class GoogleSheetsReporter {
     private HttpTransport HTTP_TRANSPORT;
 
     private final Sheets sheetService;
-    private final String spreadsheetId = "1XehPd74Tqb-LYdP8WlZzDbS03VhGZf5YuVN5qvkH6E8";
+    private final String spreadsheetId;
+
+
 
     /** Global instance of the scopes required by this quickstart.
      *
@@ -61,8 +63,9 @@ public class GoogleSheetsReporter {
         }
     }
 
-    public GoogleSheetsReporter() throws IOException {
+    public GoogleSheetsReporter(String spreadsheetId) throws IOException {
         sheetService = getSheetsService();
+        this.spreadsheetId = spreadsheetId;
     }
 
     /**
@@ -111,13 +114,6 @@ public class GoogleSheetsReporter {
                 .append(spreadsheetId, range, vr)
                 .setValueInputOption("RAW")
                 .execute();
-    }
-
-
-    public static void main(String[] args) throws IOException {
-        // Build a new authorized API client service.
-        new GoogleSheetsReporter().writeNewLine("Initial over all + Incremental One Batch", "Hallo", "wie", "gehts");
-
     }
 
 
