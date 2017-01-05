@@ -65,6 +65,9 @@ class IncrementalPLIBuilder {
                 pli.setClustersWithNewRecords(getClustersWithNewRecords(inserted, i));
             }
         }
+        if(version.usesInnerClusterPruning()) {
+            plis.forEach(pli -> pli.setNewRecords(inserted));
+        }
     }
 
     private Set<Integer> getClustersWithNewRecords(Collection<Integer> newRecords, int attribute) {

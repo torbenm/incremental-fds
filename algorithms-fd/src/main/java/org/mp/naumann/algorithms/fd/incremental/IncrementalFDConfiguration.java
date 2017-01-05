@@ -14,6 +14,7 @@ public class IncrementalFDConfiguration {
     private final String versionName;
     private boolean sampling = false;
     private boolean clusterPruning = true;
+    private boolean innerClusterPruning = false;
 
     public static final IncrementalFDConfiguration LATEST = V0_3;
     public static final IncrementalFDConfiguration HYFD_ORIGINAL = V0_0;
@@ -76,6 +77,15 @@ public class IncrementalFDConfiguration {
 
     public IncrementalFDConfiguration setSampling(boolean sampling) {
         this.sampling = sampling;
+        return this;
+    }
+
+    public boolean usesInnerClusterPruning() {
+        return innerClusterPruning;
+    }
+
+    public IncrementalFDConfiguration setInnerClusterPruning(boolean innerClusterPruning) {
+        this.innerClusterPruning = innerClusterPruning;
         return this;
     }
 

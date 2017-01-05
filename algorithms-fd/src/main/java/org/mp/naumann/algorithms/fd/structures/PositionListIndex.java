@@ -20,10 +20,12 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -44,6 +46,7 @@ public class PositionListIndex {
     private final List<IntArrayList> clusters;
     private final int numNonUniqueValues;
     private List<IntArrayList> clustersWithNewRecords = null;
+    private Collection<Integer> newRecords = null;
 
     public int getAttribute() {
         return this.attribute;
@@ -127,14 +130,30 @@ public class PositionListIndex {
             index++;
         }
 
+        boolean useInnerClusterPruning = useInnerClusterPruning();
         for (IntArrayList cluster : clustersWithNewRecords()) {
             Object2ObjectOpenHashMap<ClusterIdentifier, ClusterIdentifierWithRecord> subClusters = new Object2ObjectOpenHashMap<>(cluster.size());
+            ObjectOpenHashSet<ClusterIdentifier> haveOldRecord = null;
+            if (useInnerClusterPruning) {
+                haveOldRecord = new ObjectOpenHashSet<>(cluster.size());
+            }
             for (int recordId : cluster) {
                 ClusterIdentifier subClusterIdentifier = this.buildClusterIdentifier(lhs, lhsSize, compressedRecords[recordId]);
                 if (subClusterIdentifier == null)
                     continue;
 
+                boolean isOldRecord = false;
+                if (useInnerClusterPruning) {
+                    isOldRecord = isOldRecord(recordId);
+                }
                 if (subClusters.containsKey(subClusterIdentifier)) {
+                    if (useInnerClusterPruning && isOldRecord) {
+                        if (haveOldRecord.contains(subClusterIdentifier)) {
+                            continue;
+                        } else {
+                            haveOldRecord.add(subClusterIdentifier);
+                        }
+                    }
                     ClusterIdentifierWithRecord rhsClusters = subClusters.get(subClusterIdentifier);
 
                     for (int rhsAttr = refinedRhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = refinedRhs.nextSetBit(rhsAttr + 1)) {
@@ -152,10 +171,17 @@ public class PositionListIndex {
                     for (int rhsAttr = 0; rhsAttr < rhsSize; rhsAttr++)
                         rhsClusters[rhsAttr] = compressedRecords[recordId][rhsAttrIndex2Id[rhsAttr]];
                     subClusters.put(subClusterIdentifier, new ClusterIdentifierWithRecord(rhsClusters, recordId));
+                    if (useInnerClusterPruning && isOldRecord) {
+                        haveOldRecord.add(subClusterIdentifier);
+                    }
                 }
             }
         }
         return refinedRhs;
+    }
+
+    private boolean isOldRecord(int recordId) {
+        return !newRecords.contains(recordId);
     }
 
     public void setClustersWithNewRecords(Set<Integer> clusterIds) {
@@ -163,7 +189,7 @@ public class PositionListIndex {
     }
 
     private List<IntArrayList> clustersWithNewRecords() {
-        return clustersWithNewRecords == null? this.clusters : clustersWithNewRecords;
+        return clustersWithNewRecords == null ? this.clusters : clustersWithNewRecords;
     }
 
     private ClusterIdentifier buildClusterIdentifier(OpenBitSet lhs, int lhsSize, int[] record) {
@@ -254,5 +280,13 @@ public class PositionListIndex {
         }
 
         return setClusters;
+    }
+
+    private boolean useInnerClusterPruning() {
+        return newRecords != null;
+    }
+
+    public void setNewRecords(Collection<Integer> newRecords) {
+        this.newRecords = newRecords;
     }
 }

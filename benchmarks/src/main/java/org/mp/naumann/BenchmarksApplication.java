@@ -34,9 +34,11 @@ public class BenchmarksApplication {
     @Parameter(names = "--dataSet")
     private String dataSet = "benchmark.adultfull.csv";
     @Parameter(names = "--sampling")
-    private Boolean useSampling = false;
+    private Boolean useSampling;
     @Parameter(names = "--clusterPruning")
-    private Boolean useClusterPruning = true;
+    private Boolean useClusterPruning;
+    @Parameter(names = "--innerClusterPruning")
+    private Boolean useInnerClusterPruning;
 
 
     public static void main(String[] args) throws IOException {
@@ -62,6 +64,9 @@ public class BenchmarksApplication {
         }
         if (useClusterPruning != null) {
             config.setClusterPruning(useClusterPruning);
+        }
+        if (useInnerClusterPruning != null) {
+            config.setInnerClusterPruning(useInnerClusterPruning);
         }
 
         try {
