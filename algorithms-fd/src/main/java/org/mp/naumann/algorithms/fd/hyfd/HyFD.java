@@ -7,39 +7,29 @@ import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
-import org.mp.naumann.algorithms.fd.incremental.violations.AllValuesViolationCollection;
+import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
+import org.mp.naumann.algorithms.fd.incremental.violations.SingleValueViolationCollection;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
-import org.mp.naumann.algorithms.fd.utils.PliUtils;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
+import org.mp.naumann.algorithms.fd.structures.FDTree;
+import org.mp.naumann.algorithms.fd.structures.IntegerPair;
+import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
+import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.structures.RecordCompressor;
+import org.mp.naumann.algorithms.fd.utils.FileUtils;
+import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 
-import com.google.common.hash.BloomFilter;
-
-import org.mp.naumann.algorithms.fd.FunctionalDependency;
-import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
-import org.mp.naumann.algorithms.fd.structures.FDSet;
-import org.mp.naumann.algorithms.fd.structures.FDTree;
-import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
-import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.structures.ValueCombination.ColumnValue;
-import org.mp.naumann.algorithms.fd.utils.FileUtils;
-import org.mp.naumann.algorithms.fd.utils.ValueComparator;
-
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.logging.Level;
-
-import static org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion.LATEST;
 
 
 public class HyFD implements FunctionalDependencyAlgorithm {
@@ -61,39 +51,19 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 	private FDTree posCover;
 
-	private List<HashMap<String, IntArrayList>> clusterMaps;
-	private int numRecords;
+	private FDSet negCover;
+	private PLIBuilder pliBuilder;
 
-	private List<Integer> pliSequence;
-    private final IncrementalFDVersion version;
-    private final ViolationCollection violationCollection = new AllValuesViolationCollection();
-    //private Map<IntColumnValue, Set<OpenBitSet>> violatingValues;
 
+    private final ViolationCollection violationCollection = new SingleValueViolationCollection();
 
     public HyFD(){
-        this(LATEST);
         FDLogger.setCurrentAlgorithm(this);
     }
 
-    public HyFD(IncrementalFDVersion version){
-        this.version = version;
-    }
-
-	private BloomFilter<Set<ColumnValue>> filter;
-
-	
-	public BloomFilter<Set<ColumnValue>> getFilter() {
-		return filter;
-	}
-
 	public HyFD(Table table, FunctionalDependencyResultReceiver resultReceiver) {
-        this(LATEST, table, resultReceiver);
         configure(table, resultReceiver);
 	}
-    public HyFD(IncrementalFDVersion version, Table table, FunctionalDependencyResultReceiver resultReceiver) {
-        this(version);
-        configure(table, resultReceiver);
-    }
 
 	public void configure(Table table, FunctionalDependencyResultReceiver resultReceiver){
         this.table = table;
@@ -134,16 +104,12 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 		// Calculate plis
 		FDLogger.log(Level.FINER, "Reading data and calculating plis ...");
-		PLIBuilder pliBuilder = new PLIBuilder(this.version);
-		List<PositionListIndex> plis = pliBuilder.getPLIs(tableInput, this.numAttributes,
-				this.valueComparator.isNullEqualNull());
+		this.pliBuilder = new PLIBuilder(this.numAttributes, this.valueComparator.isNullEqualNull());
+		pliBuilder.addRecords(tableInput);
+		List<PositionListIndex> plis = pliBuilder.fetchPositionListIndexes();
 		this.closeInput(tableInput);
-		this.clusterMaps = pliBuilder.getClusterMaps(); // get the clusterMaps here to transfer them to the incremental algorithm
-		this.numRecords = pliBuilder.getNumLastRecords(); // same with numRecords
-		this.filter = pliBuilder.getFilter();
 
 		final int numRecords = pliBuilder.getNumLastRecords();
-		pliBuilder = null;
 
 		if (numRecords == 0) {
 			ObjectArrayList<ColumnIdentifier> columnIdentifiers = this.buildColumnIdentifiers();
@@ -153,28 +119,8 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 			return;
 		}
         SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialized Datastructures.");
-        // Sort plis by number of clusters: For searching in the covers and for
-		// validation, it is good to have attributes with few non-unique values
-		// and many clusters left in the prefix tree
-		FDLogger.log(Level.FINER, "Sorting plis by number of clusters ...");
-		Collections.sort(plis, (o1, o2) -> {
-            int numClustersInO1 = numRecords - o1.getNumNonUniqueValues() + o1.getClusters().size();
-            int numClustersInO2 = numRecords - o2.getNumNonUniqueValues() + o2.getClusters().size();
-            return numClustersInO2 - numClustersInO1;
-        });
-        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Sorted plis by cluster");
-		// Calculate inverted plis
-		FDLogger.log(Level.FINER, "Inverting plis ...");
-		int[][] invertedPlis = PliUtils.invert(plis, numRecords);
-        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Inverted plis");
-		// Extract the integer representations of all records from the inverted
-		// plis
-		FDLogger.log(Level.FINER, "Extracting integer representations for the records ...");
-		int[][] compressedRecords = new int[numRecords][];
-		for (int recordId = 0; recordId < numRecords; recordId++)
-			compressedRecords[recordId] = this.fetchRecordFrom(recordId, invertedPlis);
-		invertedPlis = null;
-        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Compressed plis");
+
+		int[][] compressedRecords = RecordCompressor.fetchCompressedRecords(plis, numRecords);
 		// Initialize the negative cover
 		int maxLhsSize = -1;
 		FDSet negCover = new FDSet(this.numAttributes, maxLhsSize);
@@ -201,24 +147,19 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
-        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialised Sampler, Inductor and Validator");
+        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialised Sampler, Inductor and IncrementalValidator");
         SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
         int i = 1;
 		do {
+			FDLogger.log(Level.FINE, "Started round " + i);
+			FDLogger.log(Level.FINE, "Enriching negative cover");
 			FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
+			FDLogger.log(Level.FINE, "Updating positive cover");
 			inductor.updatePositiveCover(newNonFds);
+			FDLogger.log(Level.FINE, "Validating positive cover");
 			comparisonSuggestions = validator.validatePositiveCover();
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round "+i++);
 		} while (comparisonSuggestions != null);
-
-       // this.violatingValues = buildViolatingValues();
-       /* sampler.getInvalidationsMap().entrySet().stream().map(e -> BitSetUtils.toString(e.getKey())+": "+e.getValue()).forEach(PrintUtils::print);
-        PrintUtils.print("==================");
-        for(Map.Entry<IntColumnValue, Set<OpenBitSet>> obs : violatingValues.entrySet()){
-            PrintUtils.print(obs.getKey());
-            obs.getValue().stream().map(BitSetUtils::toString).forEach(PrintUtils::print);
-        } */
-
 
         // Output all valid FDs
 		FDLogger.log(Level.FINER, "Translating FD-tree into result format ...");
@@ -232,7 +173,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		FDLogger.log(Level.FINER, "... done! (" + numFDs + " FDs)");
 		
 		this.posCover = posCover;
-		this.pliSequence = plis.stream().map(PositionListIndex::getAttribute).collect(Collectors.toList());
+		this.negCover = negCover;
 	}
 
 	public FDTree getPosCover() {
@@ -249,23 +190,6 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		}
 	}
 
-	/*private Map<IntColumnValue, Set<OpenBitSet>> buildViolatingValues(){
-        Map<IntColumnValue, Set<OpenBitSet>> violatingValues = new HashMap<>();
-        for(Map.Entry<OpenBitSet, List<Set<Integer>>> entries : invalidationsMap.entrySet()){
-            int column = -1;
-            for(Set<Integer> colvalues : entries.getValue()){
-                column = entries.getKey().nextSetBit(column+1);
-                for(int value : colvalues){
-                    IntColumnValue colval = new IntColumnValue(column, value);
-
-                    if(!violatingValues.containsKey(colval))
-                        violatingValues.put(colval, new HashSet<>());
-                    violatingValues.get(colval).add(entries.getKey());
-                }
-            }
-        }
-        return violatingValues;
-    } */
 
 	private void closeInput(TableInput tableInput) {
 		FileUtils.close(tableInput);
@@ -289,16 +213,16 @@ public class HyFD implements FunctionalDependencyAlgorithm {
         return violationCollection;
     }
 
-    public List<HashMap<String,IntArrayList>> getClusterMaps() {
-		return clusterMaps;
+	public FDSet getNegCover() {
+		return negCover;
 	}
 
-	public int getNumRecords() {
-		return numRecords;
+	public PLIBuilder getPLIBuilder() {
+		return pliBuilder;
 	}
 
-	public List<Integer> getPliSequence() {
-		return pliSequence;
+	public ValueComparator getValueComparator() {
+		return valueComparator;
 	}
 
 }

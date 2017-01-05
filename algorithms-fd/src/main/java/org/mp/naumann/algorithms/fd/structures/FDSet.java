@@ -3,7 +3,7 @@ package org.mp.naumann.algorithms.fd.structures;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.incremental.BitSetUtils;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
 import java.util.ArrayList;
 import java.util.List;

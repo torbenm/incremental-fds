@@ -7,9 +7,9 @@ import org.apache.lucene.util.OpenBitSet;
 import java.util.ArrayList;
 import java.util.List;
 
-class CardinalitySet {
+public class CardinalitySet {
 
-	private List<ObjectOpenHashSet<OpenBitSet>> levels;
+	private final List<ObjectOpenHashSet<OpenBitSet>> levels;
 	
 	private int depth = 0;
 	private int maxDepth;

@@ -1,6 +1,9 @@
-package org.mp.naumann.algorithms.fd.incremental;
+package org.mp.naumann.algorithms.fd.utils;
 
 import org.apache.lucene.util.OpenBitSet;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BitSetUtils {
 
@@ -19,6 +22,14 @@ public class BitSetUtils {
         }catch(AssertionError e){
             return "";
         }
+	}
+
+	public static List<Integer> collectSetBits(OpenBitSet bitSet) {
+		List<Integer> cols = new ArrayList<>();
+		for (int nextSetBit = bitSet.nextSetBit(0); nextSetBit >= 0; nextSetBit = bitSet.nextSetBit(nextSetBit + 1)) {
+			cols.add(nextSetBit);
+		}
+		return cols;
 	}
 
 }

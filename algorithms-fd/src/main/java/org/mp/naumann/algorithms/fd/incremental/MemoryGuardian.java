@@ -1,9 +1,13 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
-import java.lang.management.ManagementFactory;
-import java.util.logging.Logger;
-
+import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.hyfd.FDList;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
+
+import java.lang.management.ManagementFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 class MemoryGuardian {
 
@@ -33,27 +37,30 @@ class MemoryGuardian {
 		long memoryUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed();
 		return memoryUsage > memory;
 	}
-	
-	public void match(FDTree posCover) {
+
+	public void match(FDSet negCover, FDTree posCover, FDList newNonFDs) {
 		if ((!this.active) || (this.allocationEventsSinceLastCheck < this.memoryCheckFrequency))
 			return;
-		
+
 		if (this.memoryExhausted(this.maxMemoryUsage)) {
-//			LOG.info("Memory exhausted (" + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() + "/" + this.maxMemoryUsage + ") ");
+//			FDLogger.log(Level.FINEST, "Memory exhausted (" + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() + "/" + this.maxMemoryUsage + ") ");
 			Runtime.getRuntime().gc();
-//			LOG.info("GC reduced to " + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed());
-			
+//			FDLogger.log(Level.FINEST, "GC reduced to " + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed());
+
 			while (this.memoryExhausted(this.trimMemoryUsage)) {
-				int depth = posCover.getDepth() - 1;
+				int depth = Math.max(posCover.getDepth(), negCover.getDepth()) - 1;
 				if (depth < 1)
 					throw new RuntimeException("Insufficient memory to calculate any result!");
-				
-				LOG.info(" (trim to " + depth + ")");
+
+				FDLogger.log(Level.FINEST, " (trim to " + depth + ")");
 				posCover.trim(depth);
+				negCover.trim(depth);
+				if (newNonFDs != null)
+					newNonFDs.trim(depth);
 				Runtime.getRuntime().gc();
 			}
 		}
-		
+
 		this.allocationEventsSinceLastCheck = 0;
 	}
 }

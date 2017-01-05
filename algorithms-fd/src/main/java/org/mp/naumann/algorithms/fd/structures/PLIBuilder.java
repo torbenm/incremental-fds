@@ -19,161 +19,54 @@ package org.mp.naumann.algorithms.fd.structures;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
-import org.mp.naumann.algorithms.fd.structures.ValueCombination.ColumnValue;
+import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
+import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
+import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Row;
-
-import com.google.common.hash.BloomFilter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class PLIBuilder {
-	
-	private int numRecords = 0;
-	private List<HashMap<String, IntArrayList>> clusterMaps;
-	private final BloomFilter<Set<ColumnValue>> filter;
-    private final IncrementalFDVersion version;
-    public PLIBuilder(){
-        this(IncrementalFDVersion.LATEST);
-    }
 
-    public PLIBuilder(IncrementalFDVersion version) {
-        this.version = version;
-        if(version.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.BLOOM){
-            filter = BloomFilter.create(new ValueCombinationFunnel(), 100_000);
-        }else{
-            filter = null;
-        }
+    private final ClusterMapBuilder clusterMapBuilder;
+    private final boolean isNullEqualNull;
+    private List<Integer> pliOrder;
+
+    public List<Integer> getPliOrder() {
+        return pliOrder;
     }
 
     public List<HashMap<String, IntArrayList>> getClusterMaps() {
-		return clusterMaps;
-	}
+        return clusterMapBuilder.getClusterMaps();
+    }
 
-	public int getNumLastRecords() {
-		return this.numRecords;
-	}
-	
-	public List<PositionListIndex> getPLIs(TableInput tableInput, int numAttributes, boolean isNullEqualNull) {
-		List<HashMap<String, IntArrayList>> clusterMaps = this.calculateClusterMaps(tableInput, numAttributes);
-		return this.fetchPositionListIndexes(clusterMaps, isNullEqualNull);
-	}
+    public int getNumLastRecords() {
+        return clusterMapBuilder.getNumLastRecords();
+    }
 
-	/**
-	 * Calculates the clusterMap for each column of a given relation.
-	 * A clusterMap is a mapping of attributes (by position in the relation, e.g. 0 - n)
-	 * to attribute values to record identifiers.
-	 *
-	 * @param tableInput the table/relation used as input, e.g. from a DB
-	 * @param numAttributes the number of attributes in the given relation
-	 * @return the list of clusterMaps, as described above
-	 */
-	private List<HashMap<String, IntArrayList>> calculateClusterMaps(TableInput tableInput, int numAttributes) {
-		clusterMaps = new ArrayList<>();
-		for (int i = 0; i < numAttributes; i++) {
-			clusterMaps.add(new HashMap<>());
-		}
-		
-		this.numRecords = 0;
-		while (tableInput.hasNext()) {
-			Row record = tableInput.next();
-			ValueCombination vc = new ValueCombination();
-			
-			int attributeId = 0;
-			for (String value : record) {
-				vc.add(record.getColumnNames().get(attributeId), value);
-				HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
-				
-				if (clusterMap.containsKey(value)) {
-					clusterMap.get(value).add(this.numRecords);
-				}
-				else {
-					IntArrayList newCluster = new IntArrayList();
-					newCluster.add(this.numRecords);
-					clusterMap.put(value, newCluster);
-				}
-				
-				attributeId++;
-			}
-			this.numRecords++;
-			if (this.numRecords == Integer.MAX_VALUE - 1)
-				throw new RuntimeException("PLI encoding into integer based PLIs is not possible, because the number of records in the dataset exceeds Integer.MAX_VALUE. Use long based plis instead! (NumRecords = " + this.numRecords + " and Integer.MAX_VALUE = " + Integer.MAX_VALUE);
+    public PLIBuilder(int numAttributes, boolean isNullEqualNull) {
+        this.clusterMapBuilder = new ClusterMapBuilder(numAttributes);
+        this.isNullEqualNull = isNullEqualNull;
+    }
 
-            if(version.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.BLOOM){
-                for(Set<ColumnValue> combination : vc.getPowerSet(2)) {
-                    filter.put(combination);
-                }
+    public void addRecords(TableInput tableInput) {
+        clusterMapBuilder.addRecords(tableInput);
+    }
 
-            }
-		}
-		
-		return clusterMaps;
-	}
-	
-	
-	public BloomFilter<Set<ColumnValue>> getFilter() {
-		return filter;
-	}
-
-	private List<PositionListIndex> fetchPositionListIndexes(List<HashMap<String, IntArrayList>> clusterMaps,
-			boolean isNullEqualNull) {
-
-		return fetchPositionListIndexesStatic(clusterMaps, isNullEqualNull);
-
-	}
-	
-	public static List<PositionListIndex> getPLIs(ObjectArrayList<Row> records, int numAttributes, boolean isNullEqualNull) {
-		if (records.size() > Integer.MAX_VALUE)
-			throw new RuntimeException("PLI encoding into integer based PLIs is not possible, because the number of records in the dataset exceeds Integer.MAX_VALUE. Use long based plis instead! (NumRecords = " + records.size() + " and Integer.MAX_VALUE = " + Integer.MAX_VALUE);
-		
-		List<HashMap<String, IntArrayList>> clusterMaps = calculateClusterMapsStatic(records, numAttributes);
-		return fetchPositionListIndexesStatic(clusterMaps, isNullEqualNull);
-	}
-
-	private static List<HashMap<String, IntArrayList>> calculateClusterMapsStatic(ObjectArrayList<Row> records,
-			int numAttributes) {
-		List<HashMap<String, IntArrayList>> clusterMaps = new ArrayList<>();
-		for (int i = 0; i < numAttributes; i++)
-			clusterMaps.add(new HashMap<>());
-		
-		int recordId = 0;
-		for (Row record : records) {
-			int attributeId = 0;
-			for (String value : record) {
-				HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
-				
-				if (clusterMap.containsKey(value)) {
-					clusterMap.get(value).add(recordId);
-				}
-				else {
-					IntArrayList newCluster = new IntArrayList();
-					newCluster.add(recordId);
-					clusterMap.put(value, newCluster);
-				}
-				
-				attributeId++;
-			}
-			recordId++;
-		}
-		
-		return clusterMaps;
-	}
-
-	/**
-	 * Creates the actual positionListIndices based on the clusterMaps calculated beforehand.
-	 * Clusters of size 1 are being discarded in the process.
-	 *
-	 * @param clusterMaps see calculateClusterMaps
-	 * @param isNullEqualNull determines how to handle NULL values in the data
-	 * @return clustersPerAttribute,
-	 */
-	private static List<PositionListIndex> fetchPositionListIndexesStatic(
-			List<HashMap<String, IntArrayList>> clusterMaps, boolean isNullEqualNull) {
-
+    /**
+     * Creates the actual positionListIndices based on the clusterMaps calculated beforehand.
+     * Clusters of size 1 are being discarded in the process.
+     *
+     * @return clustersPerAttribute,
+     */
+    public List<PositionListIndex> fetchPositionListIndexes() {
+        SpeedBenchmark.begin(BenchmarkLevel.OPERATION);
+        List<HashMap<String, IntArrayList>> clusterMaps = clusterMapBuilder.getClusterMaps();
         List<PositionListIndex> clustersPerAttribute = new ArrayList<>();
         for (int columnId = 0; columnId < clusterMaps.size(); columnId++) {
             List<IntArrayList> clusters = new ArrayList<>();
@@ -188,7 +81,35 @@ public class PLIBuilder {
 
             clustersPerAttribute.add(new PositionListIndex(columnId, clusters));
         }
-        return clustersPerAttribute;
+        // Sort plis by number of clusters: For searching in the covers and for
+        // validation, it is good to have attributes with few non-unique values
+        // and many clusters left in the prefix tree
+        FDLogger.log(Level.FINER, "Sorting plis by number of clusters ...");
+        if (pliOrder == null) {
+            pliOrder = clustersPerAttribute.stream().sorted((o1, o2) -> {
+                int numClustersInO1 = numClusters(o1);
+                int numClustersInO2 = numClusters(o2);
+                return numClustersInO2 - numClustersInO1;
+            }).map(PositionListIndex::getAttribute).collect(Collectors.toList());
+        }
+        List<PositionListIndex> plis = new ArrayList<>(clustersPerAttribute.size());
+        for (int attributeId : pliOrder) {
+            plis.add(clustersPerAttribute.get(attributeId));
+        }
+        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Sorted plis by cluster");
+        return plis;
 
-	}
+    }
+
+    private int numClusters(PositionListIndex idx) {
+        return getNumLastRecords() - idx.getNumNonUniqueValues() + idx.getClusters().size();
+    }
+
+    public void addRecords(ObjectArrayList<Row> records) {
+        clusterMapBuilder.addRecords(records);
+    }
+
+    public int addRecord(Iterable<String> record) {
+        return clusterMapBuilder.addRecord(record);
+    }
 }
