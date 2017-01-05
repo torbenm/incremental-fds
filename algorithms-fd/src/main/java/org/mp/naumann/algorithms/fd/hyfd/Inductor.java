@@ -43,7 +43,6 @@ class Inductor {
 			nonFdLevel.clear();
 		}
 	}
-	private static boolean firstTimeEver = true;
 	private int specializePositiveCover(OpenBitSet lhs, int rhs, FDList nonFds) {
 		int numAttributes = this.posCover.getChildren().length;
 		int newFDs = 0;
@@ -59,9 +58,6 @@ class Inductor {
 					if (!lhs.get(attr) && (attr != rhs)) {
                         specLhs.set(attr);
 
-                        if(firstTimeEver){
-                            System.out.println("added "+BitSetUtils.toString(specLhs));
-                        }
 						if (!this.posCover.containsFdOrGeneralization(specLhs, rhs)) {
 							this.posCover.addFunctionalDependency(specLhs, rhs);
 							newFDs++;
@@ -75,10 +71,7 @@ class Inductor {
 				}
 			}
 		}
-		if(firstTimeEver){
-		    System.out.println(newFDs + " added; "+numAttributes+" "+BitSetUtils.toString(lhs));
-		    firstTimeEver = false;
-        }
+
 		return newFDs;
 	}
 }

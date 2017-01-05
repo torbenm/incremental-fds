@@ -161,6 +161,8 @@ public class HyFD implements FunctionalDependencyAlgorithm {
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round "+i++);
 		} while (comparisonSuggestions != null);
 
+
+		violationCollection.print();
         // Output all valid FDs
 		FDLogger.log(Level.FINER, "Translating FD-tree into result format ...");
 

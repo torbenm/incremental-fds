@@ -3,6 +3,8 @@ package org.mp.naumann.algorithms.fd.hyfd;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.FunctionalDependency;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
@@ -53,19 +55,10 @@ public class Validator {
 		}
 	}
 	
-	private class FD {
-		public OpenBitSet lhs;
-		public int rhs;
-		public FD(OpenBitSet lhs, int rhs) {
-			this.lhs = lhs;
-			this.rhs = rhs;
-		}
-	}
-	
 	private class ValidationResult {
 		public int validations = 0;
 		public int intersections = 0;
-		public List<FD> invalidFDs = new ArrayList<>();
+		public List<OpenBitSetFD> invalidFDs = new ArrayList<>();
 		public List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 		public void add(ValidationResult other) {
 			this.validations += other.validations;
@@ -101,7 +94,7 @@ public class Validator {
 					if (!Validator.this.plis.get(rhsAttr).isConstant(Validator.this.numRecords)) {
 						element.removeFd(rhsAttr);
                         //TODO: we could dive in here
-                        result.invalidFDs.add(new FD(lhs, rhsAttr));
+                        result.invalidFDs.add(new OpenBitSetFD(lhs, rhsAttr));
 					}
 					result.intersections++;
 				}
@@ -115,7 +108,7 @@ public class Validator {
 //                        PrintUtils.print(BitSetUtils.toString(lhs));
 
                         //TODO: we could dive in here
-						result.invalidFDs.add(new FD(lhs, rhsAttr));
+						result.invalidFDs.add(new OpenBitSetFD(lhs, rhsAttr));
 					}
 					result.intersections++;
 				}
@@ -135,11 +128,12 @@ public class Validator {
 
                 //TODO: we could dive in here.
 				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
-                    PrintUtils.print(BitSetUtils.toString(lhs));
+                    //PrintUtils.print(BitSetUtils.toString(lhs));
 
-                    result.invalidFDs.add(new FD(lhs, rhsAttr));
+                    result.invalidFDs.add(new OpenBitSetFD(lhs, rhsAttr));
                 }
 			}
+			violationCollection.addInvalidFd(result.invalidFDs);
 			return result;
 		}
 	}
@@ -250,11 +244,11 @@ public class Validator {
 			FDLogger.log(Level.FINER, "(G); ");
 			
 			int candidates = 0;
-			for (FD invalidFD : validationResult.invalidFDs) {
+			for (OpenBitSetFD invalidFD : validationResult.invalidFDs) {
 				for (int extensionAttr = 0; extensionAttr < numAttributes; extensionAttr++) {
-					OpenBitSet childLhs = this.extendWith(invalidFD.lhs, invalidFD.rhs, extensionAttr);
+					OpenBitSet childLhs = this.extendWith(invalidFD.getLhs(), invalidFD.getRhs(), extensionAttr);
 					if (childLhs != null) {
-						FDTreeElement child = this.posCover.addFunctionalDependencyGetIfNew(childLhs, invalidFD.rhs);
+						FDTreeElement child = this.posCover.addFunctionalDependencyGetIfNew(childLhs, invalidFD.getRhs());
 						if (child != null) {
 							nextLevel.add(new FDTreeElementLhsPair(child, childLhs));
 							candidates++;

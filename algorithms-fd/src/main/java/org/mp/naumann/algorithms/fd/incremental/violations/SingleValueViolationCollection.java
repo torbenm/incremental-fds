@@ -2,14 +2,19 @@ package org.mp.naumann.algorithms.fd.incremental.violations;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class SingleValueViolationCollection implements ViolationCollection {
 
-    Map<OpenBitSet, List<Integer>> violationsMap = new HashMap<>();
+    private final Map<OpenBitSet, List<Integer>> violationsMap = new HashMap<>();
+    private final List<OpenBitSetFD> invalidFDs = new ArrayList<>();
 
     @Override
     public void add(OpenBitSet attrs, List<Integer> violatingValues) {
@@ -33,6 +38,30 @@ public class SingleValueViolationCollection implements ViolationCollection {
             if(isMatch(entry.getKey(), entry.getValue(), values)){
                 violationsMap.remove(attrs);
             }
+        }
+    }
+
+    @Override
+    public void addInvalidFd(OpenBitSetFD fd) {
+        invalidFDs.add(fd);
+    }
+
+    @Override
+    public void addInvalidFd(Collection<OpenBitSetFD> fd) {
+        invalidFDs.addAll(fd);
+    }
+
+    public void print(){
+        System.out.println("Negative Cover");
+        System.out.println("=========");
+        for(Map.Entry<OpenBitSet, List<Integer>> entry : violationsMap.entrySet()){
+            System.out.println(BitSetUtils.toString(entry.getKey())+" "+entry.getValue().toString());
+        }
+        System.out.println("=========");
+        System.out.println("Invalid FDs");
+        System.out.println("=========");
+        for(OpenBitSetFD invalidFD : invalidFDs){
+            System.out.println(BitSetUtils.toString(invalidFD.getLhs())+" -> "+invalidFD.getRhs());
         }
     }
 

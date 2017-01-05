@@ -2,8 +2,10 @@ package org.mp.naumann.algorithms.fd.incremental.violations;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +38,21 @@ public class AllValuesViolationCollection implements ViolationCollection {
 
     @Override
     public void remove(List<Integer> values) {
+
+    }
+
+    @Override
+    public void addInvalidFd(OpenBitSetFD fd) {
+
+    }
+
+    @Override
+    public void addInvalidFd(Collection<OpenBitSetFD> fd) {
+
+    }
+
+    @Override
+    public void print() {
 
     }
 
