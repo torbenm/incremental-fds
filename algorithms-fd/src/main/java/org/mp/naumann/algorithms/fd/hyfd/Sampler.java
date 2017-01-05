@@ -17,9 +17,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Set;
 import java.util.logging.Level;
 
 class Sampler {
@@ -273,7 +271,7 @@ class Sampler {
                 invalidatingValues.add(t1[i]);
             }
         }
-        violationCollection.addViolationOfNegativeCover(equalAttrs, invalidatingValues);
+        violationCollection.add(equalAttrs, invalidatingValues);
     }
 
 

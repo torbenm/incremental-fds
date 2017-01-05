@@ -114,7 +114,7 @@ public class Validator {
 				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
 					if (!Validator.this.plis.get(lhsAttribute).refines(Validator.this.compressedRecords, rhsAttr)) {
 						element.removeFd(rhsAttr);
-                        PrintUtils.print(BitSetUtils.toString(lhs));
+//                        PrintUtils.print(BitSetUtils.toString(lhs));
 
                         //TODO: we could dive in here
 						result.invalidFDs.add(new FD(lhs, rhsAttr));

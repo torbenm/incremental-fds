@@ -20,6 +20,7 @@ import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.IntColumnValue;
@@ -50,7 +51,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 	private FDIntermediateDatastructure intermediateDatastructure;
 	private boolean initialized = false;
     private ViolationCollection violatingValues;
-
+    private FDSet negativeCover;
 	private IncrementalPLIBuilder incrementalPLIBuilder;
 	private BloomFilter<Set<ColumnValue>> filter;
 	private final Map<String, Integer> columnsToId = new HashMap<>();
@@ -87,6 +88,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 		for (PositionListIndex pli : incrementalPLIBuilder.getPlis()) {
 			columnsToId.put(columns.get(pli.getAttribute()), i++);
 		}
+
 	}
 
 	@Override
@@ -95,6 +97,12 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 			initialize();
 			initialized = true;
 		}
+
+		if(VERSION.getDeletePruningStrategy() == IncrementalFDVersion.DeletePruningStrategy.ANNOTATION){
+            int maxLhsSize = -1;
+            negativeCover = new FDSet(columns.size(), maxLhsSize);
+        }
+
 		SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
 		CardinalitySet existingCombinations = null;
 		if (VERSION.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.BLOOM) {

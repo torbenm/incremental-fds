@@ -3,19 +3,15 @@ package org.mp.naumann.algorithms.fd.hyfd;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
-import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
-import org.mp.naumann.algorithms.fd.incremental.BitSetUtils;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
-import org.mp.naumann.algorithms.fd.incremental.violations.DefaultViolationCollection;
+import org.mp.naumann.algorithms.fd.incremental.violations.AllValuesViolationCollection;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
-import org.mp.naumann.algorithms.fd.structures.IntColumnValue;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
-import org.mp.naumann.algorithms.fd.utils.PrintUtils;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
@@ -38,9 +34,7 @@ import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.logging.Level;
@@ -72,7 +66,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 	private List<Integer> pliSequence;
     private final IncrementalFDVersion version;
-    private final ViolationCollection violationCollection = new DefaultViolationCollection();
+    private final ViolationCollection violationCollection = new AllValuesViolationCollection();
     //private Map<IntColumnValue, Set<OpenBitSet>> violatingValues;
 
 
