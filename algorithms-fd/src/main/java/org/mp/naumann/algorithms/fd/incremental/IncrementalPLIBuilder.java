@@ -16,13 +16,13 @@ import java.util.stream.Collectors;
 class IncrementalPLIBuilder {
 
     private final PLIBuilder pliBuilder;
-    private final IncrementalFDVersion version;
+    private final IncrementalFDConfiguration version;
     private final List<String> columns;
 
     private List<PositionListIndex> plis;
     private int[][] compressedRecords;
 
-    public IncrementalPLIBuilder(PLIBuilder pliBuilder, IncrementalFDVersion version, List<String> columns) {
+    public IncrementalPLIBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns) {
         this.pliBuilder = pliBuilder;
         this.version = version;
         this.columns = columns;
@@ -43,7 +43,7 @@ class IncrementalPLIBuilder {
 
     private CompressedDiff buildDiff(Collection<Integer> inserted) {
         int[][] insertedRecords = new int[inserted.size()][];
-        if (this.version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
+        if (version.getPruningStrategies().contains(IncrementalFDConfiguration.PruningStrategy.SIMPLE)) {
             int i = 0;
             for (int id : inserted) {
                 insertedRecords[i] = compressedRecords[id];
@@ -59,7 +59,7 @@ class IncrementalPLIBuilder {
     private void updateDataStructures(Set<Integer> inserted) {
         plis = pliBuilder.fetchPositionListIndexes();
         compressedRecords = RecordCompressor.fetchCompressedRecords(plis, pliBuilder.getNumLastRecords());
-        if (version.useClusterPruning()) {
+        if (version.usesClusterPruning()) {
             for(int i = 0; i < plis.size(); i++) {
                 PositionListIndex pli = plis.get(i);
                 pli.setClustersWithNewRecords(getClustersWithNewRecords(inserted, i));

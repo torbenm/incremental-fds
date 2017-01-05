@@ -35,7 +35,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
     private static final boolean VALIDATE_PARALLEL = true;
     private static final float EFFICIENCY_THRESHOLD = 0.01f;
-    private IncrementalFDVersion version = IncrementalFDVersion.LATEST;
+    private IncrementalFDConfiguration version = IncrementalFDConfiguration.LATEST;
 
     private final List<String> columns;
     private FDTree posCover;
@@ -51,7 +51,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     private BloomPruningStrategy bloomPruning;
     private FDSet negCover;
 
-    public IncrementalFD(List<String> columns, String tableName, IncrementalFDVersion version) {
+    public IncrementalFD(List<String> columns, String tableName, IncrementalFDConfiguration version) {
         this(columns, tableName);
         this.version = version;
     }
@@ -79,16 +79,16 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         List<Integer> pliSequence = pliBuilder.getPliOrder();
         List<String> orderedColumns = pliSequence.stream().map(columns::get).collect(Collectors.toList());
         List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
-        if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
+        if (version.getPruningStrategies().contains(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {
             bloomPruning = new BloomPruningStrategy(orderedColumns).addGenerator(new AllCombinationsBloomGenerator(2));
             bloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliSequence);
         }
-        if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED) {
+        if (version.getPruningStrategies().contains(IncrementalFDConfiguration.PruningStrategy.BLOOM_ADVANCED)) {
             advancedBloomPruning = new BloomPruningStrategy(orderedColumns)
                     .addGenerator(new CurrentFDBloomGenerator(posCover));
             advancedBloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliSequence);
         }
-        if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
+        if (version.getPruningStrategies().contains(IncrementalFDConfiguration.PruningStrategy.SIMPLE)) {
             simplePruning = new ExistingValuesPruningStrategy(columns);
         }
         incrementalPLIBuilder = new IncrementalPLIBuilder(pliBuilder, this.version, this.columns);
@@ -110,13 +110,13 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
                 intermediateDatastructure.getValueComparator(), this.memoryGuardian);
         Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
-        if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM) {
+        if (version.getPruningStrategies().contains(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {
             validator.addValidationPruner(bloomPruning.analyzeBatch(batch));
         }
-        if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.BLOOM_ADVANCED) {
+        if (version.getPruningStrategies().contains(IncrementalFDConfiguration.PruningStrategy.BLOOM_ADVANCED)) {
             validator.addValidationPruner(advancedBloomPruning.analyzeBatch(batch));
         }
-        if (version.getPruningStrategy() == IncrementalFDVersion.PruningStrategy.SIMPLE) {
+        if (version.getPruningStrategies().contains(IncrementalFDConfiguration.PruningStrategy.SIMPLE)) {
             validator.addValidationPruner(simplePruning.analyzeDiff(diff));
         }
         FDLogger.log(Level.FINE, "Finished building pruning strategies");
@@ -125,7 +125,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         int i = 1;
         do {
             FDLogger.log(Level.FINE, "Started round " + i);
-            if (version.useSampling()) {
+            if (version.usesSampling()) {
                 FDLogger.log(Level.FINE, "Enriching negative cover");
                 FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
                 FDLogger.log(Level.FINE, "Updating positive cover");

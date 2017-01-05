@@ -1,10 +1,13 @@
 package org.mp.naumann;
 
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.benchmarks.IncrementalFDBenchmark;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.reporter.GoogleSheetsReporter;
@@ -16,32 +19,56 @@ import java.util.logging.Level;
 
 public class BenchmarksApplication {
 
-    private static GoogleSheetsReporter googleSheetsReporter;
+    @Parameter(names = "--name")
+    private String name = "";
+    @Parameter(names = "--version")
+    private int version = -1;
+    @Parameter(names = "--help", help = true)
+    private boolean help = false;
+    @Parameter(names = "--spreadsheet")
+    private String spreadsheet = "1ATQM5p6usBFImtxrn1yti-cjAtlnuli8kM4-ZpgrwfY";
+    @Parameter(names = "--batchSize")
+    private int batchSize = 100;
+    @Parameter(names = "--splitLine")
+    private int splitLine = 15000;
+    @Parameter(names = "--dataSet")
+    private String dataSet = "benchmark.adultfull.csv";
+    @Parameter(names = "--sampling")
+    private Boolean useSampling = false;
+    @Parameter(names = "--clusterPruning")
+    private Boolean useClusterPruning = true;
 
-    static {
-        try {
-            googleSheetsReporter = new GoogleSheetsReporter();
-        } catch (IOException e) {
-            e.printStackTrace();
+
+    public static void main(String[] args) throws IOException {
+        BenchmarksApplication app = new BenchmarksApplication();
+        JCommander jc = new JCommander(app, args);
+        if (app.help) {
+            jc.usage();
+            System.exit(0);
         }
+        app.run();
     }
 
-    public static void main(String[] args) {
-        int version = args.length >= 1 ? Integer.valueOf(args[0]) : 3;
-        int batchSize = args.length >= 2 ? Integer.valueOf(args[1]) : 100;
-        long splitLine = args.length >= 3 ? Long.valueOf(args[2]) : 15000;
-        String dataSet = args.length >= 4 ? args[3] : "benchmark.adultfull.csv";
-
+    public void run() throws IOException {
+        GoogleSheetsReporter googleSheetsReporter = new GoogleSheetsReporter(spreadsheet);
         int stopAfter = batchSize < 10 ? 100 : -1;
 
         FDLogger.setLevel(Level.OFF);
         setUp();
 
+        IncrementalFDConfiguration config = IncrementalFDConfiguration.getVersion(version, name);
+        if (useSampling != null) {
+            config.setSampling(useSampling);
+        }
+        if (useClusterPruning != null) {
+            config.setClusterPruning(useClusterPruning);
+        }
+
         try {
             TestCase t = new InitialAndIncrementalOneBatch(splitLine,
                     batchSize,
                     dataSet,
-                    new IncrementalFDBenchmark(IncrementalFDVersion.valueOf(version)),
+                    new IncrementalFDBenchmark(config),
                     stopAfter
             );
             t.execute();
@@ -62,21 +89,19 @@ public class BenchmarksApplication {
         } finally {
             tearDown();
         }
-	}
+    }
 
-
-
-	public static void setUp(){
+    public static void setUp() {
         SpeedBenchmark.enable();
         SpeedBenchmark.addEventListener(e -> {
-            if(e.getLevel() == BenchmarkLevel.ALGORITHM
+            if (e.getLevel() == BenchmarkLevel.ALGORITHM
                     || e.getLevel() == BenchmarkLevel.BATCH)
                 System.out.println(e);
         });
         SpeedBenchmark.begin(BenchmarkLevel.BENCHMARK);
     }
 
-    public static void tearDown(){
+    public static void tearDown() {
         SpeedBenchmark.end(BenchmarkLevel.BENCHMARK, "Finished complete benchmark");
         SpeedBenchmark.disable();
     }

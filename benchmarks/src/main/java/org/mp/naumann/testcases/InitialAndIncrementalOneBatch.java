@@ -5,7 +5,7 @@ import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedEvent;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedEventListener;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.benchmarks.IncrementalFDBenchmark;
 import org.mp.naumann.database.ConnectionException;
@@ -56,7 +56,7 @@ public class InitialAndIncrementalOneBatch implements TestCase, SpeedEventListen
         benchmark.runInitial();
 
         status = 1;
-        benchmark.constructInitialOnly(IncrementalFDVersion.HYFD_ORIGINAL,
+        benchmark.constructInitialOnly(IncrementalFDConfiguration.HYFD_ORIGINAL,
                 "Initial algorithm for Baseline + 1 Batch",
                 ConnectionManager.getCsvConnectionFromAbsolutePath(FileSource.TEMP_DIR, ","),
                 "benchmark",
@@ -88,7 +88,6 @@ public class InitialAndIncrementalOneBatch implements TestCase, SpeedEventListen
         return new Object[]{
                 new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
                 filename,
-                benchmark.getVersionCode(),
                 benchmark.getVersionName(),
                 splitLine,
                 batchSize,
