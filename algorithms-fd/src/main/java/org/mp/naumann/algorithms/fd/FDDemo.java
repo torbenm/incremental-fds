@@ -18,12 +18,12 @@ public class FDDemo {
 		SpeedBenchmark.enable();
         SpeedBenchmark.addEventListener(System.out::println);
         SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
-        DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection("/test", ";"));
+        DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection("/", ","));
 		SpeedBenchmark.lap(BenchmarkLevel.ALGORITHM, "Loaded dataconnector");
-		InitialAlgorithm<List<FunctionalDependency>, ?> hyfd = new FDInitialAlgorithm("hyfd", dc, "test", "countries");
+		InitialAlgorithm<List<FunctionalDependency>, ?> hyfd = new FDInitialAlgorithm("hyfd", dc, "test", "deletesample.result");
 		List<FunctionalDependency> fds = hyfd.execute();
-		SpeedBenchmark.end(BenchmarkLevel.ALGORITHM,"Finished execution");
-		//fds.forEach(System.out::println);
+		SpeedBenchmark.end(BenchmarkLevel.ALGORITHM,"Finished execution "+fds.size());
+		fds.forEach(System.out::println);
 	}
 
 }

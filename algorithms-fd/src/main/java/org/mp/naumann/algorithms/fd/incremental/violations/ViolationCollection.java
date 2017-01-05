@@ -4,20 +4,15 @@ import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
-public interface ViolationCollection {
+public interface ViolationCollection extends Serializable{
 
     void add(OpenBitSet attrs, List<Integer> violatingValues);
 
-    void injectIntoNegativeCover(FDSet negCoverBase);
-
-    void remove(List<Integer> values);
-
-    void addInvalidFd(OpenBitSetFD fd);
+    List<OpenBitSet> getAffected(FDSet negativeCoverToUpdate, int[][] removedValues);
     void addInvalidFd(Collection<OpenBitSetFD> fd);
-
-    void print();
 
 }

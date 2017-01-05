@@ -58,12 +58,13 @@ public class FDSet {
 	}
 
 	public String toString(){
+	    StringBuilder s = new StringBuilder();
         for(ObjectOpenHashSet<OpenBitSet> obs : this.fdLevels){
             for(OpenBitSet o : obs){
-                System.out.println(BitSetUtils.toString(o));
+                s.append(BitSetUtils.toString(o));
             }
         }
-        return "";
+        return s.toString();
     }
 
 }

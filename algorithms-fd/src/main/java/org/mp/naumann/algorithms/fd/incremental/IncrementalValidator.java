@@ -101,8 +101,9 @@ public class IncrementalValidator {
 			FDTreeElement element = this.elementLhsPair.getElement();
 			OpenBitSet lhs = this.elementLhsPair.getLhs();
 			OpenBitSet rhs = element.getFds();
-			
+
 			int rhsSize = (int) rhs.cardinality();
+
 			if (rhsSize == 0)
 				return result;
 			result.validations = result.validations + rhsSize;
@@ -121,8 +122,7 @@ public class IncrementalValidator {
 				// Check if lhs from plis refines rhs
 				int lhsAttribute = lhs.nextSetBit(0);
 				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
-
-					if (!IncrementalValidator.this.plis.get(lhsAttribute).refines(IncrementalValidator.this.compressedRecords, rhsAttr)) {
+                    if (!IncrementalValidator.this.plis.get(lhsAttribute).refines(IncrementalValidator.this.compressedRecords, rhsAttr)) {
 						element.removeFd(rhsAttr);
 						result.invalidFDs.add(new FD(lhs, rhsAttr));
 					}

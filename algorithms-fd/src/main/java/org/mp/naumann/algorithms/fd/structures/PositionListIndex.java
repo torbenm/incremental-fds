@@ -24,6 +24,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -87,9 +88,11 @@ public class PositionListIndex {
 
 
     public boolean refines(int[][] compressedRecords, int rhsAttr) {
-        for (IntArrayList cluster : clustersWithNewRecords())
+        for (IntArrayList cluster : getClusters()) {
+      //TODO:  for(IntArrayList cluster : clustersWithNewRecords())
             if (!this.probe(compressedRecords, rhsAttr, cluster))
                 return false;
+        }
         return true;
     }
 
@@ -116,7 +119,9 @@ public class PositionListIndex {
         // Returns the rhs attributes that are refined by the lhs
         OpenBitSet refinedRhs = rhs.clone();
 
-        // TODO: Check if it is technically possible that this fd holds, i.e., if A1 has 2 clusters of size 10 and A2 has 2 clusters of size 10, then the intersection can have at most 4 clusters of size 5 (see join cardinality estimation)
+        // TODO: Check if it is technically possible that this fd holds, i.e.,
+        // if A1 has 2 clusters of size 10 and A2 has 2 clusters of size 10,
+        // then the intersection can have at most 4 clusters of size 5 (see join cardinality estimation)
 
         int[] rhsAttrId2Index = new int[compressedRecords[0].length];
         int[] rhsAttrIndex2Id = new int[rhsSize];
@@ -127,7 +132,8 @@ public class PositionListIndex {
             index++;
         }
 
-        for (IntArrayList cluster : clustersWithNewRecords()) {
+      // TODO: for (IntArrayList cluster : clustersWithNewRecords()) {
+        for (IntArrayList cluster : clusters) {
             Object2ObjectOpenHashMap<ClusterIdentifier, ClusterIdentifierWithRecord> subClusters = new Object2ObjectOpenHashMap<>(cluster.size());
             for (int recordId : cluster) {
                 ClusterIdentifier subClusterIdentifier = this.buildClusterIdentifier(lhs, lhsSize, compressedRecords[recordId]);

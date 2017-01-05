@@ -32,29 +32,15 @@ public class AllValuesViolationCollection implements ViolationCollection {
     }
 
     @Override
-    public void injectIntoNegativeCover(FDSet negCoverBase) {
-
+    public List<OpenBitSet> getAffected(FDSet negativeCoverToUpdate, int[][] removedValues) {
+        return null;
     }
 
-    @Override
-    public void remove(List<Integer> values) {
 
-    }
-
-    @Override
-    public void addInvalidFd(OpenBitSetFD fd) {
-
-    }
 
     @Override
     public void addInvalidFd(Collection<OpenBitSetFD> fd) {
 
     }
-
-    @Override
-    public void print() {
-
-    }
-
 
 }

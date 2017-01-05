@@ -28,6 +28,7 @@ import org.mp.naumann.database.data.Row;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -111,5 +112,8 @@ public class PLIBuilder {
 
     public int addRecord(Iterable<String> record) {
         return clusterMapBuilder.addRecord(record);
+    }
+    public Set<Integer> removeRecord(Iterable<String> record) {
+        return clusterMapBuilder.removeRecord(record);
     }
 }

@@ -162,7 +162,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		} while (comparisonSuggestions != null);
 
 
-		violationCollection.print();
+		//violationCollection.print();
         // Output all valid FDs
 		FDLogger.log(Level.FINER, "Translating FD-tree into result format ...");
 

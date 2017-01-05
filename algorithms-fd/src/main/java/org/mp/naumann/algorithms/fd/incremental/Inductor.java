@@ -5,6 +5,7 @@ import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -70,4 +71,25 @@ class Inductor {
 		}
 		return newFDs;
 	}
+
+    public int addIntoPositiveCover(FDTree posCover, List<OpenBitSet> affectedNegativeCover, int numAttributes){
+	    int newFunctionalDependenciesToCheck = 0;
+        for(OpenBitSet cover : affectedNegativeCover){
+            OpenBitSet flipped = cover.clone();
+            flipped.flip(0, numAttributes);
+            OpenBitSet lhsCover = new OpenBitSet();
+
+            for(int lhs = cover.nextSetBit(0); lhs >= 0; lhs = cover.nextSetBit(lhs + 1)){
+                lhsCover.set(lhs);
+                for(int rhs = flipped.nextSetBit(0); rhs >= 0; rhs = flipped.nextSetBit(rhs + 1)){
+                    if(!posCover.containsFdOrGeneralization(lhsCover, rhs)){
+                        posCover.addFunctionalDependency(lhsCover.clone(), rhs);
+                        newFunctionalDependenciesToCheck++;
+                    }
+                }
+                lhsCover.clear(lhs);
+            }
+        }
+        return newFunctionalDependenciesToCheck;
+    }
 }
