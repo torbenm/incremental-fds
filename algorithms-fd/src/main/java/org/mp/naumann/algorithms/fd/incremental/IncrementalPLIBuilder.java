@@ -1,5 +1,7 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.RecordCompressor;
@@ -31,9 +33,21 @@ class IncrementalPLIBuilder {
 
     public CompressedDiff update(Batch batch) {
         Set<Integer> inserted = addRecordsToClusterMap(batch.getInsertStatements());
-        Set<Integer> deleted = removeRecordsFromClusterMap(batch.getDeleteStatements());
+        Set<Integer> deleted = getRecordIdsToRemove(batch.getDeleteStatements());
         updateDataStructures(inserted, deleted);
-        return buildDiff(inserted, deleted);
+        CompressedDiff diff = buildDiff(inserted, deleted);
+        finalRemoveRecords(batch.getDeleteStatements(), deleted);
+        updateDataStructures();
+        return diff;
+    }
+
+    private void finalRemoveRecords(List<? extends Statement> stmts, Set<Integer> deleted) {
+        for(Statement stmt : stmts){
+            Map<String, String> valueMap = stmt.getValueMap();
+            List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
+            pliBuilder.removeRecords(values, deleted);
+        }
+
     }
 
     private Set<Integer> addRecordsToClusterMap(List<? extends Statement> stmts){
@@ -47,7 +61,7 @@ class IncrementalPLIBuilder {
         return ids;
     }
 
-    private Set<Integer> removeRecordsFromClusterMap(List<? extends Statement> stmts){
+    private Set<Integer> getRecordIdsToRemove(List<? extends Statement> stmts){
         Set<Integer> ids = new HashSet<>();
         for (Statement stmt : stmts) {
             Map<String, String> valueMap = stmt.getValueMap();
@@ -58,29 +72,36 @@ class IncrementalPLIBuilder {
     }
 
     private CompressedDiff buildDiff(Collection<Integer> inserted, Collection<Integer> deleted) {
-        int[][] insertedRecords = diffToArray(inserted, this.version.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.SIMPLE);
-        int[][] deletedRecords = diffToArray(deleted, this.version.getDeletePruningStrategy() == IncrementalFDVersion.DeletePruningStrategy.ANNOTATION);
+        int[][] insertedRecords = diffToArray(inserted, this.version.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.SIMPLE, false);
+        int[][] deletedRecords = diffToArray(deleted, this.version.getDeletePruningStrategy() == IncrementalFDVersion.DeletePruningStrategy.ANNOTATION, true);
 
         int[][] oldUpdatedRecords = new int[0][];
         int[][] newUpdatedRecords = new int[0][];
         return new CompressedDiff(insertedRecords, deletedRecords, oldUpdatedRecords, newUpdatedRecords);
     }
 
-    private int[][] diffToArray(Collection<Integer> diff, boolean doBuild){
+    private int[][] diffToArray(Collection<Integer> diff, boolean doBuild, boolean remove){
         int[][] array = new int[diff.size()][];
         if (doBuild) {
             int i = 0;
             for (int id : diff) {
-                array[i] = compressedRecords[id];
+                array[i] = compressedRecords[id].clone();
+                if(remove) {
+                    Arrays.fill(compressedRecords[id], -1);
+                    System.out.println(id+" "+Arrays.toString(compressedRecords[id]));
+                }
                 i++;
             }
         }
         return array;
     }
 
-    private void updateDataStructures(Set<Integer> inserted, Set<Integer> deleted) {
+    private void updateDataStructures(){
         plis = pliBuilder.fetchPositionListIndexes();
         compressedRecords = RecordCompressor.fetchCompressedRecords(plis, pliBuilder.getNumLastRecords());
+    }
+    private void updateDataStructures(Set<Integer> inserted, Set<Integer> deleted) {
+        updateDataStructures();
         if (version.useClusterPruning()) {
             for(int i = 0; i < plis.size(); i++) {
                 PositionListIndex pli = plis.get(i);
@@ -98,7 +119,15 @@ class IncrementalPLIBuilder {
     private void invalidateRecords(Collection<Integer> oldRecords, int attribute){
         for(int id : oldRecords) {
             int clusterId = compressedRecords[id][attribute];
-            plis.get(attribute).getClusters().get(clusterId).remove((Integer)id);
+            if(clusterId > -1) {
+                IntArrayList cluster =  plis.get(attribute).getClusters().get(clusterId);
+                cluster.remove((Integer) id);
+                if(cluster.size() == 0){
+                    plis.get(attribute).getClusters().set(clusterId, null);
+                }
+
+            }
+
         }
     }
     private Set<Integer> getClustersWithNewRecords(Collection<Integer> newRecords, int attribute) {

@@ -23,15 +23,23 @@ import java.util.logging.Level;
 
 public class IncrementalFDDemo {
 
-    private static final String batchFileName = "csv/deletes.deletesample.csv";
+    /*   private static final String batchFileName = "csv/deletes.benchmark.adult.csv";
+       private static final String schema = "";
+       private static final String tableName = "benchmark.adult";
+       private static final int batchSize = 1200;
+    */  private static final String batchFileName = "csv/deletes.deletesample.csv";
+       private static final String schema = "";
+       private static final String tableName = "test.deletesample";
+       private static final int batchSize = 100;
+ /*private static final String batchFileName = "csv/test/deletes.bridges.csv";
     private static final String schema = "";
-    private static final String tableName = "test.deletesample";
-    private static final int batchSize = 100;
+    private static final String tableName = "test.bridges";
+    private static final int batchSize = 200; */
 
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
         FDLogger.setLevel(Level.INFO);
         try (DataConnector dc = new JdbcDataConnector(
-                ConnectionManager.getCsvConnection(IncrementalFDDemo.class, "", ","))) {
+                ConnectionManager.getCsvConnection(IncrementalFDDemo.class, "/", ","))) {
 
             // execute initial algorithm
             Table table = dc.getTable(schema, tableName);

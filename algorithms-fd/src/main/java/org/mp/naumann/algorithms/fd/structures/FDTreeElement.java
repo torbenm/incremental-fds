@@ -3,6 +3,7 @@ package org.mp.naumann.algorithms.fd.structures;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
@@ -226,7 +227,9 @@ public class FDTreeElement {
         for (int childAttr = 0; childAttr < this.numAttributes; childAttr++) {
             FDTreeElement element = this.getChildren()[childAttr];
             if (element != null) {
+
                 lhs.set(childAttr);
+                System.out.println(BitSetUtils.toString(lhs));
                 numFDs += element.addFunctionalDependenciesInto(resultReceiver, lhs, columnIdentifiers, plis);
                 lhs.clear(childAttr);
             }

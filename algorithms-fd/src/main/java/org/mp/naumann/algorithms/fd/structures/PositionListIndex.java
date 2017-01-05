@@ -97,6 +97,8 @@ public class PositionListIndex {
     }
 
     private boolean probe(int[][] compressedRecords, int rhsAttr, IntArrayList cluster) {
+        if(cluster.size() == 0) return false;
+
         int rhsClusterId = compressedRecords[cluster.getInt(0)][rhsAttr];
 
         // If otherClusterId < 0, then this cluster must point into more than one other clusters
@@ -107,6 +109,7 @@ public class PositionListIndex {
         for (int recordId : cluster)
             if (compressedRecords[recordId][rhsAttr] != rhsClusterId)
                 return false;
+
 
         return true;
     }
@@ -174,7 +177,6 @@ public class PositionListIndex {
 
     private ClusterIdentifier buildClusterIdentifier(OpenBitSet lhs, int lhsSize, int[] record) {
         int[] cluster = new int[lhsSize];
-
         int index = 0;
         for (int lhsAttr = lhs.nextSetBit(0); lhsAttr >= 0; lhsAttr = lhs.nextSetBit(lhsAttr + 1)) {
             int clusterId = record[lhsAttr];

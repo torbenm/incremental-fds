@@ -91,10 +91,10 @@ public class ClusterMapBuilder {
 	public Set<Integer> removeRecord(Iterable<String> record){
 	    int attributeId = 0;
         Set<Integer> matching = null;
+
         for(String value : record) {
            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
            Set<Integer> cluster = new HashSet<>(clusterMap.getOrDefault(value, new IntArrayList()));
-
            if(matching == null) {
                matching = cluster;
            } else {
@@ -103,6 +103,18 @@ public class ClusterMapBuilder {
            attributeId++;
        }
        return matching;
+    }
+
+    public void removeRecords(Iterable<String> record, Set<Integer> recordIds){
+        int attributeId = 0;
+        for(String value : record) {
+            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
+            if(clusterMap.containsKey(value)){
+                Set<Integer> cluster = new HashSet<>(clusterMap.getOrDefault(value, new IntArrayList()));
+                cluster.removeAll(recordIds);
+            }
+            attributeId++;
+        }
     }
 
 	public void addRecords(ObjectArrayList<Row> records) {

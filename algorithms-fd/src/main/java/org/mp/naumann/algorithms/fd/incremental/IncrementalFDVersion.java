@@ -6,8 +6,8 @@ public class IncrementalFDVersion {
     public static IncrementalFDVersion V0_1 = new IncrementalFDVersion(InsertPruningStrategy.SIMPLE, DeletePruningStrategy.NONE, "Simple incremental pruning", 1);
     public static IncrementalFDVersion V0_2 = new IncrementalFDVersion(InsertPruningStrategy.BLOOM, DeletePruningStrategy.NONE, "Improved pruning with bloom", 2);
     public static IncrementalFDVersion V0_3 = new IncrementalFDVersion(InsertPruningStrategy.BLOOM_ADVANCED,DeletePruningStrategy.NONE,  "Improved pruning with bloom based on initial FDs", 3);
-    public static IncrementalFDVersion V0_4 = new IncrementalFDVersion(InsertPruningStrategy.BLOOM_ADVANCED,DeletePruningStrategy.ANNOTATION,  "Improved pruning with bloom based on initial FDs, annotation pruning for deletes", 4);
-
+    public static IncrementalFDVersion V0_4 = new IncrementalFDVersion(InsertPruningStrategy.NONE,DeletePruningStrategy.ANNOTATION,  "Improved pruning with bloom based on initial FDs, annotation pruning for deletes", 4);
+    public static IncrementalFDVersion V0_5 = new IncrementalFDVersion(InsertPruningStrategy.BLOOM_ADVANCED,DeletePruningStrategy.ANNOTATION,  "Improved pruning with bloom based on initial FDs, annotation pruning for deletes", 4);
     public static final IncrementalFDVersion LATEST = V0_4;
     public static final IncrementalFDVersion HYFD_ORIGINAL = V0_0;
 

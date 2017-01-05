@@ -26,6 +26,7 @@ import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Row;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +38,8 @@ public class PLIBuilder {
     private final ClusterMapBuilder clusterMapBuilder;
     private final boolean isNullEqualNull;
     private List<Integer> pliOrder;
+    private List<String> dictionary = new ArrayList<String>();
+
 
     public List<Integer> getPliOrder() {
         return pliOrder;
@@ -115,5 +118,9 @@ public class PLIBuilder {
     }
     public Set<Integer> removeRecord(Iterable<String> record) {
         return clusterMapBuilder.removeRecord(record);
+    }
+
+    public void removeRecords(Iterable<String> record, Set<Integer> recordIds) {
+        clusterMapBuilder.removeRecords(record, recordIds);
     }
 }

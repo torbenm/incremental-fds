@@ -223,10 +223,8 @@ class Sampler {
 				}
 			}
 			numNewNonFds = newNonFds.size() - previousNegCoverSize;
-			
 			this.numNewNonFds.add(numNewNonFds);
 			this.numComparisons.add(numComparisons);
-
 			return numComparisons != 0;
 		}
 	}

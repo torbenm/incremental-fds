@@ -13,6 +13,7 @@ import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -177,7 +178,7 @@ public class IncrementalValidator {
 		}
 		
 		for (Future<ValidationResult> future : futures) {
-			try {
+		    try {
 				validationResult.add(future.get());
 			}
 			catch (ExecutionException e) {
@@ -201,7 +202,6 @@ public class IncrementalValidator {
 		FDLogger.log(Level.FINER, "Validating FDs using plis ...");
 
 		List<FDTreeElementLhsPair> currentLevel = pruneLevel(FDTreeUtils.getFdLevel(posCover, level));
-		
 		// Start the level-wise validation/discovery
 		int previousNumInvalidFds = 0;
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
@@ -240,7 +240,8 @@ public class IncrementalValidator {
 						}
 					}
 				}
-				
+
+
 				if ((this.posCover.getMaxDepth() > -1) && (this.level >= this.posCover.getMaxDepth()))
 					break;
 			}

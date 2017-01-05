@@ -35,8 +35,7 @@ public class SingleValueViolationCollection implements ViolationCollection {
 
             if (anyMatch) {
                 affected.add(entry.getKey());
-            }else{
-                negativeCover.add(attrs);
+                negativeCover.remove(attrs);
             }
         }
         return affected;

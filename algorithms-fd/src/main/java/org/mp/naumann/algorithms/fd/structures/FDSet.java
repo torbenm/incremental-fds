@@ -39,6 +39,15 @@ public class FDSet {
 		this.depth = Math.max(this.depth, length);
 		return this.fdLevels.get(length).add(fd);
 	}
+	public boolean remove(OpenBitSet fd){
+        int length = (int) fd.cardinality();
+
+        if ((this.maxDepth > 0) && (length > this.maxDepth))
+            return false;
+
+        this.depth = Math.max(this.depth, length);
+        return this.fdLevels.get(length).remove(fd);
+    }
 
 	public boolean contains(OpenBitSet fd) {
 		int length = (int) fd.cardinality();
