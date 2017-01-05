@@ -4,111 +4,189 @@ import com.google.common.hash.BloomFilter;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.CardinalitySet;
+import org.mp.naumann.algorithms.fd.incremental.ValidationPruner;
+import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
-public abstract class BloomPruningStrategy {
+public class BloomPruningStrategy {
 
-    protected final int maxLevel;
     private final List<String> columns;
-    private final Map<String, Integer> columnsToId = new HashMap<>();
-    private final List<Integer> pliSequence;
-    private final int numRecords;
-    private BloomFilter<Set<ColumnValue>> filter;
-    private final List<HashMap<String, IntArrayList>> clusterMaps;
+    private BloomFilter<Collection<ColumnValue>> filter;
+    private final Collection<BloomGenerator> generators = new ArrayList<>();
+
     private int puts = 0;
     private int requests = 0;
+    private Map<OpenBitSet, List<Integer>> combinations;
+    private int bloomViolations = 0;
+    private int innerViolations = 0;
 
-    protected BloomPruningStrategy(List<String> columns, int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<Integer> pliSequence, int maxLevel) {
+    public BloomPruningStrategy(List<String> columns) {
         this.columns = columns;
-        this.clusterMaps = clusterMaps;
-        this.numRecords = numRecords;
-        this.pliSequence = pliSequence;
-        this.maxLevel = maxLevel;
     }
 
-    private List<Map<String, String>> invertRecords(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps) {
-        List<Map<String, String>> invertedRecords = new ArrayList<>(numRecords);
+    private List<String[]> invertRecords(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<Integer> pliSequence) {
+        FDLogger.log(Level.FINER, "Inverting records...");
+        List<String[]> invertedRecords = new ArrayList<>(numRecords);
         for (int i = 0; i < numRecords; i++) {
-            invertedRecords.add(new HashMap<>());
+            invertedRecords.add(new String[columns.size()]);
         }
         int i = 0;
-        for (HashMap<String, IntArrayList> clusterMap : clusterMaps) {
-            String column = columns.get(i++);
-            for (Map.Entry<String, IntArrayList> entry : clusterMap.entrySet()) {
+        for (int columnId : pliSequence) {
+            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(columnId);
+            for (Entry<String, IntArrayList> entry : clusterMap.entrySet()) {
                 String value = entry.getKey();
                 for (int id : entry.getValue()) {
-                    invertedRecords.get(id).put(column, value);
+                    invertedRecords.get(id)[i] = value;
                 }
             }
+            i++;
         }
+        FDLogger.log(Level.FINER, "Finished inverting records");
         return invertedRecords;
     }
 
-    public CardinalitySet getExistingCombinations(Batch batch) {
-        CardinalitySet existingCombinations = new CardinalitySet(maxLevel);
+    public BloomPruningStrategy addGenerator(BloomGenerator generator) {
+        generators.add(generator);
+        return this;
+    }
+
+    public ValidationPruner analyzeBatch(Batch batch) {
         List<InsertStatement> inserts = batch.getInsertStatements();
-        Set<Set<ColumnValue>> innerDoubleCombinations = innerCombinationsToCheck(batch);
         int oldRequest = requests;
-        for (InsertStatement insert : inserts) {
-            Collection<Set<ColumnValue>> toCheck = getCombinationsToCheck(insert);
-            for (Set<ColumnValue> combination : toCheck) {
-                if (innerDoubleCombinations.contains(combination) || mightContain(combination)) {
-                    OpenBitSet existing = new OpenBitSet(columns.size());
-                    for (ColumnValue value : combination) {
-                        existing.fastSet(columnsToId.get(value.getColumn()));
-                    }
-                    existingCombinations.add(existing);
+        int oldBloomViolations = bloomViolations;
+        int oldInnerViolations = innerViolations;
+        CardinalitySet nonViolations = new CardinalitySet(columns.size());
+        for (Entry<OpenBitSet, List<Integer>> combination : combinations.entrySet()) {
+            boolean isUniqueCombination = true;
+            Set<Collection<ColumnValue>> inner = new HashSet<>();
+            for (InsertStatement insert : inserts) {
+                Collection<ColumnValue> vc = getValues(toArray(insert.getValueMap()), combination.getValue());
+                if (inner.contains(vc)) {
+                    innerViolations++;
+                    isUniqueCombination = false;
+                } else if (mightContain(vc)) {
+                    bloomViolations++;
+                    isUniqueCombination = false;
                 }
+                if (!isUniqueCombination) {
+                    break;
+                }
+                inner.add(vc);
+            }
+            if (isUniqueCombination) {
+                nonViolations.add(combination.getKey());
+                FDLogger.log(Level.FINEST, "All combinations new for columns " + combination.getValue());
+            }
+        }
+        int oldPuts = puts;
+        for (List<Integer> fd : combinations.values()) {
+            for (InsertStatement insert : inserts) {
+                updateFilter(fd, toArray(insert.getValueMap()));
             }
         }
         FDLogger.log(Level.FINER, "Made " + (requests - oldRequest) + " requests on filter");
-        int oldPuts = puts;
-        for (InsertStatement insert : inserts) {
-            updateFilter(insert);
-        }
         FDLogger.log(Level.FINER, "Made " + (puts - oldPuts) + " puts on filter");
         FDLogger.log(Level.FINER, "Made " + requests + " total requests on filter");
         FDLogger.log(Level.FINER, "Made " + puts + " total puts on filter");
-        return existingCombinations;
+        FDLogger.log(Level.FINER, "Found " + (bloomViolations - oldBloomViolations) + " violations in filter");
+        FDLogger.log(Level.FINER, "Found " + (innerViolations - oldInnerViolations) + " inner violations");
+        FDLogger.log(Level.FINER, "Found " + bloomViolations + " total violations in filter");
+        FDLogger.log(Level.FINER, "Found " + innerViolations + " total inner violations");
+        return new BloomValidationPruner(nonViolations);
     }
 
-    protected boolean mightContain(Set<ColumnValue> combination) {
+    private String[] toArray(Map<String, String> record) {
+        return columns.stream().map(record::get).toArray(String[]::new);
+    }
+
+    private Collection<ColumnValue> getValues(String[] record, List<Integer> combination) {
+        Collection<ColumnValue> list = new ArrayList<>();
+        for (Integer column : combination) {
+            list.add(new ColumnValue(column, record[column]));
+        }
+        return list;
+    }
+
+    private boolean mightContain(Collection<ColumnValue> combination) {
         requests++;
         return filter.mightContain(combination);
     }
 
-    public void initialize() {
-        int i = 0;
-        for (int id : pliSequence) {
-            String column = columns.get(id);
-            columnsToId.put(column, i++);
-        }
-        List<Map<String, String>> invertedRecords = invertRecords(numRecords, clusterMaps);
-        filter = initializeFilter(invertedRecords);
+    public void initialize(List<HashMap<String, IntArrayList>> clusterMaps, int numRecords, List<Integer> pliSequence) {
+        Collection<String[]> invertedRecords = invertRecords(numRecords, clusterMaps, pliSequence);
+        initialize(invertedRecords);
     }
 
-    protected void put(Set<ColumnValue> combination) {
+    public void initialize(Iterable<String[]> invertedRecords) {
+        combinations = toMap(generators.stream().flatMap(g -> g.generateCombinations(columns).stream()).collect(Collectors.toSet()));
+        int numCombinations = combinations.size();
+        FDLogger.log(Level.FINER, "Keeping track of " + numCombinations + " column combinations");
+        FDLogger.log(Level.FINER, "Initializing bloom filter...");
+        int expectedInsertions = 100_000_000;
+        filter = BloomFilter.create(new ValueCombinationFunnel(), expectedInsertions);
+        for (List<Integer> combination : combinations.values()) {
+            for (String[] record : invertedRecords) {
+                updateFilter(combination, record);
+            }
+        }
+        puts = 0;
+        FDLogger.log(Level.FINER, "Finished initializing bloom filter");
+    }
+
+    private Map<OpenBitSet, List<Integer>> toMap(Set<OpenBitSet> fds) {
+        return fds.stream().map(bits -> Pair.of(bits, BitSetUtils.collectSetBits(bits))).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+    }
+
+    private void updateFilter(List<Integer> cols, String[] record) {
+        put(getValues(record, cols));
+    }
+
+    private void put(Collection<ColumnValue> combination) {
         filter.put(combination);
         puts++;
     }
 
-    protected abstract BloomFilter<Set<ColumnValue>> initializeFilter(List<Map<String, String>> invertedRecords);
+    private static class BloomValidationPruner implements ValidationPruner {
 
-    protected abstract Collection<Set<ColumnValue>> getCombinationsToCheck(InsertStatement insert);
+        private final CardinalitySet nonViolations;
 
-    protected abstract void updateFilter(InsertStatement insert);
+        private BloomValidationPruner(CardinalitySet nonViolations) {
+            this.nonViolations = nonViolations;
+        }
 
-    protected abstract Set<Set<ColumnValue>> innerCombinationsToCheck(Batch batch);
+        @Override
+        public boolean cannotBeViolated(FDTreeElementLhsPair fd) {
+            OpenBitSet canBeViolated = fd.getLhs().clone();
+            int depth = Math.min(nonViolations.getDepth(), (int) fd.getLhs().cardinality());
+            for (int level = depth; level >= 0; level--) {
+                for (OpenBitSet nonViolation : nonViolations.getLevel(level)) {
+                    if (BitSetUtils.isContained(nonViolation, fd.getLhs())) {
+                        canBeViolated.andNot(nonViolation);
+                        if (canBeViolated.isEmpty()) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+    }
 }
