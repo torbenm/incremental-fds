@@ -11,6 +11,7 @@ import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.benchmarks.IncrementalFDBenchmark;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.reporter.GoogleSheetsReporter;
+import org.mp.naumann.reporter.Reporter;
 import org.mp.naumann.testcases.InitialAndIncrementalOneBatch;
 import org.mp.naumann.testcases.TestCase;
 
@@ -50,7 +51,6 @@ public class BenchmarksApplication {
     }
 
     public void run() throws IOException {
-        GoogleSheetsReporter googleSheetsReporter = new GoogleSheetsReporter(spreadsheet);
         int stopAfter = batchSize < 10 ? 100 : -1;
 
         FDLogger.setLevel(Level.OFF);
@@ -72,11 +72,9 @@ public class BenchmarksApplication {
                     stopAfter
             );
             t.execute();
+            Reporter reporter = new GoogleSheetsReporter(spreadsheet, t.sheetName());
 
-            googleSheetsReporter.writeNewLine(
-                    t.sheetName(),
-                    t.sheetValues()
-            );
+            reporter.writeNewLine(t.sheetValues());
 
         } catch (ConnectionException e) {
             e.printStackTrace();

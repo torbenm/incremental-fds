@@ -121,18 +121,18 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         }
         FDLogger.log(Level.FINE, "Finished building pruning strategies");
 
-        List<IntegerPair> comparisonSuggestions = new ArrayList<>();
+        List<IntegerPair> comparisonSuggestions;
         int i = 1;
         do {
             FDLogger.log(Level.FINE, "Started round " + i);
-            if (version.usesSampling()) {
+            FDLogger.log(Level.FINE, "Validating positive cover");
+            comparisonSuggestions = validator.validatePositiveCover();
+            if (version.usesSampling() && comparisonSuggestions != null) {
                 FDLogger.log(Level.FINE, "Enriching negative cover");
                 FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
                 FDLogger.log(Level.FINE, "Updating positive cover");
                 inductor.updatePositiveCover(newNonFds);
             }
-            FDLogger.log(Level.FINE, "Validating positive cover");
-            comparisonSuggestions = validator.validatePositiveCover();
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round " + i++);
         } while (comparisonSuggestions != null);
         int pruned = validator.getPruned();
