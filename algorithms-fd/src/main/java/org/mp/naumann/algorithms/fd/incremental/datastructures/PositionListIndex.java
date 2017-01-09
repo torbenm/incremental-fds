@@ -35,7 +35,6 @@ import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -182,14 +181,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
         this.newRecords = newRecords;
     }
 
-    public void setClustersWithNewRecords(Collection<Integer> newRecords, CompressedRecords compressedRecords, int attribute) {
-        Set<Integer> clusterIds = new HashSet<>();
-        for (int id : newRecords) {
-            int clusterId = compressedRecords.get(id)[attribute];
-            if (clusterId != PliUtils.UNIQUE_VALUE) {
-                clusterIds.add(clusterId);
-            }
-        }
+    public void setClustersWithNewRecords(Set<Integer> clusterIds) {
         clustersWithNewRecords = clusterIds.stream().map(this::getCluster).collect(Collectors.toList());
     }
 

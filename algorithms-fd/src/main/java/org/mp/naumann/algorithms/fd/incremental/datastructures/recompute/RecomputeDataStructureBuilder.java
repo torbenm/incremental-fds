@@ -7,9 +7,11 @@ import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.RecordCompressor;
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +46,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         if (version.usesClusterPruning()) {
             for (int i = 0; i < plis.size(); i++) {
                 PositionListIndex pli = plis.get(i);
-                pli.setClustersWithNewRecords(inserted, compressedRecords, i);
+                pli.setClustersWithNewRecords(extractClustersWithNewRecords(inserted, i));
             }
         }
         if (version.usesInnerClusterPruning()) {
@@ -56,6 +58,17 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     private void updateDataStructures(Set<Integer> inserted) {
         plis = pliBuilder.fetchPositionListIndexes();
         compressedRecords = new ArrayCompressedRecords(RecordCompressor.fetchCompressedRecords(plis, pliBuilder.getNumRecords()));
+    }
+
+    private Set<Integer> extractClustersWithNewRecords(Collection<Integer> newRecords, int attribute) {
+        Set<Integer> clusterIds = new HashSet<>();
+        for (int id : newRecords) {
+            int clusterId = compressedRecords.get(id)[attribute];
+            if (clusterId != PliUtils.UNIQUE_VALUE) {
+                clusterIds.add(clusterId);
+            }
+        }
+        return clusterIds;
     }
 
     public List<? extends PositionListIndex> getPlis() {
