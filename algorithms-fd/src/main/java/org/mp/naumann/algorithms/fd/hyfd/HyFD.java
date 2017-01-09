@@ -12,8 +12,6 @@ import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
-import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.RecordCompressor;
 import org.mp.naumann.algorithms.fd.utils.FileUtils;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
@@ -140,7 +138,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
-        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialised Sampler, Inductor and IncrementalValidator");
+        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialised IncrementalSampler, IncrementalInductor and IncrementalValidator");
         SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
         int i = 1;
 		do {

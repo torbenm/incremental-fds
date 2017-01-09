@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.mp.naumann.algorithms.fd.structures;
+package org.mp.naumann.algorithms.fd.hyfd;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -22,14 +22,16 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.structures.ClusterIdentifier;
+import org.mp.naumann.algorithms.fd.structures.ClusterIdentifierWithRecord;
+import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
+import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Position list indices (or stripped partitions) are an index structure that
@@ -38,13 +40,13 @@ import java.util.stream.Collectors;
  * (3, 5)). Clusters of size 1 are discarded. A position list index should be
  * created using the {@link PLIBuilder}.
  */
-public class PositionListIndex {
+public class PositionListIndex implements IPositionListIndex {
 
     private final int attribute;
     private final List<IntArrayList> clusters;
     private final int numNonUniqueValues;
-    private List<IntArrayList> clustersWithNewRecords = null;
 
+    @Override
     public int getAttribute() {
         return this.attribute;
     }
@@ -87,7 +89,7 @@ public class PositionListIndex {
 
 
     public boolean refines(int[][] compressedRecords, int rhsAttr) {
-        for (IntArrayList cluster : clustersWithNewRecords())
+        for (IntArrayList cluster : this.clusters)
             if (!this.probe(compressedRecords, rhsAttr, cluster))
                 return false;
         return true;
@@ -127,7 +129,7 @@ public class PositionListIndex {
             index++;
         }
 
-        for (IntArrayList cluster : clustersWithNewRecords()) {
+        for (IntArrayList cluster : this.clusters) {
             Object2ObjectOpenHashMap<ClusterIdentifier, ClusterIdentifierWithRecord> subClusters = new Object2ObjectOpenHashMap<>(cluster.size());
             for (int recordId : cluster) {
                 ClusterIdentifier subClusterIdentifier = this.buildClusterIdentifier(lhs, lhsSize, compressedRecords[recordId]);
@@ -156,14 +158,6 @@ public class PositionListIndex {
             }
         }
         return refinedRhs;
-    }
-
-    public void setClustersWithNewRecords(Set<Integer> clusterIds) {
-        clustersWithNewRecords = clusterIds.stream().map(clusters::get).collect(Collectors.toList());
-    }
-
-    private List<IntArrayList> clustersWithNewRecords() {
-        return clustersWithNewRecords == null? this.clusters : clustersWithNewRecords;
     }
 
     private ClusterIdentifier buildClusterIdentifier(OpenBitSet lhs, int lhsSize, int[] record) {

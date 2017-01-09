@@ -11,15 +11,18 @@ import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
-import org.mp.naumann.algorithms.fd.incremental.bloom.CurrentFDBloomGenerator;
-import org.mp.naumann.algorithms.fd.incremental.bloom.BloomPruningStrategy;
-import org.mp.naumann.algorithms.fd.incremental.bloom.AllCombinationsBloomGenerator;
-import org.mp.naumann.algorithms.fd.incremental.simple.ExistingValuesPruningStrategy;
+import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.incremental.IncrementalDataStructureBuilder;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.RecomputeDataStructureBuilder;
+import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.AllCombinationsBloomGenerator;
+import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.BloomPruningStrategy;
+import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.CurrentFDBloomGenerator;
+import org.mp.naumann.algorithms.fd.incremental.pruning.simple.ExistingValuesPruningStrategy;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
+import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
-import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.processor.batch.Batch;
@@ -45,7 +48,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     private FDIntermediateDatastructure intermediateDatastructure;
     private boolean initialized = false;
 
-    private IncrementalPLIBuilder incrementalPLIBuilder;
+    private org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder dataStructureBuilder;
     private BloomPruningStrategy advancedBloomPruning;
     private ExistingValuesPruningStrategy simplePruning;
     private BloomPruningStrategy bloomPruning;
@@ -76,22 +79,26 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         this.posCover = intermediateDatastructure.getPosCover();
         this.negCover = intermediateDatastructure.getNegCover();
         PLIBuilder pliBuilder = intermediateDatastructure.getPliBuilder();
-        List<Integer> pliSequence = pliBuilder.getPliOrder();
-        List<String> orderedColumns = pliSequence.stream().map(columns::get).collect(Collectors.toList());
+        List<Integer> pliOrder = pliBuilder.fetchPositionListIndexes().stream().map(IPositionListIndex::getAttribute).collect(Collectors.toList());
+        List<String> orderedColumns = pliOrder.stream().map(columns::get).collect(Collectors.toList());
         List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
         if (version.getPruningStrategies().contains(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {
             bloomPruning = new BloomPruningStrategy(orderedColumns).addGenerator(new AllCombinationsBloomGenerator(2));
-            bloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliSequence);
+            bloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder);
         }
         if (version.getPruningStrategies().contains(IncrementalFDConfiguration.PruningStrategy.BLOOM_ADVANCED)) {
             advancedBloomPruning = new BloomPruningStrategy(orderedColumns)
                     .addGenerator(new CurrentFDBloomGenerator(posCover));
-            advancedBloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliSequence);
+            advancedBloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder);
         }
         if (version.getPruningStrategies().contains(IncrementalFDConfiguration.PruningStrategy.SIMPLE)) {
             simplePruning = new ExistingValuesPruningStrategy(columns);
         }
-        incrementalPLIBuilder = new IncrementalPLIBuilder(pliBuilder, this.version, this.columns);
+        if(version.recomputesDataStructures()) {
+            dataStructureBuilder = new RecomputeDataStructureBuilder(pliBuilder, this.version, this.columns, pliOrder);
+        } else {
+            dataStructureBuilder = new IncrementalDataStructureBuilder(pliBuilder, this.version, this.columns, pliOrder);
+        }
     }
 
     @Override
@@ -103,13 +110,13 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         }
         FDLogger.log(Level.FINE, "Started IncrementalFD for new Batch");
         SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
-        CompressedDiff diff = incrementalPLIBuilder.update(batch);
-        List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
-        int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
+        CompressedDiff diff = dataStructureBuilder.update(batch);
+        List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
+        CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecord();
         IncrementalValidator validator = new IncrementalValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
-        Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
+        IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
                 intermediateDatastructure.getValueComparator(), this.memoryGuardian);
-        Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
+        IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
         if (version.getPruningStrategies().contains(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {
             validator.addValidationPruner(bloomPruning.analyzeBatch(batch));
         }

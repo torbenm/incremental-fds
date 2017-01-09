@@ -5,13 +5,14 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -19,18 +20,18 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.logging.Level;
 
-class Sampler {
+class IncrementalSampler {
 
 	private FDSet negCover;
 	private FDTree posCover;
-	private int[][] compressedRecords;
-	private List<PositionListIndex> plis;
+	private CompressedRecords compressedRecords;
+	private List<? extends PositionListIndex> plis;
 	private float efficiencyThreshold;
 	private ValueComparator valueComparator;
 	private List<AttributeRepresentant> attributeRepresentants = null;
 	private MemoryGuardian memoryGuardian;
 
-	public Sampler(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian) {
+	public IncrementalSampler(FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian) {
 		this.negCover = negCover;
 		this.posCover = posCover;
 		this.compressedRecords = compressedRecords;
@@ -41,7 +42,7 @@ class Sampler {
 	}
 
 	public FDList enrichNegativeCover(List<IntegerPair> comparisonSuggestions) {
-		int numAttributes = this.compressedRecords[0].length;
+		int numAttributes = this.compressedRecords.get(0).length;
 
 		FDLogger.log(Level.FINEST, "Investigating comparison suggestions ... ");
 		FDList newNonFds = new FDList(numAttributes, this.negCover.getMaxDepth());
@@ -62,7 +63,7 @@ class Sampler {
 		if (this.attributeRepresentants == null) { // if this is the first call of this method
 			FDLogger.log(Level.FINEST, "Sorting clusters ...");
 			long time = System.currentTimeMillis();
-			ClusterComparator comparator = new ClusterComparator(this.compressedRecords, this.compressedRecords[0].length - 1, 1);
+			ClusterComparator comparator = new ClusterComparator(this.compressedRecords, this.compressedRecords.get(0).length - 1, 1);
 			for (PositionListIndex pli : this.plis) {
 				for (IntArrayList cluster : pli.getClusters()) {
 					Collections.sort(cluster, comparator);
@@ -106,11 +107,11 @@ class Sampler {
 
 	private class ClusterComparator implements Comparator<Integer> {
 
-		private int[][] sortKeys;
+		private CompressedRecords sortKeys;
 		private int activeKey1;
 		private int activeKey2;
 
-		public ClusterComparator(int[][] sortKeys, int activeKey1, int activeKey2) {
+		public ClusterComparator(CompressedRecords sortKeys, int activeKey1, int activeKey2) {
 			super();
 			this.sortKeys = sortKeys;
 			this.activeKey1 = activeKey1;
@@ -135,12 +136,12 @@ class Sampler {
 			return value2 - value1;
 		*/
 			// Previous -> Next
-			int value1 = this.sortKeys[o1][this.activeKey1];
-			int value2 = this.sortKeys[o2][this.activeKey1];
+			int value1 = this.sortKeys.get(o1)[this.activeKey1];
+			int value2 = this.sortKeys.get(o2)[this.activeKey1];
 			int result = value2 - value1;
 			if (result == 0) {
-				value1 = this.sortKeys[o1][this.activeKey2];
-				value2 = this.sortKeys[o2][this.activeKey2];
+				value1 = this.sortKeys.get(o1)[this.activeKey2];
+				value2 = this.sortKeys.get(o2)[this.activeKey2];
 			}
 			return value2 - value1;
 
@@ -157,7 +158,7 @@ class Sampler {
 		}
 
 		private int increment(int number) {
-			return (number == this.sortKeys[0].length - 1) ? 0 : number + 1;
+			return (number == this.sortKeys.get(0).length - 1) ? 0 : number + 1;
 		}
 	}
 
@@ -170,7 +171,7 @@ class Sampler {
 		private List<IntArrayList> clusters;
 		private FDSet negCover;
 		private FDTree posCover;
-		private Sampler sampler;
+		private IncrementalSampler sampler;
 		private MemoryGuardian memoryGuardian;
 
 		public float getEfficiencyFactor() {
@@ -195,7 +196,7 @@ class Sampler {
 			return (int)(sumNonFds * (this.efficiencyFactor / sumComparisons));
 		}
 
-		public AttributeRepresentant(List<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, FDTree posCover, Sampler sampler, MemoryGuardian memoryGuardian) {
+		public AttributeRepresentant(Collection<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, FDTree posCover, IncrementalSampler sampler, MemoryGuardian memoryGuardian) {
 			this.clusters = new ArrayList<>(clusters);
 			this.efficiencyFactor = efficiencyFactor;
 			this.negCover = negCover;
@@ -210,7 +211,7 @@ class Sampler {
 			return (int)Math.signum(o.getEfficiency() - this.getEfficiency());
 		}
 		
-		public boolean runNext(FDList newNonFds, int[][] compressedRecords) {
+		public boolean runNext(FDList newNonFds, CompressedRecords compressedRecords) {
 			this.windowDistance++;
 			int numNewNonFds = 0;
 			int numComparisons = 0;
@@ -230,7 +231,7 @@ class Sampler {
 					int recordId = cluster.getInt(recordIndex);
 					int partnerRecordId = cluster.getInt(recordIndex + this.windowDistance);
 					
-					this.sampler.match(equalAttrs, compressedRecords[recordId], compressedRecords[partnerRecordId]);
+					this.sampler.match(equalAttrs, compressedRecords.get(recordId), compressedRecords.get(partnerRecordId));
 					
 					if (!this.negCover.contains(equalAttrs)) {
 						OpenBitSet equalAttrsCopy = equalAttrs.clone();
@@ -253,7 +254,7 @@ class Sampler {
 	}
 	
 	private void match(OpenBitSet equalAttrs, int t1, int t2) {
-		this.match(equalAttrs, this.compressedRecords[t1], this.compressedRecords[t2]);
+		this.match(equalAttrs, this.compressedRecords.get(t1), this.compressedRecords.get(t2));
 	}
 	
 	private void match(OpenBitSet equalAttrs, int[] t1, int[] t2) {

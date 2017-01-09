@@ -9,7 +9,7 @@ for version in ${test_versions[@]}; do
     for run in ${tests_per_version_and_batch[@]}; do
         for i in ${batch_sizes[@]}; do
             echo "Running test for version $version, run $run and batchsize $i"
-             java -jar benchmarks/target/benchmarks-1.0-SNAPSHOT-jar-with-dependencies.jar --version $version --batchSize $i
+             java -jar benchmarks/target/benchmarks-1.0-SNAPSHOT-jar-with-dependencies.jar --name $version --batchSize $i
         done
     done
 done

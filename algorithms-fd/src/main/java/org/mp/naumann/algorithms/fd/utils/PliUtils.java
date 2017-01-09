@@ -1,21 +1,28 @@
 package org.mp.naumann.algorithms.fd.utils;
 
-import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+
+import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class PliUtils {
 
-    public static int[][] invert(List<PositionListIndex> plis, int numRecords) {
+    public static final int UNIQUE_VALUE = -1;
+
+    public static int[][] invert(List<? extends IPositionListIndex> plis, int numRecords) {
         int[][] invertedPlis = new int[plis.size()][];
         for (int attr = 0; attr < plis.size(); attr++) {
             int[] invertedPli = new int[numRecords];
             Arrays.fill(invertedPli, -1);
 
-            for (int clusterId = 0; clusterId < plis.get(attr).size(); clusterId++) {
-                for (int recordId : plis.get(attr).getClusters().get(clusterId))
+            int clusterId = 0;
+            for (IntArrayList cluster : plis.get(attr).getClusters()) {
+                for (int recordId : cluster) {
                     invertedPli[recordId] = clusterId;
+                }
+                clusterId++;
             }
             invertedPlis[attr] = invertedPli;
         }

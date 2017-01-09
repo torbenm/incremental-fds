@@ -191,7 +191,7 @@ public class FDTreeElement {
     }
 
     void addFunctionalDependenciesInto(List<FunctionalDependency> functionalDependencies, OpenBitSet lhs,
-                                       ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis) {
+                                       ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<? extends IPositionListIndex> plis) {
 
         for (int rhs = this.rhsFds.nextSetBit(0); rhs >= 0; rhs = this.rhsFds.nextSetBit(rhs + 1)) {
             FunctionalDependency fdResult =  findFunctionDependency(lhs, rhs, columnIdentifiers, plis);
@@ -212,7 +212,7 @@ public class FDTreeElement {
     }
 
     int addFunctionalDependenciesInto(FunctionalDependencyResultReceiver resultReceiver, OpenBitSet lhs,
-                                      ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis) {
+                                      ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<? extends IPositionListIndex> plis) {
         int numFDs = 0;
         for (int rhs = this.rhsFds.nextSetBit(0); rhs >= 0; rhs = this.rhsFds.nextSetBit(rhs + 1)) {
             FunctionalDependency fdResult = findFunctionDependency(lhs, rhs, columnIdentifiers, plis);
@@ -236,7 +236,7 @@ public class FDTreeElement {
     }
 
     private FunctionalDependency findFunctionDependency(OpenBitSet lhs, int rhs,
-                                                        ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis){
+                                                        ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<? extends IPositionListIndex> plis){
         ColumnIdentifier[] columns = new ColumnIdentifier[(int) lhs.cardinality()];
         int j = 0;
         for (int i = lhs.nextSetBit(0); i >= 0; i = lhs.nextSetBit(i + 1)) {

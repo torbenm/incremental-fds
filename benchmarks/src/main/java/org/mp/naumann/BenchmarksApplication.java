@@ -22,8 +22,6 @@ public class BenchmarksApplication {
 
     @Parameter(names = "--name")
     private String name = "";
-    @Parameter(names = "--version")
-    private int version = -1;
     @Parameter(names = "--help", help = true)
     private boolean help = false;
     @Parameter(names = "--spreadsheet")
@@ -35,9 +33,11 @@ public class BenchmarksApplication {
     @Parameter(names = "--dataSet")
     private String dataSet = "benchmark.adultfull.csv";
     @Parameter(names = "--sampling")
-    private Boolean useSampling = false;
+    private Boolean useSampling;
     @Parameter(names = "--clusterPruning")
-    private Boolean useClusterPruning = true;
+    private Boolean useClusterPruning;
+    @Parameter(names = "--recompute")
+    private Boolean recomputeDataStructures;
 
 
     public static void main(String[] args) throws IOException {
@@ -56,12 +56,15 @@ public class BenchmarksApplication {
         FDLogger.setLevel(Level.OFF);
         setUp();
 
-        IncrementalFDConfiguration config = IncrementalFDConfiguration.getVersion(version, name);
+        IncrementalFDConfiguration config = IncrementalFDConfiguration.getVersion(name);
         if (useSampling != null) {
             config.setSampling(useSampling);
         }
         if (useClusterPruning != null) {
             config.setClusterPruning(useClusterPruning);
+        }
+        if (recomputeDataStructures != null) {
+            config.setRecomputeDataStructures(recomputeDataStructures);
         }
 
         try {

@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.incremental.simple;
+package org.mp.naumann.algorithms.fd.incremental.pruning.simple;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.CardinalitySet;
