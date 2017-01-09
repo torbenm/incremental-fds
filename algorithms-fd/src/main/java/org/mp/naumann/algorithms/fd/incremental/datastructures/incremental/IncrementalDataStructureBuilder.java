@@ -73,11 +73,12 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
             inserted.add(id);
         }
         nextRecordId = clusterMapBuilder.getNextRecordId();
-        updateDataStructures(inserted, clusterMapBuilder.getClusterMaps());
+        List<Map<Integer, IntArrayList>> clusterMaps = clusterMapBuilder.getClusterMaps();
+        updateDataStructures(inserted, clusterMaps);
         if (version.usesClusterPruning()) {
-            for (int i = 0; i < plis.size(); i++) {
-                PositionListIndex pli = plis.get(i);
-                pli.setClustersWithNewRecords(inserted, compressedRecords, i);
+            for (PositionListIndex pli : plis) {
+                int attribute = pli.getAttribute();
+                pli.setClustersWithNewRecords(clusterMaps.get(attribute).keySet());
             }
         }
         return CompressedDiff.buildDiff(inserted, version, compressedRecords);
