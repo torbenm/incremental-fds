@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
+import org.mp.naumann.algorithms.fd.hyfd.PositionListIndex;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 
@@ -118,7 +119,7 @@ public class FDTree extends FDTreeElement {
 		return functionalDependencies;
 	}
 	
-	public int addFunctionalDependenciesInto(FunctionalDependencyResultReceiver resultReceiver, ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis) {
+	public int addFunctionalDependenciesInto(FunctionalDependencyResultReceiver resultReceiver, ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<? extends IPositionListIndex> plis) {
 		return this.addFunctionalDependenciesInto(resultReceiver, new OpenBitSet(), columnIdentifiers, plis);
 	}
 }

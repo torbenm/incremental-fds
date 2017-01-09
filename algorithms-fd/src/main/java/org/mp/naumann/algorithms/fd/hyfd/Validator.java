@@ -8,7 +8,6 @@ import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -284,7 +283,7 @@ public class Validator {
 	private OpenBitSet extendWith(OpenBitSet lhs, int rhs, int extensionAttr) {
 		if (lhs.get(extensionAttr) || 											// Triviality: AA->C cannot be valid, because A->C is invalid
 			(rhs == extensionAttr) || 											// Triviality: AC->C cannot be valid, because A->C is invalid
-			this.posCover.containsFdOrGeneralization(lhs, extensionAttr) ||		// Pruning: If A->B, then AB->C cannot be minimal // TODO: this pruning is not used in the Inductor when inverting the negCover; so either it is useless here or it is useful in the Inductor?
+			this.posCover.containsFdOrGeneralization(lhs, extensionAttr) ||		// Pruning: If A->B, then AB->C cannot be minimal // TODO: this pruning is not used in the IncrementalInductor when inverting the negCover; so either it is useless here or it is useful in the IncrementalInductor?
 			((this.posCover.getChildren() != null) && (this.posCover.getChildren()[extensionAttr] != null) && this.posCover.getChildren()[extensionAttr].isFd(rhs)))	
 																				// Pruning: If B->C, then AB->C cannot be minimal
 			return null;

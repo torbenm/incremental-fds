@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.incremental.bloom;
+package org.mp.naumann.algorithms.fd.incremental.pruning.bloom;
 
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.mp.naumann.algorithms.fd.structures;
+package org.mp.naumann.algorithms.fd.incremental.datastructures;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -23,6 +23,12 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
+import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
+import org.mp.naumann.algorithms.fd.structures.ClusterIdentifier;
+import org.mp.naumann.algorithms.fd.structures.ClusterIdentifierWithRecord;
+import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
+import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
 import java.util.Collection;
@@ -40,37 +46,19 @@ import java.util.stream.Collectors;
  * (3, 5)). Clusters of size 1 are discarded. A position list index should be
  * created using the {@link PLIBuilder}.
  */
-public class PositionListIndex {
+public abstract class PositionListIndex implements IPositionListIndex {
 
     private final int attribute;
-    private final List<IntArrayList> clusters;
-    private final int numNonUniqueValues;
     private List<IntArrayList> clustersWithNewRecords = null;
     private Collection<Integer> newRecords = null;
 
+    @Override
     public int getAttribute() {
         return this.attribute;
     }
 
-    public List<IntArrayList> getClusters() {
-        return this.clusters;
-    }
-
-    public int getNumNonUniqueValues() {
-        return this.numNonUniqueValues;
-    }
-
-    public PositionListIndex(int attribute, List<IntArrayList> clusters) {
+    protected PositionListIndex(int attribute) {
         this.attribute = attribute;
-        this.clusters = clusters;
-        this.numNonUniqueValues = this.countNonUniqueValuesIn(clusters);
-    }
-
-    private int countNonUniqueValuesIn(List<IntArrayList> clusters) {
-        int numNonUniqueValues = 0;
-        for (IntArrayList cluster : clusters)
-            numNonUniqueValues += cluster.size();
-        return numNonUniqueValues;
     }
 
     /**
@@ -79,25 +67,25 @@ public class PositionListIndex {
      * @return the number of clusters in the {@link PositionListIndex}
      */
     public long size() {
-        return this.clusters.size();
+        return getClusters().size();
     }
 
     public boolean isConstant(int numRecords) {
         if (numRecords <= 1)
             return true;
-        return (this.clusters.size() == 1) && (this.clusters.get(0).size() == numRecords);
+        return (getClusters().size() == 1) && (getClusters().iterator().next().size() == numRecords);
     }
 
 
-    public boolean refines(int[][] compressedRecords, int rhsAttr) {
-        for (IntArrayList cluster : clustersWithNewRecords())
+    public boolean refines(CompressedRecords compressedRecords, int rhsAttr) {
+        for (IntArrayList cluster : getClustersToCheck())
             if (!this.probe(compressedRecords, rhsAttr, cluster))
                 return false;
         return true;
     }
 
-    private boolean probe(int[][] compressedRecords, int rhsAttr, IntArrayList cluster) {
-        int rhsClusterId = compressedRecords[cluster.getInt(0)][rhsAttr];
+    private boolean probe(CompressedRecords compressedRecords, int rhsAttr, IntArrayList cluster) {
+        int rhsClusterId = compressedRecords.get(cluster.getInt(0))[rhsAttr];
 
         // If otherClusterId < 0, then this cluster must point into more than one other clusters
         if (rhsClusterId == -1)
@@ -105,14 +93,14 @@ public class PositionListIndex {
 
         // Check if all records of this cluster point into the same other cluster
         for (int recordId : cluster)
-            if (compressedRecords[recordId][rhsAttr] != rhsClusterId)
+            if (compressedRecords.get(recordId)[rhsAttr] != rhsClusterId)
                 return false;
 
         return true;
     }
 
 
-    public OpenBitSet refines(int[][] compressedRecords, OpenBitSet lhs, OpenBitSet rhs, List<IntegerPair> comparisonSuggestions) {
+    public OpenBitSet refines(CompressedRecords compressedRecords, OpenBitSet lhs, OpenBitSet rhs, List<IntegerPair> comparisonSuggestions) {
         int rhsSize = (int) rhs.cardinality();
         int lhsSize = (int) lhs.cardinality();
 
@@ -121,7 +109,7 @@ public class PositionListIndex {
 
         // TODO: Check if it is technically possible that this fd holds, i.e., if A1 has 2 clusters of size 10 and A2 has 2 clusters of size 10, then the intersection can have at most 4 clusters of size 5 (see join cardinality estimation)
 
-        int[] rhsAttrId2Index = new int[compressedRecords[0].length];
+        int[] rhsAttrId2Index = new int[compressedRecords.get(0).length];
         int[] rhsAttrIndex2Id = new int[rhsSize];
         int index = 0;
         for (int rhsAttr = refinedRhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = refinedRhs.nextSetBit(rhsAttr + 1)) {
@@ -131,14 +119,14 @@ public class PositionListIndex {
         }
 
         boolean useInnerClusterPruning = useInnerClusterPruning();
-        for (IntArrayList cluster : clustersWithNewRecords()) {
+        for (IntArrayList cluster : getClustersToCheck()) {
             Object2ObjectOpenHashMap<ClusterIdentifier, ClusterIdentifierWithRecord> subClusters = new Object2ObjectOpenHashMap<>(cluster.size());
             ObjectOpenHashSet<ClusterIdentifier> haveOldRecord = null;
             if (useInnerClusterPruning) {
                 haveOldRecord = new ObjectOpenHashSet<>(cluster.size());
             }
             for (int recordId : cluster) {
-                ClusterIdentifier subClusterIdentifier = this.buildClusterIdentifier(lhs, lhsSize, compressedRecords[recordId]);
+                ClusterIdentifier subClusterIdentifier = this.buildClusterIdentifier(lhs, lhsSize, compressedRecords.get(recordId));
                 if (subClusterIdentifier == null)
                     continue;
 
@@ -157,7 +145,7 @@ public class PositionListIndex {
                     ClusterIdentifierWithRecord rhsClusters = subClusters.get(subClusterIdentifier);
 
                     for (int rhsAttr = refinedRhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = refinedRhs.nextSetBit(rhsAttr + 1)) {
-                        int rhsCluster = compressedRecords[recordId][rhsAttr];
+                        int rhsCluster = compressedRecords.get(recordId)[rhsAttr];
                         if ((rhsCluster == -1) || (rhsCluster != rhsClusters.get(rhsAttrId2Index[rhsAttr]))) {
                             comparisonSuggestions.add(new IntegerPair(recordId, rhsClusters.getRecord()));
 
@@ -169,7 +157,7 @@ public class PositionListIndex {
                 } else {
                     int[] rhsClusters = new int[rhsSize];
                     for (int rhsAttr = 0; rhsAttr < rhsSize; rhsAttr++)
-                        rhsClusters[rhsAttr] = compressedRecords[recordId][rhsAttrIndex2Id[rhsAttr]];
+                        rhsClusters[rhsAttr] = compressedRecords.get(recordId)[rhsAttrIndex2Id[rhsAttr]];
                     subClusters.put(subClusterIdentifier, new ClusterIdentifierWithRecord(rhsClusters, recordId));
                     if (useInnerClusterPruning && isOldRecord) {
                         haveOldRecord.add(subClusterIdentifier);
@@ -184,12 +172,23 @@ public class PositionListIndex {
         return !newRecords.contains(recordId);
     }
 
-    public void setClustersWithNewRecords(Set<Integer> clusterIds) {
-        clustersWithNewRecords = clusterIds.stream().map(clusters::get).collect(Collectors.toList());
+    private boolean useInnerClusterPruning() {
+        return newRecords != null;
     }
 
-    private List<IntArrayList> clustersWithNewRecords() {
-        return clustersWithNewRecords == null ? this.clusters : clustersWithNewRecords;
+    public void setNewRecords(Collection<Integer> newRecords) {
+        this.newRecords = newRecords;
+    }
+
+    public void setClustersWithNewRecords(Set<Integer> clusterIds) {
+        clustersWithNewRecords = clusterIds.stream().map(this::getCluster).collect(Collectors.toList());
+    }
+
+    protected abstract IntArrayList getCluster(int index);
+
+    private Collection<IntArrayList> getClustersToCheck() {
+        Collection<IntArrayList> toCheck = clustersWithNewRecords == null ? getClusters() : clustersWithNewRecords;
+        return toCheck.stream().filter(c -> c.size() > 1).collect(Collectors.toList());
     }
 
     private ClusterIdentifier buildClusterIdentifier(OpenBitSet lhs, int lhsSize, int[] record) {
@@ -214,7 +213,7 @@ public class PositionListIndex {
         final int prime = 31;
         int result = 1;
 
-        List<IntOpenHashSet> setCluster = this.convertClustersToSets(this.clusters);
+        List<IntOpenHashSet> setCluster = this.convertClustersToSets(getClusters());
 
         Collections.sort(setCluster, new Comparator<IntSet>() {
             @Override
@@ -238,13 +237,13 @@ public class PositionListIndex {
             return false;
         }
         PositionListIndex other = (PositionListIndex) obj;
-        if (this.clusters == null) {
-            if (other.clusters != null) {
+        if (getClusters() == null) {
+            if (other.getClusters() != null) {
                 return false;
             }
         } else {
-            List<IntOpenHashSet> setCluster = this.convertClustersToSets(this.clusters);
-            List<IntOpenHashSet> otherSetCluster = this.convertClustersToSets(other.clusters);
+            List<IntOpenHashSet> setCluster = this.convertClustersToSets(getClusters());
+            List<IntOpenHashSet> otherSetCluster = this.convertClustersToSets(getClusters());
 
             for (IntOpenHashSet cluster : setCluster) {
                 if (!otherSetCluster.contains(cluster)) {
@@ -264,7 +263,7 @@ public class PositionListIndex {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder("{ ");
-        for (IntArrayList cluster : this.clusters) {
+        for (IntArrayList cluster : getClusters()) {
             builder.append("{");
             builder.append(CollectionUtils.concat(cluster, ","));
             builder.append("} ");
@@ -273,20 +272,12 @@ public class PositionListIndex {
         return builder.toString();
     }
 
-    private List<IntOpenHashSet> convertClustersToSets(List<IntArrayList> listCluster) {
+    private List<IntOpenHashSet> convertClustersToSets(Collection<IntArrayList> listCluster) {
         List<IntOpenHashSet> setClusters = new LinkedList<>();
         for (IntArrayList cluster : listCluster) {
             setClusters.add(new IntOpenHashSet(cluster));
         }
 
         return setClusters;
-    }
-
-    private boolean useInnerClusterPruning() {
-        return newRecords != null;
-    }
-
-    public void setNewRecords(Collection<Integer> newRecords) {
-        this.newRecords = newRecords;
     }
 }

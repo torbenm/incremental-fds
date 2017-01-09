@@ -11,6 +11,7 @@ import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.benchmarks.IncrementalFDBenchmark;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.reporter.GoogleSheetsReporter;
+import org.mp.naumann.reporter.Reporter;
 import org.mp.naumann.testcases.InitialAndIncrementalOneBatch;
 import org.mp.naumann.testcases.TestCase;
 
@@ -21,8 +22,6 @@ public class BenchmarksApplication {
 
     @Parameter(names = "--name")
     private String name = "";
-    @Parameter(names = "--version")
-    private int version = -1;
     @Parameter(names = "--help", help = true)
     private boolean help = false;
     @Parameter(names = "--spreadsheet")
@@ -39,6 +38,8 @@ public class BenchmarksApplication {
     private Boolean useClusterPruning;
     @Parameter(names = "--innerClusterPruning")
     private Boolean useInnerClusterPruning;
+    @Parameter(names = "--recomputeDataStructures")
+    private Boolean recomputeDataStructures;
 
 
     public static void main(String[] args) throws IOException {
@@ -52,13 +53,12 @@ public class BenchmarksApplication {
     }
 
     public void run() throws IOException {
-        GoogleSheetsReporter googleSheetsReporter = new GoogleSheetsReporter(spreadsheet);
         int stopAfter = batchSize < 10 ? 100 : -1;
 
         FDLogger.setLevel(Level.OFF);
         setUp();
 
-        IncrementalFDConfiguration config = IncrementalFDConfiguration.getVersion(version, name);
+        IncrementalFDConfiguration config = IncrementalFDConfiguration.getVersion(name);
         if (useSampling != null) {
             config.setSampling(useSampling);
         }
@@ -67,6 +67,9 @@ public class BenchmarksApplication {
         }
         if (useInnerClusterPruning != null) {
             config.setInnerClusterPruning(useInnerClusterPruning);
+        }
+        if (recomputeDataStructures != null) {
+            config.setRecomputeDataStructures(recomputeDataStructures);
         }
 
         try {
@@ -77,11 +80,9 @@ public class BenchmarksApplication {
                     stopAfter
             );
             t.execute();
+            Reporter reporter = new GoogleSheetsReporter(spreadsheet, t.sheetName());
 
-            googleSheetsReporter.writeNewLine(
-                    t.sheetName(),
-                    t.sheetValues()
-            );
+            reporter.writeNewLine(t.sheetValues());
 
         } catch (ConnectionException e) {
             e.printStackTrace();

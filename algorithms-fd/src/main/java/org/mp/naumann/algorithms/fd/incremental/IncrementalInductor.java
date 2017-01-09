@@ -9,13 +9,13 @@ import org.mp.naumann.algorithms.fd.structures.FDTree;
 import java.util.List;
 import java.util.logging.Level;
 
-class Inductor {
+class IncrementalInductor {
 
 	private FDSet negCover;
 	private FDTree posCover;
 	private MemoryGuardian memoryGuardian;
 
-	public Inductor(FDSet negCover, FDTree posCover, MemoryGuardian memoryGuardian) {
+	public IncrementalInductor(FDSet negCover, FDTree posCover, MemoryGuardian memoryGuardian) {
 		this.negCover = negCover;
 		this.posCover = posCover;
 		this.memoryGuardian = memoryGuardian;

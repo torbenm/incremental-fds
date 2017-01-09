@@ -1,6 +1,6 @@
 package org.mp.naumann.algorithms.fd.structures;
 
-class ClusterIdentifier {
+public class ClusterIdentifier {
 
 	private final int[] cluster;
 	
