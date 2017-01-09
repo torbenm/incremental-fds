@@ -77,7 +77,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         if (version.usesClusterPruning()) {
             for (int i = 0; i < plis.size(); i++) {
                 PositionListIndex pli = plis.get(i);
-                pli.setClustersWithNewRecords(DataStructureBuilder.getClustersWithNewRecords(compressedRecords, inserted, i));
+                pli.setClustersWithNewRecords(inserted, compressedRecords, i);
             }
         }
         if(version.usesInnerClusterPruning()) {

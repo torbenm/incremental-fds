@@ -30,10 +30,12 @@ import org.mp.naumann.algorithms.fd.structures.ClusterIdentifierWithRecord;
 import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -88,7 +90,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
         int rhsClusterId = compressedRecords.get(cluster.getInt(0))[rhsAttr];
 
         // If otherClusterId < 0, then this cluster must point into more than one other clusters
-        if (rhsClusterId == -1)
+        if (rhsClusterId == PliUtils.UNIQUE_VALUE)
             return false;
 
         // Check if all records of this cluster point into the same other cluster
@@ -146,7 +148,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
 
                     for (int rhsAttr = refinedRhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = refinedRhs.nextSetBit(rhsAttr + 1)) {
                         int rhsCluster = compressedRecords.get(recordId)[rhsAttr];
-                        if ((rhsCluster == -1) || (rhsCluster != rhsClusters.get(rhsAttrId2Index[rhsAttr]))) {
+                        if ((rhsCluster == PliUtils.UNIQUE_VALUE) || (rhsCluster != rhsClusters.get(rhsAttrId2Index[rhsAttr]))) {
                             comparisonSuggestions.add(new IntegerPair(recordId, rhsClusters.getRecord()));
 
                             refinedRhs.clear(rhsAttr);
@@ -180,7 +182,14 @@ public abstract class PositionListIndex implements IPositionListIndex {
         this.newRecords = newRecords;
     }
 
-    public void setClustersWithNewRecords(Set<Integer> clusterIds) {
+    public void setClustersWithNewRecords(Collection<Integer> newRecords, CompressedRecords compressedRecords, int attribute) {
+        Set<Integer> clusterIds = new HashSet<>();
+        for (int id : newRecords) {
+            int clusterId = compressedRecords.get(id)[attribute];
+            if (clusterId != PliUtils.UNIQUE_VALUE) {
+                clusterIds.add(clusterId);
+            }
+        }
         clustersWithNewRecords = clusterIds.stream().map(this::getCluster).collect(Collectors.toList());
     }
 

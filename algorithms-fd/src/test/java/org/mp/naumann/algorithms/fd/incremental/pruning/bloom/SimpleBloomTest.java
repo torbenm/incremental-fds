@@ -2,7 +2,7 @@ package org.mp.naumann.algorithms.fd.incremental.pruning.bloom;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.junit.Test;
-import org.mp.naumann.algorithms.fd.incremental.ValidationPruner;
+import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.database.statement.DefaultInsertStatement;
 import org.mp.naumann.database.statement.Statement;
