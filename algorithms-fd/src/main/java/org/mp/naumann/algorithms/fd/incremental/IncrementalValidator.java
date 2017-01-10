@@ -3,12 +3,13 @@ package org.mp.naumann.algorithms.fd.incremental;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
 
@@ -24,13 +25,13 @@ import java.util.logging.Level;
 
 public class IncrementalValidator {
 
-	private FDSet negCover;
-	private FDTree posCover;
-	private int numRecords;
-	private List<PositionListIndex> plis;
-	private int[][] compressedRecords;
-	private float efficiencyThreshold;
-	private MemoryGuardian memoryGuardian;
+	private final FDSet negCover;
+	private final FDTree posCover;
+	private final int numRecords;
+	private final List<? extends PositionListIndex> plis;
+	private final CompressedRecords compressedRecords;
+	private final float efficiencyThreshold;
+	private final MemoryGuardian memoryGuardian;
 	private ExecutorService executor;
 
 	private int level = 0;
@@ -42,10 +43,10 @@ public class IncrementalValidator {
 		validationPruners.add(ValidationPruner);
 	}
 
-	public IncrementalValidator(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
+	public IncrementalValidator(FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
 		this.negCover = negCover;
 		this.posCover = posCover;
-		this.numRecords = compressedRecords.length;
+		this.numRecords = compressedRecords.size();
 		this.plis = plis;
 		this.compressedRecords = compressedRecords;
 		this.efficiencyThreshold = efficiencyThreshold;
@@ -287,7 +288,7 @@ public class IncrementalValidator {
 	private OpenBitSet extendWith(OpenBitSet lhs, int rhs, int extensionAttr) {
 		if (lhs.get(extensionAttr) || 											// Triviality: AA->C cannot be valid, because A->C is invalid
 			(rhs == extensionAttr) || 											// Triviality: AC->C cannot be valid, because A->C is invalid
-			this.posCover.containsFdOrGeneralization(lhs, extensionAttr) ||		// Pruning: If A->B, then AB->C cannot be minimal // TODO: this pruning is not used in the Inductor when inverting the negCover; so either it is useless here or it is useful in the Inductor?
+			this.posCover.containsFdOrGeneralization(lhs, extensionAttr) ||		// Pruning: If A->B, then AB->C cannot be minimal // TODO: this pruning is not used in the IncrementalInductor when inverting the negCover; so either it is useless here or it is useful in the IncrementalInductor?
 			((this.posCover.getChildren() != null) && (this.posCover.getChildren()[extensionAttr] != null) && this.posCover.getChildren()[extensionAttr].isFd(rhs)))	
 																				// Pruning: If B->C, then AB->C cannot be minimal
 			return null;

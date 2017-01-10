@@ -4,16 +4,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class IncrementalFDConfiguration {
-    public static IncrementalFDConfiguration V0_0 = new IncrementalFDConfiguration("Original hyfd version");
-    public static IncrementalFDConfiguration V0_1 = new IncrementalFDConfiguration("Simple incremental pruning").addPruningStrategy(PruningStrategy.SIMPLE);
-    public static IncrementalFDConfiguration V0_2 = new IncrementalFDConfiguration("Improved pruning with bloom").addPruningStrategy(PruningStrategy.BLOOM);
-    public static IncrementalFDConfiguration V0_3 = new IncrementalFDConfiguration("Improved pruning with bloom based on initial FDs").addPruningStrategy(PruningStrategy.BLOOM_ADVANCED);
+    public static final IncrementalFDConfiguration V0_0 = new IncrementalFDConfiguration("Original hyfd version");
+    public static final IncrementalFDConfiguration V0_1 = new IncrementalFDConfiguration("Simple incremental pruning").addPruningStrategy(PruningStrategy.SIMPLE);
+    public static final IncrementalFDConfiguration V0_2 = new IncrementalFDConfiguration("Improved pruning with bloom").addPruningStrategy(PruningStrategy.BLOOM);
+    public static final IncrementalFDConfiguration V0_3 = new IncrementalFDConfiguration("Improved pruning with bloom based on initial FDs").addPruningStrategy(PruningStrategy.BLOOM_ADVANCED);
 
 
-    private Collection<PruningStrategy> pruningStrategies = new ArrayList<>();
+    private final Collection<PruningStrategy> pruningStrategies = new ArrayList<>();
     private final String versionName;
     private boolean sampling = false;
     private boolean clusterPruning = true;
+    private boolean recomputeDataStructures = true;
 
     public static final IncrementalFDConfiguration LATEST = V0_3;
     public static final IncrementalFDConfiguration HYFD_ORIGINAL = V0_0;
@@ -48,9 +49,26 @@ public class IncrementalFDConfiguration {
         return clusterPruning;
     }
 
+    public boolean recomputesDataStructures() {
+        return recomputeDataStructures;
+    }
+
     public IncrementalFDConfiguration addPruningStrategy(PruningStrategy pruningStrategy) {
         this.pruningStrategies.add(pruningStrategy);
         return this;
+    }
+
+    public IncrementalFDConfiguration setRecomputeDataStructures(boolean recomputeDataStructures) {
+        this.recomputeDataStructures = recomputeDataStructures;
+        return this;
+    }
+
+    public IncrementalFDConfiguration recomputeDataStructures() {
+        return setRecomputeDataStructures(true);
+    }
+
+    public IncrementalFDConfiguration computeDataStructuresIncrementally() {
+        return setRecomputeDataStructures(false);
     }
 
     public IncrementalFDConfiguration enableClusterPruning() {

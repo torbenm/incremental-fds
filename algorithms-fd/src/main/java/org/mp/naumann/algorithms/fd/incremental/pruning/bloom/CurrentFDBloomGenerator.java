@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.incremental.bloom;
+package org.mp.naumann.algorithms.fd.incremental.pruning.bloom;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
