@@ -27,6 +27,10 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     private List<? extends PositionListIndex> plis;
     private CompressedRecords compressedRecords;
 
+    public RecomputeDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns) {
+        this(pliBuilder, version, columns, pliBuilder.getPliOrder());
+    }
+
     public RecomputeDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns, List<Integer> pliOrder) {
         this.pliBuilder = new RecomputePLIBuilder(pliBuilder.getClusterMapBuilder(), pliBuilder.isNullEqualNull(), pliOrder);
         this.version = version;

@@ -12,6 +12,7 @@ import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.incremental.IncrementalDataStructureBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.RecomputeDataStructureBuilder;
@@ -48,7 +49,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     private FDIntermediateDatastructure intermediateDatastructure;
     private boolean initialized = false;
 
-    private org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder dataStructureBuilder;
+    private DataStructureBuilder dataStructureBuilder;
     private BloomPruningStrategy advancedBloomPruning;
     private ExistingValuesPruningStrategy simplePruning;
     private BloomPruningStrategy bloomPruning;
@@ -79,7 +80,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         this.posCover = intermediateDatastructure.getPosCover();
         this.negCover = intermediateDatastructure.getNegCover();
         PLIBuilder pliBuilder = intermediateDatastructure.getPliBuilder();
-        List<Integer> pliOrder = pliBuilder.fetchPositionListIndexes().stream().map(IPositionListIndex::getAttribute).collect(Collectors.toList());
+        List<Integer> pliOrder = pliBuilder.getPliOrder();
         List<String> orderedColumns = pliOrder.stream().map(columns::get).collect(Collectors.toList());
         List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
         if (version.getPruningStrategies().contains(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {

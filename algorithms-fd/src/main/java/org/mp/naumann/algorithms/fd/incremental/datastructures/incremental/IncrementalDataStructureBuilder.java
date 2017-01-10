@@ -36,6 +36,10 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
     private final MapCompressedRecords compressedRecords = new MapCompressedRecords();
     private int nextRecordId;
 
+    public IncrementalDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns) {
+        this(pliBuilder, version, columns, pliBuilder.getPliOrder());
+    }
+
     public IncrementalDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns, List<Integer> pliOrder) {
         this.pliOrder = pliOrder;
         this.dictionary = new Dictionary<>(pliBuilder.isNullEqualNull());
