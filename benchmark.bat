@@ -2,8 +2,8 @@
 
 set filename="benchmark.adultfull.csv"
 
-set batch_sizes=100
-set tests_per_version_and_batch=1
+set batch_sizes=10 100 1000 10000
+set tests_per_version_and_batch=5
 
 for /F "usebackq delims=" %%v in (benchmarks.txt) do (
     for /L %%r in (1,1,%tests_per_version_and_batch%) do (

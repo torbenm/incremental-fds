@@ -12,6 +12,7 @@ import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,20 +48,32 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
             inserted.add(id);
         }
         updateDataStructures(inserted);
+        if (version.usesClusterPruning() || version.usesEnhancedClusterPruning()) {
+            Map<Integer, Set<Integer>> newClusters = null;
+            if (version.usesEnhancedClusterPruning()) {
+                newClusters = new HashMap<>(plis.size());
+            }
+            for (int i = 0; i < plis.size(); i++) {
+                PositionListIndex pli = plis.get(i);
+                Set<Integer> clusterIds = extractClustersWithNewRecords(inserted, i);
+                if (version.usesClusterPruning()) {
+                    pli.setClustersWithNewRecords(clusterIds);
+                }
+                if (version.usesEnhancedClusterPruning()) {
+                    newClusters.put(i, clusterIds);
+                }
+            }
+            if (version.usesEnhancedClusterPruning()) {
+                Map<Integer, Set<Integer>> otherClustersWithNewRecords = newClusters;
+                plis.forEach(pli -> pli.setOtherClustersWithNewRecords(otherClustersWithNewRecords));
+            }
+        }
         return CompressedDiff.buildDiff(inserted, version, compressedRecords);
     }
 
     private void updateDataStructures(Set<Integer> inserted) {
         plis = pliBuilder.fetchPositionListIndexes();
-        int numRecords = pliBuilder.getNumRecords();
-
-        compressedRecords = new ArrayCompressedRecords(RecordCompressor.fetchCompressedRecords(plis, numRecords));
-        if (version.usesClusterPruning()) {
-            for (int i = 0; i < plis.size(); i++) {
-                PositionListIndex pli = plis.get(i);
-                pli.setClustersWithNewRecords(extractClustersWithNewRecords(inserted, i));
-            }
-        }
+        compressedRecords = new ArrayCompressedRecords(RecordCompressor.fetchCompressedRecords(plis, pliBuilder.getNumRecords()));
     }
 
     private Set<Integer> extractClustersWithNewRecords(Collection<Integer> newRecords, int attribute) {

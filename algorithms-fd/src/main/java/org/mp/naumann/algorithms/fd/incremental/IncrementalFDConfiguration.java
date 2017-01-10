@@ -14,6 +14,7 @@ public class IncrementalFDConfiguration {
     private final String versionName;
     private boolean sampling = false;
     private boolean clusterPruning = true;
+    private boolean enhancedClusterPruning = false;
     private boolean recomputeDataStructures = true;
 
     public static final IncrementalFDConfiguration LATEST = V0_3;
@@ -49,6 +50,10 @@ public class IncrementalFDConfiguration {
         return clusterPruning;
     }
 
+    public boolean usesEnhancedClusterPruning() {
+        return enhancedClusterPruning;
+    }
+
     public boolean recomputesDataStructures() {
         return recomputeDataStructures;
     }
@@ -81,6 +86,11 @@ public class IncrementalFDConfiguration {
 
     public IncrementalFDConfiguration setClusterPruning(boolean clusterPruning) {
         this.clusterPruning = clusterPruning;
+        return this;
+    }
+
+    public IncrementalFDConfiguration setEnhancedClusterPruning(boolean enhancedClusterPruning) {
+        this.enhancedClusterPruning = enhancedClusterPruning;
         return this;
     }
 
