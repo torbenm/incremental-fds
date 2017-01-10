@@ -32,11 +32,15 @@ public class BenchmarksApplication {
     private int splitLine = 15000;
     @Parameter(names = "--dataSet")
     private String dataSet = "benchmark.adultfull.csv";
-    @Parameter(names = "--sampling")
+    @Parameter(names = "--sampling", arity = 1)
     private Boolean useSampling;
-    @Parameter(names = "--clusterPruning")
+    @Parameter(names = "--clusterPruning", arity = 1)
     private Boolean useClusterPruning;
-    @Parameter(names = "--recompute")
+    @Parameter(names = "--innerClusterPruning", arity = 1)
+    private Boolean useInnerClusterPruning;
+    @Parameter(names = "--enhancedClusterPruning", arity = 1)
+    private Boolean useEnhancedClusterPruning;
+    @Parameter(names = "--recomputeDataStructures", arity = 1)
     private Boolean recomputeDataStructures;
 
 
@@ -62,6 +66,12 @@ public class BenchmarksApplication {
         }
         if (useClusterPruning != null) {
             config.setClusterPruning(useClusterPruning);
+        }
+        if (useInnerClusterPruning != null) {
+            config.setInnerClusterPruning(useInnerClusterPruning);
+        }
+        if (useEnhancedClusterPruning != null) {
+            config.setEnhancedClusterPruning(useEnhancedClusterPruning);
         }
         if (recomputeDataStructures != null) {
             config.setRecomputeDataStructures(recomputeDataStructures);

@@ -1,2 +1,4 @@
---name "test" --sampling --spreadsheet 1F3j6NLBwGSEWwEVIPMAU1FilGLmpJOi2eoc22BkWwu8
---name "bla" --spreadsheet 1F3j6NLBwGSEWwEVIPMAU1FilGLmpJOi2eoc22BkWwu8
+--name "Inc Enhanced Cluster Pruning" --enhancedClusterPruning true --recomputeDataStructures false
+--name "Inc Default Cluster Pruning" --recomputeDataStructures false
+--name "Enhanced Cluster Pruning" --enhancedClusterPruning true --recomputeDataStructures true
+--name "Default Cluster Pruning" --recomputeDataStructures true
