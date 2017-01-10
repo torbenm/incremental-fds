@@ -19,10 +19,8 @@ import java.util.logging.Level;
 
 public class BenchmarksApplication {
 
-    @Parameter(names = "--name")
-    private String name = "";
-    @Parameter(names = "--version")
-    private int version = -1;
+    @Parameter(names = "--name", required = true)
+    private String name;
     @Parameter(names = "--help", help = true)
     private boolean help = false;
     @Parameter(names = "--spreadsheet")
@@ -56,7 +54,7 @@ public class BenchmarksApplication {
         FDLogger.setLevel(Level.OFF);
         setUp();
 
-        IncrementalFDConfiguration config = IncrementalFDConfiguration.getVersion(version, name);
+        IncrementalFDConfiguration config = IncrementalFDConfiguration.getVersion(name);
         if (useSampling != null) {
             config.setSampling(useSampling);
         }

@@ -26,12 +26,12 @@ public class IncrementalFDConfiguration {
         return versionName;
     }
 
-    public static IncrementalFDConfiguration getVersion(int shortid, String name){
-        switch (shortid) {
-            case 3: return V0_3;
-            case 2: return V0_2;
-            case 1: return V0_1;
-            case 0: return V0_0;
+    public static IncrementalFDConfiguration getVersion(String name){
+        switch (name) {
+            case "3": return V0_3;
+            case "2": return V0_2;
+            case "1": return V0_1;
+            case "0": return V0_0;
             default: return new IncrementalFDConfiguration(name);
         }
     }
