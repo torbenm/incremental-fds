@@ -36,6 +36,10 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
     private final MapCompressedRecords compressedRecords = new MapCompressedRecords();
     private int nextRecordId;
 
+    public IncrementalDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns) {
+        this(pliBuilder, version, columns, pliBuilder.getPliOrder());
+    }
+
     public IncrementalDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns, List<Integer> pliOrder) {
         this.pliOrder = pliOrder;
         this.dictionary = new Dictionary<>(pliBuilder.isNullEqualNull());
@@ -75,10 +79,26 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         nextRecordId = clusterMapBuilder.getNextRecordId();
         List<Map<Integer, IntArrayList>> clusterMaps = clusterMapBuilder.getClusterMaps();
         updateDataStructures(inserted, clusterMaps);
-        if (version.usesClusterPruning()) {
+        if (version.usesClusterPruning() || version.usesEnhancedClusterPruning()) {
+            Map<Integer, Set<Integer>> newClusters = null;
+            if (version.usesEnhancedClusterPruning()) {
+                newClusters = new HashMap<>(plis.size());
+            }
+            int i = 0;
             for (PositionListIndex pli : plis) {
                 int attribute = pli.getAttribute();
-                pli.setClustersWithNewRecords(clusterMaps.get(attribute).keySet());
+                Set<Integer> clusterIds = clusterMaps.get(attribute).keySet();
+                if (version.usesClusterPruning()) {
+                    pli.setClustersWithNewRecords(clusterIds);
+                }
+                if (version.usesEnhancedClusterPruning()) {
+                    newClusters.put(i, clusterIds);
+                }
+                i++;
+            }
+            if (version.usesEnhancedClusterPruning()) {
+                Map<Integer, Set<Integer>> otherClustersWithNewRecords = newClusters;
+                plis.forEach(pli -> pli.setOtherClustersWithNewRecords(otherClustersWithNewRecords));
             }
         }
         if(version.usesInnerClusterPruning()) {

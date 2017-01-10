@@ -37,6 +37,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -52,6 +53,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
     private final int attribute;
     private List<IntArrayList> clustersWithNewRecords = null;
     private Collection<Integer> newRecords = null;
+    private Map<Integer, Set<Integer>> otherClustersWithNewRecords;
 
     @Override
     public int getAttribute() {
@@ -181,6 +183,10 @@ public abstract class PositionListIndex implements IPositionListIndex {
         this.newRecords = newRecords;
     }
 
+    public void setOtherClustersWithNewRecords(Map<Integer, Set<Integer>> otherClustersWithNewRecords) {
+        this.otherClustersWithNewRecords = otherClustersWithNewRecords;
+    }
+
     public void setClustersWithNewRecords(Set<Integer> clusterIds) {
         clustersWithNewRecords = clusterIds.stream().map(this::getCluster).collect(Collectors.toList());
     }
@@ -201,6 +207,10 @@ public abstract class PositionListIndex implements IPositionListIndex {
 
             if (clusterId < 0)
                 return null;
+
+            if (otherClustersWithNewRecords != null && !otherClustersWithNewRecords.get(lhsAttr).contains(clusterId)) {
+                return null;
+            }
 
             cluster[index] = clusterId;
             index++;

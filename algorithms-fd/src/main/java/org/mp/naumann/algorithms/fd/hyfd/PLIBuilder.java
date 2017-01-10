@@ -17,19 +17,20 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
+import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
 import org.mp.naumann.database.TableInput;
-import org.mp.naumann.database.data.Row;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class PLIBuilder {
 
@@ -94,7 +95,7 @@ public class PLIBuilder {
         return getNumLastRecords() - idx.getNumNonUniqueValues() + idx.getClusters().size();
     }
 
-    public void addRecords(ObjectArrayList<Row> records) {
+    public void addRecords(Collection<? extends Iterable<String>> records) {
         clusterMapBuilder.addRecords(records);
     }
 
@@ -104,5 +105,9 @@ public class PLIBuilder {
 
     public ClusterMapBuilder getClusterMapBuilder() {
         return clusterMapBuilder;
+    }
+
+    public List<Integer> getPliOrder() {
+        return fetchPositionListIndexes().stream().map(IPositionListIndex::getAttribute).collect(Collectors.toList());
     }
 }
