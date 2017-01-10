@@ -20,8 +20,8 @@ import java.util.logging.Level;
 
 public class BenchmarksApplication {
 
-    @Parameter(names = "--name")
-    private String name = "";
+    @Parameter(names = "--name", required = true)
+    private String name;
     @Parameter(names = "--help", help = true)
     private boolean help = false;
     @Parameter(names = "--spreadsheet")
