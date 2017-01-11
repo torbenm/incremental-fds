@@ -43,4 +43,9 @@ public class AllValuesViolationCollection implements ViolationCollection {
 
     }
 
+    @Override
+    public List<OpenBitSetFD> getInvalidFds() {
+        return null;
+    }
+
 }

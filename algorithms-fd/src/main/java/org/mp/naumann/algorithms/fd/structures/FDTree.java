@@ -4,12 +4,14 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class FDTree extends FDTreeElement {
 
@@ -99,6 +101,26 @@ public class FDTree extends FDTreeElement {
 		return foundLhs;
 	}
 
+	public FDTreeElement findTreeElement(OpenBitSet lhs){
+        FDTreeElement current = this;
+        for(int lhsAttr = lhs.nextSetBit(0); lhsAttr >= 0; lhsAttr = lhs.nextSetBit(lhsAttr+1)){
+            if(current.children != null && current.children[lhsAttr] != null){
+                current = current.children[lhsAttr];
+            }else {
+                return null;
+            }
+        }
+        return current;
+    }
+
+    public boolean containsFd(OpenBitSet lhs, int rhs){
+	    FDTreeElement fd = findTreeElement(lhs);
+	    if(fd != null){
+	        return fd.isFd(rhs);
+        }
+        return false;
+    }
+
 	public List<FDTreeElementLhsPair> getLevel(int level) {
 		List<FDTreeElementLhsPair> result = new ArrayList<>();
 		OpenBitSet currentLhs = new OpenBitSet();
@@ -106,6 +128,10 @@ public class FDTree extends FDTreeElement {
 		this.getLevel(level, currentLevel, currentLhs, result);
 		return result;
 	}
+
+	public List<FDTreeElementLhsPair> getLevel(int level, OpenBitSet lhs){
+	    return getLevel(level).stream().filter(e -> BitSetUtils.isContained(lhs, e.getLhs())).collect(Collectors.toList());
+    }
 
 	public void removeFunctionalDependency(OpenBitSet lhs, int rhs) {
 		int currentLhsAttr = lhs.nextSetBit(0);

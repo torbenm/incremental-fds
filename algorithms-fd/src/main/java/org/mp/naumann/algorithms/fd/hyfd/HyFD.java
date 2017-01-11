@@ -18,6 +18,7 @@ import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.RecordCompressor;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.FileUtils;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.database.InputReadException;
@@ -161,8 +162,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round "+i++);
 		} while (comparisonSuggestions != null);
 
-
-		//violationCollection.print();
+        //violationCollection.print();
         // Output all valid FDs
 		FDLogger.log(Level.FINER, "Translating FD-tree into result format ...");
 

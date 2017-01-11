@@ -7,6 +7,7 @@ import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +48,11 @@ public class SingleValueViolationCollection implements ViolationCollection {
     }
 
     @Override
+    public List<OpenBitSetFD> getInvalidFds() {
+        return invalidFDs;
+    }
+
+    @Override
     public String toString(){
         StringBuilder s = new StringBuilder("Negative Cover\n");
         s.append("=========\n");
@@ -77,11 +83,10 @@ public class SingleValueViolationCollection implements ViolationCollection {
     }
     public static boolean isMatch(OpenBitSet attrs, int[] violatingValues, int[] removedValues){
         for(int i = attrs.nextSetBit(0), j = 0; i >= 0; i = attrs.nextSetBit(i+1), j++){
-            if(i >= removedValues.length || violatingValues[j] != removedValues[i]){
-                return false;
+            if(i < removedValues.length && violatingValues[j] == removedValues[i]){
+                return true;
             }
-
         }
-        return true;
+        return false;
     }
 }

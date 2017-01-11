@@ -18,6 +18,7 @@ public class FDTreeElement {
     OpenBitSet rhsFds;
     int numAttributes;
 
+
     FDTreeElement(int numAttributes) {
         this.rhsAttributes = new OpenBitSet(numAttributes);
         this.rhsFds = new OpenBitSet(numAttributes);
@@ -181,6 +182,15 @@ public class FDTreeElement {
         }
         return false;
     }
+    public void removeChildren(int rhs){
+        if(this.children == null) return;
+
+        for(int i = 0; i < numAttributes; i++){
+            if(this.children[i] != null && this.children[i].isFd(rhs)){
+                this.children[i].removeRhsAttribute(rhs);
+            }
+        }
+    }
 
     private boolean isLastNodeOf(int rhs) {
         if (this.children == null)
@@ -229,7 +239,6 @@ public class FDTreeElement {
             if (element != null) {
 
                 lhs.set(childAttr);
-                System.out.println(BitSetUtils.toString(lhs));
                 numFDs += element.addFunctionalDependenciesInto(resultReceiver, lhs, columnIdentifiers, plis);
                 lhs.clear(childAttr);
             }

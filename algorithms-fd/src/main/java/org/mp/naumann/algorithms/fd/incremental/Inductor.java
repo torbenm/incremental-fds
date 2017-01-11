@@ -5,6 +5,7 @@ import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
 import java.util.List;
@@ -72,24 +73,29 @@ class Inductor {
 		return newFDs;
 	}
 
-    public int addIntoPositiveCover(FDTree posCover, List<OpenBitSet> affectedNegativeCover, int numAttributes){
+    public int generalisePositiveCover(FDTree posCover, List<OpenBitSet> affectedNegativeCover, List<OpenBitSetFD> invalidFDs, int numAttributes){
 	    int newFunctionalDependenciesToCheck = 0;
         for(OpenBitSet cover : affectedNegativeCover){
             OpenBitSet flipped = cover.clone();
             flipped.flip(0, numAttributes);
-            OpenBitSet lhsCover = new OpenBitSet();
 
-            for(int lhs = cover.nextSetBit(0); lhs >= 0; lhs = cover.nextSetBit(lhs + 1)){
-                lhsCover.set(lhs);
-                for(int rhs = flipped.nextSetBit(0); rhs >= 0; rhs = flipped.nextSetBit(rhs + 1)){
-                    if(!posCover.containsFdOrGeneralization(lhsCover, rhs)){
-                        posCover.addFunctionalDependency(lhsCover.clone(), rhs);
-                        newFunctionalDependenciesToCheck++;
-                    }
+            for(int rhs = flipped.nextSetBit(0); rhs >= 0; rhs = flipped.nextSetBit(rhs + 1)){
+                if(!posCover.containsFd(cover, rhs)){
+                    posCover.addFunctionalDependency(cover, rhs);
+                    newFunctionalDependenciesToCheck++;
                 }
-                lhsCover.clear(lhs);
+            }
+
+        }
+
+        for(OpenBitSetFD invalidFD : invalidFDs){
+            newFunctionalDependenciesToCheck++;
+            if(!posCover.containsFd(invalidFD.getLhs(), invalidFD.getRhs())){
+                posCover.addFunctionalDependency(invalidFD.getLhs(), invalidFD.getRhs());
+                newFunctionalDependenciesToCheck++;
             }
         }
+
         return newFunctionalDependenciesToCheck;
     }
 }

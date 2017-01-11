@@ -126,7 +126,9 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
         int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
 
-
+        if(diff.getDeletedRecords().length > 0){
+            return validateDeletes(diff, compressedRecords, plis);
+        }
 
         // Create Validator, Sampler & Inductor
         IncrementalValidator validator = new IncrementalValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
@@ -145,13 +147,6 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             validator.addValidationPruner(simplePruning.analyzeDiff(diff));
         }
 
-        if(version.getDeletePruningStrategy() == IncrementalFDVersion.DeletePruningStrategy.ANNOTATION
-                && diff.getDeletedRecords().length > 0){
-
-            List<OpenBitSet> affected = violationCollection.getAffected(negCover, diff.getDeletedRecords());
-            int induct = inductor.addIntoPositiveCover(posCover, affected, columns.size());
-            FDLogger.log(Level.INFO, "Added " + induct + " generalisations to check");
-        }
         FDLogger.log(Level.FINE, "Finished building pruning strategies");
 
         // Actual algorithm execution
@@ -171,8 +166,6 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             comparisonSuggestions = validator.validatePositiveCover();
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round " + i++);
         } while (comparisonSuggestions != null);
-        FDTreeUtils.getFdLevel(posCover, 2).forEach(f -> System.out.println(BitSetUtils.toString(f.getLhs())));
-
         // Return result
         int pruned = validator.getPruned();
         int validations = validator.getValidations();
@@ -182,6 +175,38 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
         SpeedBenchmark.end(BenchmarkLevel.METHOD_HIGH_LEVEL, "Processed one batch, inner measuring");
         return new IncrementalFDResult(fds, validations, pruned);
+    }
+
+    public IncrementalFDResult validateDeletes(CompressedDiff diff, int[][] compressedRecords, List<PositionListIndex> plis) throws AlgorithmExecutionException {
+        if(version.getDeletePruningStrategy() == IncrementalFDVersion.DeletePruningStrategy.ANNOTATION){
+
+            FDTree posCover = new FDTree(columns.size(), -1);
+
+            BottomUpIncrementalValidator validator = new BottomUpIncrementalValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, false, memoryGuardian);
+
+            Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
+
+            List<OpenBitSet> affected = violationCollection.getAffected(negCover, diff.getDeletedRecords());
+            int induct = inductor.generalisePositiveCover(posCover, affected, violationCollection.getInvalidFds(), columns.size());
+            FDLogger.log(Level.INFO, "Added " + induct + " candidates to check, depth now at "+posCover.getDepth());
+            boolean theresmore = true;
+
+            int i = 0;
+            do{
+                theresmore = validator.validatePositiveCover();
+                SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round " + i++);
+            } while (theresmore);
+
+            int pruned = validator.getPruned();
+            int validations = validator.getValidations();
+            FDLogger.log(Level.FINE, "Pruned " + pruned + " validations");
+            FDLogger.log(Level.FINE, "Made " + validations + " validations");
+            List<FunctionalDependency> fds = new ArrayList<>();
+            posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
+            SpeedBenchmark.end(BenchmarkLevel.METHOD_HIGH_LEVEL, "Processed one batch, inner measuring");
+            return new IncrementalFDResult(fds, validations, pruned);
+        }
+        return null;
     }
 
     @Override
