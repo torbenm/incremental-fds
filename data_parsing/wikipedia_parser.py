@@ -271,7 +271,9 @@ def findNewAndOldValues(update, newValues, oldValues, attributes):
 	if "newvalue" in update and key in attributes and key not in newValues:
 		newValues[key.lower()] = update["newvalue"].replace("\"", "\"\"")
 	if "oldvalue" in update and key in attributes and key not in oldValues:
-		oldValues[key.lower()] = update["oldvalue"].replace("\"", "\"\"")	
+		oldValues[key.lower()] = update["oldvalue"].replace("\"", "\"\"")
+
+	return newValues, oldValues
 
 def addValuesToUpdateStatement(updateStatement, attributes, newValues, oldValues):
 	for attribute in attributes:
@@ -292,15 +294,31 @@ def generateBaselineEntryFromData(dataByTitle, article, baselineDataEntryBluepri
 	
 	return baselineDataEntry
 
+
+def checkValidityOfUpdateStatement(updateStatement, attributes):
+	isValid = False
+	for key, value in updateStatement.items():
+		if key in ["::action", "::record", "article_title"]:
+			continue
+		if value != "":
+			isValid = True
+	return isValid
+
+
 def generateUpdateStatementFromData(dataByTitle, updateId, article, updateStatementsEntryBlueprint, currentId, attributes):
+	if article == "Katie Bowden":
+		print("break")
+
 	updateStatement = initUpdateStatement(article, updateStatementsEntryBlueprint, currentId)
 
 	newValues = {}
 	oldValues = {}
 	for update in dataByTitle[article]["updates"][updateId]:
-		findNewAndOldValues(update, newValues, oldValues, attributes)
+		newValues, oldValues = findNewAndOldValues(update, newValues, oldValues, attributes)
 
-	# TODO: this is probably wrong, the logic for how to determine the ::action has to be rethought	
+	# TODO: this is probably wrong, the logic for how to determine the ::action has to be rethought
+	# basically we have to check whether a statement deleting something leaves nothing but the article_title in the record.
+	# then it should be a delete statement
 	if len(newValues) == 0:
 		updateStatement["::action"] = "delete"
 	else:
@@ -308,7 +326,11 @@ def generateUpdateStatementFromData(dataByTitle, updateId, article, updateStatem
 
 	addValuesToUpdateStatement(updateStatement, attributes, newValues, oldValues)
 
-	return updateStatement
+	isValidUpdateStatement = checkValidityOfUpdateStatement(updateStatement, attributes)
+
+	if isValidUpdateStatement:
+		return updateStatement
+	return None
 
 def transformUpdatesIntoStatements(dataByTitle, baselineDataEntryBlueprint, updateStatementsEntryBlueprint, attributes):
 	## THIS SHOULD WORK IN DEPENDENCE OF THE ATTRIBUTES
@@ -326,7 +348,8 @@ def transformUpdatesIntoStatements(dataByTitle, baselineDataEntryBlueprint, upda
 
 		for updateId in dataByTitle[article]["updates"]:
 			updateStatement = generateUpdateStatementFromData(dataByTitle, updateId, article, updateStatementsEntryBlueprint, currentId, attributes)
-			updateStatements.append(updateStatement)
+			if updateStatement != None:
+				updateStatements.append(updateStatement)
 		currentId += 1
 
 	return baselineData, updateStatements
