@@ -177,12 +177,11 @@ def remove_attributes_manually(attributes):
 		attributes.remove(attribute)
 
 def getAttributes(attributesInput):
-	detectAttributes = len(attributesInput) == 0
-
 	attributes = set()
 
+	detectAttributes = len(attributesInput) == 0
 	if not detectAttributes:
-		 getAttributesFromInput(attributesInput)
+		attributes = getAttributesFromInput(attributesInput)
 
 	return attributes
 
@@ -194,34 +193,43 @@ def getAttributesFromInput(attributesInput):
 
 	return attributes
 
-def groupDataIntoBaselineAndUpdates(target_infobox_type, attributes, detectAttributes):
+def addAttributesFromUpdate(attributes, update):
+	attributes.add(update["key"].replace("\n", "").replace("\t", "").lower())
+	return attributes
+
+def groupUpdatesById(updates, attributes):
+	updatesById = {}
+
+	for update in updates["attribute"]:
+		updateId = update["id"]
+
+		detectAttributes = len(attributes) == 0
+		if detectAttributes:
+			attributes = addAttributesFromUpdate(attributes, update)
+
+		if updateId not in updatesById:
+			updatesById[updateId] = []
+		updatesById[updateId].append(update)
+
+	return updatesById, attributes
+	
+def groupDataIntoBaselineAndUpdates(targetInfoboxType, attributes):
 	dataByTitle = {}
 
-	with open("files_by_infobox_type/" + target_infobox_type, 'r', encoding = 'utf-8') as infile:
+	with open("files_by_infobox_type/" + targetInfoboxType, 'r', encoding = 'utf-8') as infile:
 		for line in infile:
 			data = json.loads(line)
 
-			article_title = data["article_title"]
+			articleTitle = data["article_title"]
 
-			if article_title not in dataByTitle:
-				dataByTitle[article_title] = {}
+			if articleTitle not in dataByTitle:
+				dataByTitle[articleTitle] = {}
+
+			updatesById, attributes = groupUpdatesById(data, attributes)
 			
-			updates_by_id = {}
-
-			for update in data["attribute"]:
-				update_id = update["id"]
-
-				if detectAttributes:
-					attributes.add(update["key"].replace("\n", "").replace("\t", "").lower())
-
-				if update_id not in updates_by_id:
-					updates_by_id[update_id] = []
-				updates_by_id[update_id].append(update)
-
-			ordered_update_ids = sorted(updates_by_id.keys())
-
-			dataByTitle[article_title]["baseline"] = updates_by_id.pop(ordered_update_ids[0])
-			dataByTitle[article_title]["updates"] = updates_by_id
+			orderedUpdateIds = sorted(updatesById.keys())	
+			dataByTitle[articleTitle]["baseline"] = updatesById.pop(orderedUpdateIds[0])
+			dataByTitle[articleTitle]["updates"] = updatesById
 
 	return dataByTitle, attributes
 
@@ -233,70 +241,93 @@ def createBaselineAndUpdateDummies(attributes):
 		baselineDataEntryBlueprint[attribute] = None
 	
 	updateStatementsEntryBlueprint = collections.OrderedDict()
-	updateStatementsEntryBlueprint["refers_to"] = None
+	updateStatementsEntryBlueprint["::record"] = None
 	updateStatementsEntryBlueprint["article_title"] = None
-	updateStatementsEntryBlueprint["statement_type"] = None
+	updateStatementsEntryBlueprint["::action"] = None
 	for attribute in attributes:
 		updateStatementsEntryBlueprint[attribute] = None
 
 	return baselineDataEntryBlueprint, updateStatementsEntryBlueprint
 
-def transformDataIntoRecords(data_by_title, baselineDataEntryBlueprint, updateStatementsEntryBlueprint, attributes):
+def initBaselineDataEntry(article, baselineDataEntryBlueprint, currentId):
+	baselineDataEntry = copy.deepcopy(baselineDataEntryBlueprint)
+	baselineDataEntry["id"] = str(currentId)
+	baselineDataEntry["article_title"] = article.replace("\"", "\"\"")
+	return baselineDataEntry
+
+def addValuesToBaselineDataEntry(update, attributes, baselineDataEntry):
+	key = update["key"].lower()
+	if "newvalue" in update and key in attributes:
+		baselineDataEntry[key] = update["newvalue"].replace("|", "").replace("\n", "").replace("\"", "\"\"")
+	
+def initUpdateStatement(article, updateStatementsEntryBlueprint, currentId):
+	updateStatement = copy.deepcopy(updateStatementsEntryBlueprint)
+	updateStatement["::record"] = currentId
+	updateStatement["article_title"] = article.replace("\"", "\"\"")
+	return updateStatement
+
+def findNewAndOldValues(update, newValues, oldValues, attributes):
+	key = update["key"].lower()
+	if "newvalue" in update and key in attributes and key not in newValues:
+		newValues[key.lower()] = update["newvalue"].replace("\"", "\"\"")
+	if "oldvalue" in update and key in attributes and key not in oldValues:
+		oldValues[key.lower()] = update["oldvalue"].replace("\"", "\"\"")	
+
+def addValuesToUpdateStatement(updateStatement, attributes, newValues, oldValues):
+	for attribute in attributes:
+		if attribute in newValues and attribute in oldValues:
+			updateStatement[attribute] = oldValues[attribute].replace("|", "").replace("\n", "") + "|" + newValues[attribute].replace("|", "").replace("\n", "")
+		elif attribute in newValues:
+			updateStatement[attribute] = newValues[attribute].replace("|", "").replace("\n", "")
+		elif attribute in oldValues:
+			updateStatement[attribute] = oldValues[attribute].replace("|", "").replace("\n", "")
+		else:
+			updateStatement[attribute] = ""
+
+def generateBaselineEntryFromData(dataByTitle, article, baselineDataEntryBlueprint, currentId, attributes):
+	baselineDataEntry = initBaselineDataEntry(article, baselineDataEntryBlueprint, currentId)
+		
+	for update in dataByTitle[article]["baseline"]:
+		addValuesToBaselineDataEntry(update, attributes, baselineDataEntry)
+	
+	return baselineDataEntry
+
+def generateUpdateStatementFromData(dataByTitle, updateId, article, updateStatementsEntryBlueprint, currentId, attributes):
+	updateStatement = initUpdateStatement(article, updateStatementsEntryBlueprint, currentId)
+
+	newValues = {}
+	oldValues = {}
+	for update in dataByTitle[article]["updates"][updateId]:
+		findNewAndOldValues(update, newValues, oldValues, attributes)
+
+	# TODO: this is probably wrong, the logic for how to determine the ::action has to be rethought	
+	if len(newValues) == 0:
+		updateStatement["::action"] = "delete"
+	else:
+		updateStatement["::action"] = "update"
+
+	addValuesToUpdateStatement(updateStatement, attributes, newValues, oldValues)
+
+	return updateStatement
+
+def transformUpdatesIntoStatements(dataByTitle, baselineDataEntryBlueprint, updateStatementsEntryBlueprint, attributes):
 	## THIS SHOULD WORK IN DEPENDENCE OF THE ATTRIBUTES
 	## If we find 'key' and 'Key' and the we will get one match to much
-	current_id = 1
+	currentId = 1
 
 	baselineData = []
 	updateStatements = []
 
-	for article in data_by_title:
+	for article in dataByTitle:
 		print(article)
-		baselineData_entry = copy.deepcopy(baselineDataEntryBlueprint)
-		baselineData_entry["id"] = current_id
-		baselineData_entry["article_title"] = article.replace("\"", "\"\"")
-		
-		for update in data_by_title[article]["baseline"]:
-			key = update["key"].lower()
-			if "newvalue" in update and key in attributes and key not in baselineData:
-				baselineData_entry[key] = update["newvalue"].replace("|", "").replace("\n", "").replace("\"", "\"\"")
-			baselineData_entry["id"] = str(current_id)
-		if len(baselineData_entry) != len(attributes) + 2:
-			print("FEHLER")
-		baselineData.append(baselineData_entry)
 
-		for update_id in data_by_title[article]["updates"]:
-			new_values = {}
-			old_values = {}
+		baselineDataEntry = generateBaselineEntryFromData(dataByTitle, article, baselineDataEntryBlueprint, currentId, attributes)
+		baselineData.append(baselineDataEntry)
 
-			for update_by_id in data_by_title[article]["updates"][update_id]:
-				key = update_by_id["key"].lower()
-				if "newvalue" in update_by_id and key in attributes and key not in new_values:
-					new_values[key.lower()] = update_by_id["newvalue"].replace("\"", "\"\"")
-				if "oldvalue" in update_by_id and key in attributes and key not in old_values:
-					old_values[key.lower()] = update_by_id["oldvalue"].replace("\"", "\"\"")
-
-			update_statement = copy.deepcopy(updateStatementsEntryBlueprint)
-			update_statement["refers_to"] = current_id
-			update_statement["article_title"] = article.replace("\"", "\"\"")
-
-			if len(new_values) == 0:
-				update_statement["statement_type"] = "delete"
-			else:
-				update_statement["statement_type"] = "update"
-
-			for attribute in attributes:
-				if attribute in new_values and attribute in old_values:
-					update_statement[attribute] = old_values[attribute].replace("|", "").replace("\n", "") + "|" + new_values[attribute].replace("|", "").replace("\n", "")
-				elif attribute in new_values:
-					update_statement[attribute] = new_values[attribute].replace("|", "").replace("\n", "")
-				elif attribute in old_values:
-					update_statement[attribute] = old_values[attribute].replace("|", "").replace("\n", "")
-				else:
-					update_statement[attribute] = ""
-			if len(update_statement) != len(attributes) + 3:
-				print("FEHLER")
-			updateStatements.append(update_statement)
-		current_id += 1
+		for updateId in dataByTitle[article]["updates"]:
+			updateStatement = generateUpdateStatementFromData(dataByTitle, updateId, article, updateStatementsEntryBlueprint, currentId, attributes)
+			updateStatements.append(updateStatement)
+		currentId += 1
 
 	return baselineData, updateStatements
 
@@ -319,9 +350,9 @@ def transformBaselineInsertsIntoUpdates(baselineInserts, attributes, updateState
 	keys = list(attributes)
 	for baselineInsert in baselineInserts:
 		insertStatement = copy.deepcopy(updateStatementsEntryBlueprint)
-		insertStatement["refers_to"] = baselineInsert["id"]
+		insertStatement["::record"] = baselineInsert["id"]
 		insertStatement["article_title"] = baselineInsert["article_title"]
-		insertStatement["statement_type"] = "insert"
+		insertStatement["::action"] = "insert"
 		for i in range(2, len(keys)):
 			insertStatement[keys[i]] = baselineInsert[keys[i]]
 		insertStatements.append(insertStatement)
@@ -340,23 +371,22 @@ def mergeInsertAndUpdateStatements(insertStatements, updateStatements):
 
 def insertInsertStatementIntoUpdateStatements(combinedUpdateStatements, insert, updateStatements, lastUpdateIndex, insertedStatementsCount):
 	for currentUpdateIndex in range(lastUpdateIndex, len(updateStatements)):
-		if int(insert["refers_to"]) <= int(updateStatements[currentUpdateIndex]["refers_to"]):
+		if int(insert["::record"]) <= int(updateStatements[currentUpdateIndex]["::record"]):
 			combinedUpdateStatements.insert(currentUpdateIndex + insertedStatementsCount, insert)
 			return currentUpdateIndex
 		else:
 			combinedUpdateStatements.append(updateStatements[currentUpdateIndex])
 
-def parseInfoboxUpdatesToCsv(infobox_config, statementTypesToBeParsed):
-	for targetInfoboxType, attributesInput in infobox_config.items():
+def parseInfoboxUpdatesToCsv(infoboxConfig, statementTypesToBeParsed):
+	for targetInfoboxType, attributesInput in infoboxConfig.items():
 		attributes = getAttributes(attributesInput)
-		detectAttributes = len(attributes) != 0
 		
 		print("Now parsing " + targetInfoboxType + "...")
 
-		dataByTitle, attributes = groupDataIntoBaselineAndUpdates(targetInfoboxType, attributes, detectAttributes)
+		dataByTitle, attributes = groupDataIntoBaselineAndUpdates(targetInfoboxType, attributes)
 
 		baselineDataEntryBlueprint, updateStatementsEntryBlueprint = createBaselineAndUpdateDummies(attributes)
-		baselineData, updateStatements = transformDataIntoRecords(dataByTitle, baselineDataEntryBlueprint, updateStatementsEntryBlueprint, attributes)		
+		baselineData, updateStatements = transformUpdatesIntoStatements(dataByTitle, baselineDataEntryBlueprint, updateStatementsEntryBlueprint, attributes)		
 
 		print("Grouping data...")
 
@@ -377,19 +407,19 @@ def filterUpdatesBySelection(updateStatements, statementTypesToBeParsed):
 
 	filteredUpdateStatements = []	
 	for updateStatement in updateStatements:
-		if updateStatement["statement_type"] in statementTypesToBeParsed:
+		if updateStatement["::action"] in statementTypesToBeParsed:
 			filteredUpdateStatements.append(updateStatement)
 
 	return filteredUpdateStatements
 
 def writeBaselineDataAndUpdateStatementsToDisk(targetInfoboxType, baselineData, updateStatements, attributes):
 	print("Writing baseline csv...")
-	baselineFilename = str("data/baseline/" + targetInfoboxType + "_baselineData.csv").replace(" ", "_")
+	baselineFilename = str("data/baseline/" + targetInfoboxType + "_baseline_data.csv").replace(" ", "_")
 	baselineAttributes = arrangeBaselineAttributes(attributes)
-	writeAsCsv(baselineFilename, baselineFilename, baselineData)
+	writeAsCsv(baselineFilename, baselineAttributes, baselineData)
 
 	print("Writing updates csv...")
-	updateFilename = str("data/updates/" + targetInfoboxType + "_updateStatements.csv").replace(" ", "_")
+	updateFilename = str("data/updates/" + targetInfoboxType + "_update_statements.csv").replace(" ", "_")
 	updateAttributes = arrangeUpdateAttributes(attributes)
 	writeAsCsv(updateFilename, updateAttributes, updateStatements)
 
@@ -422,11 +452,11 @@ def writeAsCsv(filename, attributes, statements):
 		for entry in statements:
 			outputString = ""
 			count = 0
-			for value in entry.values():
+			for key in attributes:
 				if count != 0:
 					outputString += ","
-				if value != None:
-					outputString += "\"" + str(value) + "\""
+				if entry[key] is not None:
+					outputString += "\"" + str(entry[key]) + "\""
 				else:
 					outputString += "\"\""
 				count += 1
