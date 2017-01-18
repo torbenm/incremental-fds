@@ -88,7 +88,6 @@ class IncrementalPLIBuilder {
                 array[i] = compressedRecords[id].clone();
                 if(remove) {
                     Arrays.fill(compressedRecords[id], -1);
-                    System.out.println(id+" "+Arrays.toString(compressedRecords[id]));
                 }
                 i++;
             }

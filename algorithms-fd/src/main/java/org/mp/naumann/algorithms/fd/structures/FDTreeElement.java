@@ -9,6 +9,8 @@ import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class FDTreeElement {
@@ -85,6 +87,22 @@ public class FDTreeElement {
 
     public boolean isFd(int i) {
         return this.rhsFds.get(i);
+    }
+
+    public Collection<Integer> getFdCollection(){
+        List<Integer> fds = new ArrayList<>();
+        for(int rhsAttr = rhsAttributes.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhsAttributes.nextSetBit(rhsAttr+1)){
+            fds.add(rhsAttr);
+        }
+        return fds;
+    }
+
+    public Collection<FunctionalDependency> getFdCollection(OpenBitSet lhs, ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis){
+        List<FunctionalDependency> fds = new ArrayList<>();
+        for(int rhsAttr = rhsAttributes.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhsAttributes.nextSetBit(rhsAttr+1)){
+            fds.add(findFunctionDependency(lhs, rhsAttr, columnIdentifiers, plis));
+        }
+        return fds;
     }
 
     void trimRecursive(int currentDepth, int newDepth) {

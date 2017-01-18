@@ -152,9 +152,12 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         // Actual algorithm execution
 
         List<IntegerPair> comparisonSuggestions = new ArrayList<>();
+
         int i = 1;
         do {
             FDLogger.log(Level.FINE, "Started round " + i);
+
+
             if (version.useSampling()) {
                 FDLogger.log(Level.FINE, "Enriching negative cover");
                 FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
@@ -180,8 +183,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     public IncrementalFDResult validateDeletes(CompressedDiff diff, int[][] compressedRecords, List<PositionListIndex> plis) throws AlgorithmExecutionException {
         if(version.getDeletePruningStrategy() == IncrementalFDVersion.DeletePruningStrategy.ANNOTATION){
 
-            FDTree posCover = new FDTree(columns.size(), -1);
-
+            //FDTree posCover = new FDTree(columns.size(), -1);
             BottomUpIncrementalValidator validator = new BottomUpIncrementalValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, false, memoryGuardian);
 
             Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);

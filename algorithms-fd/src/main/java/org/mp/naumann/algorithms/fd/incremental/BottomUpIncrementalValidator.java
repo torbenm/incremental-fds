@@ -1,5 +1,7 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
@@ -9,8 +11,8 @@ import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
+import org.mp.naumann.database.data.ColumnIdentifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +52,6 @@ public class BottomUpIncrementalValidator {
 		this.compressedRecords = compressedRecords;
 		this.efficiencyThreshold = efficiencyThreshold;
 		this.memoryGuardian = memoryGuardian;
-
 		if (parallel) {
 			int numThreads = Runtime.getRuntime().availableProcessors();
 			this.executor = Executors.newFixedThreadPool(numThreads);
@@ -98,10 +99,13 @@ public class BottomUpIncrementalValidator {
 			this.elementLhsPair = elementLhsPair;
 		}
 		public ValidationResult call() throws Exception {
+
+
 			ValidationResult result = new ValidationResult();
 			
 			FDTreeElement element = this.elementLhsPair.getElement();
 			OpenBitSet lhs = this.elementLhsPair.getLhs();
+
 			OpenBitSet rhs = element.getFds();
 
 			int rhsSize = (int) rhs.cardinality();
@@ -136,9 +140,9 @@ public class BottomUpIncrementalValidator {
 				}
 			}
 			else {
+
 				// Check if lhs from plis plus remaining inverted plis refines rhs
 				int firstLhsAttr = lhs.nextSetBit(0);
-				
 				lhs.clear(firstLhsAttr);
 				OpenBitSet validRhs = BottomUpIncrementalValidator.this.plis.get(firstLhsAttr).refines(BottomUpIncrementalValidator.this.compressedRecords, lhs, rhs, result.comparisonSuggestions);
 				lhs.set(firstLhsAttr);
@@ -149,7 +153,7 @@ public class BottomUpIncrementalValidator {
 				element.setFds(validRhs); // Sets the valid FDs in the FD tree
 				
 				for (int rhsAttr = validRhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = validRhs.nextSetBit(rhsAttr + 1)) {
-                    result.validFDs.add(new FD(lhs, rhsAttr));
+				    result.validFDs.add(new FD(lhs, rhsAttr));
                 }
 			}
 			return result;
@@ -245,12 +249,14 @@ public class BottomUpIncrementalValidator {
 			int numValidFds = validationResult.validFDs.size();
 			int numInvalidFds = validationResult.validations - numValidFds;
 			FDLogger.log(Level.FINER, validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + candidates + " new candidates; --> " + numValidFds + " FDs");
-		
+
 			// Decide if we continue validating the next level or if we go back into the sampling phase
 			if ((numInvalidFds > numValidFds * this.efficiencyThreshold) && (previousNumInvalidFds < numInvalidFds))
 				return true;
 			currentLevel = FDTreeUtils.getFdLevel(posCover, level);
 			previousNumInvalidFds = numInvalidFds;
+
+
 		}
 		
 		if (this.executor != null) {
@@ -289,7 +295,7 @@ public class BottomUpIncrementalValidator {
         for(int removeLhs = validFD.lhs.nextSetBit(0); removeLhs >= 0; removeLhs =validFD.lhs.nextSetBit(removeLhs+1)){
             OpenBitSet lhs = validFD.lhs.clone();
             lhs.clear(removeLhs);
-            candidates += addFunctionalDependency(lhs, validFD.rhs);
+            candidates += addFunctionalDependencyNoCheck(lhs, validFD.rhs);
         }
         return candidates;
     }
@@ -305,6 +311,18 @@ public class BottomUpIncrementalValidator {
             //TODO: Make Memory Guardian cut the bottom, not the top
             //checkMemoryGuardian();
         }
+        return candidates;
+    }
+
+    private int addFunctionalDependencyNoCheck(OpenBitSet lhs, int rhs){
+        int candidates = 0;
+        // Check if this attribute has already been added
+        FDTreeElement child = this.posCover.addFunctionalDependencyGetIfNew(lhs, rhs);
+        if(child != null) {
+            candidates++;
+        }
+        //TODO: Make Memory Guardian cut the bottom, not the top
+        //checkMemoryGuardian();
         return candidates;
     }
 

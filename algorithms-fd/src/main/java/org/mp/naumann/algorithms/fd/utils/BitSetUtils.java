@@ -32,4 +32,12 @@ public class BitSetUtils {
 		return cols;
 	}
 
+	public static OpenBitSet generateOpenBitSet(int... setBits){
+	    OpenBitSet obs = new OpenBitSet();
+	    for(int setBit : setBits){
+	        obs.set(setBit);
+        }
+        return obs;
+    }
+
 }

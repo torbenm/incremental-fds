@@ -1,5 +1,7 @@
 package org.mp.naumann.algorithms.fd.utils;
 
+import java.util.Collection;
+
 public class PrintUtils {
 
     public static String toString(int[] array){
@@ -18,5 +20,9 @@ public class PrintUtils {
             System.out.print(" ");
         }
         System.out.println();
+    }
+
+    public static void print(Collection<String> strings){
+        strings.forEach(System.out::println);
     }
 }
