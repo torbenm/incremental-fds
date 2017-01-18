@@ -277,14 +277,16 @@ def findNewAndOldValues(update, newValues, oldValues, attributes):
 
 def addValuesToUpdateStatement(updateStatement, attributes, newValues, oldValues):
 	for attribute in attributes:
-		if attribute in newValues and attribute in oldValues:
-			updateStatement[attribute] = oldValues[attribute].replace("|", "").replace("\n", "") + "|" + newValues[attribute].replace("|", "").replace("\n", "")
-		elif attribute in newValues:
-			updateStatement[attribute] = newValues[attribute].replace("|", "").replace("\n", "")
-		elif attribute in oldValues:
-			updateStatement[attribute] = oldValues[attribute].replace("|", "").replace("\n", "")
-		else:
-			updateStatement[attribute] = ""
+		oldValue = ""
+		newValue = ""
+		compundValue = ""
+		if attribute in oldValues:
+			oldValue = oldValues[attribute].replace("|", "").replace("\n", "")
+		if attribute in newValues:
+			newValue = newValues[attribute].replace("|", "").replace("\n", "")
+		if oldValue != "" or newValue != "":
+			compundValue = oldValue + "|" + newValue
+		updateStatement[attribute] = compundValue
 
 def generateBaselineEntryFromData(dataByTitle, article, baselineDataEntryBlueprint, currentId, attributes):
 	baselineDataEntry = initBaselineDataEntry(article, baselineDataEntryBlueprint, currentId)
@@ -400,6 +402,93 @@ def insertInsertStatementIntoUpdateStatements(combinedUpdateStatements, insert, 
 		else:
 			combinedUpdateStatements.append(updateStatements[currentUpdateIndex])
 
+
+def buildTableFromBaselineData(baselineData):
+	table = {}
+	for record in baselineData:
+		table[record["id"]] = record
+	return table
+
+
+def applyInsertStatement(baselineDataEntryBlueprint, updateStatement, baselineDataTable):
+	newEntry = copy.deepcopy(baselineDataEntryBlueprint)
+	targetId = str(updateStatement["::record"])
+
+	for attribute in updateStatement:
+		if attribute in newEntry:
+			newEntry[attribute] = updateStatement[attribute]
+	baselineDataTable[targetId] = newEntry
+
+
+def applyDeleteStatement(updateStatement, baselineDataTable):
+	targetId = str(updateStatement["::record"])
+
+	targetEntry = baselineDataTable[targetId]
+	for attribute in updateStatement:
+		if attribute in targetEntry and updateStatement[attribute] != "" and attribute != "article_title":
+			targetEntry[attribute] = ""
+
+
+def checkForTrueDelete(updateStatement, baselineDataTable, trueDeleteCounter, falseDeleteCounter):
+	targetId = str(updateStatement["::record"])
+	targetEntry = baselineDataTable[targetId]
+
+	hasNonEmptyFields = False
+	for attribute in targetEntry:
+		if attribute in ["id", "article_title"]:
+			continue
+		if targetEntry[attribute] != "":
+			hasNonEmptyFields = True
+	if hasNonEmptyFields:
+		falseDeleteCounter += 1
+		# TODO: change the darn statement then!
+	else:
+		trueDeleteCounter += 1
+
+	return trueDeleteCounter, falseDeleteCounter
+
+
+def applyUpdateStatement(updateStatement, baselineDataTable, updateMatchCounter, updateMismatchCounter):
+	targetId = str(updateStatement["::record"])
+	targetEntry = baselineDataTable[targetId]
+
+	for attribute in updateStatement:
+		if attribute in targetEntry and updateStatement[attribute] != "" and attribute != "article_title":
+			newValue = updateStatement[attribute].split("|")[1]
+			oldValue = updateStatement[attribute].split("|")[0]
+			if targetEntry[attribute] != oldValue:
+				# TODO: why?
+				updateMismatchCounter += 1
+			else:
+				updateMatchCounter += 1
+			targetEntry[attribute] = newValue
+
+	return updateMatchCounter, updateMismatchCounter
+
+
+def applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, baselineDataEntryBlueprint):
+	trueDeleteCounter = 0
+	falseDeleteCounter = 0
+	updateMatchCounter = 0
+	updateMismatchCounter = 0
+	for updateStatement in updateStatements:
+		statementType = updateStatement["::action"]
+		if statementType == "insert":
+			applyInsertStatement(baselineDataEntryBlueprint, updateStatement, baselineDataTable)
+		elif statementType == "delete":
+			applyDeleteStatement(updateStatement, baselineDataTable)
+			trueDeleteCounter, falseDeleteCounter = checkForTrueDelete(updateStatement, baselineDataTable, trueDeleteCounter, falseDeleteCounter)
+		elif statementType == "update":
+			updateMatchCounter, updateMismatchCounter = applyUpdateStatement(updateStatement, baselineDataTable, updateMatchCounter, updateMismatchCounter)
+	print("true deletes: {}, false deletes: {}".format(trueDeleteCounter, falseDeleteCounter))
+	print("update matches: {}, update mismatches: {}".format(updateMatchCounter, updateMismatchCounter))
+
+
+def determineFinalUpdateStatementType(updateStatements, baselineData, baselineDataEntryBlueprint):
+	baselineDataTable = buildTableFromBaselineData(baselineData)
+	applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, baselineDataEntryBlueprint)
+
+
 def parseInfoboxUpdatesToCsv(infoboxConfig, statementTypesToBeParsed):
 	for targetInfoboxType, attributesInput in infoboxConfig.items():
 		attributes = getAttributes(attributesInput)
@@ -418,6 +507,8 @@ def parseInfoboxUpdatesToCsv(infoboxConfig, statementTypesToBeParsed):
 		updateStatements = mergeInsertAndUpdateStatements(insertStatements, updateStatements)
 		
 		updateStatements = filterUpdatesBySelection(updateStatements, statementTypesToBeParsed)
+
+		determineFinalUpdateStatementType(updateStatements, baselineData, baselineDataEntryBlueprint)
 
 		createTargetDirectoriesIfNecessary()
 		writeBaselineDataAndUpdateStatementsToDisk(targetInfoboxType, baselineData, updateStatements, attributes)
@@ -492,105 +583,104 @@ if __name__ == "__main__":
 	# THIS WILL SRSLY IMPEDE RUNTIME AND DATA QUALITY, THOUGH! better just don't do it...
 
 	infobox_config = {
-		# "infobox disease" : [
-			# "Name",
-			# "Image",
-			# "Caption",
-			# "DiseasesDB",
-			# "ICD10",
-			# "ICD9",
-			# "ICDO",
-			# "OMIM",
-			# "MedlinePlus",
-			# "eMedicineSubj",
-			# "eMedicineTopic",
-			# "MeshID",
-		# ],
-		"infobox actor" : [
-			"honorific_prefix",
-			"name",
-			"honorific_suffix",
-			"image",
-			"image_upright",
-			"image_size",
-			"alt",
-			"caption",
-			"native_name",
-			"native_name_lang",
-			"pronunciation",
-			"birth_name",
-			"birth_date",
-			"birth_place",
-			"baptised",
-			"disappeared_date",
-			"disappeared_place",
-			"disappeared_status",
-			"death_date",
-			"death_place",
-			"death_cause",
-			"body_discovered",
-			"resting_place",
-			"resting_place_coordinates",
-			"burial_place",
-			"burial_coordinates",
-			"monuments",
-			"residence",
-			"nationality",
-			"other_names",
-			"citizenship",
-			"education",
-			"alma_mater",
-			"occupation",
-			"years_active",
-			"era",
-			"employer",
-			"organization",
-			"agent",
-			"known_for",
-			"notable_works",
-			"style",
-			"home_town",
-			"salary",
-			"net_worth",
-			"height",
-			"weight",
-			"television",
-			"title",
-			"term",
-			"predecessor",
-			"successor",
-			"party",
-			"movement",
-			"opponents",
-			"boards",
-			"religion",
-			"denomination",
-			"criminal_charge",
-			"criminal_penalty",
-			"criminal_status",
-			"spouse",
-			"partner",
-			"children",
-			"parents",
-			"mother",
-			"father",
-			"relatives",
-			"family",
-			"callsign",
-			"awards",
-			"website",
-			"module",
-			"module2",
-			"module3",
-			"module4",
-			"module5",
-			"module6",
-			"signature",
-			"signature_size",
-			"signature_alt",
-			"footnotes",
+		"infobox disease" : [
+			"Name",
+			"Image",
+			"Caption",
+			"DiseasesDB",
+			"ICD10",
+			"ICD9",
+			"ICDO",
+			"OMIM",
+			"MedlinePlus",
+			"eMedicineSubj",
+			"eMedicineTopic",
+			"MeshID",
 		],
-		# "infobox actor" : [],
+		# "infobox actor" : [
+		# 	"honorific_prefix",
+		# 	"name",
+		# 	"honorific_suffix",
+		# 	"image",
+		# 	"image_upright",
+		# 	"image_size",
+		# 	"alt",
+		# 	"caption",
+		# 	"native_name",
+		# 	"native_name_lang",
+		# 	"pronunciation",
+		# 	"birth_name",
+		# 	"birth_date",
+		# 	"birth_place",
+		# 	"baptised",
+		# 	"disappeared_date",
+		# 	"disappeared_place",
+		# 	"disappeared_status",
+		# 	"death_date",
+		# 	"death_place",
+		# 	"death_cause",
+		# 	"body_discovered",
+		# 	"resting_place",
+		# 	"resting_place_coordinates",
+		# 	"burial_place",
+		# 	"burial_coordinates",
+		# 	"monuments",
+		# 	"residence",
+		# 	"nationality",
+		# 	"other_names",
+		# 	"citizenship",
+		# 	"education",
+		# 	"alma_mater",
+		# 	"occupation",
+		# 	"years_active",
+		# 	"era",
+		# 	"employer",
+		# 	"organization",
+		# 	"agent",
+		# 	"known_for",
+		# 	"notable_works",
+		# 	"style",
+		# 	"home_town",
+		# 	"salary",
+		# 	"net_worth",
+		# 	"height",
+		# 	"weight",
+		# 	"television",
+		# 	"title",
+		# 	"term",
+		# 	"predecessor",
+		# 	"successor",
+		# 	"party",
+		# 	"movement",
+		# 	"opponents",
+		# 	"boards",
+		# 	"religion",
+		# 	"denomination",
+		# 	"criminal_charge",
+		# 	"criminal_penalty",
+		# 	"criminal_status",
+		# 	"spouse",
+		# 	"partner",
+		# 	"children",
+		# 	"parents",
+		# 	"mother",
+		# 	"father",
+		# 	"relatives",
+		# 	"family",
+		# 	"callsign",
+		# 	"awards",
+		# 	"website",
+		# 	"module",
+		# 	"module2",
+		# 	"module3",
+		# 	"module4",
+		# 	"module5",
+		# 	"module6",
+		# 	"signature",
+		# 	"signature_size",
+		# 	"signature_alt",
+		# 	"footnotes",
+		# ],
 	}
 
 	# also somehow try to solve delete vs. update statements
@@ -599,7 +689,7 @@ if __name__ == "__main__":
 
 	# select what types of update statements you want
 	## ATTENTION: ommiting inserts is probably bad idea as it would result in inconsistent data (i.e. updateStatements targeting nonexisting records)
-	statementTypesToBeParsed = ["insert", "delete"]
+	statementTypesToBeParsed = ["insert", "delete", "update"]
 
 	parseInfoboxUpdatesToCsv(infobox_config, statementTypesToBeParsed)
 
