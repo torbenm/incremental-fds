@@ -3,6 +3,7 @@ package org.mp.naumann.algorithms.fd;
 import org.mp.naumann.algorithms.InitialAlgorithm;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.hyfd.HyFD;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.database.Table;
 
 import java.util.ArrayList;
@@ -15,13 +16,13 @@ public class HyFDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDep
 	private List<FunctionalDependency> fds = new ArrayList<>();
 
 
-	public HyFDInitialAlgorithm(Table table) {
-		hyfd = new HyFD(table, fds::add);
+	public HyFDInitialAlgorithm(IncrementalFDConfiguration configuration, Table table) {
+		hyfd = new HyFD(configuration, table, fds::add);
 	}
 	
 	@Override
 	public FDIntermediateDatastructure getIntermediateDataStructure() {
-		return new FDIntermediateDatastructure(hyfd.getNegCover(), hyfd.getPosCover(), hyfd.getPLIBuilder(), hyfd.getValueComparator());
+		return new FDIntermediateDatastructure(hyfd.getNegCover(), hyfd.getPosCover(), hyfd.getPLIBuilder(), hyfd.getValueComparator(), hyfd.getViolationCollection());
 	}
 
 	@Override

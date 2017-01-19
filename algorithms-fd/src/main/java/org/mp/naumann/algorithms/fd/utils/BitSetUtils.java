@@ -12,11 +12,16 @@ public class BitSetUtils {
 	}
 	
 	public static String toString(OpenBitSet a) {
-		StringBuilder s = new StringBuilder();
-		for(int i = 0; i < a.length(); i++) {
-			s.append(a.fastGet(i) ? 1 : 0);
-		}
-		return s.toString();
+		try {
+            StringBuilder s = new StringBuilder();
+
+            for (int i = 0; i < a.length(); i++) {
+                s.append(a.fastGet(i) ? 1 : 0);
+            }
+            return s.toString();
+        }catch(AssertionError e){
+            return "";
+        }
 	}
 
 	public static List<Integer> collectSetBits(OpenBitSet bitSet) {
@@ -26,5 +31,13 @@ public class BitSetUtils {
 		}
 		return cols;
 	}
+
+	public static OpenBitSet generateOpenBitSet(int... setBits){
+	    OpenBitSet obs = new OpenBitSet();
+	    for(int setBit : setBits){
+	        obs.set(setBit);
+        }
+        return obs;
+    }
 
 }

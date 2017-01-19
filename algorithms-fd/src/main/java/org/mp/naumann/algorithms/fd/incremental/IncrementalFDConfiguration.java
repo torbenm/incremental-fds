@@ -8,7 +8,7 @@ public class IncrementalFDConfiguration {
     public static final IncrementalFDConfiguration V0_1 = new IncrementalFDConfiguration("Simple incremental pruning").addPruningStrategy(PruningStrategy.SIMPLE);
     public static final IncrementalFDConfiguration V0_2 = new IncrementalFDConfiguration("Improved pruning with bloom").addPruningStrategy(PruningStrategy.BLOOM);
     public static final IncrementalFDConfiguration V0_3 = new IncrementalFDConfiguration("Improved pruning with bloom based on initial FDs").addPruningStrategy(PruningStrategy.BLOOM_ADVANCED);
-
+    public static final IncrementalFDConfiguration V0_4 = new IncrementalFDConfiguration("Annotation pruning for deletes").addPruningStrategy(PruningStrategy.ANNOTATION);
 
     private final Collection<PruningStrategy> pruningStrategies = new ArrayList<>();
     private final String versionName;
@@ -55,9 +55,15 @@ public class IncrementalFDConfiguration {
         return enhancedClusterPruning;
     }
 
+    public boolean usesPruningStrategy(PruningStrategy strategy){
+        return getPruningStrategies().contains(strategy);
+    }
+
     public boolean recomputesDataStructures() {
         return recomputeDataStructures;
     }
+
+
 
     public IncrementalFDConfiguration addPruningStrategy(PruningStrategy pruningStrategy) {
         this.pruningStrategies.add(pruningStrategy);
@@ -118,7 +124,7 @@ public class IncrementalFDConfiguration {
     }
 
     public enum PruningStrategy {
-        SIMPLE, BLOOM, BLOOM_ADVANCED
+        SIMPLE, BLOOM, BLOOM_ADVANCED, ANNOTATION
     }
 
 }

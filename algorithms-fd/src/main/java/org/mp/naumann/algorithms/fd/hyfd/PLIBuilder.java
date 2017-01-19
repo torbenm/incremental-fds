@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -110,4 +111,5 @@ public class PLIBuilder {
     public List<Integer> getPliOrder() {
         return fetchPositionListIndexes().stream().map(IPositionListIndex::getAttribute).collect(Collectors.toList());
     }
+
 }

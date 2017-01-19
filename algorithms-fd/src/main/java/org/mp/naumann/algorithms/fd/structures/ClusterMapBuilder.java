@@ -16,6 +16,8 @@
 
 package org.mp.naumann.algorithms.fd.structures;
 
+import com.google.common.collect.Sets;
+
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.mp.naumann.database.TableInput;
@@ -24,7 +26,9 @@ import org.mp.naumann.database.data.Row;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ClusterMapBuilder {
 	
@@ -83,6 +87,37 @@ public class ClusterMapBuilder {
 		this.numRecords++;
 		return recId;
 	}
+
+
+	public Set<Integer> getMatchingRecordsIds(Iterable<String> record){
+	    int attributeId = 0;
+        Set<Integer> matching = null;
+
+        for(String value : record) {
+           HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
+           Set<Integer> cluster = new HashSet<>(clusterMap.getOrDefault(value, new IntArrayList()));
+           if(matching == null) {
+               matching = cluster;
+           } else {
+               matching = Sets.intersection(cluster, matching);
+           }
+           attributeId++;
+       }
+       return matching;
+    }
+
+    public void removeRecords(Iterable<String> record, Set<Integer> recordIds){
+        int attributeId = 0;
+        for(String value : record) {
+            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
+            if(clusterMap.containsKey(value)){
+                Set<Integer> cluster = new HashSet<>(clusterMap.getOrDefault(value, new IntArrayList()));
+                cluster.removeAll(recordIds);
+            }
+            attributeId++;
+        }
+    }
+
 
 	public void addRecords(Collection<? extends Iterable<String>> records) {
 		if (records.size() > Integer.MAX_VALUE)

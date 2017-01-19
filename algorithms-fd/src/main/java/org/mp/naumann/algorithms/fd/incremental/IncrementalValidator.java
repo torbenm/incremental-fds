@@ -14,6 +14,7 @@ import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -102,8 +103,9 @@ public class IncrementalValidator {
 			FDTreeElement element = this.elementLhsPair.getElement();
 			OpenBitSet lhs = this.elementLhsPair.getLhs();
 			OpenBitSet rhs = element.getFds();
-			
+
 			int rhsSize = (int) rhs.cardinality();
+
 			if (rhsSize == 0)
 				return result;
 			result.validations = result.validations + rhsSize;
@@ -122,7 +124,7 @@ public class IncrementalValidator {
 				// Check if lhs from plis refines rhs
 				int lhsAttribute = lhs.nextSetBit(0);
 				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
-					if (!IncrementalValidator.this.plis.get(lhsAttribute).refines(IncrementalValidator.this.compressedRecords, rhsAttr)) {
+                    if (!IncrementalValidator.this.plis.get(lhsAttribute).refines(IncrementalValidator.this.compressedRecords, rhsAttr)) {
 						element.removeFd(rhsAttr);
 						result.invalidFDs.add(new FD(lhs, rhsAttr));
 					}
@@ -177,7 +179,7 @@ public class IncrementalValidator {
 		}
 		
 		for (Future<ValidationResult> future : futures) {
-			try {
+		    try {
 				validationResult.add(future.get());
 			}
 			catch (ExecutionException e) {
@@ -201,7 +203,6 @@ public class IncrementalValidator {
 		FDLogger.log(Level.FINER, "Validating FDs using plis ...");
 
 		List<FDTreeElementLhsPair> currentLevel = pruneLevel(FDTreeUtils.getFdLevel(posCover, level));
-		
 		// Start the level-wise validation/discovery
 		int previousNumInvalidFds = 0;
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
@@ -240,7 +241,8 @@ public class IncrementalValidator {
 						}
 					}
 				}
-				
+
+
 				if ((this.posCover.getMaxDepth() > -1) && (this.level >= this.posCover.getMaxDepth()))
 					break;
 			}

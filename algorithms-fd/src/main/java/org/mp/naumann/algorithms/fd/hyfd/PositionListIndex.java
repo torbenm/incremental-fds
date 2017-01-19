@@ -28,6 +28,7 @@ import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -53,6 +54,16 @@ public class PositionListIndex implements IPositionListIndex {
 
     public List<IntArrayList> getClusters() {
         return this.clusters;
+    }
+
+    @Override
+    public IntArrayList getCluster(int index) {
+        return this.clusters.get(index);
+    }
+
+    @Override
+    public void setCluster(int index, IntArrayList value) {
+        this.clusters.set(index, value);
     }
 
     public int getNumNonUniqueValues() {
@@ -89,13 +100,16 @@ public class PositionListIndex implements IPositionListIndex {
 
 
     public boolean refines(int[][] compressedRecords, int rhsAttr) {
-        for (IntArrayList cluster : this.clusters)
+        for (IntArrayList cluster : this.clusters) {
             if (!this.probe(compressedRecords, rhsAttr, cluster))
                 return false;
+        }
         return true;
     }
 
     private boolean probe(int[][] compressedRecords, int rhsAttr, IntArrayList cluster) {
+        if(cluster.size() == 0) return false;
+
         int rhsClusterId = compressedRecords[cluster.getInt(0)][rhsAttr];
 
         // If otherClusterId < 0, then this cluster must point into more than one other clusters
@@ -106,6 +120,7 @@ public class PositionListIndex implements IPositionListIndex {
         for (int recordId : cluster)
             if (compressedRecords[recordId][rhsAttr] != rhsClusterId)
                 return false;
+
 
         return true;
     }
@@ -118,7 +133,9 @@ public class PositionListIndex implements IPositionListIndex {
         // Returns the rhs attributes that are refined by the lhs
         OpenBitSet refinedRhs = rhs.clone();
 
-        // TODO: Check if it is technically possible that this fd holds, i.e., if A1 has 2 clusters of size 10 and A2 has 2 clusters of size 10, then the intersection can have at most 4 clusters of size 5 (see join cardinality estimation)
+        // TODO: Check if it is technically possible that this fd holds, i.e.,
+        // if A1 has 2 clusters of size 10 and A2 has 2 clusters of size 10,
+        // then the intersection can have at most 4 clusters of size 5 (see join cardinality estimation)
 
         int[] rhsAttrId2Index = new int[compressedRecords[0].length];
         int[] rhsAttrIndex2Id = new int[rhsSize];
@@ -162,7 +179,6 @@ public class PositionListIndex implements IPositionListIndex {
 
     private ClusterIdentifier buildClusterIdentifier(OpenBitSet lhs, int lhsSize, int[] record) {
         int[] cluster = new int[lhsSize];
-
         int index = 0;
         for (int lhsAttr = lhs.nextSetBit(0); lhsAttr >= 0; lhsAttr = lhs.nextSetBit(lhsAttr + 1)) {
             int clusterId = record[lhsAttr];

@@ -8,4 +8,6 @@ public interface IPositionListIndex {
     int getAttribute();
 
     Collection<IntArrayList> getClusters();
+    IntArrayList getCluster(int index);
+    void setCluster(int index, IntArrayList value);
 }

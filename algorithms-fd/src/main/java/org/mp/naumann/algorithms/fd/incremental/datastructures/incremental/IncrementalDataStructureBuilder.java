@@ -14,6 +14,7 @@ import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -104,7 +105,8 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         if(version.usesInnerClusterPruning()) {
             plis.forEach(pli -> pli.setNewRecords(inserted));
         }
-        return CompressedDiff.buildDiff(inserted, version, compressedRecords);
+        //TODO: deletes
+        return CompressedDiff.buildDiff(inserted, new ArrayList<>(), version, compressedRecords);
     }
 
     private void updateDataStructures(Collection<Integer> inserted, List<Map<Integer, IntArrayList>> clusterMaps) {
@@ -164,6 +166,11 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         @Override
         public int[] get(int index) {
             return compressedRecords.get(index);
+        }
+
+        @Override
+        public void fill(int index, int value) {
+            Arrays.fill(compressedRecords.get(index), value);
         }
 
         @Override

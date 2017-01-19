@@ -125,16 +125,6 @@ class IncrementalSampler {
 
 		@Override
 		public int compare(Integer o1, Integer o2) {
-			// Next
-		/*	int value1 = this.sortKeys[o1.intValue()][this.activeKey2];
-			int value2 = this.sortKeys[o2.intValue()][this.activeKey2];
-			return value2 - value1;
-		*/
-			// Previous
-		/*	int value1 = this.sortKeys[o1.intValue()][this.activeKey1];
-			int value2 = this.sortKeys[o2.intValue()][this.activeKey1];
-			return value2 - value1;
-		*/
 			// Previous -> Next
 			int value1 = this.sortKeys.get(o1)[this.activeKey1];
 			int value2 = this.sortKeys.get(o2)[this.activeKey1];
@@ -144,17 +134,6 @@ class IncrementalSampler {
 				value2 = this.sortKeys.get(o2)[this.activeKey2];
 			}
 			return value2 - value1;
-
-			// Next -> Previous
-		/*	int value1 = this.sortKeys[o1.intValue()][this.activeKey2];
-			int value2 = this.sortKeys[o2.intValue()][this.activeKey2];
-			int result = value2 - value1;
-			if (result == 0) {
-				value1 = this.sortKeys[o1.intValue()][this.activeKey1];
-				value2 = this.sortKeys[o2.intValue()][this.activeKey1];
-			}
-			return value2 - value1;
-		*/
 		}
 
 		private int increment(int number) {
@@ -245,10 +224,8 @@ class IncrementalSampler {
 				}
 			}
 			numNewNonFds = newNonFds.size() - previousNegCoverSize;
-			
 			this.numNewNonFds.add(numNewNonFds);
 			this.numComparisons.add(numComparisons);
-
 			return numComparisons != 0;
 		}
 	}

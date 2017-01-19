@@ -23,18 +23,31 @@ import java.util.logging.Level;
 
 public class IncrementalFDDemo {
 
-    private static final String batchFileName = "inserts.adult.csv";
+      private static final String batchFileName = "deletes.adult.csv";
+       private static final String schema = "";
+       private static final String tableName = "benchmark.adult";
+       private static final int batchSize = 1200; //*/
+    private static final ResourceType resourceType = ResourceType.BENCHMARK;
+     /* private static final String batchFileName = "deletes.deletesample.csv";
+       private static final String schema = "";
+       private static final String tableName = "test.deletesample";
+       private static final String csvDir = "/";
+       private static final int batchSize = 100;  //*/
+  /* private static final String batchFileName = "csv/test/deletes.bridges.csv";
     private static final String schema = "";
-    private static final String tableName = "adult";
-    private static final int batchSize = 100;
+    private static final String csvDir = "/test";
+    private static final String tableName = "test.bridges";
+    private static final int batchSize = 200; //*/
 
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
-        FDLogger.setLevel(Level.FINER);
-        try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceType.BASELINE, ","))) {
+        FDLogger.setLevel(Level.INFO);
+        IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom").addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION);
+
+        try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(resourceType, ","))) {
 
             // execute initial algorithm
             Table table = dc.getTable(schema, tableName);
-            HyFDInitialAlgorithm hyfd = new HyFDInitialAlgorithm(table);
+            HyFDInitialAlgorithm hyfd = new HyFDInitialAlgorithm(configuration, table);
             List<FunctionalDependency> fds = hyfd.execute();
             FDLogger.log(Level.INFO, String.format("Original FD count: %s", fds.size()));
             FDLogger.log(Level.INFO, String.format("Batch size: %s", batchSize));
@@ -49,7 +62,7 @@ public class IncrementalFDDemo {
             BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 
             // create incremental algorithm
-            IncrementalFD algorithm = new IncrementalFD(table.getColumnNames(), tableName, new IncrementalFDConfiguration("Sampling test").setRecomputeDataStructures(true).setEnhancedClusterPruning(true));
+            IncrementalFD algorithm = new IncrementalFD(table.getColumnNames(), tableName, configuration);
             IncrementalFDResultListener listener = new IncrementalFDResultListener();
             algorithm.addResultListener(listener);
             algorithm.setIntermediateDataStructure(ds);
@@ -62,6 +75,7 @@ public class IncrementalFDDemo {
             FDLogger.log(Level.INFO, String.format("Total performed validations: %s", listener.getValidationCount()));
             FDLogger.log(Level.INFO, String.format("Total pruned validations: %s", listener.getPrunedCount()));
             FDLogger.log(Level.INFO, String.format("Final FD count: %s", listener.getFDs().size()));
+            listener.getFDs().forEach(f -> FDLogger.log(Level.INFO, f.toString()));
         }
     }
 

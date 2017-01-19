@@ -191,8 +191,6 @@ public abstract class PositionListIndex implements IPositionListIndex {
         clustersWithNewRecords = clusterIds.stream().map(this::getCluster).collect(Collectors.toList());
     }
 
-    protected abstract IntArrayList getCluster(int index);
-
     private Collection<IntArrayList> getClustersToCheck() {
         Collection<IntArrayList> toCheck = clustersWithNewRecords == null ? getClusters() : clustersWithNewRecords;
         return toCheck.stream().filter(c -> c.size() > 1).collect(Collectors.toList());

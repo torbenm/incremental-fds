@@ -1,6 +1,15 @@
 package org.mp.naumann.algorithms.fd.structures;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.FunctionalDependency;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
+import org.mp.naumann.database.data.ColumnIdentifier;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class FDTreeElementLhsPair {
 	
@@ -19,5 +28,18 @@ public class FDTreeElementLhsPair {
 		this.element = element;
 		this.lhs = lhs;
 	}
+
+	public Collection<String> toFDStrings(){
+	    return element.getFdCollection().parallelStream().map(fd -> BitSetUtils.toString(lhs) + " -> "+fd).collect(Collectors.toList());
+    }
+
+
+    public Collection<String> toFDStrings(List<IPositionListIndex> plis, ObjectArrayList<ColumnIdentifier> columnIdentifiers) {
+        return element
+                .getFdCollection(lhs, columnIdentifiers, plis)
+                .parallelStream()
+                .map(FunctionalDependency::toString)
+                .collect(Collectors.toList());
+    }
 }
 

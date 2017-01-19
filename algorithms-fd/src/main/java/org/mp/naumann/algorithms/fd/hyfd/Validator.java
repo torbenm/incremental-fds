@@ -3,11 +3,13 @@ package org.mp.naumann.algorithms.fd.hyfd;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,10 +31,11 @@ public class Validator {
 	private float efficiencyThreshold;
 	private MemoryGuardian memoryGuardian;
 	private ExecutorService executor;
-	
+    private final ViolationCollection violationCollection;
+
 	private int level = 0;
 
-	public Validator(FDSet negCover, FDTree posCover, int numRecords, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
+	public Validator(FDSet negCover, FDTree posCover, int numRecords, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian, ViolationCollection violationCollection) {
 		this.negCover = negCover;
 		this.posCover = posCover;
 		this.numRecords = numRecords;
@@ -40,26 +43,18 @@ public class Validator {
 		this.compressedRecords = compressedRecords;
 		this.efficiencyThreshold = efficiencyThreshold;
 		this.memoryGuardian = memoryGuardian;
-		
-		if (parallel) {
+        this.violationCollection = violationCollection;
+
+        if (parallel) {
 			int numThreads = Runtime.getRuntime().availableProcessors();
 			this.executor = Executors.newFixedThreadPool(numThreads);
-		}
-	}
-	
-	private class FD {
-		public OpenBitSet lhs;
-		public int rhs;
-		public FD(OpenBitSet lhs, int rhs) {
-			this.lhs = lhs;
-			this.rhs = rhs;
 		}
 	}
 	
 	private class ValidationResult {
 		public int validations = 0;
 		public int intersections = 0;
-		public List<FD> invalidFDs = new ArrayList<>();
+		public List<OpenBitSetFD> invalidFDs = new ArrayList<>();
 		public List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 		public void add(ValidationResult other) {
 			this.validations += other.validations;
@@ -94,7 +89,8 @@ public class Validator {
 				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
 					if (!Validator.this.plis.get(rhsAttr).isConstant(Validator.this.numRecords)) {
 						element.removeFd(rhsAttr);
-						result.invalidFDs.add(new FD(lhs, rhsAttr));
+                        //TODO: we could dive in here
+                        result.invalidFDs.add(new OpenBitSetFD(lhs, rhsAttr));
 					}
 					result.intersections++;
 				}
@@ -105,7 +101,10 @@ public class Validator {
 				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
 					if (!Validator.this.plis.get(lhsAttribute).refines(Validator.this.compressedRecords, rhsAttr)) {
 						element.removeFd(rhsAttr);
-						result.invalidFDs.add(new FD(lhs, rhsAttr));
+//                        PrintUtils.print(BitSetUtils.toString(lhs));
+
+                        //TODO: we could dive in here
+						result.invalidFDs.add(new OpenBitSetFD(lhs, rhsAttr));
 					}
 					result.intersections++;
 				}
@@ -122,10 +121,15 @@ public class Validator {
 				
 				rhs.andNot(validRhs); // Now contains all invalid FDs
 				element.setFds(validRhs); // Sets the valid FDs in the FD tree
-				
-				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1))
-					result.invalidFDs.add(new FD(lhs, rhsAttr));
+
+                //TODO: we could dive in here.
+				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
+                    //PrintUtils.print(BitSetUtils.toString(lhs));
+
+                    result.invalidFDs.add(new OpenBitSetFD(lhs, rhsAttr));
+                }
 			}
+			violationCollection.addInvalidFd(result.invalidFDs);
 			return result;
 		}
 	}
@@ -236,11 +240,11 @@ public class Validator {
 			FDLogger.log(Level.FINER, "(G); ");
 			
 			int candidates = 0;
-			for (FD invalidFD : validationResult.invalidFDs) {
+			for (OpenBitSetFD invalidFD : validationResult.invalidFDs) {
 				for (int extensionAttr = 0; extensionAttr < numAttributes; extensionAttr++) {
-					OpenBitSet childLhs = this.extendWith(invalidFD.lhs, invalidFD.rhs, extensionAttr);
+					OpenBitSet childLhs = this.extendWith(invalidFD.getLhs(), invalidFD.getRhs(), extensionAttr);
 					if (childLhs != null) {
-						FDTreeElement child = this.posCover.addFunctionalDependencyGetIfNew(childLhs, invalidFD.rhs);
+						FDTreeElement child = this.posCover.addFunctionalDependencyGetIfNew(childLhs, invalidFD.getRhs());
 						if (child != null) {
 							nextLevel.add(new FDTreeElementLhsPair(child, childLhs));
 							candidates++;
@@ -300,5 +304,17 @@ public class Validator {
 		
 		return childLhs;
 	}
+	//TODO:
+/*
+    private void addInvalidation(OpenBitSet attrs, List<Integer> invalidatingValues){
+        if(!this.invalidationsMap.containsKey(attrs)) {
+            this.invalidationsMap.put(attrs, new ArrayList<>());
+        }
+        while(this.invalidationsMap.get(attrs).size() < invalidatingValues.size())
+            this.invalidationsMap.get(attrs).add(new HashSet<>());
+        for(int i = 0; i < invalidatingValues.size(); i++){
+            this.invalidationsMap.get(attrs).get(i).add(invalidatingValues.get(i));
+        }
+    } */
 
 }

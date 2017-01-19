@@ -3,11 +3,14 @@ package org.mp.naumann.algorithms.fd.structures;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class FDTreeElement {
@@ -16,6 +19,7 @@ public class FDTreeElement {
     OpenBitSet rhsAttributes;
     OpenBitSet rhsFds;
     int numAttributes;
+
 
     FDTreeElement(int numAttributes) {
         this.rhsAttributes = new OpenBitSet(numAttributes);
@@ -83,6 +87,22 @@ public class FDTreeElement {
 
     public boolean isFd(int i) {
         return this.rhsFds.get(i);
+    }
+
+    public Collection<Integer> getFdCollection(){
+        List<Integer> fds = new ArrayList<>();
+        for(int rhsAttr = rhsAttributes.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhsAttributes.nextSetBit(rhsAttr+1)){
+            fds.add(rhsAttr);
+        }
+        return fds;
+    }
+
+    public Collection<FunctionalDependency> getFdCollection(OpenBitSet lhs, ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<IPositionListIndex> plis){
+        List<FunctionalDependency> fds = new ArrayList<>();
+        for(int rhsAttr = rhsAttributes.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhsAttributes.nextSetBit(rhsAttr+1)){
+            fds.add(findFunctionDependency(lhs, rhsAttr, columnIdentifiers, plis));
+        }
+        return fds;
     }
 
     void trimRecursive(int currentDepth, int newDepth) {
@@ -180,6 +200,15 @@ public class FDTreeElement {
         }
         return false;
     }
+    public void removeChildren(int rhs){
+        if(this.children == null) return;
+
+        for(int i = 0; i < numAttributes; i++){
+            if(this.children[i] != null && this.children[i].isFd(rhs)){
+                this.children[i].removeRhsAttribute(rhs);
+            }
+        }
+    }
 
     private boolean isLastNodeOf(int rhs) {
         if (this.children == null)
@@ -226,6 +255,7 @@ public class FDTreeElement {
         for (int childAttr = 0; childAttr < this.numAttributes; childAttr++) {
             FDTreeElement element = this.getChildren()[childAttr];
             if (element != null) {
+
                 lhs.set(childAttr);
                 numFDs += element.addFunctionalDependenciesInto(resultReceiver, lhs, columnIdentifiers, plis);
                 lhs.clear(childAttr);
