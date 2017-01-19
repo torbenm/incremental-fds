@@ -345,8 +345,7 @@ def generateUpdateStatementFromData(dataByTitle, updateId, article, updateStatem
         newValues, oldValues = findNewAndOldValues(update, newValues, oldValues, attributes)
 
     # TODO: this is probably wrong, the logic for how to determine the ::action has to be rethought
-    # basically we have to check whether a statement deleting something leaves nothing but the article_title in the record.
-    # then it should be a delete statement
+    # which we do somewhere else, so we leave this for now
     if len(newValues) == 0:
         updateStatement["::action"] = "delete"
     else:
@@ -362,8 +361,6 @@ def generateUpdateStatementFromData(dataByTitle, updateId, article, updateStatem
 
 
 def transformUpdatesIntoStatements(dataByTitle, baselineDataEntryBlueprint, updateStatementsEntryBlueprint, attributes):
-    ## THIS SHOULD WORK IN DEPENDENCE OF THE ATTRIBUTES
-    ## If we find 'key' and 'Key' and the we will get one match to much
     currentId = 1
 
     baselineData = []
@@ -621,119 +618,30 @@ def writeAsCsv(filename, attributes, statements):
             outfile.write(outputString + "\n")
 
 
+def readInfoboxConfigFromFile():
+    concatLines = ""
+    with open("infobox_config.json", "r", encoding = "utf-8") as infile:
+        for line in infile:
+            concatLines += line
+
+    return json.loads(concatLines)
+
+
 if __name__ == "__main__":
     # infobox config is a mapping of infobox name (i.e. name of the file to be parsed) to the attributes in this infobox
     # these attributes have to be manually copied from the corresponding wikipedia page (wikipedia.org/wiki/Template:Infobox_Name)
     # you can also leave the list empty, then attributes will be detected automatically.
     # THIS WILL SRSLY IMPEDE RUNTIME AND DATA QUALITY, THOUGH! better just don't do it...
 
-    infobox_config = {
-        "infobox disease": [
-            "Name",
-            "Image",
-            "Caption",
-            "DiseasesDB",
-            "ICD10",
-            "ICD9",
-            "ICDO",
-            "OMIM",
-            "MedlinePlus",
-            "eMedicineSubj",
-            "eMedicineTopic",
-            "MeshID",
-        ],
-        # "infobox actor" : [
-        # 	"honorific_prefix",
-        # 	"name",
-        # 	"honorific_suffix",
-        # 	"image",
-        # 	"image_upright",
-        # 	"image_size",
-        # 	"alt",
-        # 	"caption",
-        # 	"native_name",
-        # 	"native_name_lang",
-        # 	"pronunciation",
-        # 	"birth_name",
-        # 	"birth_date",
-        # 	"birth_place",
-        # 	"baptised",
-        # 	"disappeared_date",
-        # 	"disappeared_place",
-        # 	"disappeared_status",
-        # 	"death_date",
-        # 	"death_place",
-        # 	"death_cause",
-        # 	"body_discovered",
-        # 	"resting_place",
-        # 	"resting_place_coordinates",
-        # 	"burial_place",
-        # 	"burial_coordinates",
-        # 	"monuments",
-        # 	"residence",
-        # 	"nationality",
-        # 	"other_names",
-        # 	"citizenship",
-        # 	"education",
-        # 	"alma_mater",
-        # 	"occupation",
-        # 	"years_active",
-        # 	"era",
-        # 	"employer",
-        # 	"organization",
-        # 	"agent",
-        # 	"known_for",
-        # 	"notable_works",
-        # 	"style",
-        # 	"home_town",
-        # 	"salary",
-        # 	"net_worth",
-        # 	"height",
-        # 	"weight",
-        # 	"television",
-        # 	"title",
-        # 	"term",
-        # 	"predecessor",
-        # 	"successor",
-        # 	"party",
-        # 	"movement",
-        # 	"opponents",
-        # 	"boards",
-        # 	"religion",
-        # 	"denomination",
-        # 	"criminal_charge",
-        # 	"criminal_penalty",
-        # 	"criminal_status",
-        # 	"spouse",
-        # 	"partner",
-        # 	"children",
-        # 	"parents",
-        # 	"mother",
-        # 	"father",
-        # 	"relatives",
-        # 	"family",
-        # 	"callsign",
-        # 	"awards",
-        # 	"website",
-        # 	"module",
-        # 	"module2",
-        # 	"module3",
-        # 	"module4",
-        # 	"module5",
-        # 	"module6",
-        # 	"signature",
-        # 	"signature_size",
-        # 	"signature_alt",
-        # 	"footnotes",
-        # ],
-    }
+    # TODO: move this to separate file
 
-    # also somehow try to solve delete vs. update statements
-    # statement == all changes with the same timestamp
-    # so for one statement check whether, in case values are deleted, there are still non empty field left in the record (except id/article name?)
+    infoboxConfig = readInfoboxConfigFromFile()
+
 
     # select what types of update statements you want
     ## ATTENTION: ommiting inserts is probably bad idea as it would result in inconsistent data (i.e. updateStatements targeting nonexisting records)
-    statementTypesToBeParsed = ["insert", "delete", "update"]
+    # "delete", "update"
+    statementTypesToBeParsed = ["insert", ]
 
-    parseInfoboxUpdatesToCsv(infobox_config, statementTypesToBeParsed)
+    # TODO: duplicate statements
+    parseInfoboxUpdatesToCsv(infoboxConfig, statementTypesToBeParsed)
