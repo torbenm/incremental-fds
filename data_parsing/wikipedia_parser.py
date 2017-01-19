@@ -566,20 +566,40 @@ def filterUpdatesBySelection(updateStatements, statementTypesToBeParsed):
 
 def writeBaselineDataAndUpdateStatementsToDisk(targetInfoboxType, baselineData, updateStatements, attributes):
     print("Writing baseline csv...")
-    baselineFilename = str("data/baseline/" + targetInfoboxType + "_baseline_data.csv").replace(" ", "_")
-    baselineAttributes = arrangeBaselineAttributes(attributes)
-    writeAsCsv(baselineFilename, baselineAttributes, baselineData)
+    writeBaselineData(attributes, baselineData, targetInfoboxType)
 
     print("Writing updates csv...")
+    writeUpdateStatements(attributes, targetInfoboxType, updateStatements)
+
+
+def writeUpdateStatements(attributes, targetInfoboxType, updateStatements):
     updateFilename = str("data/updates/" + targetInfoboxType + "_update_statements.csv").replace(" ", "_")
     updateAttributes = arrangeUpdateAttributes(attributes)
-    writeAsCsv(updateFilename, updateAttributes, updateStatements)
+    updateRecordsString = transformRecordsToString(updateAttributes, updateStatements)
+    writeAsCsv(updateFilename, updateAttributes, updateRecordsString)
+
+
+def writeBaselineData(attributes, baselineData, targetInfoboxType):
+    baselineFilename = str("data/baseline/" + targetInfoboxType + "_baseline_data.csv").replace(" ", "_")
+    baselineAttributes = arrangeBaselineAttributes(attributes)
+    baselineRecordsStrings = transformRecordsToString(baselineAttributes, baselineData)
+    writeAsCsv(baselineFilename, baselineAttributes, baselineRecordsStrings)
+
+
+def transformRecordsToString(attributes, records):
+    uniqueRecords = set()
+    recordStrings = []
+    for record in records:
+        recordString = statementToString(attributes, record)
+        if recordString not in uniqueRecords:
+            uniqueRecords.add(recordString)
+            recordStrings.append(recordString)
+    return recordStrings
 
 
 def arrangeBaselineAttributes(attributes):
     baselineAttributes = list(attributes)
     baselineAttributes.insert(0, "article_title")
-    baselineAttributes.insert(0, "id")
 
     return baselineAttributes
 
@@ -587,13 +607,13 @@ def arrangeBaselineAttributes(attributes):
 def arrangeUpdateAttributes(attributes):
     updateAttributes = list(attributes)
     updateAttributes.insert(0, "article_title")
-    updateAttributes.insert(0, "::record")
     updateAttributes.insert(0, "::action")
 
     return updateAttributes
 
 
-def writeAsCsv(filename, attributes, statements):
+def writeAsCsv(filename, attributes, records):
+    uniqueStatements = set()
     with open(filename, "w") as outfile:
         header = ""
         count = 0
@@ -604,23 +624,27 @@ def writeAsCsv(filename, attributes, statements):
             count += 1
         outfile.write(header + "\n")
 
-        for entry in statements:
-            outputString = ""
-            count = 0
-            for key in attributes:
-                if count != 0:
-                    outputString += ","
-                if entry[key] is not None:
-                    outputString += "\"" + str(entry[key]) + "\""
-                else:
-                    outputString += "\"\""
-                count += 1
-            outfile.write(outputString + "\n")
+        for record in records:
+            outfile.write(record + "\n")
+
+
+def statementToString(attributes, entry):
+    outputString = ""
+    count = 0
+    for key in attributes:
+        if count != 0:
+            outputString += ","
+        if entry[key] is not None:
+            outputString += "\"" + str(entry[key]) + "\""
+        else:
+            outputString += "\"\""
+        count += 1
+    return outputString
 
 
 def readInfoboxConfigFromFile():
     concatLines = ""
-    with open("infobox_config.json", "r", encoding = "utf-8") as infile:
+    with open("infobox_config.json", "r", encoding="utf-8") as infile:
         for line in infile:
             concatLines += line
 
@@ -633,15 +657,13 @@ if __name__ == "__main__":
     # you can also leave the list empty, then attributes will be detected automatically.
     # THIS WILL SRSLY IMPEDE RUNTIME AND DATA QUALITY, THOUGH! better just don't do it...
 
-    # TODO: move this to separate file
-
     infoboxConfig = readInfoboxConfigFromFile()
 
 
     # select what types of update statements you want
-    ## ATTENTION: ommiting inserts is probably bad idea as it would result in inconsistent data (i.e. updateStatements targeting nonexisting records)
-    # "delete", "update"
-    statementTypesToBeParsed = ["insert", ]
+    # either use ["insert"] or ["insert, "delete", "update"] to guarantee data consistency
+    statementTypesToBeParsed = ["insert"]
 
     # TODO: duplicate statements
+    # done?
     parseInfoboxUpdatesToCsv(infoboxConfig, statementTypesToBeParsed)
