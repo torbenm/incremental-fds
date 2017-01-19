@@ -1,5 +1,7 @@
 package org.mp.naumann.algorithms.fd;
 
+import ResourceConnection.ResourceConnector;
+import ResourceConnection.ResourceType;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
@@ -16,21 +18,19 @@ import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
-import java.net.URL;
 import java.util.List;
 import java.util.logging.Level;
 
 public class IncrementalFDDemo {
 
-    private static final String batchFileName = "csv/inserts.adult.csv";
+    private static final String batchFileName = "inserts.adult.csv";
     private static final String schema = "";
-    private static final String tableName = "benchmark.adult";
+    private static final String tableName = "adult";
     private static final int batchSize = 100;
 
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
         FDLogger.setLevel(Level.FINER);
-        try (DataConnector dc = new JdbcDataConnector(
-                ConnectionManager.getCsvConnection(IncrementalFDDemo.class, "", ","))) {
+        try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceType.BASELINE, ","))) {
 
             // execute initial algorithm
             Table table = dc.getTable(schema, tableName);
@@ -43,10 +43,8 @@ public class IncrementalFDDemo {
             FDIntermediateDatastructure ds = hyfd.getIntermediateDataStructure();
 
             // create batch source & processor for inserts
-            URL res = IncrementalFDDemo.class.getClassLoader().getResource(batchFileName);
-            if (res == null)
-                throw new RuntimeException("Couldn't find csv file for batches.");
-            StreamableBatchSource batchSource = new CsvFileBatchSource(res.getFile(), schema, tableName, batchSize);
+            String batchFile = ResourceConnector.getResourcePath(ResourceType.FULL_BATCHES, batchFileName);
+            StreamableBatchSource batchSource = new CsvFileBatchSource(batchFile, schema, tableName, batchSize);
             DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
             BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 

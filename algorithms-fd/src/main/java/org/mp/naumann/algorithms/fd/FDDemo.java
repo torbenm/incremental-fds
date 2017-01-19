@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd;
 
+import ResourceConnection.ResourceType;
 import org.mp.naumann.algorithms.InitialAlgorithm;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
@@ -18,7 +19,7 @@ public class FDDemo {
 		SpeedBenchmark.enable();
         SpeedBenchmark.addEventListener(System.out::println);
         SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
-        DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection("/test", ";"));
+        DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceType.TEST, ";"));
 		SpeedBenchmark.lap(BenchmarkLevel.ALGORITHM, "Loaded dataconnector");
 		InitialAlgorithm<List<FunctionalDependency>, ?> hyfd = new FDInitialAlgorithm("hyfd", dc, "test", "countries");
 		List<FunctionalDependency> fds = hyfd.execute();

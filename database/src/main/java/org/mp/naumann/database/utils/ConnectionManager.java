@@ -1,5 +1,7 @@
 package org.mp.naumann.database.utils;
 
+import ResourceConnection.ResourceConnector;
+import ResourceConnection.ResourceType;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.jdbc.ConnectionInfo;
 
@@ -11,9 +13,6 @@ import java.sql.DriverManager;
 import java.util.Properties;
 
 public class ConnectionManager {
-
-    private static final String defaultCsvSeparator = ",";
-    private static final String defaultCsvDir = "";
 
     private static Connection getConnection(String className, ConnectionInfo ci) throws ConnectionException {
         Connection connection;
@@ -54,16 +53,10 @@ public class ConnectionManager {
         return getConnection("org.postgresql.Driver", getPostgresConnectionInfo());
     }
 
-    public static Connection getCsvConnection(String csvDir, String separator) throws ConnectionException {
-        return getCsvConnection(ConnectionManager.class, csvDir, separator);
-    }
-
-    public static Connection getCsvConnection(Class<?> clazz, String csvDir, String separator) throws ConnectionException {
-        URL csvResourceURL = clazz.getClassLoader().getResource("csv");
-        if (csvResourceURL == null)
-            throw new ConnectionException("Can't find resource directory");
+    public static Connection getCsvConnection(ResourceType resourceType, String separator) throws ConnectionException {
+        String resourcePath = ResourceConnector.getResourcePath(resourceType, "");
         ConnectionInfo ci = new ConnectionInfo();
-        ci.connectionString = "jdbc:relique:csv:" + csvResourceURL.getFile() + csvDir + "?separator=" + separator;
+        ci.connectionString = "jdbc:relique:csv:" + resourcePath + "?separator=" + separator;
         return getConnection("org.relique.jdbc.csv.CsvDriver", ci);
     }
 
@@ -71,14 +64,6 @@ public class ConnectionManager {
         ConnectionInfo ci = new ConnectionInfo();
         ci.connectionString = "jdbc:relique:csv:" + absoluteFilePath + "?separator=" + separator;
         return getConnection("org.relique.jdbc.csv.CsvDriver", ci);
-    }
-
-    public static Connection getCsvConnection(String csvDir) throws ConnectionException {
-        return getCsvConnection(csvDir, defaultCsvSeparator);
-    }
-
-    public static Connection getCsvConnection() throws ConnectionException {
-        return getCsvConnection(defaultCsvDir, defaultCsvSeparator);
     }
 
 }

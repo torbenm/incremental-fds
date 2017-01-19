@@ -1,13 +1,11 @@
 package ResourceConnection;
 
-/**
- * Created by dennis on 01.12.16.
- */
 public enum ResourceType {
     TEST("test/"),
     BASELINE("baseline/"),
     UPDATE("update/"),
-    BENCHMARK("benchmark/");
+    BENCHMARK("benchmark/"),
+    FULL_BATCHES("full_batches/");
 
     private String path;
 

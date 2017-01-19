@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd.fixtures;
 
+import ResourceConnection.ResourceType;
 import com.google.common.collect.ImmutableList;
 
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
@@ -28,7 +29,7 @@ public class BridgesFixture implements AlgorithmFixture{
 
 
     public Table getInputGenerator() throws ConnectionException {
-        JdbcDataConnector jdbcDataConnector = new JdbcDataConnector(ConnectionManager.getCsvConnection("/test"));
+        JdbcDataConnector jdbcDataConnector = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceType.TEST, ","));
         return jdbcDataConnector.getTable("test", relationName);
     }
 

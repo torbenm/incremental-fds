@@ -1,5 +1,6 @@
 package org.mp.naumann.benchmarks;
 
+import ResourceConnection.ResourceType;
 import org.mp.naumann.BenchmarksApplication;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.InitialAlgorithm;
@@ -29,7 +30,7 @@ public class AverageAlgorithmBenchmark implements AlgorithmBenchmark {
         batchSource = new CsvFileBatchSource(file, "", "", batchSize);
         DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
 
-        JdbcDataConnector jdbcDataConnector = new JdbcDataConnector(ConnectionManager.getCsvConnection(BenchmarksApplication.class, "", ","));
+        JdbcDataConnector jdbcDataConnector = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceType.BENCHMARK, ","));
         initialAlgorithm = new AverageInitialAlgorithm(column, table, jdbcDataConnector, "benchmark");
 
         incrementalAlgorithm = new AverageIncrementalAlgorithm(column);
