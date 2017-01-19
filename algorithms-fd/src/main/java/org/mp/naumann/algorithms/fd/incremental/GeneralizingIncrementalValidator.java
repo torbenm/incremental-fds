@@ -1,7 +1,5 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
@@ -12,7 +10,6 @@ import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
-import org.mp.naumann.database.data.ColumnIdentifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +21,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-public class BottomUpIncrementalValidator {
+public class GeneralizingIncrementalValidator {
 
 	private FDSet negCover;
 	private FDTree posCover;
@@ -44,7 +41,7 @@ public class BottomUpIncrementalValidator {
 		validationPruners.add(ValidationPruner);
 	}
 
-	public BottomUpIncrementalValidator(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
+	public GeneralizingIncrementalValidator(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
 		this.negCover = negCover;
 		this.posCover = posCover;
 		this.numRecords = compressedRecords.length;
@@ -114,10 +111,10 @@ public class BottomUpIncrementalValidator {
 				return result;
 			result.validations = result.validations + rhsSize;
 
-			if (BottomUpIncrementalValidator.this.level == 0) {
+			if (GeneralizingIncrementalValidator.this.level == 0) {
 				// Check if rhs is unique
 				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
-					if (!BottomUpIncrementalValidator.this.plis.get(rhsAttr).isConstant(BottomUpIncrementalValidator.this.numRecords)) {
+					if (!GeneralizingIncrementalValidator.this.plis.get(rhsAttr).isConstant(GeneralizingIncrementalValidator.this.numRecords)) {
 						element.removeFd(rhsAttr);
 					}else{
 					    // The fd is valid
@@ -127,11 +124,11 @@ public class BottomUpIncrementalValidator {
 					result.intersections++;
 				}
 			}
-			else if (BottomUpIncrementalValidator.this.level == 1) {
+			else if (GeneralizingIncrementalValidator.this.level == 1) {
 				// Check if lhs from plis refines rhs
 				int lhsAttribute = lhs.nextSetBit(0);
 				for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
-                    if (!BottomUpIncrementalValidator.this.plis.get(lhsAttribute).refines(BottomUpIncrementalValidator.this.compressedRecords, rhsAttr)) {
+                    if (!GeneralizingIncrementalValidator.this.plis.get(lhsAttribute).refines(GeneralizingIncrementalValidator.this.compressedRecords, rhsAttr)) {
 						element.removeFd(rhsAttr);
 					}else{
                         result.validFDs.add(new FD(lhs, rhsAttr));
@@ -144,7 +141,7 @@ public class BottomUpIncrementalValidator {
 				// Check if lhs from plis plus remaining inverted plis refines rhs
 				int firstLhsAttr = lhs.nextSetBit(0);
 				lhs.clear(firstLhsAttr);
-				OpenBitSet validRhs = BottomUpIncrementalValidator.this.plis.get(firstLhsAttr).refines(BottomUpIncrementalValidator.this.compressedRecords, lhs, rhs, result.comparisonSuggestions);
+				OpenBitSet validRhs = GeneralizingIncrementalValidator.this.plis.get(firstLhsAttr).refines(GeneralizingIncrementalValidator.this.compressedRecords, lhs, rhs, result.comparisonSuggestions);
 				lhs.set(firstLhsAttr);
 				
 				result.intersections++;

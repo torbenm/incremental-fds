@@ -22,8 +22,6 @@ import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
-import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.processor.batch.Batch;
@@ -184,7 +182,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         if(version.getDeletePruningStrategy() == IncrementalFDVersion.DeletePruningStrategy.ANNOTATION){
 
             //FDTree posCover = new FDTree(columns.size(), -1);
-            BottomUpIncrementalValidator validator = new BottomUpIncrementalValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, false, memoryGuardian);
+            GeneralizingIncrementalValidator validator = new GeneralizingIncrementalValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, false, memoryGuardian);
 
             Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
 

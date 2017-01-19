@@ -23,12 +23,12 @@ import java.util.logging.Level;
 
 public class IncrementalFDDemo {
 
-   /*   private static final String batchFileName = "csv/deletes.benchmark.adult.csv";
+      private static final String batchFileName = "csv/deletes.benchmark.adult.csv";
        private static final String schema = "";
        private static final String tableName = "benchmark.adult";
        private static final String csvDir = "/";
-       private static final int batchSize = 100; //*/
-      private static final String batchFileName = "csv/deletes.deletesample.csv";
+       private static final int batchSize = 1200; //*/
+     /* private static final String batchFileName = "csv/deletes.deletesample.csv";
        private static final String schema = "";
        private static final String tableName = "test.deletesample";
        private static final String csvDir = "/";
