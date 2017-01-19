@@ -6,6 +6,8 @@ import os
 import re
 import collections
 
+import sys
+
 
 def calculate_statistics():
     # filename = "wikipedia_infobox_dataset_head_100.json"
@@ -232,24 +234,31 @@ def groupUpdatesById(updates, attributes):
 
 
 def groupDataIntoBaselineAndUpdates(targetInfoboxType, attributes):
-    dataByTitle = {}
+    baselineRecords = []
+    updateRecords = []
+
+    currentId = 1
 
     with open("files_by_infobox_type/" + targetInfoboxType, 'r', encoding='utf-8') as infile:
         for line in infile:
             data = json.loads(line)
 
-            articleTitle = data["article_title"]
-
-            if articleTitle not in dataByTitle:
-                dataByTitle[articleTitle] = {}
-
             updatesById, attributes = groupUpdatesById(data, attributes)
 
             orderedUpdateIds = sorted(updatesById.keys())
-            dataByTitle[articleTitle]["baseline"] = updatesById.pop(orderedUpdateIds[0])
-            dataByTitle[articleTitle]["updates"] = updatesById
+            baselineData = updatesById.pop(orderedUpdateIds[0])
+            updateData = updatesById
 
-    return dataByTitle, attributes
+            articleTitle = data["article_title"]
+            print(articleTitle)
+            baselineRecords.append(generateBaselineRecord(baselineData, attributes, currentId, articleTitle))
+
+            for entry in updateData.values():
+                updateRecords.append(generateUpdateRecord(entry, attributes, currentId, articleTitle))
+
+            currentId += 1
+
+    return baselineRecords, updateRecords
 
 
 def createBaselineAndUpdateDummies(attributes):
@@ -269,21 +278,21 @@ def createBaselineAndUpdateDummies(attributes):
     return baselineDataEntryBlueprint, updateStatementsEntryBlueprint
 
 
-def initBaselineDataEntry(article, baselineDataEntryBlueprint, currentId):
-    baselineDataEntry = copy.deepcopy(baselineDataEntryBlueprint)
+def initBaselineRecord(article, baselineRecordBlueprint, currentId):
+    baselineDataEntry = copy.deepcopy(baselineRecordBlueprint)
     baselineDataEntry["id"] = str(currentId)
     baselineDataEntry["article_title"] = article.replace("\"", "\"\"")
     return baselineDataEntry
 
 
-def addValuesToBaselineDataEntry(update, attributes, baselineDataEntry):
+def addValuesToBaselineRecord(update, attributes, baselineDataEntry):
     key = update["key"].lower()
     if "newvalue" in update and key in attributes:
         baselineDataEntry[key] = update["newvalue"].replace("|", "").replace("\n", "").replace("\"", "\"\"")
 
 
-def initUpdateStatement(article, updateStatementsEntryBlueprint, currentId):
-    updateStatement = copy.deepcopy(updateStatementsEntryBlueprint)
+def initUpdateStatement(article, updateRecordBlueprint, currentId):
+    updateStatement = copy.deepcopy(updateRecordBlueprint)
     updateStatement["::record"] = currentId
     updateStatement["article_title"] = article.replace("\"", "\"\"")
     return updateStatement
@@ -313,14 +322,55 @@ def addValuesToUpdateStatement(updateStatement, attributes, newValues, oldValues
         updateStatement[attribute] = compundValue
 
 
-def generateBaselineEntryFromData(dataByTitle, article, baselineDataEntryBlueprint, currentId, attributes):
-    baselineDataEntry = initBaselineDataEntry(article, baselineDataEntryBlueprint, currentId)
+def getBaselineRecordBlueprint(attributes):
+    baselineRecordBlueprint = collections.OrderedDict()
+    baselineRecordBlueprint["id"] = ""
+    baselineRecordBlueprint["article_title"] = ""
+    for attribute in attributes:
+        baselineRecordBlueprint[attribute] = ""
 
-    for update in dataByTitle[article]["baseline"]:
-        addValuesToBaselineDataEntry(update, attributes, baselineDataEntry)
+    return baselineRecordBlueprint
 
-    return baselineDataEntry
 
+def generateBaselineRecord(data, attributes, currentId, articleTitle):
+    baselineRecordBlueprint = getBaselineRecordBlueprint(attributes)
+
+    baselineRecord = initBaselineRecord(articleTitle, baselineRecordBlueprint, currentId)
+
+    for entry in data:
+        addValuesToBaselineRecord(entry, attributes, baselineRecord)
+
+    # for attribute in baselineRecord:
+    #     if baselineRecord[attribute] == None:
+    #         baselineRecord[attribute] = ""
+
+    return baselineRecord
+
+
+def getUpdateRecordBlueprint(attributes):
+    updateRecordBlueprint = collections.OrderedDict()
+    updateRecordBlueprint["::record"] = ""
+    updateRecordBlueprint["article_title"] = ""
+    updateRecordBlueprint["::action"] = ""
+    for attribute in attributes:
+        updateRecordBlueprint[attribute] = ""
+
+    return updateRecordBlueprint
+
+
+def generateUpdateRecord(data, attributes, currentId, articleTitle):
+    updateRecordBlueprint = getUpdateRecordBlueprint(attributes)
+
+    updateRecord = initUpdateStatement(articleTitle, updateRecordBlueprint, currentId)
+
+    for entry in data:
+        addValuesToBaselineRecord(entry, attributes, updateRecord)
+
+    # for attribute in updateRecord:
+    #     if updateRecord[attribute] == None:
+    #         updateRecord[attribute] = ""
+
+    return updateRecord
 
 def checkValidityOfUpdateStatement(updateStatement, attributes):
     isValid = False
@@ -369,8 +419,8 @@ def transformUpdatesIntoStatements(dataByTitle, baselineDataEntryBlueprint, upda
     for article in dataByTitle:
         print(article)
 
-        baselineDataEntry = generateBaselineEntryFromData(dataByTitle, article, baselineDataEntryBlueprint, currentId,
-                                                          attributes)
+        baselineDataEntry = generateBaselineRecord(dataByTitle, article, baselineDataEntryBlueprint, currentId,
+                                                   attributes)
         baselineData.append(baselineDataEntry)
 
         for updateId in dataByTitle[article]["updates"]:
@@ -399,11 +449,11 @@ def splitBaselineDataInHalf(baselineData):
     return baselineData, baselineInserts
 
 
-def transformBaselineInsertsIntoUpdates(baselineInserts, attributes, updateStatementsEntryBlueprint):
+def transformBaselineInsertsIntoUpdates(baselineInserts, attributes):
     insertStatements = []
     keys = list(attributes)
     for baselineInsert in baselineInserts:
-        insertStatement = copy.deepcopy(updateStatementsEntryBlueprint)
+        insertStatement = copy.deepcopy(getUpdateRecordBlueprint(attributes))
         insertStatement["::record"] = baselineInsert["id"]
         insertStatement["article_title"] = baselineInsert["article_title"]
         insertStatement["::action"] = "insert"
@@ -443,8 +493,8 @@ def buildTableFromBaselineData(baselineData):
     return table
 
 
-def applyInsertStatement(baselineDataEntryBlueprint, updateStatement, baselineDataTable):
-    newEntry = copy.deepcopy(baselineDataEntryBlueprint)
+def applyInsertStatement(updateStatement, baselineDataTable, attributes):
+    newEntry = copy.deepcopy(getBaselineRecordBlueprint(attributes))
     targetId = str(updateStatement["::record"])
 
     for attribute in updateStatement:
@@ -499,7 +549,7 @@ def applyUpdateStatement(updateStatement, baselineDataTable, updateMatchCounter,
     return updateMatchCounter, updateMismatchCounter
 
 
-def applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, baselineDataEntryBlueprint):
+def applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, attributes):
     trueDeleteCounter = 0
     falseDeleteCounter = 0
     updateMatchCounter = 0
@@ -507,7 +557,7 @@ def applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, bas
     for updateStatement in updateStatements:
         statementType = updateStatement["::action"]
         if statementType == "insert":
-            applyInsertStatement(baselineDataEntryBlueprint, updateStatement, baselineDataTable)
+            applyInsertStatement(updateStatement, baselineDataTable, attributes)
         elif statementType == "delete":
             applyDeleteStatement(updateStatement, baselineDataTable)
             trueDeleteCounter, falseDeleteCounter = checkForTrueDeleteAndCorrect(updateStatement, baselineDataTable, trueDeleteCounter, falseDeleteCounter)
@@ -518,9 +568,9 @@ def applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, bas
     print("update matches: {}, update mismatches: {}".format(updateMatchCounter, updateMismatchCounter))
 
 
-def determineFinalUpdateStatementType(updateStatements, baselineData, baselineDataEntryBlueprint):
+def determineFinalUpdateStatementType(updateStatements, baselineData, attributes):
     baselineDataTable = buildTableFromBaselineData(baselineData)
-    applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, baselineDataEntryBlueprint)
+    applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, attributes)
 
 
 def parseInfoboxUpdatesToCsv(infoboxConfig, statementTypesToBeParsed):
@@ -529,25 +579,20 @@ def parseInfoboxUpdatesToCsv(infoboxConfig, statementTypesToBeParsed):
 
         print("Now parsing " + targetInfoboxType + "...")
 
-        dataByTitle, attributes = groupDataIntoBaselineAndUpdates(targetInfoboxType, attributes)
-
-        baselineDataEntryBlueprint, updateStatementsEntryBlueprint = createBaselineAndUpdateDummies(attributes)
-        baselineData, updateStatements = transformUpdatesIntoStatements(dataByTitle, baselineDataEntryBlueprint,
-                                                                        updateStatementsEntryBlueprint, attributes)
+        baselineRecords, updateRecords = groupDataIntoBaselineAndUpdates(targetInfoboxType, attributes)
 
         print("Grouping data...")
 
-        baselineData, baselineInserts = splitBaselineDataInHalf(baselineData)
-        insertStatements = transformBaselineInsertsIntoUpdates(baselineInserts, attributes,
-                                                               updateStatementsEntryBlueprint)
-        updateStatements = mergeInsertAndUpdateStatements(insertStatements, updateStatements)
+        baselineRecords, baselineInserts = splitBaselineDataInHalf(baselineRecords)
+        insertStatements = transformBaselineInsertsIntoUpdates(baselineInserts, attributes,)
+        updateRecords = mergeInsertAndUpdateStatements(insertStatements, updateRecords)
 
-        updateStatements = filterUpdatesBySelection(updateStatements, statementTypesToBeParsed)
+        updateRecords = filterUpdatesBySelection(updateRecords, statementTypesToBeParsed)
 
-        determineFinalUpdateStatementType(updateStatements, baselineData, baselineDataEntryBlueprint)
+        determineFinalUpdateStatementType(updateRecords, baselineRecords, attributes)
 
         createTargetDirectoriesIfNecessary()
-        writeBaselineDataAndUpdateStatementsToDisk(targetInfoboxType, baselineData, updateStatements, attributes)
+        writeBaselineDataAndUpdateStatementsToDisk(targetInfoboxType, baselineRecords, updateRecords, attributes)
 
 
 def filterUpdatesBySelection(updateStatements, statementTypesToBeParsed):
