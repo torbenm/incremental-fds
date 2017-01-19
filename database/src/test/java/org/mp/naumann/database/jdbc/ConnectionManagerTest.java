@@ -1,5 +1,6 @@
 package org.mp.naumann.database.jdbc;
 
+import ResourceConnection.ResourceType;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -18,7 +19,7 @@ public class ConnectionManagerTest {
 
 	@Test
 	public void testGetCsvConnection() throws ConnectionException {
-		Connection conn = ConnectionManager.getCsvConnection("", ";");
+		Connection conn = ConnectionManager.getCsvConnection(ResourceType.TEST, ";");
 		try (JdbcDataConnector connector = new JdbcDataConnector(conn)) {
 			Table table = connector.getTable("test", "countries");
 			assertEquals(248, table.getRowCount());
@@ -27,14 +28,8 @@ public class ConnectionManagerTest {
 	}
 
 	@Test
-	public void testGetCsvConnectionInvalidPath() throws ConnectionException {
-		thrown.expect(ConnectionException.class);
-		ConnectionManager.getCsvConnection("/test");
-	}
-
-	@Test
 	public void testGetCsvConnectionWrongSeparator() throws ConnectionException {
-		Connection conn = ConnectionManager.getCsvConnection();
+		Connection conn = ConnectionManager.getCsvConnection(ResourceType.TEST, ",");
 		try (JdbcDataConnector connector = new JdbcDataConnector(conn)) {
 			thrown.expect(RuntimeException.class);
 			connector.getTable("test", "countries").getColumnNames();
