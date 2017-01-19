@@ -1,7 +1,7 @@
 package org.mp.naumann;
 
 import org.apache.commons.io.FileUtils;
-import org.mp.naumann.processor.batch.source.CsvFileBatchSource;
+import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -56,7 +56,7 @@ public class FileSource {
 				while ((line = bufferedReader.readLine()) != null) {
 					// Write header line for inserts
 					if (lineNumber == 0) {
-						inserts.write(CsvFileBatchSource.ACTION_COLUMN_NAME + "," + line);
+						inserts.write(FixedSizeBatchSource.ACTION_COLUMN_NAME + "," + line);
 						baseline.write(line);
 						baselineandone.write(line);
 					} else {

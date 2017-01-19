@@ -13,7 +13,7 @@ import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.jdbc.JdbcDataConnector;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
-import org.mp.naumann.processor.batch.source.CsvFileBatchSource;
+import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
@@ -39,14 +39,14 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
         reset();
         this.currentTestCase = testCase;
 
-        batchSource = new CsvFileBatchSource(incrementalFilePath, "", "", batchSize, stopAfter);
+        batchSource = new FixedSizeBatchSource(incrementalFilePath, "", "", batchSize, stopAfter);
         DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
 
         DataConnector dc = new JdbcDataConnector(csvConnection);
         Table table = dc.getTable(schema, tableName);
         initialAlgorithm = new HyFDInitialAlgorithm(table);
 
-        incrementalAlgorithm = new IncrementalFD(((CsvFileBatchSource)batchSource).getColumnNames(), tableName, version);
+        incrementalAlgorithm = new IncrementalFD(((FixedSizeBatchSource)batchSource).getColumnNames(), tableName, version);
 
         this.batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
         this.batchProcessor.addBatchHandler(incrementalAlgorithm);

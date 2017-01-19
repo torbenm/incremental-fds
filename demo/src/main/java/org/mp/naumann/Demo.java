@@ -9,7 +9,7 @@ import org.mp.naumann.algorithms.result.PrintResultListener;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.processor.BatchProcessor;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
-import org.mp.naumann.processor.batch.source.CsvFileBatchSource;
+import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
@@ -22,7 +22,7 @@ public class Demo {
 
 	public static void main(String[] args) throws ClassNotFoundException, ConnectionException {
 		String file = ResourceConnector.getResourcePath(ResourceType.FULL_BATCHES, "inserts.countries.csv");
-		StreamableBatchSource batchSource = new CsvFileBatchSource(file, SCHEMA, TABLE, BATCH_SIZE);
+		StreamableBatchSource batchSource = new FixedSizeBatchSource(file, SCHEMA, TABLE, BATCH_SIZE);
 		DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
 		BatchProcessor bp = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 
