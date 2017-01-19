@@ -10,7 +10,7 @@ import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.jdbc.JdbcDataConnector;
 import org.mp.naumann.database.utils.ConnectionManager;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
-import org.mp.naumann.processor.batch.source.CsvFileBatchSource;
+import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
@@ -27,7 +27,7 @@ public class AverageAlgorithmBenchmark implements AlgorithmBenchmark {
                                     String column, String table) throws ConnectionException {
         this.currentTestCase = testCase;
         String file = BenchmarksApplication.class.getResource(incrementalFileName).getPath();
-        batchSource = new CsvFileBatchSource(file, "", "", batchSize);
+        batchSource = new FixedSizeBatchSource(file, "", "", batchSize);
         DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
 
         JdbcDataConnector jdbcDataConnector = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceType.BENCHMARK, ","));

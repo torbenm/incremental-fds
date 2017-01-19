@@ -13,7 +13,7 @@ import org.mp.naumann.database.jdbc.JdbcDataConnector;
 import org.mp.naumann.database.utils.ConnectionManager;
 import org.mp.naumann.processor.BatchProcessor;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
-import org.mp.naumann.processor.batch.source.CsvFileBatchSource;
+import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
@@ -57,7 +57,7 @@ public class IncrementalFDDemo {
 
             // create batch source & processor for inserts
             String batchFile = ResourceConnector.getResourcePath(ResourceType.FULL_BATCHES, batchFileName);
-            StreamableBatchSource batchSource = new CsvFileBatchSource(batchFile, schema, tableName, batchSize);
+            StreamableBatchSource batchSource = new FixedSizeBatchSource(batchFile, schema, tableName, batchSize);
             DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
             BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 

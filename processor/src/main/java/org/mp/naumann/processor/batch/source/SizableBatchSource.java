@@ -7,12 +7,9 @@ import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.ListBatch;
 
-public abstract class SizableBatchSource extends AbstractBatchSource implements StreamableBatchSource{
+public abstract class SizableBatchSource extends CsvFileBatchSource implements StreamableBatchSource{
 
     private final int batchSize;
-    private final List<Statement> statementList = new ArrayList<>();
-    private final String schema;
-    private final String tableName;
     private boolean streaming = false;
     private boolean doneFilling = false;
     private int currentStatementPosition = 0;
@@ -20,14 +17,12 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
     private int currentBatch = 0;
 
     public SizableBatchSource(String schema, String tableName, int batchSize) {
-        this.schema = schema;
+        super(schema, tableName);
     	this.batchSize = batchSize;
-        this.tableName = tableName;
     }
+
     public SizableBatchSource(String schema, String tableName, int batchSize, int stopAfter) {
-        this.schema = schema;
-        this.batchSize = batchSize;
-        this.tableName = tableName;
+        this(schema, tableName, batchSize);
         this.stopAfter = stopAfter;
     }
 
@@ -63,7 +58,7 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
             forceStream();
     }
 
-    protected void addStatement(String tableName, Statement stmt){
+    protected void addStatement(Statement stmt){
         this.statementList.add(stmt);
         if(streaming)
             weakStream();
@@ -120,12 +115,6 @@ public abstract class SizableBatchSource extends AbstractBatchSource implements 
     protected boolean hasSomethingToStream(){
         return statementList.size() > currentStatementPosition;
     }
-
-    public String getTableName() {
-        return tableName;
-    }
-
-    public String getSchema() { return schema; }
 
     protected int getCurrentStatementPosition() {
         return currentStatementPosition;

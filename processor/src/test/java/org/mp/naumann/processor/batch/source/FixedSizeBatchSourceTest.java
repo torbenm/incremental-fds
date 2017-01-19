@@ -5,13 +5,13 @@ import ResourceConnection.ResourceType;
 import org.junit.Before;
 import org.junit.Test;
 
-public class CsvFileBatchSourceTest {
+public class FixedSizeBatchSourceTest {
 
-    CsvFileBatchSource csv;
+    FixedSizeBatchSource csv;
 
     @Before
     public void init(){
-        csv = new CsvFileBatchSource(
+        csv = new FixedSizeBatchSource(
                 ResourceConnector.getResourcePath(ResourceType.TEST, "test.csv"),
                 "", "demotable", 5
         );

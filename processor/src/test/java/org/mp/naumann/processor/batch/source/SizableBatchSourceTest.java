@@ -28,11 +28,6 @@ public class SizableBatchSourceTest {
     }
 
     @Test
-    public void testGetTableName() {
-        assertEquals(TABLE_NAME, sbs.getTableName());
-    }
-
-    @Test
     public void testStartAndStopStreaming() {
         sbs.startStreaming();
         assertTrue(sbs.isStreaming());
@@ -150,7 +145,7 @@ public class SizableBatchSourceTest {
 
     
     private void addStatement(){
-        sbs.addStatement(TABLE_NAME, new FakeDeleteStatement());
+        sbs.addStatement(new FakeDeleteStatement());
     }
 
 }
