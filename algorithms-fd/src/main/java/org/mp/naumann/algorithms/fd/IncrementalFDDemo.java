@@ -1,9 +1,10 @@
 package org.mp.naumann.algorithms.fd;
 
+import ResourceConnection.ResourceConnector;
+import ResourceConnection.ResourceType;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
-import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
@@ -17,18 +18,17 @@ import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
-import java.net.URL;
 import java.util.List;
 import java.util.logging.Level;
 
 public class IncrementalFDDemo {
 
-      private static final String batchFileName = "csv/deletes.benchmark.adult.csv";
+      private static final String batchFileName = "deletes.adult.csv";
        private static final String schema = "";
        private static final String tableName = "benchmark.adult";
-       private static final String csvDir = "/";
        private static final int batchSize = 1200; //*/
-     /* private static final String batchFileName = "csv/deletes.deletesample.csv";
+    private static final ResourceType resourceType = ResourceType.BENCHMARK;
+     /* private static final String batchFileName = "deletes.deletesample.csv";
        private static final String schema = "";
        private static final String tableName = "test.deletesample";
        private static final String csvDir = "/";
@@ -41,12 +41,13 @@ public class IncrementalFDDemo {
 
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
         FDLogger.setLevel(Level.INFO);
-        try (DataConnector dc = new JdbcDataConnector(
-                ConnectionManager.getCsvConnection(IncrementalFDDemo.class, csvDir, ","))) {
+        IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom").addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION);
+
+        try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(resourceType, ","))) {
 
             // execute initial algorithm
             Table table = dc.getTable(schema, tableName);
-            HyFDInitialAlgorithm hyfd = new HyFDInitialAlgorithm(table);
+            HyFDInitialAlgorithm hyfd = new HyFDInitialAlgorithm(configuration, table);
             List<FunctionalDependency> fds = hyfd.execute();
             FDLogger.log(Level.INFO, String.format("Original FD count: %s", fds.size()));
             FDLogger.log(Level.INFO, String.format("Batch size: %s", batchSize));
@@ -55,15 +56,13 @@ public class IncrementalFDDemo {
             FDIntermediateDatastructure ds = hyfd.getIntermediateDataStructure();
 
             // create batch source & processor for inserts
-            URL res = IncrementalFDDemo.class.getClassLoader().getResource(batchFileName);
-            if (res == null)
-                throw new RuntimeException("Couldn't find csv file for batches.");
-            StreamableBatchSource batchSource = new CsvFileBatchSource(res.getFile(), schema, tableName, batchSize);
+            String batchFile = ResourceConnector.getResourcePath(ResourceType.FULL_BATCHES, batchFileName);
+            StreamableBatchSource batchSource = new CsvFileBatchSource(batchFile, schema, tableName, batchSize);
             DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
             BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 
             // create incremental algorithm
-            IncrementalFD algorithm = new IncrementalFD(table.getColumnNames(), tableName, IncrementalFDVersion.LATEST);
+            IncrementalFD algorithm = new IncrementalFD(table.getColumnNames(), tableName, configuration);
             IncrementalFDResultListener listener = new IncrementalFDResultListener();
             algorithm.addResultListener(listener);
             algorithm.setIntermediateDataStructure(ds);

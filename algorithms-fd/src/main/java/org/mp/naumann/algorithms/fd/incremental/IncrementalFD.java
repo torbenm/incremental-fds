@@ -12,21 +12,25 @@ import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
-import org.mp.naumann.algorithms.fd.incremental.bloom.AllCombinationsBloomGenerator;
-import org.mp.naumann.algorithms.fd.incremental.bloom.BloomPruningStrategy;
-import org.mp.naumann.algorithms.fd.incremental.bloom.CurrentFDBloomGenerator;
-import org.mp.naumann.algorithms.fd.incremental.simple.ExistingValuesPruningStrategy;
+import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.incremental.IncrementalDataStructureBuilder;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.RecomputeDataStructureBuilder;
+import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.AllCombinationsBloomGenerator;
+import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.BloomPruningStrategy;
+import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.CurrentFDBloomGenerator;
+import org.mp.naumann.algorithms.fd.incremental.pruning.simple.ExistingValuesPruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
-import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.processor.batch.Batch;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +41,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
     private static final boolean VALIDATE_PARALLEL = true;
     private static final float EFFICIENCY_THRESHOLD = 0.01f;
-    private IncrementalFDVersion version = IncrementalFDVersion.LATEST;
+    private IncrementalFDConfiguration version = IncrementalFDConfiguration.LATEST;
 
     private final List<String> columns;
     private FDTree posCover;
@@ -47,14 +51,14 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     private FDIntermediateDatastructure intermediateDatastructure;
     private boolean initialized = false;
 
-    private IncrementalPLIBuilder incrementalPLIBuilder;
+    private DataStructureBuilder dataStructureBuilder;
     private BloomPruningStrategy advancedBloomPruning;
     private ExistingValuesPruningStrategy simplePruning;
     private BloomPruningStrategy bloomPruning;
     private FDSet negCover;
     private ViolationCollection violationCollection;
 
-    public IncrementalFD(List<String> columns, String tableName, IncrementalFDVersion version) {
+    public IncrementalFD(List<String> columns, String tableName, IncrementalFDConfiguration version) {
         this(columns, tableName);
         this.version = version;
     }
@@ -80,31 +84,31 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     public void initialize() {
         this.posCover = intermediateDatastructure.getPosCover();
         this.negCover = intermediateDatastructure.getNegCover();
+        this.violationCollection = intermediateDatastructure.getViolatingValues();
 
         PLIBuilder pliBuilder = intermediateDatastructure.getPliBuilder();
-        List<Integer> pliSequence = pliBuilder.getPliOrder();
 
-        List<String> orderedColumns = pliSequence.stream().map(columns::get).collect(Collectors.toList());
-
+        List<Integer> pliOrder = pliBuilder.getPliOrder();
+        List<String> orderedColumns = pliOrder.stream().map(columns::get).collect(Collectors.toList());
         List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
-
-        if (version.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.BLOOM) {
+        if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {
             bloomPruning = new BloomPruningStrategy(orderedColumns).addGenerator(new AllCombinationsBloomGenerator(2));
-            bloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliSequence);
+            bloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder);
         }
-        if (version.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.BLOOM_ADVANCED) {
+
+        if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM_ADVANCED)) {
             advancedBloomPruning = new BloomPruningStrategy(orderedColumns)
                     .addGenerator(new CurrentFDBloomGenerator(posCover));
-            advancedBloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliSequence);
+            advancedBloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder);
         }
-        if (version.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.SIMPLE) {
+        if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.SIMPLE)) {
             simplePruning = new ExistingValuesPruningStrategy(columns);
         }
-        if(version.getDeletePruningStrategy() == IncrementalFDVersion.DeletePruningStrategy.ANNOTATION){
-            violationCollection = intermediateDatastructure.getViolatingValues();
+        if(version.recomputesDataStructures()) {
+            dataStructureBuilder = new RecomputeDataStructureBuilder(pliBuilder, this.version, this.columns, pliOrder);
+        } else {
+            dataStructureBuilder = new IncrementalDataStructureBuilder(pliBuilder, this.version, this.columns, pliOrder);
         }
-
-        incrementalPLIBuilder = new IncrementalPLIBuilder(pliBuilder, this.version, this.columns);
     }
 
     @Override
@@ -119,44 +123,40 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         FDLogger.log(Level.FINE, "Started IncrementalFD for new Batch");
         SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
 
-        // Update datastructures with current batch
-        CompressedDiff diff = incrementalPLIBuilder.update(batch);
-        List<PositionListIndex> plis = incrementalPLIBuilder.getPlis();
-        int[][] compressedRecords = incrementalPLIBuilder.getCompressedRecord();
+        CompressedDiff diff = dataStructureBuilder.update(batch);
+        List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
+        CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecord();
 
+        // Currently we don't have a version that handles both inserts and deletes well,
+        // so we just 'escape' to handling only deletes once we have some.
         if(diff.getDeletedRecords().length > 0){
             return validateDeletes(diff, compressedRecords, plis);
         }
-
-        // Create Validator, Sampler & Inductor
         IncrementalValidator validator = new IncrementalValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
-        Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
+        IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
                 intermediateDatastructure.getValueComparator(), this.memoryGuardian);
-        Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
 
-        // Add validation pruner for inserts
-        if (version.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.BLOOM) {
+        IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
+        if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {
             validator.addValidationPruner(bloomPruning.analyzeBatch(batch));
         }
-        if (version.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.BLOOM_ADVANCED) {
+        if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM_ADVANCED)) {
             validator.addValidationPruner(advancedBloomPruning.analyzeBatch(batch));
         }
-        if (version.getInsertPruningStrategy() == IncrementalFDVersion.InsertPruningStrategy.SIMPLE) {
+        if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.SIMPLE)) {
             validator.addValidationPruner(simplePruning.analyzeDiff(diff));
         }
 
         FDLogger.log(Level.FINE, "Finished building pruning strategies");
 
-        // Actual algorithm execution
 
-        List<IntegerPair> comparisonSuggestions = new ArrayList<>();
-
+        List<IntegerPair> comparisonSuggestions;
         int i = 1;
         do {
             FDLogger.log(Level.FINE, "Started round " + i);
-
-
-            if (version.useSampling()) {
+            FDLogger.log(Level.FINE, "Validating positive cover");
+            comparisonSuggestions = validator.validatePositiveCover();
+            if (version.usesSampling() && comparisonSuggestions != null) {
                 FDLogger.log(Level.FINE, "Enriching negative cover");
                 FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
                 FDLogger.log(Level.FINE, "Updating positive cover");
@@ -178,19 +178,18 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         return new IncrementalFDResult(fds, validations, pruned);
     }
 
-    public IncrementalFDResult validateDeletes(CompressedDiff diff, int[][] compressedRecords, List<PositionListIndex> plis) throws AlgorithmExecutionException {
-        if(version.getDeletePruningStrategy() == IncrementalFDVersion.DeletePruningStrategy.ANNOTATION){
+    public IncrementalFDResult validateDeletes(CompressedDiff diff, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis) throws AlgorithmExecutionException {
+        if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)){
 
             //FDTree posCover = new FDTree(columns.size(), -1);
             GeneralizingIncrementalValidator validator = new GeneralizingIncrementalValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, false, memoryGuardian);
 
-            Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
-
+            IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
             List<OpenBitSet> affected = violationCollection.getAffected(negCover, diff.getDeletedRecords());
+
             int induct = inductor.generalisePositiveCover(posCover, affected, violationCollection.getInvalidFds(), columns.size());
             FDLogger.log(Level.INFO, "Added " + induct + " candidates to check, depth now at "+posCover.getDepth());
-            boolean theresmore = true;
-
+            boolean theresmore;
             int i = 0;
             do{
                 theresmore = validator.validatePositiveCover();

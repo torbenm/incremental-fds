@@ -15,19 +15,20 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import com.google.common.collect.Lists;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.List;
 
-public class GoogleSheetsReporter {
+public class GoogleSheetsReporter implements Reporter {
 
     private final String APPLICATION_NAME =
             "Incremental Function Dependency Algorithms";
 
     /** Directory to store user credentials for this application. */
-    private final java.io.File DATA_STORE_DIR = new java.io.File(
+    private final File DATA_STORE_DIR = new File(
             System.getProperty("user.home"), ".credentials/incremental-fd-benchmarks");
 
     /** Global instance of the {@link FileDataStoreFactory}. */
@@ -41,7 +42,10 @@ public class GoogleSheetsReporter {
     private HttpTransport HTTP_TRANSPORT;
 
     private final Sheets sheetService;
-    private final String spreadsheetId = "1XehPd74Tqb-LYdP8WlZzDbS03VhGZf5YuVN5qvkH6E8";
+    private final String spreadsheetId;
+    private final String spreadsheet;
+
+
 
     /** Global instance of the scopes required by this quickstart.
      *
@@ -61,8 +65,10 @@ public class GoogleSheetsReporter {
         }
     }
 
-    public GoogleSheetsReporter() throws IOException {
+    public GoogleSheetsReporter(String spreadsheetId, String spreadsheet) throws IOException {
+        this.spreadsheet = spreadsheet;
         sheetService = getSheetsService();
+        this.spreadsheetId = spreadsheetId;
     }
 
     /**
@@ -103,7 +109,7 @@ public class GoogleSheetsReporter {
                 .build();
     }
 
-    public void writeNewLine(String spreadsheet, Object... values) throws IOException {
+    public void writeNewLine(Object... values) throws IOException {
         String range = spreadsheet+"!A:I";
         ValueRange vr = new ValueRange().setValues(Collections.singletonList(Lists.newArrayList(values)));
         sheetService.spreadsheets()
@@ -111,13 +117,6 @@ public class GoogleSheetsReporter {
                 .append(spreadsheetId, range, vr)
                 .setValueInputOption("RAW")
                 .execute();
-    }
-
-
-    public static void main(String[] args) throws IOException {
-        // Build a new authorized API client service.
-        new GoogleSheetsReporter().writeNewLine("Initial over all + Incremental One Batch", "Hallo", "wie", "gehts");
-
     }
 
 

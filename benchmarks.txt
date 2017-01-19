@@ -1,0 +1,4 @@
+--name "Inc Enhanced Cluster Pruning" --enhancedClusterPruning true --recomputeDataStructures false
+--name "Inc Default Cluster Pruning" --recomputeDataStructures false
+--name "Enhanced Cluster Pruning" --enhancedClusterPruning true --recomputeDataStructures true
+--name "Default Cluster Pruning" --recomputeDataStructures true

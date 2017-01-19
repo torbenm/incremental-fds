@@ -3,12 +3,13 @@ package org.mp.naumann.algorithms.fd.incremental;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
 
 import java.util.ArrayList;
@@ -26,8 +27,8 @@ public class GeneralizingIncrementalValidator {
 	private FDSet negCover;
 	private FDTree posCover;
 	private int numRecords;
-	private List<PositionListIndex> plis;
-	private int[][] compressedRecords;
+	private List<? extends PositionListIndex> plis;
+	private CompressedRecords compressedRecords;
 	private float efficiencyThreshold;
 	private MemoryGuardian memoryGuardian;
 	private ExecutorService executor;
@@ -41,10 +42,10 @@ public class GeneralizingIncrementalValidator {
 		validationPruners.add(ValidationPruner);
 	}
 
-	public GeneralizingIncrementalValidator(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
+	public GeneralizingIncrementalValidator(FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
 		this.negCover = negCover;
 		this.posCover = posCover;
-		this.numRecords = compressedRecords.length;
+		this.numRecords = compressedRecords.size();
 		this.plis = plis;
 		this.compressedRecords = compressedRecords;
 		this.efficiencyThreshold = efficiencyThreshold;

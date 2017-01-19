@@ -1,15 +1,15 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml configuration="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>benchmarks</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<configuration>1.0-SNAPSHOT</configuration>
 
     <parent>
         <groupId>org.mp.naumann</groupId>
         <artifactId>incremental-fds</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <configuration>1.0-SNAPSHOT</configuration>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -17,42 +17,47 @@
         <dependency>
             <groupId>org.mp.naumann</groupId>
             <artifactId>benchmark-util</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <configuration>1.0-SNAPSHOT</configuration>
         </dependency>
         <dependency>
             <groupId>org.mp.naumann</groupId>
             <artifactId>database</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <configuration>1.0-SNAPSHOT</configuration>
         </dependency>
         <dependency>
             <groupId>org.mp.naumann</groupId>
             <artifactId>algorithms</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <configuration>1.0-SNAPSHOT</configuration>
         </dependency>
         <dependency>
             <groupId>org.mp.naumann</groupId>
             <artifactId>algorithms-fd</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <configuration>1.0-SNAPSHOT</configuration>
         </dependency>
         <dependency>
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client</artifactId>
-            <version>1.22.0</version>
+            <configuration>1.22.0</configuration>
         </dependency>
        <dependency>
             <groupId>com.google.oauth-client</groupId>
             <artifactId>google-oauth-client-jetty</artifactId>
-            <version>1.22.0</version>
+            <configuration>1.22.0</configuration>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-sheets</artifactId>
-            <version>v4-rev38-1.22.0</version>
+            <configuration>v4-rev38-1.22.0</configuration>
         </dependency>
         <dependency>
             <groupId>org.mp.naumann</groupId>
             <artifactId>data</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <configuration>1.0-SNAPSHOT</configuration>
+        </dependency>
+        <dependency>
+            <groupId>com.beust</groupId>
+            <artifactId>jcommander</artifactId>
+            <configuration>1.58</configuration>
         </dependency>
     </dependencies>
     <packaging>jar</packaging>
@@ -64,7 +69,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<java.version>1.8</java.version>
+		<java.configuration>1.8</java.configuration>
 	</properties>
 
 
@@ -73,7 +78,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.6.0</version>
+                <configuration>3.6.0</configuration>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -83,7 +88,7 @@
                 <!-- Build an executable JAR -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.0.2</version>
+                <configuration>3.0.2</configuration>
                 <configuration>
                     <archive>
                         <manifest>
@@ -97,7 +102,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
+                <configuration>2.4</configuration>
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>

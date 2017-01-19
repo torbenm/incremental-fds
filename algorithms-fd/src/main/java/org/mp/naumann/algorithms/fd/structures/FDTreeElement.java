@@ -97,7 +97,7 @@ public class FDTreeElement {
         return fds;
     }
 
-    public Collection<FunctionalDependency> getFdCollection(OpenBitSet lhs, ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis){
+    public Collection<FunctionalDependency> getFdCollection(OpenBitSet lhs, ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<IPositionListIndex> plis){
         List<FunctionalDependency> fds = new ArrayList<>();
         for(int rhsAttr = rhsAttributes.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhsAttributes.nextSetBit(rhsAttr+1)){
             fds.add(findFunctionDependency(lhs, rhsAttr, columnIdentifiers, plis));
@@ -220,7 +220,7 @@ public class FDTreeElement {
     }
 
     void addFunctionalDependenciesInto(List<FunctionalDependency> functionalDependencies, OpenBitSet lhs,
-                                       ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis) {
+                                       ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<? extends IPositionListIndex> plis) {
 
         for (int rhs = this.rhsFds.nextSetBit(0); rhs >= 0; rhs = this.rhsFds.nextSetBit(rhs + 1)) {
             FunctionalDependency fdResult =  findFunctionDependency(lhs, rhs, columnIdentifiers, plis);
@@ -241,7 +241,7 @@ public class FDTreeElement {
     }
 
     int addFunctionalDependenciesInto(FunctionalDependencyResultReceiver resultReceiver, OpenBitSet lhs,
-                                      ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis) {
+                                      ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<? extends IPositionListIndex> plis) {
         int numFDs = 0;
         for (int rhs = this.rhsFds.nextSetBit(0); rhs >= 0; rhs = this.rhsFds.nextSetBit(rhs + 1)) {
             FunctionalDependency fdResult = findFunctionDependency(lhs, rhs, columnIdentifiers, plis);
@@ -266,7 +266,7 @@ public class FDTreeElement {
     }
 
     private FunctionalDependency findFunctionDependency(OpenBitSet lhs, int rhs,
-                                                        ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis){
+                                                        ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<? extends IPositionListIndex> plis){
         ColumnIdentifier[] columns = new ColumnIdentifier[(int) lhs.cardinality()];
         int j = 0;
         for (int i = lhs.nextSetBit(0); i >= 0; i = lhs.nextSetBit(i + 1)) {

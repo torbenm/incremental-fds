@@ -1,6 +1,6 @@
 package org.mp.naumann.algorithms.fd.structures;
 
-class ClusterIdentifierWithRecord extends ClusterIdentifier {
+public class ClusterIdentifierWithRecord extends ClusterIdentifier {
 
 	private final int record;
 	

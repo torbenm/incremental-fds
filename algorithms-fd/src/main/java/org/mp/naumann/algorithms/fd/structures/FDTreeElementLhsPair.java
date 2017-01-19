@@ -34,7 +34,7 @@ public class FDTreeElementLhsPair {
     }
 
 
-    public Collection<String> toFDStrings(List<PositionListIndex> plis, ObjectArrayList<ColumnIdentifier> columnIdentifiers) {
+    public Collection<String> toFDStrings(List<IPositionListIndex> plis, ObjectArrayList<ColumnIdentifier> columnIdentifiers) {
         return element
                 .getFdCollection(lhs, columnIdentifiers, plis)
                 .parallelStream()

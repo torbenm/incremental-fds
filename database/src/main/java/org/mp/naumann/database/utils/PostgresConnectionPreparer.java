@@ -1,5 +1,7 @@
 package org.mp.naumann.database.utils;
 
+import ResourceConnection.ResourceConnector;
+import ResourceConnection.ResourceType;
 import com.opentable.db.postgres.embedded.DatabaseConnectionPreparer;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -7,8 +9,6 @@ import org.apache.commons.csv.CSVRecord;
 
 import java.io.File;
 import java.io.FileReader;
-import java.net.ConnectException;
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -48,10 +48,8 @@ public class PostgresConnectionPreparer implements DatabaseConnectionPreparer {
         }
         try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
             CSVFormat format = CSVFormat.newFormat(';').withFirstRecordAsHeader().withQuote('"');
-            URL resource = getClass().getClassLoader().getResource("csv/test.countries.csv");
-            if (resource == null)
-                throw new ConnectException("Can't find csv file to instantiate embedded db");
-            CSVParser parser = format.parse(new FileReader(new File(resource.getFile())));
+            String csvPath = ResourceConnector.getResourcePath(ResourceType.TEST, "test.countries.csv");
+            CSVParser parser = format.parse(new FileReader(new File(csvPath)));
             for (CSVRecord csvRecord : parser) {
                 for (int i = 1; i <= csvRecord.size(); i++) {
                     switch (i) {

@@ -4,12 +4,11 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDVersion;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 import java.util.ArrayList;
@@ -30,10 +29,10 @@ class Sampler {
 	private ValueComparator valueComparator;
 	private List<AttributeRepresentant> attributeRepresentants = null;
 	private MemoryGuardian memoryGuardian;
-    private final IncrementalFDVersion version;
+    private final IncrementalFDConfiguration configuration;
     private final ViolationCollection violationCollection;
 
-	public Sampler(IncrementalFDVersion version, FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian, ViolationCollection violationCollection) {
+	public Sampler(IncrementalFDConfiguration configuration, FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian, ViolationCollection violationCollection) {
 		this.negCover = negCover;
 		this.posCover = posCover;
 		this.compressedRecords = compressedRecords;
@@ -41,11 +40,11 @@ class Sampler {
 		this.efficiencyThreshold = efficiencyThreshold;
 		this.valueComparator = valueComparator;
 		this.memoryGuardian = memoryGuardian;
-        this.version = version;
+        this.configuration = configuration;
         this.violationCollection = violationCollection;
     }
     public Sampler(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian, ViolationCollection violationCollection) {
-        this(IncrementalFDVersion.LATEST, negCover, posCover, compressedRecords, plis, efficiencyThreshold, valueComparator, memoryGuardian, violationCollection);
+        this(IncrementalFDConfiguration.LATEST, negCover, posCover, compressedRecords, plis, efficiencyThreshold, valueComparator, memoryGuardian, violationCollection);
     }
 
 	public FDList enrichNegativeCover(List<IntegerPair> comparisonSuggestions) {
@@ -248,7 +247,7 @@ class Sampler {
 	}
 
     private void match(OpenBitSet equalAttrs,  int[] t1, int[] t2) {
-       if(version.getDeletePruningStrategy() == IncrementalFDVersion.DeletePruningStrategy.ANNOTATION)
+       if(configuration.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION))
            this.matchAnnotationPruning(equalAttrs, t1, t2);
         else
             this.matchNoPruning(equalAttrs, t1, t2);

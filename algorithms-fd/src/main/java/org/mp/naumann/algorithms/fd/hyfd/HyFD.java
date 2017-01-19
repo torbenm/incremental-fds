@@ -10,13 +10,12 @@ import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.violations.SingleValueViolationCollection;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
-import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.RecordCompressor;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.FileUtils;
@@ -54,15 +53,18 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 	private FDSet negCover;
 	private PLIBuilder pliBuilder;
+	private final IncrementalFDConfiguration configuration;
 
 
     private final ViolationCollection violationCollection = new SingleValueViolationCollection();
 
     public HyFD(){
+        this.configuration = IncrementalFDConfiguration.LATEST;
         FDLogger.setCurrentAlgorithm(this);
     }
 
-	public HyFD(Table table, FunctionalDependencyResultReceiver resultReceiver) {
+	public HyFD(IncrementalFDConfiguration configuration, Table table, FunctionalDependencyResultReceiver resultReceiver) {
+        this.configuration = configuration;
         configure(table, resultReceiver);
 	}
 
@@ -139,7 +141,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		// TODO: implement parallel sampling
 
 		float efficiencyThreshold = 0.01f;
-		Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, efficiencyThreshold,
+		Sampler sampler = new Sampler(configuration, negCover, posCover, compressedRecords, plis, efficiencyThreshold,
 				this.valueComparator, this.memoryGuardian, violationCollection);
 		Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
 		boolean validateParallel = true;
@@ -148,7 +150,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
-        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialised Sampler, Inductor and IncrementalValidator");
+        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialised Sampler, Inductor and Validator");
         SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
         int i = 1;
 		do {

@@ -3,7 +3,7 @@ package org.mp.naumann.algorithms.fd;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
-import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
+import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 public class FDIntermediateDatastructure {

@@ -6,7 +6,7 @@ import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
-import org.mp.naumann.algorithms.fd.structures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 
@@ -34,14 +34,14 @@ public class FDTreeUtils {
                .flatMap(Collection::stream)
                .collect(Collectors.toList());
     }
-    public static List<String> fdLevelToReadableString(FDTree tree, int level, List<PositionListIndex> plis, ObjectArrayList<ColumnIdentifier> columnIdentifiers){
+    public static List<String> fdLevelToReadableString(FDTree tree, int level, List<IPositionListIndex> plis, ObjectArrayList<ColumnIdentifier> columnIdentifiers){
         return getFdLevel(tree, level).stream()
                 .map(f -> f.toFDStrings(plis, columnIdentifiers))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }
 
-    public static String fdToString(OpenBitSet lhs, int rhs, List<PositionListIndex> plis, ObjectArrayList<ColumnIdentifier> columnIdentifiers){
+    public static String fdToString(OpenBitSet lhs, int rhs, List<IPositionListIndex> plis, ObjectArrayList<ColumnIdentifier> columnIdentifiers){
         ColumnIdentifier[] columns = new ColumnIdentifier[(int) lhs.cardinality()];
         int j = 0;
         for (int i = lhs.nextSetBit(0); i >= 0; i = lhs.nextSetBit(i + 1)) {

@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml configuration="1.0"?>
 <project
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
   xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.mp.naumann</groupId>
     <artifactId>incremental-fds</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <configuration>1.0-SNAPSHOT</configuration>
   </parent>
   <artifactId>algorithms-fd</artifactId>
   <name>algorithms-fd</name>
@@ -16,32 +16,32 @@
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-core</artifactId>
-      <version>4.5.1</version>
+      <configuration>4.5.1</configuration>
     </dependency>
     <dependency>
       <groupId>it.unimi.dsi</groupId>
       <artifactId>fastutil</artifactId>
-      <version>6.5.9</version>
+      <configuration>6.5.9</configuration>
     </dependency>
     <dependency>
       <groupId>org.mp.naumann</groupId>
       <artifactId>algorithms</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <configuration>1.0-SNAPSHOT</configuration>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>19.0</version>
+      <configuration>19.0</configuration>
     </dependency>
       <dependency>
           <groupId>org.mockito</groupId>
           <artifactId>mockito-core</artifactId>
-          <version>1.10.19</version>
+          <configuration>1.10.19</configuration>
       </dependency>
       <dependency>
           <groupId>org.mp.naumann</groupId>
           <artifactId>benchmark-util</artifactId>
-          <version>1.0-SNAPSHOT</version>
+          <configuration>1.0-SNAPSHOT</configuration>
       </dependency>
   </dependencies>
 </project>

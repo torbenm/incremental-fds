@@ -19,12 +19,12 @@ package org.mp.naumann.algorithms.fd.structures;
 import com.google.common.collect.Sets;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Row;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -88,7 +88,8 @@ public class ClusterMapBuilder {
 		return recId;
 	}
 
-	public Set<Integer> removeRecord(Iterable<String> record){
+
+	public Set<Integer> getMatchingRecordsIds(Iterable<String> record){
 	    int attributeId = 0;
         Set<Integer> matching = null;
 
@@ -117,11 +118,12 @@ public class ClusterMapBuilder {
         }
     }
 
-	public void addRecords(ObjectArrayList<Row> records) {
+
+	public void addRecords(Collection<? extends Iterable<String>> records) {
 		if (records.size() > Integer.MAX_VALUE)
 			throw new RuntimeException("PLI encoding into integer based PLIs is not possible, because the number of records in the dataset exceeds Integer.MAX_VALUE. Use long based plis instead! (NumRecords = " + records.size() + " and Integer.MAX_VALUE = " + Integer.MAX_VALUE);
 
-		for (Row record : records) {
+		for (Iterable<String> record : records) {
 			addRecord(record);
 		}
 	}

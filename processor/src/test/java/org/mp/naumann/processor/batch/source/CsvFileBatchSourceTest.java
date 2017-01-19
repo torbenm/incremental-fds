@@ -1,5 +1,7 @@
 package org.mp.naumann.processor.batch.source;
 
+import ResourceConnection.ResourceConnector;
+import ResourceConnection.ResourceType;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -10,7 +12,7 @@ public class CsvFileBatchSourceTest {
     @Before
     public void init(){
         csv = new CsvFileBatchSource(
-                getClass().getClassLoader().getResource("test.csv").getPath(),
+                ResourceConnector.getResourcePath(ResourceType.TEST, "test.csv"),
                 "", "demotable", 5
         );
     }

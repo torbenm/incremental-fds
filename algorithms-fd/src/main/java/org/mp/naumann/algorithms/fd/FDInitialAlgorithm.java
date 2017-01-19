@@ -6,6 +6,7 @@ import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.fdep.FDEPExecutor;
 import org.mp.naumann.algorithms.fd.hyfd.HyFD;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.tane.TaneAlgorithm;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.Table;
@@ -22,9 +23,11 @@ public class FDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDepen
     private FunctionalDependencyAlgorithm fdAlgorithm;
 	private String schema;
 	private String tableName;
+	private final IncrementalFDConfiguration configuration;
 
 
-    public FDInitialAlgorithm(String algorithm, DataConnector dataConnector, String schema, String tableName) {
+    public FDInitialAlgorithm(String algorithm, DataConnector dataConnector, String schema, String tableName, IncrementalFDConfiguration configuration) {
+        this.configuration = configuration;
         if(!algorithms.contains(algorithm.toLowerCase()))
             throw new RuntimeException("Unknown Algorithm "+algorithm);
         this.schema = schema;
@@ -39,7 +42,7 @@ public class FDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDepen
         FunctionalDependencyResultReceiver resultReceiver = functionalDependencies::add;
         switch(algorithm.toLowerCase()){
             case "hyfd":
-                fdAlgorithm = new HyFD(table, resultReceiver);
+                fdAlgorithm = new HyFD(configuration, table, resultReceiver);
                 break;
             case "fdep":
                 fdAlgorithm = new FDEPExecutor(table, resultReceiver);
