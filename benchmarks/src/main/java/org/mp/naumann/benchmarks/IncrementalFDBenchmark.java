@@ -6,7 +6,6 @@ import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.HyFDInitialAlgorithm;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
@@ -17,6 +16,7 @@ import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 
 import java.sql.Connection;
 
@@ -44,7 +44,7 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
 
         DataConnector dc = new JdbcDataConnector(csvConnection);
         Table table = dc.getTable(schema, tableName);
-        initialAlgorithm = new HyFDInitialAlgorithm(table);
+        initialAlgorithm = new HyFDInitialAlgorithm(version, table);
 
         incrementalAlgorithm = new IncrementalFD(((FixedSizeBatchSource)batchSource).getColumnNames(), tableName, version);
 
@@ -58,7 +58,7 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
 
         DataConnector dc = new JdbcDataConnector(csvConnection);
         Table table = dc.getTable(schema, tableName);
-        initialAlgorithm = new HyFDInitialAlgorithm(table);
+        initialAlgorithm = new HyFDInitialAlgorithm(version, table);
     }
 
     public void constructInitialOnly(String testCase, Connection csvConnection, String schema, String tableName) throws ConnectionException {

@@ -106,7 +106,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
             plis.forEach(pli -> pli.setNewRecords(inserted));
         }
         //TODO: deletes
-        return CompressedDiff.buildDiff(inserted, null, version, compressedRecords);
+        return CompressedDiff.buildDiff(inserted, new ArrayList<>(), version, compressedRecords);
     }
 
     private void updateDataStructures(Collection<Integer> inserted, List<Map<Integer, IntArrayList>> clusterMaps) {

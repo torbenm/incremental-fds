@@ -1,11 +1,11 @@
-<?xml configuration="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.mp.naumann</groupId>
     <artifactId>incremental-fds</artifactId>
     <packaging>pom</packaging>
-    <configuration>1.0-SNAPSHOT</configuration>
+    <version>1.0-SNAPSHOT</version>
 
     <modules>
         <module>database</module>
@@ -20,7 +20,7 @@
     </modules>
 
     <properties>
-        <java.configuration>1.8</java.configuration>
+        <java.version>1.8</java.version>
     </properties>
 
     <build>
@@ -28,7 +28,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>3.6.0</configuration>
+                <version>3.6.0</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -36,7 +36,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>2.6</configuration>
+                <version>2.6</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -56,28 +56,28 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <configuration>4.12</configuration>
+            <version>4.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <configuration>9.4.1211</configuration>
+            <version>9.4.1211</version>
         </dependency>
         <dependency>
             <groupId>com.opentable.components</groupId>
             <artifactId>otj-pg-embedded</artifactId>
-            <configuration>0.7.1</configuration>
+            <version>0.7.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
-            <configuration>1.4</configuration>
+            <version>1.4</version>
         </dependency>
         <dependency>
             <groupId>net.sourceforge.csvjdbc</groupId>
             <artifactId>csvjdbc</artifactId>
-            <configuration>1.0.31</configuration>
+            <version>1.0.31</version>
         </dependency>
     </dependencies>
 </project>
