@@ -1,7 +1,5 @@
 package org.mp.naumann;
 
-import ResourceConnection.ResourceConnector;
-import ResourceConnection.ResourceType;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.implementations.AverageDatastructure;
 import org.mp.naumann.algorithms.implementations.AverageIncrementalAlgorithm;
@@ -14,6 +12,8 @@ import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
+import ResourceConnection.ResourceConnector;
+
 public class Demo {
 
 	private static final String TABLE = "countries";
@@ -21,7 +21,7 @@ public class Demo {
 	private static final String SCHEMA = "";
 
 	public static void main(String[] args) throws ClassNotFoundException, ConnectionException {
-		String file = ResourceConnector.getResourcePath(ResourceType.FULL_BATCHES, "inserts.countries.csv");
+		String file = ResourceConnector.getResourcePath(ResourceConnector.FULL_BATCHES, "inserts.countries.csv");
 		StreamableBatchSource batchSource = new FixedSizeBatchSource(file, SCHEMA, TABLE, BATCH_SIZE);
 		DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
 		BatchProcessor bp = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);

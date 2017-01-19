@@ -1,7 +1,5 @@
 package org.mp.naumann.algorithms.fd;
 
-import ResourceConnection.ResourceConnector;
-import ResourceConnection.ResourceType;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
@@ -21,13 +19,15 @@ import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 import java.util.List;
 import java.util.logging.Level;
 
+import ResourceConnection.ResourceConnector;
+
 public class IncrementalFDDemo {
 
       private static final String batchFileName = "deletes.adult.csv";
        private static final String schema = "";
        private static final String tableName = "benchmark.adult";
        private static final int batchSize = 1200; //*/
-    private static final ResourceType resourceType = ResourceType.BENCHMARK;
+    private static final String resourceType = ResourceConnector.BENCHMARK;
      /* private static final String batchFileName = "deletes.deletesample.csv";
        private static final String schema = "";
        private static final String tableName = "test.deletesample";
@@ -56,7 +56,7 @@ public class IncrementalFDDemo {
             FDIntermediateDatastructure ds = hyfd.getIntermediateDataStructure();
 
             // create batch source & processor for inserts
-            String batchFile = ResourceConnector.getResourcePath(ResourceType.FULL_BATCHES, batchFileName);
+            String batchFile = ResourceConnector.getResourcePath(ResourceConnector.FULL_BATCHES, batchFileName);
             StreamableBatchSource batchSource = new FixedSizeBatchSource(batchFile, schema, tableName, batchSize);
             DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
             BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
