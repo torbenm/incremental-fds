@@ -21,6 +21,8 @@ import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.AllCombinationsBlo
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.BloomPruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.CurrentFDBloomGenerator;
 import org.mp.naumann.algorithms.fd.incremental.pruning.simple.ExistingValuesPruningStrategy;
+import org.mp.naumann.algorithms.fd.incremental.validator.GeneralizingValidator;
+import org.mp.naumann.algorithms.fd.incremental.validator.SpecializingValidator;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
@@ -30,7 +32,6 @@ import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.processor.batch.Batch;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -130,9 +131,9 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         // Currently we don't have a version that handles both inserts and deletes well,
         // so we just 'escape' to handling only deletes once we have some.
         if(diff.getDeletedRecords().length > 0){
-            return validateDeletes(diff, compressedRecords, plis);
+       //     return validateDeletes(diff, compressedRecords, plis);
         }
-        IncrementalValidator validator = new IncrementalValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
+        SpecializingValidator validator = new SpecializingValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
         IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
                 intermediateDatastructure.getValueComparator(), this.memoryGuardian);
 
@@ -182,7 +183,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)){
 
             //FDTree posCover = new FDTree(columns.size(), -1);
-            GeneralizingIncrementalValidator validator = new GeneralizingIncrementalValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, false, memoryGuardian);
+            GeneralizingValidator validator = new GeneralizingValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, false, memoryGuardian);
 
             IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
             List<OpenBitSet> affected = violationCollection.getAffected(negCover, diff.getDeletedRecords());

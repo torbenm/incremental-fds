@@ -9,7 +9,7 @@ import java.lang.management.ManagementFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class MemoryGuardian {
+public class MemoryGuardian {
 
 	private final static Logger LOG = Logger.getLogger(MemoryGuardian.class.getName());
 

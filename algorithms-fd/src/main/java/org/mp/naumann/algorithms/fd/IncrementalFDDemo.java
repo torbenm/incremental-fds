@@ -23,7 +23,7 @@ import java.util.logging.Level;
 
 public class IncrementalFDDemo {
 
-      private static final String batchFileName = "deletes.adult.csv";
+      private static final String batchFileName = "inserts.adult.csv";
        private static final String schema = "";
        private static final String tableName = "benchmark.adult";
        private static final int batchSize = 1200; //*/
@@ -40,7 +40,7 @@ public class IncrementalFDDemo {
     private static final int batchSize = 200; //*/
 
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
-        FDLogger.setLevel(Level.INFO);
+        FDLogger.setLevel(Level.FINE);
         IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom").addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION);
 
         try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(resourceType, ","))) {
