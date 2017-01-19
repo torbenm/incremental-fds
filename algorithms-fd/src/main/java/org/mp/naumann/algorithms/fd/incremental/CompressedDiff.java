@@ -53,7 +53,7 @@ public class CompressedDiff {
             for (int id : diff) {
                 // If we will invalidate the records just after getting them,
                 // we must make sure to clone them because arrays are passed by-reference.
-                array[i] = compressedRecords.get(id, remove);
+                array[i] = compressedRecords.get(id, true);
                 if(remove) {
                     compressedRecords.invalidate(id);
                 }

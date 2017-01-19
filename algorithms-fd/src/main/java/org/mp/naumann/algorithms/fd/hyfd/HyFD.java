@@ -11,6 +11,7 @@ import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
+import org.mp.naumann.algorithms.fd.incremental.violations.FirstViolatingValuesCollection;
 import org.mp.naumann.algorithms.fd.incremental.violations.SingleValueViolationCollection;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
@@ -56,7 +57,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	private final IncrementalFDConfiguration configuration;
 
 
-    private final ViolationCollection violationCollection = new SingleValueViolationCollection();
+    private final ViolationCollection violationCollection = new FirstViolatingValuesCollection();
 
     public HyFD(){
         this.configuration = IncrementalFDConfiguration.LATEST;

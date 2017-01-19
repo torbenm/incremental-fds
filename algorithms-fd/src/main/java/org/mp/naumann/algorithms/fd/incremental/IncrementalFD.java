@@ -124,14 +124,17 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         FDLogger.log(Level.FINE, "Started IncrementalFD for new Batch");
         SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
 
+        SpeedBenchmark.begin(BenchmarkLevel.UNIQUE);
         CompressedDiff diff = dataStructureBuilder.update(batch);
+        SpeedBenchmark.end(BenchmarkLevel.UNIQUE, "Built diff");
+
         List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecord();
 
         // Currently we don't have a version that handles both inserts and deletes well,
         // so we just 'escape' to handling only deletes once we have some.
         if(diff.getDeletedRecords().length > 0){
-       //     return validateDeletes(diff, compressedRecords, plis);
+            return validateDeletes(diff, compressedRecords, plis);
         }
         SpecializingValidator validator = new SpecializingValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
         IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
@@ -183,13 +186,17 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)){
 
             //FDTree posCover = new FDTree(columns.size(), -1);
+            SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Finished basic setup.");
             GeneralizingValidator validator = new GeneralizingValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, false, memoryGuardian);
 
             IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
+            SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Initialised valdiator and inductor");
             List<OpenBitSet> affected = violationCollection.getAffected(negCover, diff.getDeletedRecords());
+            SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Received affected records");
 
             int induct = inductor.generalisePositiveCover(posCover, affected, violationCollection.getInvalidFds(), columns.size());
             FDLogger.log(Level.INFO, "Added " + induct + " candidates to check, depth now at "+posCover.getDepth());
+            SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Inducted candidates into positive cover");
             boolean theresmore;
             int i = 0;
             do{

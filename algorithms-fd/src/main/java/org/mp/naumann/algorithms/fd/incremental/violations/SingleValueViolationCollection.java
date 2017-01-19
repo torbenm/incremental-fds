@@ -1,6 +1,8 @@
 package org.mp.naumann.algorithms.fd.incremental.violations;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.incremental.violations.matcher.IntersectionMatcher;
+import org.mp.naumann.algorithms.fd.incremental.violations.matcher.Matcher;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
@@ -17,6 +19,7 @@ public class SingleValueViolationCollection implements ViolationCollection {
 
     private final Map<OpenBitSet, int[]> violationsMap = new HashMap<>();
     private final List<OpenBitSetFD> invalidFDs = new ArrayList<>();
+    private final Matcher matcher = new IntersectionMatcher();
 
     @Override
     public void add(OpenBitSet attrs, List<Integer> violatingValues) {
@@ -30,7 +33,7 @@ public class SingleValueViolationCollection implements ViolationCollection {
             boolean anyMatch = false;
             OpenBitSet attrs = entry.getKey();
             for(int[] record : removedValues){
-                anyMatch = isMatch(attrs, entry.getValue(), record);
+                anyMatch = matcher.match(attrs, entry.getValue(), record);
                 if(anyMatch) break;
             }
 
@@ -73,20 +76,4 @@ public class SingleValueViolationCollection implements ViolationCollection {
         return s.toString();
     }
 
-    public static boolean isMatch(OpenBitSet attrs, List<Integer> violatingValues, List<Integer> values){
-        for(int i = attrs.nextSetBit(0), j = 0; i >= 0; i = attrs.nextSetBit(i+1), j++){
-            if(i >= values.size() || !violatingValues.get(j).equals(values.get(i))){
-                return false;
-            }
-        }
-        return true;
-    }
-    public static boolean isMatch(OpenBitSet attrs, int[] violatingValues, int[] removedValues){
-        for(int i = attrs.nextSetBit(0), j = 0; i >= 0; i = attrs.nextSetBit(i+1), j++){
-            if(i < removedValues.length && violatingValues[j] == removedValues[i]){
-                return true;
-            }
-        }
-        return false;
-    }
 }

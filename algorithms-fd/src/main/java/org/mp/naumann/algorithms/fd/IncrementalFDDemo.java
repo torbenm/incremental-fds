@@ -2,6 +2,9 @@ package org.mp.naumann.algorithms.fd;
 
 import ResourceConnection.ResourceConnector;
 import ResourceConnection.ResourceType;
+
+import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
+import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
@@ -23,25 +26,32 @@ import java.util.logging.Level;
 
 public class IncrementalFDDemo {
 
-      private static final String batchFileName = "inserts.adult.csv";
+      private static final String batchFileName = "deletes.adult.csv";
        private static final String schema = "";
        private static final String tableName = "benchmark.adult";
-       private static final int batchSize = 1200; //*/
-    private static final ResourceType resourceType = ResourceType.BENCHMARK;
-     /* private static final String batchFileName = "deletes.deletesample.csv";
+       private static final int batchSize = 200;
+    private static final ResourceType resourceType = ResourceType.BENCHMARK;//*/
+  /*    private static final String batchFileName = "deletes.deletesample.csv";
        private static final String schema = "";
        private static final String tableName = "test.deletesample";
+    private static final ResourceType resourceType = ResourceType.TEST;
        private static final String csvDir = "/";
        private static final int batchSize = 100;  //*/
-  /* private static final String batchFileName = "csv/test/deletes.bridges.csv";
+  /* private static final String batchFileName = "deletes.bridges.csv";
     private static final String schema = "";
-    private static final String csvDir = "/test";
+   // private static final String csvDir = "/test";
     private static final String tableName = "test.bridges";
+    private static final ResourceType resourceType = ResourceType.TEST;
     private static final int batchSize = 200; //*/
 
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
-        FDLogger.setLevel(Level.FINE);
+        FDLogger.setLevel(Level.INFO);
         IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom").addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION);
+        SpeedBenchmark.enable();
+        SpeedBenchmark.addEventListener(f -> {
+                    if(f.getLevel() == BenchmarkLevel.UNIQUE) System.out.println(f);
+        }
+        );
 
         try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(resourceType, ","))) {
 
@@ -62,6 +72,7 @@ public class IncrementalFDDemo {
             BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 
             // create incremental algorithm
+            SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
             IncrementalFD algorithm = new IncrementalFD(table.getColumnNames(), tableName, configuration);
             IncrementalFDResultListener listener = new IncrementalFDResultListener();
             algorithm.addResultListener(listener);
@@ -70,12 +81,13 @@ public class IncrementalFDDemo {
             // process batch
             batchProcessor.addBatchHandler(algorithm);
             batchSource.startStreaming();
+            SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Finished processing 1 batch");
 
             // output results
             FDLogger.log(Level.INFO, String.format("Total performed validations: %s", listener.getValidationCount()));
             FDLogger.log(Level.INFO, String.format("Total pruned validations: %s", listener.getPrunedCount()));
             FDLogger.log(Level.INFO, String.format("Final FD count: %s", listener.getFDs().size()));
-            listener.getFDs().forEach(f -> FDLogger.log(Level.INFO, f.toString()));
+            //listener.getFDs().forEach(f -> FDLogger.log(Level.INFO, f.toString()));
         }
     }
 

@@ -88,6 +88,7 @@ public abstract class Validator<T> {
             this.validations += other.validations;
             this.intersections += other.intersections;
             this.invalidFDs.addAll(other.invalidFDs);
+            this.validFDs.addAll(other.validFDs);
             this.comparisonSuggestions.addAll(other.comparisonSuggestions);
         }
     }
@@ -101,13 +102,11 @@ public abstract class Validator<T> {
             task.setElementLhsPair(elementLhsPair);
             try {
                 validationResult.add(task.call());
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 throw new AlgorithmExecutionException(e.getMessage());
             }
         }
-
         return validationResult;
     }
 
@@ -116,7 +115,7 @@ public abstract class Validator<T> {
 
         List<Future<ValidationResult>> futures = new ArrayList<>();
         for (FDTreeElementLhsPair elementLhsPair : currentLevel) {
-            Validator.ValidationTask task = new Validator.ValidationTask(elementLhsPair, findValid);
+            ValidationTask task = new ValidationTask(elementLhsPair, findValid);
             futures.add(this.executor.submit(task));
         }
 
@@ -199,7 +198,7 @@ public abstract class Validator<T> {
             OpenBitSet rhs = element.getFds();
 
             int rhsSize = (int) rhs.cardinality();
-
+            // If we have any issues with insert, check this
             if (rhsSize == 0)
                 return result;
             result.validations = result.validations + rhsSize;
@@ -293,8 +292,15 @@ public abstract class Validator<T> {
             FDLogger.log(Level.FINER, "(G); ");
             int candidates = generateNextLevel(validationResult);
 
-            int numValidFds = validationResult.validFDs.size();
-            int numInvalidFds = validationResult.validations - numValidFds;
+            int numInvalidFds, numValidFds;
+            if(findValid){
+                numValidFds = validationResult.validFDs.size();
+                numInvalidFds = validationResult.validations - numValidFds;
+            } else {
+                numInvalidFds = validationResult.invalidFDs.size();
+                numValidFds = validationResult.validations - numInvalidFds;
+            }
+
             FDLogger.log(Level.FINER, validationResult.intersections + " intersections; " + validationResult.validations + " validations; " + numInvalidFds + " invalid; " + candidates + " new candidates; --> " + numValidFds + " FDs");
 
             // Decide if we continue validating the next level or if we go back into the sampling phase

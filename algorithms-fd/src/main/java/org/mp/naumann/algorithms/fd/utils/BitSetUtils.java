@@ -3,6 +3,7 @@ package org.mp.naumann.algorithms.fd.utils;
 import org.apache.lucene.util.OpenBitSet;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class BitSetUtils {
@@ -38,6 +39,24 @@ public class BitSetUtils {
 	        obs.set(setBit);
         }
         return obs;
+    }
+
+    public static Iterable<Integer> iterable(OpenBitSet obs){
+	    return () -> new Iterator<Integer>() {
+            private int rhsAttr = obs.nextSetBit(0);
+
+            @Override
+            public boolean hasNext() {
+                return rhsAttr >= 0;
+            }
+
+            @Override
+            public Integer next() {
+                int tmp = rhsAttr;
+                rhsAttr = obs.nextSetBit(rhsAttr+1);
+                return tmp;
+            }
+        };
     }
 
 }

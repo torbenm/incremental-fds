@@ -23,6 +23,7 @@ import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -73,7 +74,7 @@ class RecomputePLIBuilder {
         return clusterMapBuilder.getNumLastRecords();
     }
 
-    public Set<Integer> getMatchingRecordIds(Iterable<String> record) {
+    public Collection<Integer> getMatchingRecordIds(Iterable<String> record) {
         return clusterMapBuilder.getMatchingRecordsIds(record);
     }
 

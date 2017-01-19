@@ -89,17 +89,19 @@ public class ClusterMapBuilder {
 	}
 
 
-	public Set<Integer> getMatchingRecordsIds(Iterable<String> record){
+	public Collection<Integer> getMatchingRecordsIds(Iterable<String> record){
 	    int attributeId = 0;
-        Set<Integer> matching = null;
+        IntArrayList matching = null;
+        IntArrayList def = new IntArrayList();
 
         for(String value : record) {
+
            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
-           Set<Integer> cluster = new HashSet<>(clusterMap.getOrDefault(value, new IntArrayList()));
+           IntArrayList cluster = clusterMap.getOrDefault(value, def);
            if(matching == null) {
-               matching = cluster;
-           } else {
-               matching = Sets.intersection(cluster, matching);
+               matching = cluster.clone();
+           }  else {
+               matching.retainAll(cluster);
            }
            attributeId++;
        }
