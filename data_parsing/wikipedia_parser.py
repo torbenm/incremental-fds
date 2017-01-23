@@ -30,8 +30,6 @@ def calculate_statistics():
             line_count += 1
             if line_count % 1000 == 0:
                 print(line_count)
-            # if line_count == 10000:
-            # 	break
 
     return articles_count_by_infobox_type
 
@@ -254,28 +252,13 @@ def groupDataIntoBaselineAndUpdates(targetInfoboxType, attributes):
             baselineRecords.append(generateBaselineRecord(baselineData, attributes, currentId, articleTitle))
 
             for entry in updateData.values():
-                updateRecords.append(generateUpdateRecord(entry, attributes, currentId, articleTitle))
+                updateRecord = generateUpdateRecord(entry, attributes, currentId, articleTitle)
+                if updateRecord is not None:
+                    updateRecords.append(updateRecord)
 
             currentId += 1
 
     return baselineRecords, updateRecords
-
-
-def createBaselineAndUpdateDummies(attributes):
-    baselineDataEntryBlueprint = collections.OrderedDict()
-    baselineDataEntryBlueprint["id"] = None
-    baselineDataEntryBlueprint["article_title"] = None
-    for attribute in attributes:
-        baselineDataEntryBlueprint[attribute] = None
-
-    updateStatementsEntryBlueprint = collections.OrderedDict()
-    updateStatementsEntryBlueprint["::record"] = None
-    updateStatementsEntryBlueprint["article_title"] = None
-    updateStatementsEntryBlueprint["::action"] = None
-    for attribute in attributes:
-        updateStatementsEntryBlueprint[attribute] = None
-
-    return baselineDataEntryBlueprint, updateStatementsEntryBlueprint
 
 
 def initBaselineRecord(article, baselineRecordBlueprint, currentId):
@@ -291,7 +274,7 @@ def addValuesToBaselineRecord(update, attributes, baselineDataEntry):
         baselineDataEntry[key] = update["newvalue"].replace("|", "").replace("\n", "").replace("\"", "\"\"")
 
 
-def initUpdateStatement(article, updateRecordBlueprint, currentId):
+def initUpdateRecord(article, updateRecordBlueprint, currentId):
     updateStatement = copy.deepcopy(updateRecordBlueprint)
     updateStatement["::record"] = currentId
     updateStatement["article_title"] = article.replace("\"", "\"\"")
@@ -360,15 +343,28 @@ def getUpdateRecordBlueprint(attributes):
 
 def generateUpdateRecord(data, attributes, currentId, articleTitle):
     updateRecordBlueprint = getUpdateRecordBlueprint(attributes)
+    updateRecord = initUpdateRecord(articleTitle, updateRecordBlueprint, currentId)
 
-    updateRecord = initUpdateStatement(articleTitle, updateRecordBlueprint, currentId)
+    newValues = {}
+    oldValues = {}
+    for entry in data:
+        newValues, oldValues = findNewAndOldValues(entry, newValues, oldValues, attributes)
+
+    if len(newValues) == 0:
+        updateRecord["::action"] = "delete"
+    else:
+        updateRecord["::action"] = "update"
+
+    addValuesToUpdateStatement(updateRecord, attributes, newValues, oldValues)
+
+    isValidUpdateStatement = checkValidityOfUpdateStatement(updateRecord, attributes)
+
+    if isValidUpdateStatement:
+        return updateRecord
+    return None
 
     for entry in data:
-        addValuesToBaselineRecord(entry, attributes, updateRecord)
-
-    # for attribute in updateRecord:
-    #     if updateRecord[attribute] == None:
-    #         updateRecord[attribute] = ""
+        addValuesTo(entry, attributes, updateRecord)
 
     return updateRecord
 
@@ -387,7 +383,7 @@ def generateUpdateStatementFromData(dataByTitle, updateId, article, updateStatem
     if article == "Katie Bowden":
         print("break")
 
-    updateStatement = initUpdateStatement(article, updateStatementsEntryBlueprint, currentId)
+    updateStatement = initUpdateRecord(article, updateStatementsEntryBlueprint, currentId)
 
     newValues = {}
     oldValues = {}
@@ -573,7 +569,7 @@ def determineFinalUpdateStatementType(updateStatements, baselineData, attributes
     applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, attributes)
 
 
-def parseInfoboxUpdatesToCsv(infoboxConfig, statementTypesToBeParsed):
+def parseInfoboxUpdatesToCsv(infoboxConfig):
     for targetInfoboxType, attributesInput in infoboxConfig.items():
         attributes = getAttributes(attributesInput)
 
@@ -587,12 +583,10 @@ def parseInfoboxUpdatesToCsv(infoboxConfig, statementTypesToBeParsed):
         insertStatements = transformBaselineInsertsIntoUpdates(baselineInserts, attributes,)
         updateRecords = mergeInsertAndUpdateStatements(insertStatements, updateRecords)
 
-        updateRecords = filterUpdatesBySelection(updateRecords, statementTypesToBeParsed)
-
         determineFinalUpdateStatementType(updateRecords, baselineRecords, attributes)
+        insertRecords = [x for x in updateRecords if x["::action"] == "insert"]
 
-        createTargetDirectoriesIfNecessary()
-        writeBaselineDataAndUpdateStatementsToDisk(targetInfoboxType, baselineRecords, updateRecords, attributes)
+        writeParsedDataToDisk(targetInfoboxType, baselineRecords, insertRecords, updateRecords, attributes)
 
 
 def filterUpdatesBySelection(updateStatements, statementTypesToBeParsed):
@@ -609,9 +603,14 @@ def filterUpdatesBySelection(updateStatements, statementTypesToBeParsed):
     return filteredUpdateStatements
 
 
-def writeBaselineDataAndUpdateStatementsToDisk(targetInfoboxType, baselineData, updateStatements, attributes):
+def writeParsedDataToDisk(targetInfoboxType, baselineData, insertRecords, updateStatements, attributes):
+    createTargetDirectoriesIfNecessary()
+
     print("Writing baseline csv...")
     writeBaselineData(attributes, baselineData, targetInfoboxType)
+
+    print("Writing inserts-only csv...")
+    writeInsertOnlyRecords(attributes, insertRecords, targetInfoboxType)
 
     print("Writing updates csv...")
     writeUpdateStatements(attributes, targetInfoboxType, updateStatements)
@@ -620,18 +619,25 @@ def writeBaselineDataAndUpdateStatementsToDisk(targetInfoboxType, baselineData, 
 def writeUpdateStatements(attributes, targetInfoboxType, updateStatements):
     updateFilename = str("data/updates/" + targetInfoboxType + "_update_statements.csv").replace(" ", "_")
     updateAttributes = arrangeUpdateAttributes(attributes)
-    updateRecordsString = transformRecordsToString(updateAttributes, updateStatements)
+    updateRecordsString = transformRecordsToUniqueStringRepresentation(updateAttributes, updateStatements)
     writeAsCsv(updateFilename, updateAttributes, updateRecordsString)
+
+
+def writeInsertOnlyRecords(attributes, insertRecords, targetInfoboxType):
+    insertFilename = str("data/inserts/" + targetInfoboxType + "_insert_statements.csv").replace(" ", "_")
+    insertAttributes = arrangeUpdateAttributes(attributes)
+    insertRecordsStrings = transformRecordsToUniqueStringRepresentation(insertAttributes, insertRecords)
+    writeAsCsv(insertFilename, insertAttributes, insertRecordsStrings)
 
 
 def writeBaselineData(attributes, baselineData, targetInfoboxType):
     baselineFilename = str("data/baseline/" + targetInfoboxType + "_baseline_data.csv").replace(" ", "_")
     baselineAttributes = arrangeBaselineAttributes(attributes)
-    baselineRecordsStrings = transformRecordsToString(baselineAttributes, baselineData)
+    baselineRecordsStrings = transformRecordsToUniqueStringRepresentation(baselineAttributes, baselineData)
     writeAsCsv(baselineFilename, baselineAttributes, baselineRecordsStrings)
 
 
-def transformRecordsToString(attributes, records):
+def transformRecordsToUniqueStringRepresentation(attributes, records):
     uniqueRecords = set()
     recordStrings = []
     for record in records:
@@ -658,7 +664,6 @@ def arrangeUpdateAttributes(attributes):
 
 
 def writeAsCsv(filename, attributes, records):
-    uniqueStatements = set()
     with open(filename, "w") as outfile:
         header = ""
         count = 0
@@ -697,18 +702,7 @@ def readInfoboxConfigFromFile():
 
 
 if __name__ == "__main__":
-    # infobox config is a mapping of infobox name (i.e. name of the file to be parsed) to the attributes in this infobox
-    # these attributes have to be manually copied from the corresponding wikipedia page (wikipedia.org/wiki/Template:Infobox_Name)
-    # you can also leave the list empty, then attributes will be detected automatically.
-    # THIS WILL SRSLY IMPEDE RUNTIME AND DATA QUALITY, THOUGH! better just don't do it...
-
+    # attributes should be provided via infobox_config.json
     infoboxConfig = readInfoboxConfigFromFile()
 
-
-    # select what types of update statements you want
-    # either use ["insert"] or ["insert, "delete", "update"] to guarantee data consistency
-    statementTypesToBeParsed = ["insert"]
-
-    # TODO: duplicate statements
-    # done?
-    parseInfoboxUpdatesToCsv(infoboxConfig, statementTypesToBeParsed)
+    parseInfoboxUpdatesToCsv(infoboxConfig)
