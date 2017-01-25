@@ -21,6 +21,7 @@ class JdbcTable implements Table {
 	private List<Column<String>> columns;
     private int columnCount = -1;
 	private static final String RECORD_COLUMN_NAME = "::record";
+	private int limit = -1;
 
 	JdbcTable(String schema, String name, Connection conn) {
         this.schema = schema;
@@ -111,11 +112,24 @@ class JdbcTable implements Table {
 	public TableInput open() throws InputReadException {
 		try {
 			String columnString = getColumns().stream().map(Column::getName).collect(Collectors.joining(","));
-			ResultSet rs = conn.createStatement().executeQuery(String.format("SELECT " + columnString +" FROM %s", fullName));
+			String sql = String.format("SELECT " + columnString + " FROM %s", fullName);
+			if (limit > 0) {
+				sql += " LIMIT " + limit;
+			}
+			ResultSet rs = conn.createStatement().executeQuery(sql);
 			return new JdbcTableInput(rs, name);
 		} catch (SQLException e) {
 			throw new InputReadException(e);
 		}
 	}
 
+	@Override
+	public int getLimit() {
+		return limit;
+	}
+
+	@Override
+	public void setLimit(int limit) {
+		this.limit = limit;
+	}
 }

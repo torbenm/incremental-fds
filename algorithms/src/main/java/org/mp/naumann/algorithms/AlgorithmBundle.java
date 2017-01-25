@@ -23,7 +23,7 @@ public abstract class AlgorithmBundle<T, R> {
 
     public void executeInitialAlgorithm(){
         initialAlgorithm.execute();
-        incrementalAlgorithm.setIntermediateDataStructure(initialAlgorithm.getIntermediateDataStructure());
+        incrementalAlgorithm.initialize(initialAlgorithm.getIntermediateDataStructure());
     }
 
     public void attachToBatchProcessor(BatchProcessor batchProcessor){

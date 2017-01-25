@@ -1,15 +1,15 @@
 package org.mp.naumann.algorithms.implementations;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.database.statement.DeleteStatement;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.database.statement.UpdateStatement;
 import org.mp.naumann.processor.batch.Batch;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class AverageIncrementalAlgorithm implements IncrementalAlgorithm<Double, AverageDatastructure> {
 
@@ -32,8 +32,8 @@ public class AverageIncrementalAlgorithm implements IncrementalAlgorithm<Double,
 	}
 
     @Override
-    public void initialize() {
-
+    public void initialize(AverageDatastructure ds) {
+		this.ds = ds;
     }
 
     @Override
@@ -66,11 +66,6 @@ public class AverageIncrementalAlgorithm implements IncrementalAlgorithm<Double,
 			}
 		}
 		return ds.getAverage();
-	}
-
-	@Override
-	public void setIntermediateDataStructure(AverageDatastructure intermediateDataStructure) {
-		this.ds = intermediateDataStructure;
 	}
 
 }

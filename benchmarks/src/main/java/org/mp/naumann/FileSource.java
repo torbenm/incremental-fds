@@ -59,7 +59,7 @@ public class FileSource {
 						baseline.write(line);
 						baselineandone.write(line);
 					} else {
-						if (lineNumber < splittingLine) {
+						if (lineNumber <= splittingLine) {
 							baseline.write(NL + line);
 						} else {
 							inserts.write(NL + "insert," + line);

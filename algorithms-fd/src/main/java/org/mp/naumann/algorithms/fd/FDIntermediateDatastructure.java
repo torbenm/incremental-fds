@@ -6,6 +6,8 @@ import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
+import java.util.List;
+
 public class FDIntermediateDatastructure {
 
 	private final FDTree posCover;
@@ -13,14 +15,16 @@ public class FDIntermediateDatastructure {
 	private final PLIBuilder pliBuilder;
 	private final ValueComparator valueComparator;
     private final ViolationCollection violatingValues;
+	private final List<String> columns;
 
 
-    public FDIntermediateDatastructure(FDSet negCover, FDTree posCover, PLIBuilder pliBuilder, ValueComparator valueComparator, ViolationCollection violationCollection) {
+	public FDIntermediateDatastructure(FDSet negCover, FDTree posCover, PLIBuilder pliBuilder, ValueComparator valueComparator, ViolationCollection violationCollection, List<String> columns) {
 		this.posCover = posCover;
 		this.pliBuilder = pliBuilder;
 		this.negCover = negCover;
 		this.valueComparator = valueComparator;
 		this.violatingValues = violationCollection;
+		this.columns = columns;
 	}
 
 
@@ -43,4 +47,8 @@ public class FDIntermediateDatastructure {
     public ViolationCollection getViolatingValues() {
         return violatingValues;
     }
+
+	public List<String> getColumns() {
+		return columns;
+	}
 }
