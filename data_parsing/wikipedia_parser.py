@@ -239,7 +239,11 @@ def groupDataIntoBaselineAndUpdates(targetInfoboxType, attributes):
 
     with open("files_by_infobox_type/" + targetInfoboxType, 'r', encoding='utf-8') as infile:
         for line in infile:
-            data = json.loads(line)
+            try:
+                data = json.loads(line)
+            except Exception as exception:
+                print(exception)
+
 
             updatesById, attributes = groupUpdatesById(data, attributes)
 
