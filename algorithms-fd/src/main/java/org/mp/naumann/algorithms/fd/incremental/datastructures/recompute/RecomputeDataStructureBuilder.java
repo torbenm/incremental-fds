@@ -48,17 +48,20 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
 
         updateDataStructures(inserted, deleted);
         CompressedDiff diff = CompressedDiff.buildDiff(inserted, deleted, version, compressedRecords);
-        removeRecords(batch.getDeleteStatements(), deleted);
         updateDataStructures();
+
         return diff;
     }
 
     private Set<Integer> getRecordIdsToRemove(List<? extends Statement> stmts){
         Set<Integer> ids = new HashSet<>();
+
         for (Statement stmt : stmts) {
             Map<String, String> valueMap = stmt.getValueMap();
             List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
-            ids.addAll(pliBuilder.getMatchingRecordIds(values));
+            ids.addAll(version.usingHashMapIdentification() ?
+                    pliBuilder.getMatchingRecordIdsByHashMap(values)
+                    : pliBuilder.getMatchingRecordsIdsByClusterMaps(values));
         }
         return ids;
     }
@@ -78,6 +81,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         for(Statement stmt : stmts){
             Map<String, String> valueMap = stmt.getValueMap();
             List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
+
             pliBuilder.removeRecords(values, deleted);
         }
     }
@@ -114,7 +118,6 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
                 plis.forEach(pli -> pli.setOtherClustersWithNewRecords(otherClustersWithNewRecords));
             }
         }
-
         if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)){
             //Invalidate Entries that are to be removed
             for(int i = 0; i < plis.size(); i++) {
@@ -122,19 +125,25 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
             }
         }
 
+
+
     }
 
     private void invalidateRecords(Collection<Integer> oldRecords, int attribute){
+
         for(int id : oldRecords) {
             int clusterId = compressedRecords.get(id)[attribute];
             if(clusterId > -1) {
                 IntArrayList cluster =  plis.get(attribute).getCluster(clusterId);
                 cluster.remove((Integer) id);
+                /*
+                Do we need this? THis should release some space
                 if(cluster.size() == 0) {
                     plis.get(attribute).setCluster(clusterId, null);
-                }
+                } */
             }
         }
+
     }
 
     private Set<Integer> extractClustersWithNewRecords(Collection<Integer> newRecords, int attribute) {

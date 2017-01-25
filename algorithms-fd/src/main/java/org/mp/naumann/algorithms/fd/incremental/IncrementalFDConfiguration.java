@@ -4,12 +4,20 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class IncrementalFDConfiguration {
-    public static final IncrementalFDConfiguration V0_0 = new IncrementalFDConfiguration("Original hyfd version");
-    public static final IncrementalFDConfiguration V0_1 = new IncrementalFDConfiguration("Simple incremental pruning").addPruningStrategy(PruningStrategy.SIMPLE);
-    public static final IncrementalFDConfiguration V0_2 = new IncrementalFDConfiguration("Improved pruning with bloom").addPruningStrategy(PruningStrategy.BLOOM);
-    public static final IncrementalFDConfiguration V0_3 = new IncrementalFDConfiguration("Improved pruning with bloom based on initial FDs").addPruningStrategy(PruningStrategy.BLOOM_ADVANCED);
-    public static final IncrementalFDConfiguration V0_4 = new IncrementalFDConfiguration("Annotation pruning for deletes").addPruningStrategy(PruningStrategy.ANNOTATION);
 
+    public static final IncrementalFDConfiguration V0_0 = new IncrementalFDConfiguration('0', "Original hyfd version");
+    public static final IncrementalFDConfiguration V0_1 = new IncrementalFDConfiguration('1', "Simple incremental pruning").addPruningStrategy(PruningStrategy.SIMPLE);
+    public static final IncrementalFDConfiguration V0_2 = new IncrementalFDConfiguration('2', "Improved pruning with bloom").addPruningStrategy(PruningStrategy.BLOOM);
+    public static final IncrementalFDConfiguration V0_3 = new IncrementalFDConfiguration('3', "Improved pruning with bloom based on initial FDs").addPruningStrategy(PruningStrategy.BLOOM_ADVANCED);
+    public static final IncrementalFDConfiguration V0_4 = new IncrementalFDConfiguration('4', "Annotation pruning for deletes").addPruningStrategy(PruningStrategy.ANNOTATION).setHashMapIdentification(false);
+    public static final IncrementalFDConfiguration V0_5 = new IncrementalFDConfiguration('5', "Annotation pruning for deletes with hashmap identification").addPruningStrategy(PruningStrategy.ANNOTATION);
+
+    private static final IncrementalFDConfiguration[] configurations = {V0_0, V0_1,V0_2,V0_3,V0_4, V0_5};
+
+    public static final IncrementalFDConfiguration LATEST = configurations[configurations.length-1];
+    public static final IncrementalFDConfiguration HYFD_ORIGINAL = V0_0;
+
+    private final char versionCode;
     private final Collection<PruningStrategy> pruningStrategies = new ArrayList<>();
     private final String versionName;
     private boolean sampling = false;
@@ -17,11 +25,15 @@ public class IncrementalFDConfiguration {
     private boolean innerClusterPruning = false;
     private boolean enhancedClusterPruning = false;
     private boolean recomputeDataStructures = true;
+    private boolean hashMapIdentification = true;
 
-    public static final IncrementalFDConfiguration LATEST = V0_3;
-    public static final IncrementalFDConfiguration HYFD_ORIGINAL = V0_0;
 
+    public IncrementalFDConfiguration(char versionCode, String versionName) {
+        this.versionCode = versionCode;
+        this.versionName = versionName;
+    }
     public IncrementalFDConfiguration(String versionName) {
+        this.versionCode = 'x';
         this.versionName = versionName;
     }
 
@@ -30,13 +42,12 @@ public class IncrementalFDConfiguration {
     }
 
     public static IncrementalFDConfiguration getVersion(String name){
-        switch (name) {
-            case "3": return V0_3;
-            case "2": return V0_2;
-            case "1": return V0_1;
-            case "0": return V0_0;
-            default: return new IncrementalFDConfiguration(name);
+        char c = name.charAt(0);
+        for(IncrementalFDConfiguration config : configurations){
+            if(config.versionCode == c)
+                return config;
         }
+        return null;
     }
 
     public Collection<PruningStrategy> getPruningStrategies() {
@@ -120,6 +131,15 @@ public class IncrementalFDConfiguration {
 
     public IncrementalFDConfiguration setInnerClusterPruning(boolean innerClusterPruning) {
         this.innerClusterPruning = innerClusterPruning;
+        return this;
+    }
+
+    public boolean usingHashMapIdentification() {
+        return hashMapIdentification;
+    }
+
+    public IncrementalFDConfiguration setHashMapIdentification(boolean hashMapIdentification) {
+        this.hashMapIdentification = hashMapIdentification;
         return this;
     }
 

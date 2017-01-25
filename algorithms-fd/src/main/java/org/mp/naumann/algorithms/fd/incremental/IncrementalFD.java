@@ -78,7 +78,8 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
     @Override
     public void addResultListener(ResultListener<IncrementalFDResult> listener) {
-        this.resultListeners.add(listener);
+        if(listener != null)
+            this.resultListeners.add(listener);
     }
 
     @Override
@@ -126,7 +127,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
         SpeedBenchmark.begin(BenchmarkLevel.UNIQUE);
         CompressedDiff diff = dataStructureBuilder.update(batch);
-        SpeedBenchmark.end(BenchmarkLevel.UNIQUE, "Built diff");
+        SpeedBenchmark.end(BenchmarkLevel.UNIQUE, "BUILD DIFF");
 
         List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecord();

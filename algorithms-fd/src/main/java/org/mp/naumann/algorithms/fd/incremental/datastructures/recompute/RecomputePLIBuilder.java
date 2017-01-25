@@ -74,8 +74,12 @@ class RecomputePLIBuilder {
         return clusterMapBuilder.getNumLastRecords();
     }
 
-    public Collection<Integer> getMatchingRecordIds(Iterable<String> record) {
-        return clusterMapBuilder.getMatchingRecordsIds(record);
+    public Collection<Integer> getMatchingRecordIdsByHashMap(Iterable<String> record) {
+        return clusterMapBuilder.getMatchingRecordsByHashMap(record);
+    }
+
+    public Collection<Integer> getMatchingRecordsIdsByClusterMaps(Iterable<String> record) {
+        return clusterMapBuilder.getMatchingRecordsIdsByClusterMaps(record);
     }
 
     public void removeRecords(Iterable<String> record, Set<Integer> recordIds) {

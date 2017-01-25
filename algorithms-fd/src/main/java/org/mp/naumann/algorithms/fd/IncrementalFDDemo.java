@@ -26,69 +26,68 @@ import java.util.logging.Level;
 
 public class IncrementalFDDemo {
 
-      private static final String batchFileName = "deletes.adult.csv";
-       private static final String schema = "";
-       private static final String tableName = "benchmark.adult";
-       private static final int batchSize = 200;
-    private static final ResourceType resourceType = ResourceType.BENCHMARK;//*/
-  /*    private static final String batchFileName = "deletes.deletesample.csv";
-       private static final String schema = "";
-       private static final String tableName = "test.deletesample";
-    private static final ResourceType resourceType = ResourceType.TEST;
-       private static final String csvDir = "/";
-       private static final int batchSize = 100;  //*/
-  /* private static final String batchFileName = "deletes.bridges.csv";
-    private static final String schema = "";
-   // private static final String csvDir = "/test";
-    private static final String tableName = "test.bridges";
-    private static final ResourceType resourceType = ResourceType.TEST;
-    private static final int batchSize = 200; //*/
+    private static final IncrementalFDRunConfiguration sample = new IncrementalFDRunConfiguration(
+            "deletes.deletesample.csv",
+            "",
+            "test.deletesample",
+            1800,
+                ResourceType.TEST,
+            ","
+    );
+
+    private static final IncrementalFDRunConfiguration adult = new IncrementalFDRunConfiguration(
+            "deletes.adult.csv",
+            "",
+            "benchmark.adult",
+            1800,
+            ResourceType.BENCHMARK,
+            ","
+    );
+
+    private static final IncrementalFDRunConfiguration bridges = new IncrementalFDRunConfiguration(
+            "deletes.bridges.csv",
+            "",
+            "test.bridges",
+            200,
+            ResourceType.TEST,
+            ","
+    );
 
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
         FDLogger.setLevel(Level.INFO);
-        IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom").addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION);
+
+        IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom")
+                .addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION);
+
+        IncrementalFDRunConfiguration runConfig = bridges;
+
+
         SpeedBenchmark.enable();
         SpeedBenchmark.addEventListener(f -> {
                     if(f.getLevel() == BenchmarkLevel.UNIQUE) System.out.println(f);
         }
         );
 
-        try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(resourceType, ","))) {
+        IncrementalFDRunner runner = new IncrementalFDRunner() {
+            @Override
+            public void afterInitial(List<FunctionalDependency> dependencyList) {
+                FDLogger.log(Level.INFO, String.format("Original FD count: %s", dependencyList.size()));
+                FDLogger.log(Level.INFO, String.format("Batch size: %s", runConfig.getBatchSize()));
+                FDLogger.log(Level.FINEST, "\n");
+                dependencyList.forEach(fd -> FDLogger.log(Level.FINEST, fd.toString()));
+            }
 
-            // execute initial algorithm
-            Table table = dc.getTable(schema, tableName);
-            HyFDInitialAlgorithm hyfd = new HyFDInitialAlgorithm(configuration, table);
-            List<FunctionalDependency> fds = hyfd.execute();
-            FDLogger.log(Level.INFO, String.format("Original FD count: %s", fds.size()));
-            FDLogger.log(Level.INFO, String.format("Batch size: %s", batchSize));
-            FDLogger.log(Level.FINEST, "\n");
-            fds.forEach(fd -> FDLogger.log(Level.FINEST, fd.toString()));
-            FDIntermediateDatastructure ds = hyfd.getIntermediateDataStructure();
+            @Override
+            public void afterIncremental(IncrementalFDResultListener listener) {
 
-            // create batch source & processor for inserts
-            String batchFile = ResourceConnector.getResourcePath(ResourceType.FULL_BATCHES, batchFileName);
-            StreamableBatchSource batchSource = new FixedSizeBatchSource(batchFile, schema, tableName, batchSize);
-            DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
-            BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
-
-            // create incremental algorithm
-            SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
-            IncrementalFD algorithm = new IncrementalFD(table.getColumnNames(), tableName, configuration);
-            IncrementalFDResultListener listener = new IncrementalFDResultListener();
-            algorithm.addResultListener(listener);
-            algorithm.setIntermediateDataStructure(ds);
-
-            // process batch
-            batchProcessor.addBatchHandler(algorithm);
-            batchSource.startStreaming();
-            SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Finished processing 1 batch");
-
-            // output results
-            FDLogger.log(Level.INFO, String.format("Total performed validations: %s", listener.getValidationCount()));
-            FDLogger.log(Level.INFO, String.format("Total pruned validations: %s", listener.getPrunedCount()));
-            FDLogger.log(Level.INFO, String.format("Final FD count: %s", listener.getFDs().size()));
-            //listener.getFDs().forEach(f -> FDLogger.log(Level.INFO, f.toString()));
-        }
+                // output results
+                FDLogger.log(Level.INFO, String.format("Total performed validations: %s", listener.getValidationCount()));
+                FDLogger.log(Level.INFO, String.format("Total pruned validations: %s", listener.getPrunedCount()));
+                FDLogger.log(Level.INFO, String.format("Final FD count: %s", listener.getFDs().size()));
+                //listener.getFDs().forEach(f -> FDLogger.log(Level.INFO, f.toString()));
+            }
+        };
+        runner.run(runConfig, configuration);
     }
 
 }

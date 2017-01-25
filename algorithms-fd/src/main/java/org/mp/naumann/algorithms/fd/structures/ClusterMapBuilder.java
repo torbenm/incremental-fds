@@ -16,15 +16,18 @@
 
 package org.mp.naumann.algorithms.fd.structures;
 
-import com.google.common.collect.Sets;
-
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
 
+import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
+import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Row;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +37,7 @@ public class ClusterMapBuilder {
 	
 	private int numRecords = 0;
 	private final List<HashMap<String, IntArrayList>> clusterMaps;
+	private final HashMap<Long, Integer> hashedRecords;
 
     public List<HashMap<String, IntArrayList>> getClusterMaps() {
 		return clusterMaps;
@@ -48,6 +52,7 @@ public class ClusterMapBuilder {
 		for (int i = 0; i < numAttributes; i++) {
 			clusterMaps.add(new HashMap<>());
 		}
+		hashedRecords = new HashMap<>();
 	}
 
 	/**
@@ -71,7 +76,9 @@ public class ClusterMapBuilder {
 	public int addRecord(Iterable<String> record) {
 		int recId = this.numRecords;
 		int attributeId = 0;
+        HashCodeBuilder hashCodeBuilder = new HashCodeBuilder();
 		for (String value : record) {
+		    hashCodeBuilder.append(value);
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
             if (clusterMap.containsKey(value)) {
                 clusterMap.get(value).add(recId);
@@ -84,28 +91,45 @@ public class ClusterMapBuilder {
 
             attributeId++;
         }
+        //TODO: Handling of duplicates
+        // if(this.hashedRecords.containsKey(hashCodeBuilder.build()))
+        this.hashedRecords.put(hashCodeBuilder.build(), recId);
 		this.numRecords++;
 		return recId;
 	}
 
+    public Collection<Integer> getMatchingRecordsByHashMap(Iterable<String> record){
+	    Collection<Integer> records = new IntArraySet(); // new IntArrayList();
+        HashCodeBuilder builder = new HashCodeBuilder();
+        record.forEach(builder::append);
+        int recId = hashedRecords.getOrDefault(builder.build(), -1);
+        if(recId > -1)
+            records.add(recId);
+        return records;
+    }
 
-	public Collection<Integer> getMatchingRecordsIds(Iterable<String> record){
-	    int attributeId = 0;
-        IntArrayList matching = null;
-        IntArrayList def = new IntArrayList();
-
-        for(String value : record) {
-
-           HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
-           IntArrayList cluster = clusterMap.getOrDefault(value, def);
-           if(matching == null) {
-               matching = cluster.clone();
-           }  else {
-               matching.retainAll(cluster);
-           }
-           attributeId++;
-       }
-       return matching;
+    public Collection<Integer> getMatchingRecordsIdsByClusterMaps(Iterable<String> record) {
+        int attributeId = 0;
+        List<IntArrayList> clusters = new ArrayList<>();
+        for (String value : record) {
+            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
+            IntArrayList cluster = clusterMap.get(value);
+            if (cluster == null || cluster.isEmpty()) {
+                return Collections.emptyList();
+            }
+            clusters.add(cluster);
+            attributeId++;
+        }
+        clusters.sort(Comparator.comparingInt(Collection::size));
+        Collection<Integer> matching = null;
+        for (IntArrayList cluster : clusters) {
+            if (matching == null) {
+                matching = cluster.clone();
+            } else {
+                matching.retainAll(cluster);
+            }
+        }
+        return matching;
     }
 
     public void removeRecords(Iterable<String> record, Set<Integer> recordIds){
