@@ -367,10 +367,10 @@ def generateUpdateRecord(data, attributes, currentId, articleTitle):
         return updateRecord
     return None
 
-    for entry in data:
-        addValuesTo(entry, attributes, updateRecord)
-
-    return updateRecord
+    # for entry in data:
+    #     addValuesTo(entry, attributes, updateRecord)
+    #
+    # return updateRecord
 
 def checkValidityOfUpdateStatement(updateStatement, attributes):
     isValid = False
@@ -696,17 +696,26 @@ def statementToString(attributes, entry):
     return outputString
 
 
-def readInfoboxConfigFromFile():
+def readInfoboxConfigFromFile(filename):
     concatLines = ""
-    with open("infobox_config.json", "r", encoding="utf-8") as infile:
+    with open(filename, "r", encoding="utf-8") as infile:
         for line in infile:
             concatLines += line
 
     return json.loads(concatLines)
 
 
+def readInfoboxConfigs():
+    infoboxConfig = {}
+    dirname = "infobox_configs"
+    for filename in os.listdir(dirname):
+        if filename.endswith(".json"):
+            infoboxConfig.update(readInfoboxConfigFromFile(dirname + "/" + filename))
+    return infoboxConfig
+
+
 if __name__ == "__main__":
     # attributes should be provided via infobox_config.json
-    infoboxConfig = readInfoboxConfigFromFile()
+    infoboxConfig = readInfoboxConfigs()
 
     parseInfoboxUpdatesToCsv(infoboxConfig)
