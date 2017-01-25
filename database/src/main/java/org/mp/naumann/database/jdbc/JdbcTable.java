@@ -12,6 +12,7 @@ import org.mp.naumann.database.statement.StatementGroup;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 class JdbcTable implements Table {
 
@@ -19,6 +20,7 @@ class JdbcTable implements Table {
     private String schema, name, fullName;
 	private List<Column<String>> columns;
     private int columnCount = -1;
+	private static final String RECORD_COLUMN_NAME = "::record";
 
 	JdbcTable(String schema, String name, Connection conn) {
         this.schema = schema;
@@ -49,15 +51,7 @@ class JdbcTable implements Table {
 
 	@Override
     public int numberOfColumns(){
-        if(columnCount == -1){
-            try (java.sql.Statement stmt = conn.createStatement()) {
-                try (ResultSet rs = stmt.executeQuery(String.format("SELECT * FROM %s LIMIT 1", fullName))) {
-                    columnCount = rs.getMetaData().getColumnCount();
-                }
-            } catch (SQLException ignored) {
-            }
-        }
-        return columnCount;
+        return getColumns().size();
     }
 
 	@Override
@@ -68,7 +62,11 @@ class JdbcTable implements Table {
 				DatabaseMetaData meta = conn.getMetaData();
 				try (ResultSet rs = meta.getColumns(null, schema, name, null)) {
 					while (rs.next()) {
-						columns.add(new StringColumn(rs.getString(4), JDBCType.valueOf(rs.getInt(5))));
+						String name = rs.getString(4);
+						if (name.equals(RECORD_COLUMN_NAME)) {
+							continue;
+						}
+						columns.add(new StringColumn(name, JDBCType.valueOf(rs.getInt(5))));
 					}
 				}
 
@@ -76,7 +74,11 @@ class JdbcTable implements Table {
 				if (columns.isEmpty()) {
                     try (ResultSet rs = meta.getColumns(null, schema, schema + "." + name, null)) {
                         while (rs.next()) {
-                            columns.add(new StringColumn(rs.getString(4), JDBCType.valueOf(rs.getInt(5))));
+							String name = rs.getString(4);
+							if (name.equals(RECORD_COLUMN_NAME)) {
+								continue;
+							}
+							columns.add(new StringColumn(name, JDBCType.valueOf(rs.getInt(5))));
                         }
                     }
                 }
@@ -108,7 +110,8 @@ class JdbcTable implements Table {
 	@Override
 	public TableInput open() throws InputReadException {
 		try {
-			ResultSet rs = conn.createStatement().executeQuery(String.format("SELECT * FROM %s", fullName));
+			String columnString = getColumns().stream().map(Column::getName).collect(Collectors.joining(","));
+			ResultSet rs = conn.createStatement().executeQuery(String.format("SELECT " + columnString +" FROM %s", fullName));
 			return new JdbcTableInput(rs, name);
 		} catch (SQLException e) {
 			throw new InputReadException(e);

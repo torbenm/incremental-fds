@@ -1,6 +1,6 @@
 package org.mp.naumann.algorithms.fd;
 
-import ResourceConnection.ResourceType;
+import ResourceConnection.ResourceConnector;
 
 public class IncrementalFDRunConfiguration {
 
@@ -9,9 +9,9 @@ public class IncrementalFDRunConfiguration {
     private final String schema;
     private final String tableName;
     private final int batchSize;
-    private final ResourceType resourceType;
+    private final String resourceType;
     private final String separator;
-    public IncrementalFDRunConfiguration(String batchFileName, String schema, String tableName, int batchSize, ResourceType resourceType, String separator) {
+    public IncrementalFDRunConfiguration(String batchFileName, String schema, String tableName, int batchSize, String resourceType, String separator) {
         this.batchFileName = batchFileName;
         this.schema = schema;
         this.tableName = tableName;
@@ -40,7 +40,7 @@ public class IncrementalFDRunConfiguration {
         return batchSize;
     }
 
-    public ResourceType getResourceType() {
+    public String getResourceType() {
         return resourceType;
     }
 }

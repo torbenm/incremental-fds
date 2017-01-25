@@ -1,8 +1,7 @@
 package org.mp.naumann.database.utils;
 
-import ResourceConnection.ResourceConnector;
-import ResourceConnection.ResourceType;
 import com.opentable.db.postgres.embedded.DatabaseConnectionPreparer;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -12,6 +11,8 @@ import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+
+import ResourceConnection.ResourceConnector;
 
 public class PostgresConnectionPreparer implements DatabaseConnectionPreparer {
 
@@ -48,7 +49,7 @@ public class PostgresConnectionPreparer implements DatabaseConnectionPreparer {
         }
         try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
             CSVFormat format = CSVFormat.newFormat(';').withFirstRecordAsHeader().withQuote('"');
-            String csvPath = ResourceConnector.getResourcePath(ResourceType.TEST, "test.countries.csv");
+            String csvPath = ResourceConnector.getResourcePath(ResourceConnector.TEST, "test.countries.csv");
             CSVParser parser = format.parse(new FileReader(new File(csvPath)));
             for (CSVRecord csvRecord : parser) {
                 for (int i = 1; i <= csvRecord.size(); i++) {

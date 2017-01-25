@@ -20,7 +20,7 @@ public class IncrementalFDConfiguration {
     private final char versionCode;
     private final Collection<PruningStrategy> pruningStrategies = new ArrayList<>();
     private final String versionName;
-    private boolean sampling = false;
+    private boolean sampling = true;
     private boolean clusterPruning = true;
     private boolean innerClusterPruning = false;
     private boolean enhancedClusterPruning = false;
@@ -47,7 +47,7 @@ public class IncrementalFDConfiguration {
             if(config.versionCode == c)
                 return config;
         }
-        return null;
+        return new IncrementalFDConfiguration(name);
     }
 
     public Collection<PruningStrategy> getPruningStrategies() {

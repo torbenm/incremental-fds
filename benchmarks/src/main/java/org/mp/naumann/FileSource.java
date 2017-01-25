@@ -12,7 +12,6 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 
 import ResourceConnection.ResourceConnector;
-import ResourceConnection.ResourceType;
 
 public class FileSource {
 
@@ -47,7 +46,7 @@ public class FileSource {
 	public void doSplit() throws IOException {
 		if (!hasSplit) {
 			try (BufferedReader bufferedReader = new BufferedReader(
-					new InputStreamReader(ResourceConnector.getResource(ResourceType.BENCHMARK, origin)));
+					new InputStreamReader(ResourceConnector.getResource(ResourceConnector.BENCHMARK, origin)));
 					PrintWriter baseline = new PrintWriter(BASELINE_PATH, "UTF-8");
 					PrintWriter baselineandone = new PrintWriter(BASELINEANDONE_PATH, "UTF-8");
 					PrintWriter inserts = new PrintWriter(INSERTS_PATH, "UTF-8")) {

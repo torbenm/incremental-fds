@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.logging.Level;
 
 import ResourceConnection.ResourceConnector;
-import ResourceConnection.ResourceType;
 
 public interface IncrementalFDRunner {
 
@@ -49,7 +48,7 @@ public interface IncrementalFDRunner {
             FDIntermediateDatastructure ds = hyfd.getIntermediateDataStructure();
 
             // create batch source & processor for inserts
-            String batchFile = ResourceConnector.getResourcePath(ResourceType.FULL_BATCHES, runConfig.getBatchFileName());
+            String batchFile = ResourceConnector.getResourcePath(ResourceConnector.FULL_BATCHES, runConfig.getBatchFileName());
             StreamableBatchSource batchSource = new FixedSizeBatchSource(batchFile, runConfig.getSchema(),
                     runConfig.getTableName(), runConfig.getBatchSize());
             DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
