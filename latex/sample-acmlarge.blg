@@ -1,0 +1,67 @@
+This is BibTeX, Version 0.99d (TeX Live 2015)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: sample-acmlarge.aux
+The style file: ACM-Reference-Format.bst
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Database file #1: sample-bibliography.bib
+Warning--no key, author in Editor00
+Warning--no key, author in Editor00
+Warning--no key, author in Editor00a
+Warning--no key, author in Editor00a
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Warning--empty chapter and pages in Editor00
+Warning--page numbers missing in Editor00a
+Warning--require articleno with numpages field in Kirschmer:2010:AEI:1958016.1958018
+Warning--empty address in Knuth97
+Warning--articleno field, but no numpages field, in Lee05
+Warning--page numbers missing in both pages and numpages fields in Lee05
+Warning--require pages or numpages fields with articleno field in Lee05
+Warning--unrecognized DOI value [99.9999/woot07-S422]
+Warning--articleno field, but no numpages field, in rous08
+Warning--page numbers missing in both pages and numpages fields in rous08
+Warning--require pages or numpages fields with articleno field in rous08
+Warning--page numbers missing in both pages and numpages fields in SaeediJETC10
+Warning--unrecognized DOI value [99.9999/woot07-S422]
+You've used 39 entries,
+            5551 wiz_defined-function locations,
+            1787 strings with 24623 characters,
+and the built_in function-call counts, 36177 in all, are:
+= -- 4567
+> -- 1165
+< -- 5
++ -- 342
+- -- 607
+* -- 2713
+:= -- 4004
+add.period$ -- 214
+call.type$ -- 39
+change.case$ -- 235
+chr.to.int$ -- 37
+cite$ -- 58
+duplicate$ -- 2829
+empty$ -- 2093
+format.name$ -- 470
+if$ -- 8293
+int.to.chr$ -- 3
+int.to.str$ -- 0
+missing$ -- 87
+newline$ -- 391
+num.names$ -- 298
+pop$ -- 1005
+preamble$ -- 1
+purify$ -- 424
+quote$ -- 0
+skip$ -- 768
+stack$ -- 0
+substring$ -- 3281
+swap$ -- 256
+text.length$ -- 409
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 494
+warning$ -- 17
+while$ -- 291
+width$ -- 0
+write$ -- 781
+(There were 17 warnings)

@@ -1,0 +1,55 @@
+This is BibTeX, Version 0.99d (TeX Live 2015)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: sample-sigchi.aux
+The style file: ACM-Reference-Format.bst
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Database file #1: sigproc.bib
+Warning--no key, author in Amsthm15
+Warning--no key, author in Amsthm15
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Warning--empty publisher in clark:pct
+Warning--empty address in clark:pct
+Warning--empty organization in Fear05
+You've used 8 entries,
+            5551 wiz_defined-function locations,
+            1338 strings with 16123 characters,
+and the built_in function-call counts, 6749 in all, are:
+= -- 880
+> -- 179
+< -- 0
++ -- 46
+- -- 68
+* -- 424
+:= -- 715
+add.period$ -- 42
+call.type$ -- 8
+change.case$ -- 43
+chr.to.int$ -- 8
+cite$ -- 15
+duplicate$ -- 587
+empty$ -- 432
+format.name$ -- 76
+if$ -- 1644
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 21
+newline$ -- 110
+num.names$ -- 56
+pop$ -- 216
+preamble$ -- 1
+purify$ -- 83
+quote$ -- 0
+skip$ -- 176
+stack$ -- 0
+substring$ -- 512
+swap$ -- 60
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 100
+warning$ -- 5
+while$ -- 60
+width$ -- 0
+write$ -- 181
+(There were 5 warnings)
