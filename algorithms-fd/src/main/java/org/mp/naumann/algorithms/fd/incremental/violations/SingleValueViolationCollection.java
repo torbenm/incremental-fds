@@ -18,6 +18,7 @@ import java.util.Map;
 public class SingleValueViolationCollection implements ViolationCollection {
 
     private final Map<OpenBitSet, int[]> violationsMap = new HashMap<>();
+    private final Map<OpenBitSet, Integer> violationMapById = new HashMap<>();
     private final List<OpenBitSetFD> invalidFDs = new ArrayList<>();
     private final Matcher matcher = new IntersectionMatcher();
     private final IncrementalFDConfiguration configuration;
@@ -32,6 +33,11 @@ public class SingleValueViolationCollection implements ViolationCollection {
     }
 
     @Override
+    public void add(OpenBitSet attr, int violatingRecord) {
+        this.violationMapById.put(attr.clone(), violatingRecord);
+    }
+
+   @Override
     public List<OpenBitSet> getAffected(FDSet negativeCover, Map<Integer, int[]> removedValues) {
         List<OpenBitSet> affected = new ArrayList<>();
         for(Map.Entry<OpenBitSet, int[]> entry : violationsMap.entrySet()) {
@@ -45,6 +51,19 @@ public class SingleValueViolationCollection implements ViolationCollection {
             if (anyMatch) {
                 affected.add(entry.getKey());
                 negativeCover.remove(attrs);
+            }
+        }
+        return affected;
+    }
+
+    @Override
+    public List<OpenBitSet> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords) {
+        List<OpenBitSet> affected = new ArrayList<>();
+        for(Map.Entry<OpenBitSet, Integer> entry : this.violationMapById.entrySet()) {
+
+            if(removedRecords.contains(entry.getValue())) {
+                affected.add(entry.getKey());
+                negativeCoverToUpdate.remove(entry.getKey());
             }
         }
         return affected;

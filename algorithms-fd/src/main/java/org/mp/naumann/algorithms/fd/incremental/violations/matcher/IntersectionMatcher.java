@@ -2,6 +2,9 @@ package org.mp.naumann.algorithms.fd.incremental.violations.matcher;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
+import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
+
+import java.util.Collection;
 
 public class IntersectionMatcher implements Matcher {
     @Override
@@ -14,5 +17,10 @@ public class IntersectionMatcher implements Matcher {
             j++;
         }
         return false;
+    }
+
+    @Override
+    public boolean match(Collection<Integer> recordIds, Collection<Integer> removedRecords) {
+        return CollectionUtils.intersects(recordIds, removedRecords);
     }
 }

@@ -132,11 +132,11 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         List<PositionListIndex> plis = dataStructureBuilder.getPlis();
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecord();
         //validateTopDown(batch, diff, plis, compressedRecords);
-        validateBottomUp(diff, compressedRecords, plis);
+        int v = validateBottomUp(diff, compressedRecords, plis);
         List<FunctionalDependency> fds = new ArrayList<>();
         posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
         SpeedBenchmark.end(BenchmarkLevel.METHOD_HIGH_LEVEL, "Processed one batch, inner measuring");
-        return new IncrementalFDResult(fds, 0, 0);
+        return new IncrementalFDResult(fds, v, 0);
     }
 
     protected void validateTopDown(Batch batch, CompressedDiff diff, List<PositionListIndex> plis, CompressedRecords compressedRecords) throws AlgorithmExecutionException {
@@ -182,7 +182,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         FDLogger.log(Level.FINE, "Made " + validations + " validations");
     }
 
-    public void validateBottomUp(CompressedDiff diff, CompressedRecords compressedRecords, List<PositionListIndex> plis) throws AlgorithmExecutionException {
+    public int validateBottomUp(CompressedDiff diff, CompressedRecords compressedRecords, List<PositionListIndex> plis) throws AlgorithmExecutionException {
         if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)){
 
 
@@ -192,7 +192,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
             IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Initialised valdiator and inductor");
-            List<OpenBitSet> affected = violationCollection.getAffected(negCover, diff.getDeletedRecords());
+            List<OpenBitSet> affected = violationCollection.getAffected(negCover, diff.getDeletedRecords().keySet());
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Received affected records");
 
             IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
@@ -212,7 +212,9 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             int validations = validator.getValidations();
             FDLogger.log(Level.FINE, "Pruned " + pruned + " validations");
             FDLogger.log(Level.FINE, "Made " + validations + " validations");
+            return validations;
         }
+        return 0;
     }
 
     @Override

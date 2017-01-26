@@ -55,6 +55,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         Set<Integer> deleted = removeRecords(batch.getDeleteStatements());
         recordIds.removeAll(deleted);
         Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
+
         if (version.usesPruningStrategy(PruningStrategy.ANNOTATION)) {
             for (int delete : deleted) {
                 deletedDiff.put(delete, compressedRecords.get(delete));

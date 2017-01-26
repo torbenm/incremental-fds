@@ -5,6 +5,7 @@ import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.PrintUtils;
 
 import java.util.Arrays;
+import java.util.Collection;
 
 public class ExactMatcher implements Matcher {
     @Override
@@ -19,5 +20,12 @@ public class ExactMatcher implements Matcher {
             j++;
         }
         return true;
+    }
+
+    @Override
+    public boolean match(Collection<Integer> recordIds, Collection<Integer> removedRecords) {
+        int recordsBefore = recordIds.size();
+        recordIds.removeAll(removedRecords);
+        return recordIds.size() <= 1;
     }
 }

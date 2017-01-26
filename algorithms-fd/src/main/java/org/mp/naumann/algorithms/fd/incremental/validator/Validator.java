@@ -203,6 +203,7 @@ public abstract class Validator<T> {
             int rhsSize = (int) rhs.cardinality();
             if (rhsSize == 0)
                 return result;
+
             result.validations = result.validations + rhsSize;
 
             if (Validator.this.level == 0) {
