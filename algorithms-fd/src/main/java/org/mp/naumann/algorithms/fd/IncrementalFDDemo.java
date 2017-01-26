@@ -62,10 +62,10 @@ public class IncrementalFDDemo {
             BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 
             // create incremental algorithm
-            IncrementalFD algorithm = new IncrementalFD(table.getColumnNames(), tableName, configuration);
+            IncrementalFD algorithm = new IncrementalFD(tableName, configuration);
             IncrementalFDResultListener listener = new IncrementalFDResultListener();
             algorithm.addResultListener(listener);
-            algorithm.setIntermediateDataStructure(ds);
+            algorithm.initialize(ds);
 
             // process batch
             batchProcessor.addBatchHandler(algorithm);

@@ -8,7 +8,6 @@ import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.benchmarks.IncrementalFDBenchmark;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.reporter.GoogleSheetsReporter;
 import org.mp.naumann.reporter.Reporter;
@@ -81,7 +80,7 @@ public class BenchmarksApplication {
             TestCase t = new InitialAndIncrementalOneBatch(splitLine,
                     batchSize,
                     dataSet,
-                    new IncrementalFDBenchmark(config),
+                    config,
                     stopAfter
             );
             t.execute();

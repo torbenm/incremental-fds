@@ -25,12 +25,12 @@ import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
+import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.processor.batch.Batch;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -43,13 +43,11 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     private static final float EFFICIENCY_THRESHOLD = 0.01f;
     private IncrementalFDConfiguration version = IncrementalFDConfiguration.LATEST;
 
-    private final List<String> columns;
+    private List<String> columns;
     private FDTree posCover;
     private final String tableName;
     private final List<ResultListener<IncrementalFDResult>> resultListeners = new ArrayList<>();
     private MemoryGuardian memoryGuardian = new MemoryGuardian(true);
-    private FDIntermediateDatastructure intermediateDatastructure;
-    private boolean initialized = false;
 
     private DataStructureBuilder dataStructureBuilder;
     private BloomPruningStrategy advancedBloomPruning;
@@ -57,15 +55,15 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     private BloomPruningStrategy bloomPruning;
     private FDSet negCover;
     private ViolationCollection violationCollection;
+    private ValueComparator valueComparator;
 
-    public IncrementalFD(List<String> columns, String tableName, IncrementalFDConfiguration version) {
-        this(columns, tableName);
+    public IncrementalFD(String tableName, IncrementalFDConfiguration version) {
+        this(tableName);
         this.version = version;
     }
 
 
-    public IncrementalFD(List<String> columns, String tableName) {
-        this.columns = columns;
+    public IncrementalFD(String tableName) {
         this.tableName = tableName;
     }
 
@@ -81,13 +79,15 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     }
 
     @Override
-    public void initialize() {
+    public void initialize(FDIntermediateDatastructure intermediateDatastructure) {
+        FDLogger.log(Level.FINE, "Initializing IncrementalFD");
         this.posCover = intermediateDatastructure.getPosCover();
         this.negCover = intermediateDatastructure.getNegCover();
         this.violationCollection = intermediateDatastructure.getViolatingValues();
 
         PLIBuilder pliBuilder = intermediateDatastructure.getPliBuilder();
-
+        this.valueComparator = intermediateDatastructure.getValueComparator();
+        this.columns = intermediateDatastructure.getColumns();
         List<Integer> pliOrder = pliBuilder.getPliOrder();
         List<String> orderedColumns = pliOrder.stream().map(columns::get).collect(Collectors.toList());
         List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
@@ -113,12 +113,6 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
     @Override
     public IncrementalFDResult execute(Batch batch) throws AlgorithmExecutionException {
-        if (!initialized) {
-            FDLogger.log(Level.FINE, "Initializing IncrementalFD");
-            initialize();
-            FDLogger.log(Level.FINEST, intermediateDatastructure.getViolatingValues().toString());
-            initialized = true;
-        }
 
         FDLogger.log(Level.FINE, "Started IncrementalFD for new Batch");
         SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
@@ -134,7 +128,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         }
         IncrementalValidator validator = new IncrementalValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
         IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
-                intermediateDatastructure.getValueComparator(), this.memoryGuardian);
+                valueComparator, this.memoryGuardian);
 
         IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
         if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {
@@ -206,12 +200,6 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             return new IncrementalFDResult(fds, validations, pruned);
         }
         return null;
-    }
-
-    @Override
-    public void setIntermediateDataStructure(FDIntermediateDatastructure intermediateDataStructure) {
-
-        this.intermediateDatastructure = intermediateDataStructure;
     }
 
     private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {

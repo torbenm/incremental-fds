@@ -1,6 +1,5 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
@@ -17,8 +16,6 @@ import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.RecordCompressor;
-import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
-import org.mp.naumann.algorithms.fd.utils.FileUtils;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
@@ -27,7 +24,6 @@ import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -98,19 +94,21 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		// Initialize
         SpeedBenchmark.begin(BenchmarkLevel.OPERATION);
 		FDLogger.log(Level.FINER, "Initializing ...");
-		TableInput tableInput = this.getInput();
-		this.initialize(tableInput);
+		try (TableInput tableInput = this.table.open()) {
+			this.initialize(tableInput);
 
-		///////////////////////////////////////////////////////
-		// Build data structures for sampling and validation //
-		///////////////////////////////////////////////////////
+			///////////////////////////////////////////////////////
+			// Build data structures for sampling and validation //
+			///////////////////////////////////////////////////////
 
-		// Calculate plis
-		FDLogger.log(Level.FINER, "Reading data and calculating plis ...");
-		this.pliBuilder = new PLIBuilder(this.numAttributes, this.valueComparator.isNullEqualNull());
-		pliBuilder.addRecords(tableInput);
+			// Calculate plis
+			FDLogger.log(Level.FINER, "Reading data and calculating plis ...");
+			this.pliBuilder = new PLIBuilder(this.numAttributes, this.valueComparator.isNullEqualNull());
+			pliBuilder.addRecords(tableInput);
+		} catch (InputReadException e) {
+			throw new RuntimeException("Input generation failed!",e);
+		}
 		List<PositionListIndex> plis = pliBuilder.fetchPositionListIndexes();
-		this.closeInput(tableInput);
 
 		final int numRecords = pliBuilder.getNumLastRecords();
 
@@ -184,21 +182,6 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		return posCover;
 	}
 
-	private TableInput getInput() {
-		try {
-
-			return this.table.open();
-
-		} catch (InputReadException e) {
-			throw new RuntimeException("Input generation failed!",e);
-		}
-	}
-
-
-	private void closeInput(TableInput tableInput) {
-		FileUtils.close(tableInput);
-	}
-
 	private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {
 		ObjectArrayList<ColumnIdentifier> columnIdentifiers = new ObjectArrayList<>(this.attributeNames.size());
 		for (String attributeName : this.attributeNames)
@@ -229,4 +212,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		return valueComparator;
 	}
 
+	public List<String> getColumns() {
+		return attributeNames;
+	}
 }

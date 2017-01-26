@@ -15,4 +15,7 @@ public interface Table extends HasName, HasColumns<String> {
     
     TableInput open() throws InputReadException;
 
+    int getLimit();
+
+    void setLimit(int limit);
 }
