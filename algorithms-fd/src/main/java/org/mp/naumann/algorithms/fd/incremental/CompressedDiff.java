@@ -1,14 +1,16 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
+import java.util.Map;
+
 public class CompressedDiff {
 
-	private final int[][] insertedRecords;
-	private final int[][] deletedRecords;
-	private final int[][] oldUpdatedRecords;
-	private final int[][] newUpdatedRecords;
+	private final Map<Integer, int[]> insertedRecords;
+	private final Map<Integer, int[]> deletedRecords;
+	private final Map<Integer, int[]> oldUpdatedRecords;
+	private final Map<Integer, int[]> newUpdatedRecords;
 
-	public CompressedDiff(int[][] insertedRecords, int[][] deletedRecords, int[][] oldUpdatedRecords,
-						   int[][] newUpdatedRecords) {
+	public CompressedDiff(Map<Integer, int[]> insertedRecords, Map<Integer, int[]> deletedRecords, Map<Integer, int[]> oldUpdatedRecords,
+						   Map<Integer, int[]> newUpdatedRecords) {
 		this.insertedRecords = insertedRecords;
 		this.deletedRecords = deletedRecords;
 		this.oldUpdatedRecords = oldUpdatedRecords;
@@ -16,22 +18,22 @@ public class CompressedDiff {
 	}
 
 	
-	public int[][] getInsertedRecords() {
+	public Map<Integer, int[]> getInsertedRecords() {
 		return insertedRecords;
 	}
 
 	
-	public int[][] getDeletedRecords() {
+	public Map<Integer, int[]> getDeletedRecords() {
 		return deletedRecords;
 	}
 
 	
-	public int[][] getOldUpdatedRecords() {
+	public Map<Integer, int[]> getOldUpdatedRecords() {
 		return oldUpdatedRecords;
 	}
 
 	
-	public int[][] getNewUpdatedRecords() {
+	public Map<Integer, int[]> getNewUpdatedRecords() {
 		return newUpdatedRecords;
 	}
 

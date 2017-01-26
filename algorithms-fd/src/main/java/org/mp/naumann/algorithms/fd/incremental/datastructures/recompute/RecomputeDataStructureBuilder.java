@@ -55,25 +55,21 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         recordIds.addAll(inserted);
         Set<Integer> deleted = removeRecords(batch.getDeleteStatements());
         recordIds.removeAll(deleted);
-        int[][] deletedDiff = new int[deleted.size()][];
+        Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
         if (version.usesPruningStrategy(PruningStrategy.ANNOTATION)) {
-            int i = 0;
             for (int delete : deleted) {
-                deletedDiff[i] = compressedRecords.get(delete);
-                i++;
+                deletedDiff.put(delete, compressedRecords.get(delete));
             }
         }
 
         updateDataStructures(inserted, deleted);
-        int[][] insertedDiff = new int[inserted.size()][];
+        Map<Integer, int[]> insertedDiff = new HashMap<>(inserted.size());
         if (version.usesPruningStrategy(PruningStrategy.SIMPLE)) {
-            int i = 0;
             for (int insert : inserted) {
-                insertedDiff[i] = compressedRecords.get(insert);
-                i++;
+                insertedDiff.put(insert, compressedRecords.get(insert));
             }
         }
-        CompressedDiff diff = new CompressedDiff(insertedDiff, deletedDiff, new int[0][], new int[0][]);
+        CompressedDiff diff = new CompressedDiff(insertedDiff, deletedDiff, new HashMap<>(0), new HashMap<>(0));
         return diff;
     }
 
@@ -152,7 +148,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
                 PositionListIndex pli = plis.get(i);
                 Set<Integer> clusterIds = extractClustersWithNewRecords(inserted, i);
                 if (version.usesClusterPruning()) {
-//                    pli.setClustersWithNewRecords(clusterIds);
+                    pli.setClustersWithNewRecords(clusterIds);
                 }
                 if (version.usesEnhancedClusterPruning()) {
                     newClusters.put(i, clusterIds);
@@ -177,7 +173,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         return clusterIds;
     }
 
-    public List<? extends PositionListIndex> getPlis() {
+    public List<PositionListIndex> getPlis() {
         return plis;
     }
 

@@ -26,11 +26,11 @@ import ResourceConnection.ResourceType;
 
 public class IncrementalFDDemo {
 
-      private static final String batchFileName = "deletes.adult.csv";
+      private static final String batchFileName = "simple.csv";
        private static final String schema = "";
-       private static final String tableName = "benchmark.adult";
+       private static final String tableName = "simple";
        private static final int batchSize = 200;
-    private static final ResourceType resourceType = ResourceType.BENCHMARK;//*/
+    private static final ResourceType resourceType = ResourceType.BASELINE;//*/
   /*    private static final String batchFileName = "deletes.deletesample.csv";
        private static final String schema = "";
        private static final String tableName = "test.deletesample";
@@ -45,7 +45,7 @@ public class IncrementalFDDemo {
     private static final int batchSize = 200; //*/
 
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
-        FDLogger.setLevel(Level.FINER);
+        FDLogger.setLevel(Level.FINE);
         IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom").addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION);
         SpeedBenchmark.enable();
         SpeedBenchmark.addEventListener(f -> {
@@ -87,7 +87,7 @@ public class IncrementalFDDemo {
             FDLogger.log(Level.INFO, String.format("Total performed validations: %s", listener.getValidationCount()));
             FDLogger.log(Level.INFO, String.format("Total pruned validations: %s", listener.getPrunedCount()));
             FDLogger.log(Level.INFO, String.format("Final FD count: %s", listener.getFDs().size()));
-            //listener.getFDs().forEach(f -> FDLogger.log(Level.INFO, f.toString()));
+            listener.getFDs().forEach(f -> FDLogger.log(Level.FINE, f.toString()));
         }
     }
 

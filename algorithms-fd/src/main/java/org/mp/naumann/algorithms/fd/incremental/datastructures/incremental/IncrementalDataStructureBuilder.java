@@ -97,15 +97,13 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
             plis.forEach(pli -> pli.setNewRecords(inserted));
         }
         //TODO: deletes
-        int[][] insertedDiff = new int[inserted.size()][];
+        Map<Integer, int[]> insertedDiff = new HashMap<>(inserted.size());
         if (version.usesPruningStrategy(PruningStrategy.SIMPLE)) {
-            int i = 0;
             for (int insert : inserted) {
-                insertedDiff[i] = compressedRecords.get(insert);
-                i++;
+                insertedDiff.put(insert, compressedRecords.get(insert));
             }
         }
-        return new CompressedDiff(insertedDiff, new int[0][], new int[0][], new int[0][]);
+        return new CompressedDiff(insertedDiff, new HashMap<>(0), new HashMap<>(0), new HashMap<>(0));
     }
 
     private void updateDataStructures(Collection<Integer> inserted, List<? extends Map<Integer, IntArrayList>> clusterMaps) {
@@ -149,7 +147,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
     }
 
     @Override
-    public List<? extends PositionListIndex> getPlis() {
+    public List<PositionListIndex> getPlis() {
         return plis;
     }
 

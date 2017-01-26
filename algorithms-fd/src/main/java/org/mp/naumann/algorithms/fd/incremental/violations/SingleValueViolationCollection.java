@@ -9,7 +9,6 @@ import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -27,12 +26,12 @@ public class SingleValueViolationCollection implements ViolationCollection {
     }
 
     @Override
-    public List<OpenBitSet> getAffected(FDSet negativeCover, int[][] removedValues) {
+    public List<OpenBitSet> getAffected(FDSet negativeCover, Map<Integer, int[]> removedValues) {
         List<OpenBitSet> affected = new ArrayList<>();
         for(Map.Entry<OpenBitSet, int[]> entry : violationsMap.entrySet()) {
             boolean anyMatch = false;
             OpenBitSet attrs = entry.getKey();
-            for(int[] record : removedValues){
+            for(int[] record : removedValues.values()){
                 anyMatch = matcher.match(attrs, entry.getValue(), record);
                 if(anyMatch) break;
             }

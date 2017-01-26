@@ -128,14 +128,17 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         CompressedDiff diff = dataStructureBuilder.update(batch);
         SpeedBenchmark.end(BenchmarkLevel.UNIQUE, "Built diff");
 
-        List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
+        List<PositionListIndex> plis = dataStructureBuilder.getPlis();
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecord();
+        validateTopDown(batch, diff, plis, compressedRecords);
+        validateBottomUp(diff, compressedRecords, plis);
+        List<FunctionalDependency> fds = new ArrayList<>();
+        posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
+        SpeedBenchmark.end(BenchmarkLevel.METHOD_HIGH_LEVEL, "Processed one batch, inner measuring");
+        return new IncrementalFDResult(fds, 0, 0);
+    }
 
-        // Currently we don't have a version that handles both inserts and deletes well,
-        // so we just 'escape' to handling only deletes once we have some.
-        if(diff.getDeletedRecords().length > 0){
-            return validateDeletes(diff, compressedRecords, plis);
-        }
+    protected void validateTopDown(Batch batch, CompressedDiff diff, List<PositionListIndex> plis, CompressedRecords compressedRecords) throws AlgorithmExecutionException {
         SpecializingValidator validator = new SpecializingValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
         IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
                 intermediateDatastructure.getValueComparator(), this.memoryGuardian);
@@ -176,13 +179,9 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         int validations = validator.getValidations();
         FDLogger.log(Level.FINE, "Pruned " + pruned + " validations");
         FDLogger.log(Level.FINE, "Made " + validations + " validations");
-        List<FunctionalDependency> fds = new ArrayList<>();
-        posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
-        SpeedBenchmark.end(BenchmarkLevel.METHOD_HIGH_LEVEL, "Processed one batch, inner measuring");
-        return new IncrementalFDResult(fds, validations, pruned);
     }
 
-    public IncrementalFDResult validateDeletes(CompressedDiff diff, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis) throws AlgorithmExecutionException {
+    public void validateBottomUp(CompressedDiff diff, CompressedRecords compressedRecords, List<PositionListIndex> plis) throws AlgorithmExecutionException {
         if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)){
 
             //FDTree posCover = new FDTree(columns.size(), -1);
@@ -208,12 +207,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             int validations = validator.getValidations();
             FDLogger.log(Level.FINE, "Pruned " + pruned + " validations");
             FDLogger.log(Level.FINE, "Made " + validations + " validations");
-            List<FunctionalDependency> fds = new ArrayList<>();
-            posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
-            SpeedBenchmark.end(BenchmarkLevel.METHOD_HIGH_LEVEL, "Processed one batch, inner measuring");
-            return new IncrementalFDResult(fds, validations, pruned);
         }
-        return null;
     }
 
     @Override

@@ -10,7 +10,7 @@ public interface DataStructureBuilder {
 
     CompressedDiff update(Batch batch);
 
-    List<? extends PositionListIndex> getPlis();
+    List<PositionListIndex> getPlis();
 
     CompressedRecords getCompressedRecord();
 }

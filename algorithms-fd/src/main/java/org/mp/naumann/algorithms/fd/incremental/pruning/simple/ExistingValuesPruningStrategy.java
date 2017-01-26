@@ -20,7 +20,7 @@ public class ExistingValuesPruningStrategy {
     public ValidationPruner analyzeDiff(CompressedDiff diff) {
         int numAttributes = columns.size();
         CardinalitySet existingValues = new CardinalitySet(numAttributes);
-        for (int[] insert : diff.getInsertedRecords()) {
+        for (int[] insert : diff.getInsertedRecords().values()) {
             OpenBitSet existingValuesMask = findExistingValues(insert);
             existingValues.add(existingValuesMask);
         }

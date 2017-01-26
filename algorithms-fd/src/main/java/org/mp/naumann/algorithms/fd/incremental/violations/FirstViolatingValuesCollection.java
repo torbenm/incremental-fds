@@ -1,9 +1,7 @@
 package org.mp.naumann.algorithms.fd.incremental.violations;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.incremental.violations.matcher.ExactMatcher;
 import org.mp.naumann.algorithms.fd.incremental.violations.matcher.IntersectionMatcher;
-import org.mp.naumann.algorithms.fd.incremental.violations.matcher.KIntersectionMatcher;
 import org.mp.naumann.algorithms.fd.incremental.violations.matcher.Matcher;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
@@ -45,7 +43,7 @@ public class FirstViolatingValuesCollection implements ViolationCollection {
     }
 
     @Override
-    public List<OpenBitSet> getAffected(FDSet negativeCover, int[][] removedValues) {
+    public List<OpenBitSet> getAffected(FDSet negativeCover, Map<Integer, int[]> removedValues) {
         List<OpenBitSet> affected = new ArrayList<>();
         int aff = 0, skip = 0;
         for(Map.Entry<OpenBitSet, Set<int[]>> entry : violationsMap.entrySet()) {
@@ -53,7 +51,7 @@ public class FirstViolatingValuesCollection implements ViolationCollection {
             int numAffect = 0;
             OpenBitSet attrs = entry.getKey();
             for(int[] array : entry.getValue()){
-                for(int[] record : removedValues){
+                for(int[] record : removedValues.values()){
                     if(matcher.match(attrs, array, record)){
                         numAffect++;
                         break;

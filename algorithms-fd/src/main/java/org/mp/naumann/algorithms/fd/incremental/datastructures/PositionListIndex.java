@@ -86,7 +86,7 @@ public class PositionListIndex implements IPositionListIndex {
     }
 
     private boolean isNonUniqueKey(Integer key) {
-        return isNullEqualNull? true : !key.equals(Dictionary.NULL);
+        return isNullEqualNull || !key.equals(Dictionary.NULL);
     }
 
     /**
@@ -105,8 +105,8 @@ public class PositionListIndex implements IPositionListIndex {
     }
 
 
-    public boolean refines(CompressedRecords compressedRecords, int rhsAttr) {
-        for (IntArrayList cluster : getClustersToCheck())
+    public boolean refines(CompressedRecords compressedRecords, int rhsAttr, boolean topDown) {
+        for (IntArrayList cluster : getClustersToCheck(topDown))
             if (!this.probe(compressedRecords, rhsAttr, cluster))
                 return false;
         return true;
@@ -128,7 +128,7 @@ public class PositionListIndex implements IPositionListIndex {
     }
 
 
-    public OpenBitSet refines(CompressedRecords compressedRecords, OpenBitSet lhs, OpenBitSet rhs, List<IntegerPair> comparisonSuggestions) {
+    public OpenBitSet refines(CompressedRecords compressedRecords, OpenBitSet lhs, OpenBitSet rhs, List<IntegerPair> comparisonSuggestions, boolean topDown) {
         int rhsSize = (int) rhs.cardinality();
         int lhsSize = (int) lhs.cardinality();
 
@@ -147,7 +147,7 @@ public class PositionListIndex implements IPositionListIndex {
         }
 
         boolean useInnerClusterPruning = useInnerClusterPruning();
-        for (IntArrayList cluster : getClustersToCheck()) {
+        for (IntArrayList cluster : getClustersToCheck(topDown)) {
             Object2ObjectOpenHashMap<ClusterIdentifier, ClusterIdentifierWithRecord> subClusters = new Object2ObjectOpenHashMap<>(cluster.size());
             ObjectOpenHashSet<ClusterIdentifier> haveOldRecord = null;
             if (useInnerClusterPruning) {
@@ -216,9 +216,12 @@ public class PositionListIndex implements IPositionListIndex {
         clustersWithNewRecords = clusterIds.stream().filter(this::isNonUniqueKey).map(this::getCluster).collect(Collectors.toList());
     }
 
-    private Collection<IntArrayList> getClustersToCheck() {
-        Collection<IntArrayList> toCheck = clustersWithNewRecords == null ? getClusters() : clustersWithNewRecords;
-        return toCheck.stream().filter(c -> c.size() > 1).collect(Collectors.toList());
+    private Collection<IntArrayList> getClustersToCheck(boolean topDown) {
+        if (topDown) {
+            Collection<IntArrayList> toCheck = clustersWithNewRecords == null ? getClusters() : clustersWithNewRecords;
+            return toCheck.stream().filter(c -> c.size() > 1).collect(Collectors.toList());
+        }
+        return getClusters();
     }
 
     private ClusterIdentifier buildClusterIdentifier(OpenBitSet lhs, int lhsSize, int[] record) {
