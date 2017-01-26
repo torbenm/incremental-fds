@@ -91,16 +91,16 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
         List<Integer> pliOrder = pliBuilder.getPliOrder();
         List<String> orderedColumns = pliOrder.stream().map(columns::get).collect(Collectors.toList());
-        List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
+        List<HashMap<Integer, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
         if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {
             bloomPruning = new BloomPruningStrategy(orderedColumns).addGenerator(new AllCombinationsBloomGenerator(2));
-            bloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder);
+            bloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder, pliBuilder.getDictionary());
         }
 
         if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM_ADVANCED)) {
             advancedBloomPruning = new BloomPruningStrategy(orderedColumns)
                     .addGenerator(new CurrentFDBloomGenerator(posCover));
-            advancedBloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder);
+            advancedBloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder, pliBuilder.getDictionary());
         }
         if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.SIMPLE)) {
             simplePruning = new ExistingValuesPruningStrategy(columns);

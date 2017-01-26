@@ -22,6 +22,7 @@ import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
+import org.mp.naumann.algorithms.fd.structures.Dictionary;
 import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
 import org.mp.naumann.database.TableInput;
 
@@ -29,7 +30,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -38,7 +40,7 @@ public class PLIBuilder {
     private final ClusterMapBuilder clusterMapBuilder;
     private final boolean isNullEqualNull;
 
-    public List<HashMap<String, IntArrayList>> getClusterMaps() {
+    public List<HashMap<Integer, IntArrayList>> getClusterMaps() {
         return clusterMapBuilder.getClusterMaps();
     }
 
@@ -63,18 +65,18 @@ public class PLIBuilder {
      */
     public List<PositionListIndex> fetchPositionListIndexes() {
         SpeedBenchmark.begin(BenchmarkLevel.OPERATION);
-        List<HashMap<String, IntArrayList>> clusterMaps = clusterMapBuilder.getClusterMaps();
+        List<HashMap<Integer, IntArrayList>> clusterMaps = clusterMapBuilder.getClusterMaps();
         List<PositionListIndex> clustersPerAttribute = new ArrayList<>();
         for (int columnId = 0; columnId < clusterMaps.size(); columnId++) {
-            List<IntArrayList> clusters = new ArrayList<>();
-            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(columnId);
+            Map<Integer, IntArrayList> clusters = new HashMap<>();
+            HashMap<Integer, IntArrayList> clusterMap = clusterMaps.get(columnId);
 
             if (!isNullEqualNull)
-                clusterMap.remove(null);
+                clusterMap.remove(Dictionary.NULL);
 
-            for (IntArrayList cluster : clusterMap.values())
-                if (cluster.size() > 1)
-                    clusters.add(cluster);
+            for (Entry<Integer, IntArrayList> cluster : clusterMap.entrySet())
+                if (cluster.getValue().size() > 1)
+                    clusters.put(cluster.getKey(), cluster.getValue());
 
             clustersPerAttribute.add(new PositionListIndex(columnId, clusters));
         }
@@ -112,4 +114,7 @@ public class PLIBuilder {
         return fetchPositionListIndexes().stream().map(IPositionListIndex::getAttribute).collect(Collectors.toList());
     }
 
+    public Dictionary<String> getDictionary() {
+        return clusterMapBuilder.getDictionary();
+    }
 }

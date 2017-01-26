@@ -1,8 +1,5 @@
 package org.mp.naumann.algorithms.fd;
 
-import ResourceConnection.ResourceConnector;
-import ResourceConnection.ResourceType;
-
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
@@ -23,6 +20,9 @@ import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
 import java.util.List;
 import java.util.logging.Level;
+
+import ResourceConnection.ResourceConnector;
+import ResourceConnection.ResourceType;
 
 public class IncrementalFDDemo {
 
@@ -45,7 +45,7 @@ public class IncrementalFDDemo {
     private static final int batchSize = 200; //*/
 
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
-        FDLogger.setLevel(Level.INFO);
+        FDLogger.setLevel(Level.FINER);
         IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom").addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION);
         SpeedBenchmark.enable();
         SpeedBenchmark.addEventListener(f -> {

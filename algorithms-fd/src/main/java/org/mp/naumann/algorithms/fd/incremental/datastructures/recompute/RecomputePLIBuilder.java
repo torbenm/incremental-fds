@@ -20,13 +20,15 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.Map.Entry;
 
 class RecomputePLIBuilder {
 
@@ -46,22 +48,22 @@ class RecomputePLIBuilder {
      *
      * @return clustersPerAttribute,
      */
-    List<ListPositionListIndex> fetchPositionListIndexes() {
+    List<PositionListIndex> fetchPositionListIndexes() {
         SpeedBenchmark.begin(BenchmarkLevel.OPERATION);
-        List<HashMap<String, IntArrayList>> clusterMaps = clusterMapBuilder.getClusterMaps();
-        List<ListPositionListIndex> clustersPerAttribute = new ArrayList<>();
+        List<HashMap<Integer, IntArrayList>> clusterMaps = clusterMapBuilder.getClusterMaps();
+        List<PositionListIndex> clustersPerAttribute = new ArrayList<>();
         for (int columnId : pliOrder) {
-            List<IntArrayList> clusters = new ArrayList<>();
-            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(columnId);
+            Map<Integer, IntArrayList> clusters = new HashMap<>();
+            HashMap<Integer, IntArrayList> clusterMap = clusterMaps.get(columnId);
 
             if (!isNullEqualNull)
                 clusterMap.remove(null);
 
-            for (IntArrayList cluster : clusterMap.values())
-                if (cluster.size() > 1)
-                    clusters.add(cluster);
+            for (Entry<Integer, IntArrayList> cluster : clusterMap.entrySet())
+                if (cluster.getValue().size() > 1)
+                    clusters.put(cluster.getKey(), cluster.getValue());
 
-            clustersPerAttribute.add(new ListPositionListIndex(columnId, clusters));
+            clustersPerAttribute.add(new PositionListIndex(columnId, isNullEqualNull, clusters));
         }
         return clustersPerAttribute;
     }
@@ -74,11 +76,7 @@ class RecomputePLIBuilder {
         return clusterMapBuilder.getNumLastRecords();
     }
 
-    public Collection<Integer> getMatchingRecordIds(Iterable<String> record) {
-        return clusterMapBuilder.getMatchingRecordsIds(record);
-    }
-
-    public void removeRecords(Iterable<String> record, Set<Integer> recordIds) {
-        clusterMapBuilder.removeRecords(record, recordIds);
+    public Collection<Integer> removeRecord(Iterable<String> record) {
+        return clusterMapBuilder.removeRecord(record);
     }
 }

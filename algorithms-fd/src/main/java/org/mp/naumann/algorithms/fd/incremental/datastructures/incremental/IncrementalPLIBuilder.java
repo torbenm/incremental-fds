@@ -20,6 +20,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,9 +29,11 @@ import java.util.Map;
 
 class IncrementalPLIBuilder {
     private final List<Integer> pliOrder;
-    private List<MapPositionListIndex> plis;
+    private List<PositionListIndex> plis;
+    private final boolean isNullEqualNull;
 
-    IncrementalPLIBuilder(List<Integer> pliOrder) {
+    IncrementalPLIBuilder(boolean isNullEqualNull, List<Integer> pliOrder) {
+        this.isNullEqualNull = isNullEqualNull;
         this.pliOrder = pliOrder;
     }
 
@@ -45,13 +48,13 @@ class IncrementalPLIBuilder {
      *
      * @return clustersPerAttribute,
      */
-    List<MapPositionListIndex> fetchPositionListIndexes(List<Map<Integer, IntArrayList>> clusterMaps) {
+    List<PositionListIndex> fetchPositionListIndexes(List<? extends Map<Integer, IntArrayList>> clusterMaps) {
         SpeedBenchmark.begin(BenchmarkLevel.OPERATION);
-        List<MapPositionListIndex> old = plis;
+        List<PositionListIndex> old = plis;
         if (old == null) {
             old = new ArrayList<>(pliOrder.size());
             for (int i = 0; i < pliOrder.size(); i++) {
-                old.add(new MapPositionListIndex(i, new HashMap<>()));
+                old.add(new PositionListIndex(i, isNullEqualNull, new HashMap<>()));
             }
         }
         plis = new ArrayList<>();
@@ -61,7 +64,7 @@ class IncrementalPLIBuilder {
             Map<Integer, IntArrayList> newClusters = clusterMaps.get(columnId);
             newClusters.forEach((k, v) -> clusters.merge(k, v, IncrementalPLIBuilder::concat));
 
-            plis.add(new MapPositionListIndex(columnId, clusters));
+            plis.add(new PositionListIndex(columnId, isNullEqualNull, clusters));
         }
         return plis;
     }
