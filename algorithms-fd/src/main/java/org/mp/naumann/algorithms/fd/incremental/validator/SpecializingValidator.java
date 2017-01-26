@@ -24,6 +24,11 @@ public class SpecializingValidator extends Validator<List<IntegerPair>> {
     }
 
     @Override
+    protected boolean isTopDown() {
+        return true;
+    }
+
+    @Override
     protected boolean checkLevelBounds() {
         return level <= posCover.getDepth();
     }

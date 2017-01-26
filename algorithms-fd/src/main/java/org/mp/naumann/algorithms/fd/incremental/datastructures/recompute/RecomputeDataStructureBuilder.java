@@ -6,30 +6,35 @@ import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.MapCompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.structures.RecordCompressor;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
+import org.mp.naumann.database.statement.DeleteStatement;
+import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class RecomputeDataStructureBuilder implements DataStructureBuilder {
 
     private final RecomputePLIBuilder pliBuilder;
     private final IncrementalFDConfiguration version;
     private final List<String> columns;
+    private final Set<Integer> recordIds;
 
-    private List<? extends PositionListIndex> plis;
+    private List<PositionListIndex> plis;
     private CompressedRecords compressedRecords;
 
     public RecomputeDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns) {
@@ -40,62 +45,44 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         this.pliBuilder = new RecomputePLIBuilder(pliBuilder.getClusterMapBuilder(), pliBuilder.isNullEqualNull(), pliOrder);
         this.version = version;
         this.columns = columns;
+        recordIds = IntStream.range(0, pliBuilder.getNumLastRecords()).boxed().collect(Collectors.toSet());
+        updateDataStructures();
     }
 
     public CompressedDiff update(Batch batch) {
-
-        List<? extends Map<String, Collection<Integer>>> removalMap = initRemovalMap();
-        HashMap<Statement, Collection<Integer>> deleteStatementRecordIdMatches = new HashMap<>();
-
-        Set<Integer> inserted = addRecordsToPliBuilder(batch.getInsertStatements());
-        Set<Integer> deleted = getRecordIdsToRemove(batch.getDeleteStatements(), deleteStatementRecordIdMatches, removalMap);
-
-        updateDataStructures(inserted, deleted);
-        CompressedDiff diff = CompressedDiff.buildDiff(inserted, deleted, version, compressedRecords);
-
-        if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)) {
-            if(version.usingRemovalMap())
-                removeRecords(removalMap);
-            else
-                removeRecords(deleteStatementRecordIdMatches);
-            updateDataStructures();
+        Set<Integer> inserted = addRecords(batch.getInsertStatements());
+        recordIds.addAll(inserted);
+        Set<Integer> deleted = removeRecords(batch.getDeleteStatements());
+        recordIds.removeAll(deleted);
+        Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
+        if (version.usesPruningStrategy(PruningStrategy.ANNOTATION)) {
+            for (int delete : deleted) {
+                deletedDiff.put(delete, compressedRecords.get(delete));
+            }
         }
 
+        updateDataStructures(inserted, deleted);
+        Map<Integer, int[]> insertedDiff = new HashMap<>(inserted.size());
+        if (version.usesPruningStrategy(PruningStrategy.SIMPLE)) {
+            for (int insert : inserted) {
+                insertedDiff.put(insert, compressedRecords.get(insert));
+            }
+        }
+        CompressedDiff diff = new CompressedDiff(insertedDiff, deletedDiff, new HashMap<>(0), new HashMap<>(0));
         return diff;
     }
 
-    private List<? extends Map<String, Collection<Integer>>> initRemovalMap(){
-        List<HashMap<String, Collection<Integer>>> removalMap = new ArrayList<>();
-        for(int i = 0; i < columns.size() && version.usingRemovalMap(); i++){
-            removalMap.add(new HashMap<>());
-        }
-        return removalMap;
-    }
-
-    private Set<Integer> getRecordIdsToRemove(List<? extends Statement> stmts,
-                                              HashMap<Statement, Collection<Integer>> deleteStatementRecordIdMatches,
-                                              List<? extends Map<String, Collection<Integer>>> removalMap){
+    private Set<Integer> removeRecords(List<? extends Statement> deletes){
         Set<Integer> ids = new HashSet<>();
-
-        for (Statement stmt : stmts) {
-            Map<String, String> valueMap = stmt.getValueMap();
+        for (Statement delete : deletes) {
+            Map<String, String> valueMap = delete.getValueMap();
             List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
-            Collection<Integer> matches;
-            if(version.usingRemovalMap()){
-                 matches = version.usingHashMapIdentification() ?
-                        pliBuilder.getMatchingRecordIdsByHashMapAndCreateRemovalMap(values, removalMap)
-                        : pliBuilder.getMatchingRecordIdsByClusterMapsAndCreateRemovalMap(values, removalMap);
-            }else{
-                matches = version.usingHashMapIdentification() ? pliBuilder.getMatchingRecordIdsByHashMap(values) : pliBuilder.getMatchingRecordIdsByClusterMaps(values);
-                deleteStatementRecordIdMatches.put(stmt, matches);
-            }
-
-            ids.addAll(matches);
-        }
+            ids.addAll(pliBuilder.removeRecord(values));
+       }
         return ids;
     }
 
-    private Set<Integer> addRecordsToPliBuilder(List<? extends Statement> inserts){
+    private Set<Integer> addRecords(List<InsertStatement> inserts){
         Set<Integer> inserted = new HashSet<>();
         for (Statement insert : inserts) {
             Map<String, String> valueMap = insert.getValueMap();
@@ -106,31 +93,46 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         return inserted;
     }
 
-    private void removeRecords(HashMap<Statement, Collection<Integer>> statementRecordIds) {
-        for(Statement stmt : statementRecordIds.keySet()){
-            Map<String, String> valueMap = stmt.getValueMap();
-            List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
-
-            pliBuilder.removeRecords(values, statementRecordIds.get(stmt));
-        }
-    }
-
-    private void removeRecords(List<? extends Statement> stmts, Set<Integer> deleted) {
-        for(Statement stmt : stmts){
-            Map<String, String> valueMap = stmt.getValueMap();
-            List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
-
-            pliBuilder.removeRecords(values, deleted);
-        }
-    }
-
-    private void removeRecords(List<? extends Map<String, Collection<Integer>>> removalMap){
-        pliBuilder.removeRecords(removalMap);
-    }
-
     private void updateDataStructures() {
         plis = pliBuilder.fetchPositionListIndexes();
-        compressedRecords = new ArrayCompressedRecords(RecordCompressor.fetchCompressedRecords(plis, pliBuilder.getNumRecords()));
+        compressedRecords = buildCompressedRecords();
+    }
+
+    private List<Map<Integer, Integer>> invertPlis() {
+        List<Map<Integer, Integer>> invertedPlis = new ArrayList<>();
+        for (PositionListIndex pli : plis) {
+            Map<Integer, Integer> invertedPli = new HashMap<>();
+
+            for (Entry<Integer, IntArrayList> cluster : pli.getClusterEntries()) {
+                for (int recordId : cluster.getValue()) {
+                    invertedPli.put(recordId, cluster.getKey());
+                }
+            }
+            invertedPlis.add(invertedPli);
+        }
+        return invertedPlis;
+    }
+/*
+    private void removeRecords(List<? extends Map<String, Collection<Integer>>> removalMap){
+        pliBuilder.removeRecords(removalMap);
+    }*/
+
+    private CompressedRecords buildCompressedRecords() {
+        MapCompressedRecords compressedRecords = new MapCompressedRecords();
+        List<Map<Integer, Integer>> invertedPlis = invertPlis();
+        for (int recordId : recordIds) {
+            compressedRecords.put(recordId, fetchRecordFrom(recordId, invertedPlis));
+        }
+        return compressedRecords;
+    }
+
+    private static int[] fetchRecordFrom(int recordId, List<Map<Integer, Integer>> invertedPlis) {
+        int numAttributes = invertedPlis.size();
+        int[] record = new int[numAttributes];
+        for (int i = 0; i < numAttributes; i++) {
+            record[i] = invertedPlis.get(i).getOrDefault(recordId, PliUtils.UNIQUE_VALUE);
+        }
+        return record;
     }
 
     private void updateDataStructures(Set<Integer> inserted, Set<Integer> deleted) {
@@ -160,6 +162,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
                 plis.forEach(pli -> pli.setOtherClustersWithNewRecords(otherClustersWithNewRecords));
             }
         }
+/*
         if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)){
             //Invalidate Entries that are to be removed
             for(int i = 0; i < plis.size(); i++) {
@@ -182,9 +185,10 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
                 Do we need this? THis should release some space
                 if(cluster.size() == 0) {
                     plis.get(attribute).setCluster(clusterId, null);
-                } */
+                }
             }
         }
+*/
 
     }
 
@@ -199,34 +203,11 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         return clusterIds;
     }
 
-    public List<? extends PositionListIndex> getPlis() {
+    public List<PositionListIndex> getPlis() {
         return plis;
     }
 
     public CompressedRecords getCompressedRecord() {
         return compressedRecords;
-    }
-
-    private static class ArrayCompressedRecords implements CompressedRecords {
-        private final int[][] compressedRecords;
-
-        private ArrayCompressedRecords(int[][] compressedRecords) {
-            this.compressedRecords = compressedRecords;
-        }
-
-        @Override
-        public int[] get(int index) {
-            return compressedRecords[index];
-        }
-
-        @Override
-        public void fill(int index, int value) {
-            Arrays.fill(compressedRecords[index], value);
-        }
-
-        @Override
-        public int size() {
-            return compressedRecords.length;
-        }
     }
 }

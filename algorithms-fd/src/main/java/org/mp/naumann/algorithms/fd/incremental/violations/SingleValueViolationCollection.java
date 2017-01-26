@@ -32,13 +32,13 @@ public class SingleValueViolationCollection implements ViolationCollection {
     }
 
     @Override
-    public List<OpenBitSet> getAffected(FDSet negativeCover, int[][] removedValues) {
+    public List<OpenBitSet> getAffected(FDSet negativeCover, Map<Integer, int[]> removedValues) {
         List<OpenBitSet> affected = new ArrayList<>();
         for(Map.Entry<OpenBitSet, int[]> entry : violationsMap.entrySet()) {
             boolean anyMatch = false;
             OpenBitSet attrs = entry.getKey();
-            for(int[] record : removedValues){
-                anyMatch = matcher.match(configuration.isStoreEqual(), attrs, entry.getValue(), record);
+            for(int[] record : removedValues.values()){
+                anyMatch = matcher.match(attrs, entry.getValue(), record);
                 if(anyMatch) break;
             }
 

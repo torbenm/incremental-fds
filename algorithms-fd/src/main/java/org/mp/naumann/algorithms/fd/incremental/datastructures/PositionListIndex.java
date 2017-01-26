@@ -27,6 +27,7 @@ import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.structures.ClusterIdentifier;
 import org.mp.naumann.algorithms.fd.structures.ClusterIdentifierWithRecord;
+import org.mp.naumann.algorithms.fd.structures.Dictionary;
 import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
@@ -41,6 +42,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,20 +53,43 @@ import java.util.stream.Collectors;
  * (3, 5)). Clusters of size 1 are discarded. A position list index should be
  * created using the {@link PLIBuilder}.
  */
-public abstract class PositionListIndex implements IPositionListIndex {
+public class PositionListIndex implements IPositionListIndex {
 
     private final int attribute;
     private List<IntArrayList> clustersWithNewRecords = null;
     private Collection<Integer> newRecords = null;
     private Map<Integer, Set<Integer>> otherClustersWithNewRecords;
+    private final boolean isNullEqualNull;
+
+    private final Map<Integer, IntArrayList> clusters;
+
+    @Override
+    public IntArrayList getCluster(int index) {
+        return clusters.get(index);
+    }
 
     @Override
     public int getAttribute() {
         return this.attribute;
     }
 
-    protected PositionListIndex(int attribute) {
+    @Override
+    public Iterable<Entry<Integer, IntArrayList>> getClusterEntries() {
+        return clusters.entrySet();
+    }
+
+    public PositionListIndex(int attribute, boolean isNullEqualNull, Map<Integer, IntArrayList> clusters) {
         this.attribute = attribute;
+        this.clusters = clusters;
+        this.isNullEqualNull = isNullEqualNull;
+    }
+
+    public Collection<IntArrayList> getClusters() {
+        return clusters.entrySet().stream().filter(e -> isNonUniqueKey(e.getKey())).map(Entry::getValue).collect(Collectors.toList());
+    }
+
+    private boolean isNonUniqueKey(Integer key) {
+        return isNullEqualNull || !key.equals(Dictionary.NULL);
     }
 
     /**
@@ -83,8 +108,8 @@ public abstract class PositionListIndex implements IPositionListIndex {
     }
 
 
-    public boolean refines(CompressedRecords compressedRecords, int rhsAttr) {
-        for (IntArrayList cluster : getClustersToCheck())
+    public boolean refines(CompressedRecords compressedRecords, int rhsAttr, boolean topDown) {
+        for (IntArrayList cluster : getClustersToCheck(topDown))
             if (!this.probe(compressedRecords, rhsAttr, cluster))
                 return false;
         return true;
@@ -106,7 +131,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
     }
 
 
-    public OpenBitSet refines(CompressedRecords compressedRecords, OpenBitSet lhs, OpenBitSet rhs, List<IntegerPair> comparisonSuggestions) {
+    public OpenBitSet refines(CompressedRecords compressedRecords, OpenBitSet lhs, OpenBitSet rhs, List<IntegerPair> comparisonSuggestions, boolean topDown) {
         int rhsSize = (int) rhs.cardinality();
         int lhsSize = (int) lhs.cardinality();
 
@@ -115,7 +140,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
 
         // TODO: Check if it is technically possible that this fd holds, i.e., if A1 has 2 clusters of size 10 and A2 has 2 clusters of size 10, then the intersection can have at most 4 clusters of size 5 (see join cardinality estimation)
 
-        int[] rhsAttrId2Index = new int[compressedRecords.get(0).length];
+        int[] rhsAttrId2Index = new int[compressedRecords.getNumAttributes()];
         int[] rhsAttrIndex2Id = new int[rhsSize];
         int index = 0;
         for (int rhsAttr = refinedRhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = refinedRhs.nextSetBit(rhsAttr + 1)) {
@@ -125,7 +150,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
         }
 
         boolean useInnerClusterPruning = useInnerClusterPruning();
-        for (IntArrayList cluster : getClustersToCheck()) {
+        for (IntArrayList cluster : getClustersToCheck(topDown)) {
             Object2ObjectOpenHashMap<ClusterIdentifier, ClusterIdentifierWithRecord> subClusters = new Object2ObjectOpenHashMap<>(cluster.size());
             ObjectOpenHashSet<ClusterIdentifier> haveOldRecord = null;
             if (useInnerClusterPruning) {
@@ -191,12 +216,15 @@ public abstract class PositionListIndex implements IPositionListIndex {
     }
 
     public void setClustersWithNewRecords(Set<Integer> clusterIds) {
-        clustersWithNewRecords = clusterIds.stream().map(this::getCluster).collect(Collectors.toList());
+        clustersWithNewRecords = clusterIds.stream().filter(this::isNonUniqueKey).map(this::getCluster).collect(Collectors.toList());
     }
 
-    private Collection<IntArrayList> getClustersToCheck() {
-        Collection<IntArrayList> toCheck = clustersWithNewRecords == null ? getClusters() : clustersWithNewRecords;
-        return toCheck.stream().filter(c -> c.size() > 1).collect(Collectors.toList());
+    private Collection<IntArrayList> getClustersToCheck(boolean topDown) {
+        if (topDown) {
+            Collection<IntArrayList> toCheck = clustersWithNewRecords == null ? getClusters() : clustersWithNewRecords;
+            return toCheck.stream().filter(c -> c.size() > 1).collect(Collectors.toList());
+        }
+        return getClusters();
     }
 
     private ClusterIdentifier buildClusterIdentifier(OpenBitSet lhs, int lhsSize, int[] record) {
@@ -206,7 +234,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
         for (int lhsAttr : BitSetUtils.iterable(lhs)) {
             int clusterId = record[lhsAttr];
 
-            if (clusterId < 0)
+            if (clusterId < 0 || clusterId == Dictionary.NULL)
                 return null;
 
             if (otherClustersWithNewRecords != null && !otherClustersWithNewRecords.get(lhsAttr).contains(clusterId)) {
@@ -290,5 +318,9 @@ public abstract class PositionListIndex implements IPositionListIndex {
         }
 
         return setClusters;
+    }
+
+    public Map<Integer, IntArrayList> getRawClusters() {
+        return clusters;
     }
 }

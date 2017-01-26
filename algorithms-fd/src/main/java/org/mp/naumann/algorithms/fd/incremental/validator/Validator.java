@@ -221,7 +221,7 @@ public abstract class Validator<T> {
                 // Check if lhs from plis refines rhs
                 int lhsAttribute = lhs.nextSetBit(0);
                 for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
-                    if (!Validator.this.plis.get(lhsAttribute).refines(Validator.this.compressedRecords, rhsAttr)) {
+                    if (!Validator.this.plis.get(lhsAttribute).refines(Validator.this.compressedRecords, rhsAttr, Validator.this.isTopDown())) {
                         element.removeFd(rhsAttr);
                             result.invalidFDs.add(new FD(lhs, rhsAttr));
 
@@ -236,7 +236,7 @@ public abstract class Validator<T> {
                 // Check if lhs from plis plus remaining inverted plis refines rhs
                 int firstLhsAttr = lhs.nextSetBit(0);
                 lhs.clear(firstLhsAttr);
-                OpenBitSet validRhs = Validator.this.plis.get(firstLhsAttr).refines(Validator.this.compressedRecords, lhs, rhs, result.comparisonSuggestions);
+                OpenBitSet validRhs = Validator.this.plis.get(firstLhsAttr).refines(Validator.this.compressedRecords, lhs, rhs, result.comparisonSuggestions, Validator.this.isTopDown());
                 lhs.set(firstLhsAttr);
 
                 result.intersections++;
@@ -254,6 +254,8 @@ public abstract class Validator<T> {
             return result;
         }
     }
+
+    protected abstract boolean isTopDown();
 
     protected void checkMemoryGuardian(){
         this.memoryGuardian.memoryChanged(1);

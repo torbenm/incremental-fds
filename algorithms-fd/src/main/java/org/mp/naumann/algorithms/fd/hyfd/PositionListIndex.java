@@ -28,11 +28,13 @@ import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Position list indices (or stripped partitions) are an index structure that
@@ -44,7 +46,7 @@ import java.util.List;
 public class PositionListIndex implements IPositionListIndex {
 
     private final int attribute;
-    private final List<IntArrayList> clusters;
+    private final Map<Integer, IntArrayList> clusters;
     private final int numNonUniqueValues;
 
     @Override
@@ -52,8 +54,13 @@ public class PositionListIndex implements IPositionListIndex {
         return this.attribute;
     }
 
-    public List<IntArrayList> getClusters() {
-        return this.clusters;
+    @Override
+    public Iterable<Entry<Integer, IntArrayList>> getClusterEntries() {
+        return clusters.entrySet();
+    }
+
+    public Collection<IntArrayList> getClusters() {
+        return this.clusters.values();
     }
 
     @Override
@@ -61,24 +68,19 @@ public class PositionListIndex implements IPositionListIndex {
         return this.clusters.get(index);
     }
 
-    @Override
-    public void setCluster(int index, IntArrayList value) {
-        this.clusters.set(index, value);
-    }
-
     public int getNumNonUniqueValues() {
         return this.numNonUniqueValues;
     }
 
-    public PositionListIndex(int attribute, List<IntArrayList> clusters) {
+    public PositionListIndex(int attribute, Map<Integer, IntArrayList> clusters) {
         this.attribute = attribute;
         this.clusters = clusters;
-        this.numNonUniqueValues = this.countNonUniqueValuesIn(clusters);
+        this.numNonUniqueValues = this.countNonUniqueValuesIn();
     }
 
-    private int countNonUniqueValuesIn(List<IntArrayList> clusters) {
+    private int countNonUniqueValuesIn() {
         int numNonUniqueValues = 0;
-        for (IntArrayList cluster : clusters)
+        for (IntArrayList cluster : clusters.values())
             numNonUniqueValues += cluster.size();
         return numNonUniqueValues;
     }
@@ -95,12 +97,12 @@ public class PositionListIndex implements IPositionListIndex {
     public boolean isConstant(int numRecords) {
         if (numRecords <= 1)
             return true;
-        return (this.clusters.size() == 1) && (this.clusters.get(0).size() == numRecords);
+        return (this.clusters.size() == 1) && (this.clusters.values().iterator().next().size() == numRecords);
     }
 
 
     public boolean refines(int[][] compressedRecords, int rhsAttr) {
-        for (IntArrayList cluster : this.clusters) {
+        for (IntArrayList cluster : this.clusters.values()) {
             if (!this.probe(compressedRecords, rhsAttr, cluster))
                 return false;
         }
@@ -146,7 +148,7 @@ public class PositionListIndex implements IPositionListIndex {
             index++;
         }
 
-        for (IntArrayList cluster : this.clusters) {
+        for (IntArrayList cluster : this.clusters.values()) {
             Object2ObjectOpenHashMap<ClusterIdentifier, ClusterIdentifierWithRecord> subClusters = new Object2ObjectOpenHashMap<>(cluster.size());
             for (int recordId : cluster) {
                 ClusterIdentifier subClusterIdentifier = this.buildClusterIdentifier(lhs, lhsSize, compressedRecords[recordId]);
@@ -198,7 +200,7 @@ public class PositionListIndex implements IPositionListIndex {
         final int prime = 31;
         int result = 1;
 
-        List<IntOpenHashSet> setCluster = this.convertClustersToSets(this.clusters);
+        List<IntOpenHashSet> setCluster = this.convertClustersToSets();
 
         Collections.sort(setCluster, new Comparator<IntSet>() {
             @Override
@@ -227,8 +229,8 @@ public class PositionListIndex implements IPositionListIndex {
                 return false;
             }
         } else {
-            List<IntOpenHashSet> setCluster = this.convertClustersToSets(this.clusters);
-            List<IntOpenHashSet> otherSetCluster = this.convertClustersToSets(other.clusters);
+            List<IntOpenHashSet> setCluster = this.convertClustersToSets();
+            List<IntOpenHashSet> otherSetCluster = other.convertClustersToSets();
 
             for (IntOpenHashSet cluster : setCluster) {
                 if (!otherSetCluster.contains(cluster)) {
@@ -248,7 +250,7 @@ public class PositionListIndex implements IPositionListIndex {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder("{ ");
-        for (IntArrayList cluster : this.clusters) {
+        for (IntArrayList cluster : this.clusters.values()) {
             builder.append("{");
             builder.append(CollectionUtils.concat(cluster, ","));
             builder.append("} ");
@@ -257,9 +259,9 @@ public class PositionListIndex implements IPositionListIndex {
         return builder.toString();
     }
 
-    private List<IntOpenHashSet> convertClustersToSets(List<IntArrayList> listCluster) {
+    private List<IntOpenHashSet> convertClustersToSets() {
         List<IntOpenHashSet> setClusters = new LinkedList<>();
-        for (IntArrayList cluster : listCluster) {
+        for (IntArrayList cluster : clusters.values()) {
             setClusters.add(new IntOpenHashSet(cluster));
         }
 

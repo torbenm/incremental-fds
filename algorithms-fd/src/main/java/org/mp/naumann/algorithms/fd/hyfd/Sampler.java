@@ -12,6 +12,7 @@ import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -182,7 +183,7 @@ class Sampler {
 			return (int)(sumNonFds * (this.efficiencyFactor / sumComparisons));
 		}
 		
-		public AttributeRepresentant(List<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, FDTree posCover, Sampler sampler, MemoryGuardian memoryGuardian) {
+		public AttributeRepresentant(Collection<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, FDTree posCover, Sampler sampler, MemoryGuardian memoryGuardian) {
 			this.clusters = new ArrayList<>(clusters);
 			this.efficiencyFactor = efficiencyFactor;
 			this.negCover = negCover;
