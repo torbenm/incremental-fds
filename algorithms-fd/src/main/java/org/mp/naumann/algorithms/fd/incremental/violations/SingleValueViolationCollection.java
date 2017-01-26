@@ -25,36 +25,15 @@ public class SingleValueViolationCollection implements ViolationCollection {
 
     public SingleValueViolationCollection(IncrementalFDConfiguration configuration) {
         this.configuration = configuration;
+        throw new IllegalArgumentException("DO NOT USE! Just left here for documentation and maybe further reuse.");
     }
 
-    @Override
-    public void add(OpenBitSet attrs, List<Integer> violatingValues) {
-        this.violationsMap.put(attrs.clone(), violatingValues.stream().mapToInt(r -> r).toArray());
-    }
 
     @Override
     public void add(OpenBitSet attr, int violatingRecord) {
         this.violationMapById.put(attr.clone(), violatingRecord);
     }
 
-   @Override
-    public List<OpenBitSet> getAffected(FDSet negativeCover, Map<Integer, int[]> removedValues) {
-        List<OpenBitSet> affected = new ArrayList<>();
-        for(Map.Entry<OpenBitSet, int[]> entry : violationsMap.entrySet()) {
-            boolean anyMatch = false;
-            OpenBitSet attrs = entry.getKey();
-            for(int[] record : removedValues.values()){
-                anyMatch = matcher.match(attrs, entry.getValue(), record);
-                if(anyMatch) break;
-            }
-
-            if (anyMatch) {
-                affected.add(entry.getKey());
-                negativeCover.remove(attrs);
-            }
-        }
-        return affected;
-    }
 
     @Override
     public List<OpenBitSet> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords) {
