@@ -200,11 +200,14 @@ def getAttributes(attributesInput):
     return attributes
 
 
+def normalizeAttribute(attribute):
+    return attribute.lower().replace(" ", "_")
+
 def getAttributesFromInput(attributesInput):
     attributes = set()
 
     for attribute in attributesInput:
-        attributes.add(attribute.lower())
+        attributes.add(normalizeAttribute(attribute))
 
     return attributes
 
@@ -269,7 +272,7 @@ def initBaselineRecord(article, baselineRecordBlueprint, currentId):
 
 
 def addValuesToBaselineRecord(update, attributes, baselineDataEntry):
-    key = update["key"].lower()
+    key = normalizeAttribute(update["key"])
     if "newvalue" in update and key in attributes:
         baselineDataEntry[key] = update["newvalue"].replace("|", "").replace("\n", "").replace("\"", "\"\"")
 
@@ -282,7 +285,7 @@ def initUpdateRecord(article, updateRecordBlueprint, currentId):
 
 
 def findNewAndOldValues(update, newValues, oldValues, attributes):
-    key = update["key"].lower()
+    key = normalizeAttribute(update["key"])
     if "newvalue" in update and key in attributes and key not in newValues:
         newValues[key.lower()] = update["newvalue"].replace("\"", "\"\"")
     if "oldvalue" in update and key in attributes and key not in oldValues:
