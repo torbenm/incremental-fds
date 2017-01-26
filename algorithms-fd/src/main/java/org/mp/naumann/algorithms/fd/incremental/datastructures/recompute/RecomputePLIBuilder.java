@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 class RecomputePLIBuilder {
 
@@ -78,11 +78,25 @@ class RecomputePLIBuilder {
         return clusterMapBuilder.getMatchingRecordsByHashMap(record);
     }
 
-    public Collection<Integer> getMatchingRecordsIdsByClusterMaps(Iterable<String> record) {
-        return clusterMapBuilder.getMatchingRecordsIdsByClusterMaps(record);
+    public Collection<Integer> getMatchingRecordIdsByClusterMaps(Iterable<String> record) {
+        return clusterMapBuilder.getMatchingRecordsByClusterMaps(record);
+    }
+
+    public Collection<Integer> getMatchingRecordIdsByHashMapAndCreateRemovalMap(List<String> values, List<? extends Map<String, Collection<Integer>>> removalMap) {
+        return clusterMapBuilder.getMatchingRecordsByHashMapAndCreateRemovalMap(values, removalMap);
+    }
+
+    public Collection<Integer> getMatchingRecordIdsByClusterMapsAndCreateRemovalMap(List<String> values, List<? extends Map<String, Collection<Integer>>> removalMap) {
+        return clusterMapBuilder.getMatchingRecordsByHashMapAndCreateRemovalMap(values, removalMap);
     }
 
     public void removeRecords(Iterable<String> record, Collection<Integer> recordIds) {
         clusterMapBuilder.removeRecords(record, recordIds);
+    }
+
+
+
+    public void removeRecords(List<? extends Map<String, Collection<Integer>>> removalMap) {
+        clusterMapBuilder.removeRecords(removalMap);
     }
 }

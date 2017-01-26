@@ -125,7 +125,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         FDLogger.log(Level.FINE, "Started IncrementalFD for new Batch");
         SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
 
-        SpeedBenchmark.begin(BenchmarkLevel.UNIQUE);
+         SpeedBenchmark.begin(BenchmarkLevel.UNIQUE);
         CompressedDiff diff = dataStructureBuilder.update(batch);
         SpeedBenchmark.end(BenchmarkLevel.UNIQUE, "BUILD DIFF");
 
@@ -137,7 +137,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         if(diff.getDeletedRecords().length > 0){
             return validateDeletes(diff, compressedRecords, plis);
         }
-        SpecializingValidator validator = new SpecializingValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
+        SpecializingValidator validator = new SpecializingValidator(version, negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
         IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
                 intermediateDatastructure.getValueComparator(), this.memoryGuardian);
 
@@ -189,7 +189,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
             //FDTree posCover = new FDTree(columns.size(), -1);
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Finished basic setup.");
-            GeneralizingValidator validator = new GeneralizingValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
+            GeneralizingValidator validator = new GeneralizingValidator(version, negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
 
             IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Initialised valdiator and inductor");

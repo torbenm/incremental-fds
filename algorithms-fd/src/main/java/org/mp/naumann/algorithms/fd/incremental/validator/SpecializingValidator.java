@@ -1,35 +1,26 @@
 package org.mp.naumann.algorithms.fd.incremental.validator;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.MemoryGuardian;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public class SpecializingValidator extends Validator<List<IntegerPair>> {
 
 
-    public SpecializingValidator(FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
-        super(negCover, posCover, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian);
+    public SpecializingValidator(IncrementalFDConfiguration configuration, FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
+        super(configuration, posCover, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian, negCover);
     }
 
     @Override

@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class ClusterMapBuilder {
@@ -108,7 +109,33 @@ public class ClusterMapBuilder {
         return records;
     }
 
-    public Collection<Integer> getMatchingRecordsIdsByClusterMaps(Iterable<String> record) {
+    public Collection<Integer> getMatchingRecordsByHashMapAndCreateRemovalMap(Iterable<String> record,
+                                                                              List<? extends Map<String, Collection<Integer>>> removalMap){
+        Collection<Integer> records = new IntArraySet(); // new IntArrayList();
+        HashCodeBuilder builder = new HashCodeBuilder();
+        record.forEach(builder::append);
+        int recId = hashedRecords.getOrDefault(builder.build(), -1);
+        if(recId > -1)
+            records.add(recId);
+        fillRemovalMap(record, records, removalMap);
+        return records;
+    }
+
+    private void fillRemovalMap(Iterable<String> record,
+                                Collection<Integer> recordIds,
+                                List<? extends Map<String, Collection<Integer>>> removalMap){
+        int attributeId = 0;
+        for(String v : record){
+            Map<String, Collection<Integer>> map = removalMap.get(attributeId);
+            if(!map.containsKey(v)){
+                map.put(v, recordIds);
+            } else {
+                map.get(v).addAll(recordIds);
+            }
+        }
+    }
+
+    public Collection<Integer> getMatchingRecordsByClusterMaps(Iterable<String> record) {
         int attributeId = 0;
         List<IntArrayList> clusters = new ArrayList<>();
         for (String value : record) {
@@ -132,11 +159,47 @@ public class ClusterMapBuilder {
         return matching;
     }
 
+    public Collection<Integer> getMatchingRecordsByClusterMapsAndCreateRemovalMap(Iterable<String> record, List<? extends Map<String, Collection<Integer>>> removalMap) {
+        int attributeId = 0;
+        List<IntArrayList> clusters = new ArrayList<>();
+        for (String value : record) {
+            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
+            IntArrayList cluster = clusterMap.get(value);
+            if (cluster == null || cluster.isEmpty()) {
+                return Collections.emptyList();
+            }
+            clusters.add(cluster);
+            attributeId++;
+        }
+        clusters.sort(Comparator.comparingInt(Collection::size));
+        Collection<Integer> matching = null;
+        for (IntArrayList cluster : clusters) {
+            if (matching == null) {
+                matching = cluster.clone();
+            } else {
+                matching.retainAll(cluster);
+            }
+        }
+        fillRemovalMap(record, matching, removalMap);
+        return matching;
+    }
+
     public void removeRecords(Iterable<String> record, Collection<Integer> recordIds){
         int attributeId = 0;
         for(String value : record) {
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
             clusterMap.getOrDefault(value, new IntArrayList()).removeAll(recordIds);
+            attributeId++;
+        }
+    }
+
+    public void removeRecords(List<? extends Map<String, Collection<Integer>>> removalMap){
+        int attributeId = 0;
+        for(Map<String, Collection<Integer>> attribute : removalMap){
+            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
+            for(Map.Entry<String, Collection<Integer>> entry : attribute.entrySet()){
+                clusterMap.getOrDefault(entry.getKey(), new IntArrayList()).removeAll(entry.getValue());
+            }
             attributeId++;
         }
     }

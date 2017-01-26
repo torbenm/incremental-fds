@@ -13,6 +13,7 @@ import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -42,29 +43,54 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     }
 
     public CompressedDiff update(Batch batch) {
+
+        List<? extends Map<String, Collection<Integer>>> removalMap = initRemovalMap();
         HashMap<Statement, Collection<Integer>> deleteStatementRecordIdMatches = new HashMap<>();
+
         Set<Integer> inserted = addRecordsToPliBuilder(batch.getInsertStatements());
-        Set<Integer> deleted = getRecordIdsToRemove(batch.getDeleteStatements(), deleteStatementRecordIdMatches);
+        Set<Integer> deleted = getRecordIdsToRemove(batch.getDeleteStatements(), deleteStatementRecordIdMatches, removalMap);
 
         updateDataStructures(inserted, deleted);
         CompressedDiff diff = CompressedDiff.buildDiff(inserted, deleted, version, compressedRecords);
 
-        removeRecords(deleteStatementRecordIdMatches);
-        updateDataStructures();
+        if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)) {
+            if(version.usingRemovalMap())
+                removeRecords(removalMap);
+            else
+                removeRecords(deleteStatementRecordIdMatches);
+            updateDataStructures();
+        }
+
         return diff;
     }
 
-    private Set<Integer> getRecordIdsToRemove(List<? extends Statement> stmts, Map<Statement, Collection<Integer>> statementRecordIds){
+    private List<? extends Map<String, Collection<Integer>>> initRemovalMap(){
+        List<HashMap<String, Collection<Integer>>> removalMap = new ArrayList<>();
+        for(int i = 0; i < columns.size() && version.usingRemovalMap(); i++){
+            removalMap.add(new HashMap<>());
+        }
+        return removalMap;
+    }
+
+    private Set<Integer> getRecordIdsToRemove(List<? extends Statement> stmts,
+                                              HashMap<Statement, Collection<Integer>> deleteStatementRecordIdMatches,
+                                              List<? extends Map<String, Collection<Integer>>> removalMap){
         Set<Integer> ids = new HashSet<>();
 
         for (Statement stmt : stmts) {
             Map<String, String> valueMap = stmt.getValueMap();
             List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
-            Collection<Integer> matches = version.usingHashMapIdentification() ?
-                    pliBuilder.getMatchingRecordIdsByHashMap(values)
-                    : pliBuilder.getMatchingRecordsIdsByClusterMaps(values);
+            Collection<Integer> matches;
+            if(version.usingRemovalMap()){
+                 matches = version.usingHashMapIdentification() ?
+                        pliBuilder.getMatchingRecordIdsByHashMapAndCreateRemovalMap(values, removalMap)
+                        : pliBuilder.getMatchingRecordIdsByClusterMapsAndCreateRemovalMap(values, removalMap);
+            }else{
+                matches = version.usingHashMapIdentification() ? pliBuilder.getMatchingRecordIdsByHashMap(values) : pliBuilder.getMatchingRecordIdsByClusterMaps(values);
+                deleteStatementRecordIdMatches.put(stmt, matches);
+            }
+
             ids.addAll(matches);
-            statementRecordIds.put(stmt, matches);
         }
         return ids;
     }
@@ -96,6 +122,10 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
 
             pliBuilder.removeRecords(values, deleted);
         }
+    }
+
+    private void removeRecords(List<? extends Map<String, Collection<Integer>>> removalMap){
+        pliBuilder.removeRecords(removalMap);
     }
 
     private void updateDataStructures() {

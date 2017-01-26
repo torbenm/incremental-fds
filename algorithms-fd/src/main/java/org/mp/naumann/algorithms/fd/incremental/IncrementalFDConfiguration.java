@@ -1,5 +1,9 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
+import org.mp.naumann.algorithms.fd.incremental.violations.FirstViolatingValuesCollection;
+import org.mp.naumann.algorithms.fd.incremental.violations.SingleValueViolationCollection;
+import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -20,13 +24,29 @@ public class IncrementalFDConfiguration {
     private final char versionCode;
     private final Collection<PruningStrategy> pruningStrategies = new ArrayList<>();
     private final String versionName;
+
     private boolean sampling = true;
     private boolean clusterPruning = true;
     private boolean innerClusterPruning = false;
     private boolean enhancedClusterPruning = false;
     private boolean recomputeDataStructures = true;
     private boolean hashMapIdentification = true;
+    private boolean removalMap = true;
+    private boolean pruneGeneralizations = true;
+    private boolean storeEqual = true;
 
+    private int violationCollectionSize = 5;
+    private ViolationCollections violationCollectionType = ViolationCollections.FIRST_VIOLATING_VALUES;
+
+
+    public boolean usingRemovalMap() {
+        return removalMap;
+    }
+
+    public IncrementalFDConfiguration useRemovalMap(boolean removalMap) {
+        this.removalMap = removalMap;
+        return this;
+    }
 
     public IncrementalFDConfiguration(char versionCode, String versionName) {
         this.versionCode = versionCode;
@@ -143,8 +163,58 @@ public class IncrementalFDConfiguration {
         return this;
     }
 
+    public boolean usingPruneGeneralizations() {
+        return pruneGeneralizations;
+    }
+
+    public IncrementalFDConfiguration usePruneGeneralizations(boolean pruneGeneralizations) {
+        this.pruneGeneralizations = pruneGeneralizations;
+        return this;
+    }
+
+    public boolean isStoreEqual() {
+        return storeEqual;
+    }
+
+    public IncrementalFDConfiguration setStoreEqual(boolean storeEqual) {
+        this.storeEqual = storeEqual;
+        return this;
+    }
+
+    public int getViolationCollectionSize() {
+        return violationCollectionSize;
+    }
+
+    public void setViolationCollectionSize(int violationCollectionSize) {
+        this.violationCollectionSize = violationCollectionSize;
+    }
+
+    public ViolationCollections getViolationCollectionType() {
+        return violationCollectionType;
+    }
+
+    public IncrementalFDConfiguration setViolationCollectionType(ViolationCollections violationCollectionType) {
+        this.violationCollectionType = violationCollectionType;
+        return this;
+    }
+
+    public ViolationCollection createViolationCollection(){
+        switch(this.violationCollectionType){
+            case SINGLE_VALUE:
+                return new SingleValueViolationCollection(this);
+            case FIRST_VIOLATING_VALUES:
+                return new FirstViolatingValuesCollection(this, violationCollectionSize);
+        }
+        return null;
+    }
+
     public enum PruningStrategy {
         SIMPLE, BLOOM, BLOOM_ADVANCED, ANNOTATION
+    }
+
+    public enum ViolationCollections {
+        SINGLE_VALUE,
+        FIRST_VIOLATING_VALUES
     }
 
 }

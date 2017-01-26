@@ -1,8 +1,8 @@
 package org.mp.naumann.algorithms.fd.incremental.validator;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.MemoryGuardian;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
@@ -16,8 +16,8 @@ import java.util.List;
 
 public class GeneralizingValidator extends Validator<Boolean> {
 
-    public GeneralizingValidator(FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
-        super(negCover, posCover, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian);
+    public GeneralizingValidator(IncrementalFDConfiguration configuration, FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
+        super(configuration, posCover, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian, negCover);
         findValid = true;
     }
 
@@ -49,7 +49,8 @@ public class GeneralizingValidator extends Validator<Boolean> {
         // Thus we must remove all from the previous level
         clearPreviousLevel(validationResult.validFDs);
 
-        removeGeneralizations(validationResult.invalidFDs);
+        if(configuration.usingPruneGeneralizations())
+            removeGeneralizations(validationResult.invalidFDs);
 
         // Generate new FDs from the invalid FDs and add them to the next level as well
         // In contrast to the "Normal" Validator, as we go bottom up, we create the next level out of the valid FDs

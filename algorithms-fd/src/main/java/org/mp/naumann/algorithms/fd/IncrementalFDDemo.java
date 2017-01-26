@@ -45,7 +45,12 @@ public class IncrementalFDDemo {
         FDLogger.setLevel(Level.INFO);
 
         IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom")
-                .addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION);
+                .addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)
+                .setHashMapIdentification(true)
+                .useRemovalMap(true)
+                .usePruneGeneralizations(true)
+                .setViolationCollectionType(IncrementalFDConfiguration.ViolationCollections.FIRST_VIOLATING_VALUES)
+                .setStoreEqual(true);
 
         IncrementalFDRunConfiguration runConfig = adult;
 

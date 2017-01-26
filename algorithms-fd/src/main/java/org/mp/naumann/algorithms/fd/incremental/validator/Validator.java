@@ -1,11 +1,10 @@
 package org.mp.naumann.algorithms.fd.incremental.validator;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.MemoryGuardian;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
@@ -14,7 +13,6 @@ import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
 
 import java.util.ArrayList;
@@ -44,12 +42,14 @@ public abstract class Validator<T> {
     protected int pruned = 0;
     protected int validations = 0;
     protected final List<ValidationPruner> validationPruners = new ArrayList<>();
+    protected final IncrementalFDConfiguration configuration;
 
     public void addValidationPruner(ValidationPruner ValidationPruner) {
         validationPruners.add(ValidationPruner);
     }
 
-    public Validator(FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
+    public Validator(IncrementalFDConfiguration configuration, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian, FDSet negCover) {
+        this.configuration = configuration;
         this.negCover = negCover;
         this.posCover = posCover;
         this.numRecords = compressedRecords.size();

@@ -11,8 +11,8 @@ public class ExactMatcher implements Matcher {
     public boolean match(OpenBitSet attrs, int[] violatingValues, int[] removedValues) {
         int j = 0;
 
-        for(Integer rhsAttr : BitSetUtils.iterable(attrs)){
-            if( violatingValues[j] != removedValues[rhsAttr]){
+        for (Integer rhsAttr : BitSetUtils.iterable(attrs)) {
+            if (violatingValues[j] != removedValues[rhsAttr]) {
                 return false;
 
             }

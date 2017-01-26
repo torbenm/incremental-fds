@@ -263,14 +263,21 @@ class Sampler {
 	}
     private void matchAnnotationPruning(OpenBitSet equalAttrs, int[] t1, int[] t2) {
         List<Integer> invalidatingValues = new ArrayList<>();
+        List<Integer> invalidatingValues2 = new ArrayList<>();
         equalAttrs.clear(0, t1.length);
         for (int i = 0; i < t1.length; i++) {
             if (this.valueComparator.isEqual(t1[i], t2[i])) {
                 equalAttrs.set(i);
+                if(configuration.isStoreEqual())
+                    invalidatingValues.add(t1[i]);
+            }else if(!configuration.isStoreEqual()){
                 invalidatingValues.add(t1[i]);
+                invalidatingValues2.add(t2[i]);
             }
         }
         violationCollection.add(equalAttrs, invalidatingValues);
+        if(!configuration.isStoreEqual())
+            violationCollection.add(equalAttrs, invalidatingValues2);
     }
 
 

@@ -8,8 +8,8 @@ public class IntersectionMatcher implements Matcher {
     public boolean match(OpenBitSet attrs, int[] violatingValues, int[] removedValues) {
         int j = 0;
 
-        for(Integer rhsAttr : BitSetUtils.iterable(attrs)){
-            if(rhsAttr < removedValues.length && violatingValues[j] == removedValues[rhsAttr]){
+        for(int attr : BitSetUtils.iterable(attrs)){
+            if(attr < removedValues.length && violatingValues[j] == removedValues[attr]){
                 return true;
             }
             j++;

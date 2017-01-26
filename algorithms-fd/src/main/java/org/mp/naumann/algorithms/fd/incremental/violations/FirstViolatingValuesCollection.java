@@ -1,9 +1,8 @@
 package org.mp.naumann.algorithms.fd.incremental.violations;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.incremental.violations.matcher.ExactMatcher;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.violations.matcher.IntersectionMatcher;
-import org.mp.naumann.algorithms.fd.incremental.violations.matcher.KIntersectionMatcher;
 import org.mp.naumann.algorithms.fd.incremental.violations.matcher.Matcher;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
@@ -23,12 +22,15 @@ public class FirstViolatingValuesCollection implements ViolationCollection {
     private final List<OpenBitSetFD> invalidFDs = new ArrayList<>();
     private final int capacity;
     private final Matcher matcher = new IntersectionMatcher();
-    public FirstViolatingValuesCollection(int capacity) {
+    private final IncrementalFDConfiguration configuration;
+
+    public FirstViolatingValuesCollection( IncrementalFDConfiguration configuration, int capacity) {
         this.capacity = capacity;
+        this.configuration = configuration;
     }
 
-    public FirstViolatingValuesCollection() {
-        this(5);
+    public FirstViolatingValuesCollection(IncrementalFDConfiguration configuration) {
+        this(configuration, 5);
     }
 
     @Override
@@ -54,7 +56,7 @@ public class FirstViolatingValuesCollection implements ViolationCollection {
             OpenBitSet attrs = entry.getKey();
             for(int[] array : entry.getValue()){
                 for(int[] record : removedValues){
-                    if(matcher.match(attrs, array, record)){
+                    if(matcher.match(configuration.isStoreEqual(), attrs, array, record)){
                         numAffect++;
                         break;
                     }
