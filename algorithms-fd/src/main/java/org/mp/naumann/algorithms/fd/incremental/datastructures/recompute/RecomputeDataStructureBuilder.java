@@ -42,26 +42,29 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     }
 
     public CompressedDiff update(Batch batch) {
-
+        HashMap<Statement, Collection<Integer>> deleteStatementRecordIdMatches = new HashMap<>();
         Set<Integer> inserted = addRecordsToPliBuilder(batch.getInsertStatements());
-        Set<Integer> deleted = getRecordIdsToRemove(batch.getDeleteStatements());
+        Set<Integer> deleted = getRecordIdsToRemove(batch.getDeleteStatements(), deleteStatementRecordIdMatches);
 
         updateDataStructures(inserted, deleted);
         CompressedDiff diff = CompressedDiff.buildDiff(inserted, deleted, version, compressedRecords);
-        updateDataStructures();
 
+        removeRecords(deleteStatementRecordIdMatches);
+        updateDataStructures();
         return diff;
     }
 
-    private Set<Integer> getRecordIdsToRemove(List<? extends Statement> stmts){
+    private Set<Integer> getRecordIdsToRemove(List<? extends Statement> stmts, Map<Statement, Collection<Integer>> statementRecordIds){
         Set<Integer> ids = new HashSet<>();
 
         for (Statement stmt : stmts) {
             Map<String, String> valueMap = stmt.getValueMap();
             List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
-            ids.addAll(version.usingHashMapIdentification() ?
+            Collection<Integer> matches = version.usingHashMapIdentification() ?
                     pliBuilder.getMatchingRecordIdsByHashMap(values)
-                    : pliBuilder.getMatchingRecordsIdsByClusterMaps(values));
+                    : pliBuilder.getMatchingRecordsIdsByClusterMaps(values);
+            ids.addAll(matches);
+            statementRecordIds.put(stmt, matches);
         }
         return ids;
     }
@@ -75,6 +78,15 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
             inserted.add(id);
         }
         return inserted;
+    }
+
+    private void removeRecords(HashMap<Statement, Collection<Integer>> statementRecordIds) {
+        for(Statement stmt : statementRecordIds.keySet()){
+            Map<String, String> valueMap = stmt.getValueMap();
+            List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
+
+            pliBuilder.removeRecords(values, statementRecordIds.get(stmt));
+        }
     }
 
     private void removeRecords(List<? extends Statement> stmts, Set<Integer> deleted) {

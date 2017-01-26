@@ -101,6 +101,12 @@ public class FDTree extends FDTreeElement {
 		return foundLhs;
 	}
 
+	public int removeFdFromGeneralizations(OpenBitSet lhs, int rhs){
+        OpenBitSet currentLhs = new OpenBitSet();
+        int nextLhsAttr = lhs.nextSetBit(0);
+        return this.removeFdFromGeneralizations(lhs, rhs, nextLhsAttr, currentLhs);
+    }
+
 	public FDTreeElement findTreeElement(OpenBitSet lhs){
         FDTreeElement current = this;
         for(int lhsAttr = lhs.nextSetBit(0); lhsAttr >= 0; lhsAttr = lhs.nextSetBit(lhsAttr+1)){

@@ -82,7 +82,7 @@ class RecomputePLIBuilder {
         return clusterMapBuilder.getMatchingRecordsIdsByClusterMaps(record);
     }
 
-    public void removeRecords(Iterable<String> record, Set<Integer> recordIds) {
+    public void removeRecords(Iterable<String> record, Collection<Integer> recordIds) {
         clusterMapBuilder.removeRecords(record, recordIds);
     }
 }

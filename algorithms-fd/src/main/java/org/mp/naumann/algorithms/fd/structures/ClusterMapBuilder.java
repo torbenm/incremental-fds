@@ -132,14 +132,11 @@ public class ClusterMapBuilder {
         return matching;
     }
 
-    public void removeRecords(Iterable<String> record, Set<Integer> recordIds){
+    public void removeRecords(Iterable<String> record, Collection<Integer> recordIds){
         int attributeId = 0;
         for(String value : record) {
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
-            if(clusterMap.containsKey(value)){
-                Set<Integer> cluster = new HashSet<>(clusterMap.getOrDefault(value, new IntArrayList()));
-                cluster.removeAll(recordIds);
-            }
+            clusterMap.getOrDefault(value, new IntArrayList()).removeAll(recordIds);
             attributeId++;
         }
     }

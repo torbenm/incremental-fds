@@ -186,9 +186,10 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     public IncrementalFDResult validateDeletes(CompressedDiff diff, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis) throws AlgorithmExecutionException {
         if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)){
 
+
             //FDTree posCover = new FDTree(columns.size(), -1);
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Finished basic setup.");
-            GeneralizingValidator validator = new GeneralizingValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, false, memoryGuardian);
+            GeneralizingValidator validator = new GeneralizingValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
 
             IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Initialised valdiator and inductor");

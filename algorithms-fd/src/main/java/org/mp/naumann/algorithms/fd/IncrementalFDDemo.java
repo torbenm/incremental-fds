@@ -47,14 +47,11 @@ public class IncrementalFDDemo {
         IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom")
                 .addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION);
 
-        IncrementalFDRunConfiguration runConfig = bridges;
+        IncrementalFDRunConfiguration runConfig = adult;
 
 
         SpeedBenchmark.enable();
-        SpeedBenchmark.addEventListener(f -> {
-                    if(f.getLevel() == BenchmarkLevel.UNIQUE) System.out.println(f);
-        }
-        );
+        SpeedBenchmark.addEventListener(System.out::println);
 
         IncrementalFDRunner runner = new IncrementalFDRunner() {
             @Override
