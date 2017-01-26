@@ -1,5 +1,6 @@
 package org.mp.naumann.testcases;
 
+import org.apache.commons.io.FilenameUtils;
 import org.mp.naumann.FileSource;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
@@ -66,13 +67,12 @@ public class InitialAndIncrementalOneBatch implements TestCase, SpeedEventListen
 
         //Initial
         status = 1;
-        //TODO: execute for EVERY batch
-        try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceConnector.BENCHMARK, ";"))) {
+        try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceConnector.BENCHMARK, ","))) {
             StreamableBatchSource batchSource = new FixedSizeBatchSource(FileSource.INSERTS_PATH, schema, tableName, batchSize, stopAfter);
             DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
             BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 
-            Table table = dc.getTable(filename.split("\\.")[0], filename.split("\\.")[1]);
+            Table table = dc.getTable("", FilenameUtils.removeExtension(filename));
             HyFDInitialAlgorithm initialAlgorithm = new HyFDInitialAlgorithm(config, table);
             batchProcessor.addBatchHandler(new InitialBatchHandler(splitLine, table, initialAlgorithm));
             SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
@@ -83,7 +83,7 @@ public class InitialAndIncrementalOneBatch implements TestCase, SpeedEventListen
         //Incremental
         status = 2;
         FDIntermediateDatastructure ds;
-        try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnectionFromAbsolutePath(FileSource.TEMP_DIR, ";"))) {
+        try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnectionFromAbsolutePath(FileSource.TEMP_DIR, ","))) {
             Table table = dc.getTable(schema, tableName);
             HyFDInitialAlgorithm initialAlgorithm = new HyFDInitialAlgorithm(config, table);
             initialAlgorithm.execute();

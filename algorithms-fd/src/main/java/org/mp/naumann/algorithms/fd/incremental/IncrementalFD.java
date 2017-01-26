@@ -109,7 +109,6 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         } else {
             dataStructureBuilder = new IncrementalDataStructureBuilder(pliBuilder, this.version, this.columns, pliOrder);
         }
-        FDLogger.log(Level.FINEST, violationCollection.toString());
     }
 
     @Override
