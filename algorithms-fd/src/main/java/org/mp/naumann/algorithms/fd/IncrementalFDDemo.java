@@ -1,6 +1,5 @@
 package org.mp.naumann.algorithms.fd;
 
-import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
@@ -20,6 +19,15 @@ public class IncrementalFDDemo {
             "test.deletesample",
             1800,
             ResourceConnector.TEST,
+            ","
+    );
+
+    private static final IncrementalFDRunConfiguration philippSample = new IncrementalFDRunConfiguration(
+            "simple.csv",
+            "",
+            "simple",
+            1800,
+            ResourceConnector.BASELINE,
             ","
     );
 

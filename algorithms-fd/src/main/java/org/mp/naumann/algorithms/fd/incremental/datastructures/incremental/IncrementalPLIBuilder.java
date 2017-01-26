@@ -29,11 +29,9 @@ import java.util.Map;
 
 class IncrementalPLIBuilder {
     private final List<Integer> pliOrder;
-    private List<PositionListIndex> plis;
-    private final boolean isNullEqualNull;
+    private List<MapPositionListIndex> plis;
 
-    IncrementalPLIBuilder(boolean isNullEqualNull, List<Integer> pliOrder) {
-        this.isNullEqualNull = isNullEqualNull;
+    IncrementalPLIBuilder(List<Integer> pliOrder) {
         this.pliOrder = pliOrder;
     }
 
@@ -48,13 +46,13 @@ class IncrementalPLIBuilder {
      *
      * @return clustersPerAttribute,
      */
-    List<PositionListIndex> fetchPositionListIndexes(List<? extends Map<Integer, IntArrayList>> clusterMaps) {
+    List<? extends PositionListIndex> fetchPositionListIndexes(List<Map<Integer, IntArrayList>> clusterMaps) {
         SpeedBenchmark.begin(BenchmarkLevel.OPERATION);
-        List<PositionListIndex> old = plis;
+        List<MapPositionListIndex> old = plis;
         if (old == null) {
             old = new ArrayList<>(pliOrder.size());
             for (int i = 0; i < pliOrder.size(); i++) {
-                old.add(new PositionListIndex(i, isNullEqualNull, new HashMap<>()));
+                old.add(new MapPositionListIndex(i, new HashMap<>()));
             }
         }
         plis = new ArrayList<>();
@@ -64,7 +62,7 @@ class IncrementalPLIBuilder {
             Map<Integer, IntArrayList> newClusters = clusterMaps.get(columnId);
             newClusters.forEach((k, v) -> clusters.merge(k, v, IncrementalPLIBuilder::concat));
 
-            plis.add(new PositionListIndex(columnId, isNullEqualNull, clusters));
+            plis.add(new MapPositionListIndex(columnId, clusters));
         }
         return plis;
     }
