@@ -74,9 +74,9 @@ public class PLIBuilder {
             if (!isNullEqualNull)
                 clusterMap.remove(Dictionary.NULL);
 
-            for (Entry<Integer, IntArrayList> cluster : clusterMap.entrySet())
-                if (cluster.getValue().size() > 1)
-                    clusters.put(cluster.getKey(), cluster.getValue());
+            for (Entry<Integer, IntArrayList> cluster : clusterMap.entrySet()) {
+                clusters.put(cluster.getKey(), cluster.getValue());
+            }
 
             clustersPerAttribute.add(new PositionListIndex(columnId, clusters));
         }

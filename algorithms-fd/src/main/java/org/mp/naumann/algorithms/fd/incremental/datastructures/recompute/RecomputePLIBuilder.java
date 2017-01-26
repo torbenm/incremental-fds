@@ -22,6 +22,7 @@ import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
+import org.mp.naumann.algorithms.fd.structures.Dictionary;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -57,10 +58,10 @@ class RecomputePLIBuilder {
             HashMap<Integer, IntArrayList> clusterMap = clusterMaps.get(columnId);
 
             if (!isNullEqualNull)
-                clusterMap.remove(null);
+                clusterMap.remove(Dictionary.NULL);
 
             for (Entry<Integer, IntArrayList> cluster : clusterMap.entrySet())
-                if (cluster.getValue().size() > 1)
+                if (cluster.getValue().size() > 0)
                     clusters.put(cluster.getKey(), cluster.getValue());
 
             clustersPerAttribute.add(new PositionListIndex(columnId, isNullEqualNull, clusters));
