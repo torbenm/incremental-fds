@@ -97,7 +97,7 @@ public class PositionListIndex implements IPositionListIndex {
     public boolean isConstant(int numRecords) {
         if (numRecords <= 1)
             return true;
-        return (this.clusters.size() == 1) && (this.clusters.get(0).size() == numRecords);
+        return (this.clusters.size() == 1) && (this.clusters.values().iterator().next().size() == numRecords);
     }
 
 
