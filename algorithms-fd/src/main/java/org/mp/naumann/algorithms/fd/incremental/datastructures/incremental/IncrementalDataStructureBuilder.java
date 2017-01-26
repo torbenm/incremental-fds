@@ -8,6 +8,7 @@ import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.MapCompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.Dictionary;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
@@ -15,7 +16,6 @@ import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -135,7 +135,6 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
             Map<Integer, Integer> invertedPli = new HashMap<>();
 
             for (Entry<Integer, IntArrayList> cluster : clusterMaps.get(clusterId).entrySet()) {
-                if(cluster.getKey().equals(Dictionary.NULL)) continue;
                 for (int recordId : cluster.getValue()) {
                     invertedPli.put(recordId, cluster.getKey());
                 }
@@ -159,27 +158,4 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         return compressedRecords;
     }
 
-    private static class MapCompressedRecords implements CompressedRecords {
-
-        private final Map<Integer, int[]> compressedRecords = new HashMap<>();
-
-        @Override
-        public int[] get(int index) {
-            return compressedRecords.get(index);
-        }
-
-        @Override
-        public void fill(int index, int value) {
-            Arrays.fill(compressedRecords.get(index), value);
-        }
-
-        @Override
-        public int size() {
-            return compressedRecords.size();
-        }
-
-        public void put(Integer id, int[] record) {
-            compressedRecords.put(id, record);
-        }
-    }
 }

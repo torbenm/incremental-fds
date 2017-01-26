@@ -16,7 +16,7 @@ public class PliUtils {
         int[][] invertedPlis = new int[plis.size()][];
         for (int attr = 0; attr < plis.size(); attr++) {
             int[] invertedPli = new int[numRecords];
-            Arrays.fill(invertedPli, -1);
+            Arrays.fill(invertedPli, UNIQUE_VALUE);
 
             for (Entry<Integer, IntArrayList> cluster : plis.get(attr).getClusterEntries()) {
                 for (int recordId : cluster.getValue()) {

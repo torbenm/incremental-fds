@@ -137,7 +137,7 @@ public class PositionListIndex implements IPositionListIndex {
 
         // TODO: Check if it is technically possible that this fd holds, i.e., if A1 has 2 clusters of size 10 and A2 has 2 clusters of size 10, then the intersection can have at most 4 clusters of size 5 (see join cardinality estimation)
 
-        int[] rhsAttrId2Index = new int[compressedRecords.get(0).length];
+        int[] rhsAttrId2Index = new int[compressedRecords.getNumAttributes()];
         int[] rhsAttrIndex2Id = new int[rhsSize];
         int index = 0;
         for (int rhsAttr = refinedRhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = refinedRhs.nextSetBit(rhsAttr + 1)) {
