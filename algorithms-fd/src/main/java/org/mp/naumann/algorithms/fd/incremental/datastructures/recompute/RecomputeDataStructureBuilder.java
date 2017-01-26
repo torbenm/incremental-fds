@@ -152,7 +152,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
                 PositionListIndex pli = plis.get(i);
                 Set<Integer> clusterIds = extractClustersWithNewRecords(inserted, i);
                 if (version.usesClusterPruning()) {
-                    pli.setClustersWithNewRecords(clusterIds);
+//                    pli.setClustersWithNewRecords(clusterIds);
                 }
                 if (version.usesEnhancedClusterPruning()) {
                     newClusters.put(i, clusterIds);
