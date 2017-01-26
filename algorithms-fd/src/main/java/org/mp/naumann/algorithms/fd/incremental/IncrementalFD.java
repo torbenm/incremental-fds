@@ -196,7 +196,10 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             List<OpenBitSet> affected = violationCollection.getAffected(negCover, diff.getDeletedRecords());
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Received affected records");
 
-            int induct = inductor.generalisePositiveCover(posCover, affected, violationCollection.getInvalidFds(), columns.size());
+            IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
+                    intermediateDatastructure.getValueComparator(), this.memoryGuardian);
+
+            int induct = inductor.generalizePositiveCover(posCover, affected, violationCollection.getInvalidFds(), columns.size());
             FDLogger.log(Level.INFO, "Added " + induct + " candidates to check, depth now at "+posCover.getDepth());
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Inducted candidates into positive cover");
             boolean theresmore;

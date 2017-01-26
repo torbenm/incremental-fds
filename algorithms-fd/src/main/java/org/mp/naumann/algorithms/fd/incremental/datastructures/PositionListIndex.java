@@ -29,12 +29,15 @@ import org.mp.naumann.algorithms.fd.structures.ClusterIdentifier;
 import org.mp.naumann.algorithms.fd.structures.ClusterIdentifierWithRecord;
 import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -197,10 +200,10 @@ public abstract class PositionListIndex implements IPositionListIndex {
     }
 
     private ClusterIdentifier buildClusterIdentifier(OpenBitSet lhs, int lhsSize, int[] record) {
-        int[] cluster = new int[lhsSize];
 
+        int[] cluster = new int[lhsSize];
         int index = 0;
-        for (int lhsAttr = lhs.nextSetBit(0); lhsAttr >= 0; lhsAttr = lhs.nextSetBit(lhsAttr + 1)) {
+        for (int lhsAttr : BitSetUtils.iterable(lhs)) {
             int clusterId = record[lhsAttr];
 
             if (clusterId < 0)
@@ -213,7 +216,6 @@ public abstract class PositionListIndex implements IPositionListIndex {
             cluster[index] = clusterId;
             index++;
         }
-
         return new ClusterIdentifier(cluster);
     }
 

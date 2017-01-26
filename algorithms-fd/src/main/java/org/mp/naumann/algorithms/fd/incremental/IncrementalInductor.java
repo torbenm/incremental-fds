@@ -41,6 +41,25 @@ class IncrementalInductor {
 			nonFdLevel.clear();
 		}
 	}
+
+	public void removeGeneralizations(FDList nonFds){
+        for (int i = nonFds.getFdLevels().size() - 1; i >= 0; i--) {
+
+            List<OpenBitSet> nonFdLevel = nonFds.getFdLevels().get(i);
+            for (OpenBitSet lhs : nonFdLevel) {
+
+                OpenBitSet fullRhs = lhs.clone();
+                fullRhs.flip(0, fullRhs.size());
+
+                for(int rhs : BitSetUtils.iterable(fullRhs)){
+                    if(!posCover.containsFd(lhs, rhs))
+                        continue;
+                    posCover.removeFdAndGeneralizations(lhs, rhs);
+                }
+            }
+            nonFdLevel.clear();
+        }
+    }
 	
 	private int specializePositiveCover(OpenBitSet lhs, int rhs, FDList nonFds) {
 		int numAttributes = this.posCover.getChildren().length;
@@ -73,7 +92,7 @@ class IncrementalInductor {
 		return newFDs;
 	}
 
-    public int generalisePositiveCover(FDTree posCover, List<OpenBitSet> affectedNegativeCover, List<OpenBitSetFD> invalidFDs, int numAttributes){
+    public int generalizePositiveCover(FDTree posCover, List<OpenBitSet> affectedNegativeCover, List<OpenBitSetFD> invalidFDs, int numAttributes){
 	    int newFunctionalDependenciesToCheck = 0;
         for(OpenBitSet cover : affectedNegativeCover){
             OpenBitSet flipped = cover.clone();

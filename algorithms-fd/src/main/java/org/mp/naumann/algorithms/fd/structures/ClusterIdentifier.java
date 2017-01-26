@@ -15,6 +15,10 @@ public class ClusterIdentifier {
 	private int[] getCluster() {
 		return this.cluster;
 	}
+
+	public ClusterIdentifier clone(){
+	    return new ClusterIdentifier(getCluster());
+    }
 	
 	private int size() {
 		return this.cluster.length;

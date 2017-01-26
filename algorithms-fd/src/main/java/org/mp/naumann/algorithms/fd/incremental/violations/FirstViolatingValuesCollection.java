@@ -2,7 +2,9 @@ package org.mp.naumann.algorithms.fd.incremental.violations;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
+import org.mp.naumann.algorithms.fd.incremental.violations.matcher.ExactMatcher;
 import org.mp.naumann.algorithms.fd.incremental.violations.matcher.IntersectionMatcher;
+import org.mp.naumann.algorithms.fd.incremental.violations.matcher.KIntersectionMatcher;
 import org.mp.naumann.algorithms.fd.incremental.violations.matcher.Matcher;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
@@ -64,7 +66,7 @@ public class FirstViolatingValuesCollection implements ViolationCollection {
             }
 
             // If only one is left it might be valid!
-            if(numAffect >= entry.getValue().size()) {
+            if(numAffect >= entry.getValue().size() - 1) {
           //      PrintUtils.print(numAffect, entry.getValue().size());
                 affected.add(entry.getKey());
                 negativeCover.remove(attrs);

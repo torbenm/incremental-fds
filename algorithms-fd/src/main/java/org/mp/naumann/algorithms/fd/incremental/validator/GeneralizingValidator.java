@@ -96,7 +96,7 @@ public class GeneralizingValidator extends Validator<Boolean> {
         // As each invalid FD, such as ADB -/-> C means we don't have to look at
         // A -> C, B -> C, D -> C, AD -> C, AB -> C, DB -> C,
         // we should drop all possible generalizations.
-        return invalidFDs.stream().mapToInt(fd -> this.posCover.removeFdFromGeneralizations(fd.lhs, fd.rhs)).sum();
+        return invalidFDs.stream().mapToInt(fd -> this.posCover.removeFdAndGeneralizations(fd.lhs, fd.rhs)).sum();
     }
 
     private int generateNextLevel(FD validFD){
