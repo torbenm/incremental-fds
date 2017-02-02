@@ -167,9 +167,6 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
                 FDLogger.log(Level.FINE, "Updating positive cover");
                 inductor.updatePositiveCover(newNonFds);
             }
-
-            FDLogger.log(Level.FINE, "Validating positive cover");
-            comparisonSuggestions = validator.validatePositiveCover();
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round " + i++);
         } while (comparisonSuggestions != null);
         // Return result
