@@ -10,7 +10,6 @@ import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.algorithms.fd.incremental.violations.FirstViolatingValuesCollection;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
@@ -53,21 +52,24 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	private final IncrementalFDConfiguration configuration;
 
 
-    private final ViolationCollection violationCollection = new FirstViolatingValuesCollection();
+    private final ViolationCollection violationCollection;
 
     public HyFD(){
         this.configuration = IncrementalFDConfiguration.LATEST;
-        FDLogger.setCurrentAlgorithm(this);
+        violationCollection = configuration.createViolationCollection();
     }
 
 	public HyFD(IncrementalFDConfiguration configuration, Table table, FunctionalDependencyResultReceiver resultReceiver) {
+        FDLogger.setCurrentAlgorithm(this);
         this.configuration = configuration;
+        violationCollection = configuration.createViolationCollection();
         configure(table, resultReceiver);
 	}
 
 	public void configure(Table table, FunctionalDependencyResultReceiver resultReceiver){
         this.table = table;
         this.resultReceiver = resultReceiver;
+
     }
 
 	private void initialize(TableInput tableInput) {

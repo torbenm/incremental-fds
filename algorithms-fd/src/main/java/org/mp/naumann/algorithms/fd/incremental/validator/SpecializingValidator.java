@@ -3,6 +3,7 @@ package org.mp.naumann.algorithms.fd.incremental.validator;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.MemoryGuardian;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
@@ -18,8 +19,8 @@ import java.util.logging.Level;
 public class SpecializingValidator extends Validator<List<IntegerPair>> {
 
 
-    public SpecializingValidator(FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
-        super(negCover, posCover, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian);
+    public SpecializingValidator(IncrementalFDConfiguration configuration, FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
+        super(configuration, posCover, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian, negCover);
     }
 
     @Override

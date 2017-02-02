@@ -1,6 +1,7 @@
 package org.mp.naumann.algorithms.fd.incremental.violations;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.violations.matcher.IntersectionMatcher;
 import org.mp.naumann.algorithms.fd.incremental.violations.matcher.Matcher;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
@@ -17,28 +18,31 @@ import java.util.Map;
 public class SingleValueViolationCollection implements ViolationCollection {
 
     private final Map<OpenBitSet, int[]> violationsMap = new HashMap<>();
+    private final Map<OpenBitSet, Integer> violationMapById = new HashMap<>();
     private final List<OpenBitSetFD> invalidFDs = new ArrayList<>();
     private final Matcher matcher = new IntersectionMatcher();
+    private final IncrementalFDConfiguration configuration;
 
-    @Override
-    public void add(OpenBitSet attrs, List<Integer> violatingValues) {
-        this.violationsMap.put(attrs.clone(), violatingValues.stream().mapToInt(r -> r).toArray());
+    public SingleValueViolationCollection(IncrementalFDConfiguration configuration) {
+        this.configuration = configuration;
+        throw new IllegalArgumentException("DO NOT USE! Just left here for documentation and maybe further reuse.");
     }
 
-    @Override
-    public List<OpenBitSet> getAffected(FDSet negativeCover, Map<Integer, int[]> removedValues) {
-        List<OpenBitSet> affected = new ArrayList<>();
-        for(Map.Entry<OpenBitSet, int[]> entry : violationsMap.entrySet()) {
-            boolean anyMatch = false;
-            OpenBitSet attrs = entry.getKey();
-            for(int[] record : removedValues.values()){
-                anyMatch = matcher.match(attrs, entry.getValue(), record);
-                if(anyMatch) break;
-            }
 
-            if (anyMatch) {
+    @Override
+    public void add(OpenBitSet attr, int violatingRecord) {
+        this.violationMapById.put(attr.clone(), violatingRecord);
+    }
+
+
+    @Override
+    public List<OpenBitSet> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords) {
+        List<OpenBitSet> affected = new ArrayList<>();
+        for(Map.Entry<OpenBitSet, Integer> entry : this.violationMapById.entrySet()) {
+
+            if(removedRecords.contains(entry.getValue())) {
                 affected.add(entry.getKey());
-                negativeCover.remove(attrs);
+                negativeCoverToUpdate.remove(entry.getKey());
             }
         }
         return affected;

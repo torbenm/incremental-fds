@@ -5,19 +5,27 @@ import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.PrintUtils;
 
 import java.util.Arrays;
+import java.util.Collection;
 
 public class ExactMatcher implements Matcher {
     @Override
     public boolean match(OpenBitSet attrs, int[] violatingValues, int[] removedValues) {
         int j = 0;
 
-        for(Integer rhsAttr : BitSetUtils.iterable(attrs)){
-            if( violatingValues[j] != removedValues[rhsAttr]){
+        for (Integer attr : BitSetUtils.iterable(attrs)) {
+            if (attr < removedValues.length && violatingValues[j] != removedValues[attr]) {
                 return false;
 
             }
             j++;
         }
         return true;
+    }
+
+    @Override
+    public boolean match(Collection<Integer> recordIds, Collection<Integer> removedRecords) {
+        int recordsBefore = recordIds.size();
+        recordIds.removeAll(removedRecords);
+        return recordIds.size() <= 1;
     }
 }

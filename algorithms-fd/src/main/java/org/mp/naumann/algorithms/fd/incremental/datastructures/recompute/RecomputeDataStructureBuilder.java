@@ -11,7 +11,6 @@ import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuil
 import org.mp.naumann.algorithms.fd.incremental.datastructures.MapCompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
-import org.mp.naumann.database.statement.DeleteStatement;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
@@ -22,7 +21,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -34,7 +32,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     private final List<String> columns;
     private final Set<Integer> recordIds;
 
-    private List<PositionListIndex> plis;
+    private List<? extends PositionListIndex> plis;
     private CompressedRecords compressedRecords;
 
     public RecomputeDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns) {
@@ -50,12 +48,12 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     }
 
     public CompressedDiff update(Batch batch) {
-
         Set<Integer> inserted = addRecords(batch.getInsertStatements());
         recordIds.addAll(inserted);
         Set<Integer> deleted = removeRecords(batch.getDeleteStatements());
         recordIds.removeAll(deleted);
         Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
+
         if (version.usesPruningStrategy(PruningStrategy.ANNOTATION)) {
             for (int delete : deleted) {
                 deletedDiff.put(delete, compressedRecords.get(delete));
@@ -73,13 +71,13 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         return diff;
     }
 
-    private Set<Integer> removeRecords(List<DeleteStatement> deletes){
+    private Set<Integer> removeRecords(List<? extends Statement> deletes){
         Set<Integer> ids = new HashSet<>();
         for (Statement delete : deletes) {
             Map<String, String> valueMap = delete.getValueMap();
             List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
             ids.addAll(pliBuilder.removeRecord(values));
-        }
+       }
         return ids;
     }
 
@@ -104,15 +102,21 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         for (PositionListIndex pli : plis) {
             Map<Integer, Integer> invertedPli = new HashMap<>();
 
-            for (Entry<Integer, IntArrayList> cluster : pli.getClusterEntries()) {
-                for (int recordId : cluster.getValue()) {
-                    invertedPli.put(recordId, cluster.getKey());
+            int clusterId = 0;
+            for (IntArrayList cluster : pli.getClusters()) {
+                for (int recordId : cluster) {
+                    invertedPli.put(recordId, clusterId);
                 }
+                clusterId++;
             }
             invertedPlis.add(invertedPli);
         }
         return invertedPlis;
     }
+/*
+    private void removeRecords(List<? extends Map<String, Collection<Integer>>> removalMap){
+        pliBuilder.removeRecords(removalMap);
+    }*/
 
     private CompressedRecords buildCompressedRecords() {
         MapCompressedRecords compressedRecords = new MapCompressedRecords();
@@ -159,6 +163,33 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
                 plis.forEach(pli -> pli.setOtherClustersWithNewRecords(otherClustersWithNewRecords));
             }
         }
+/*
+        if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)){
+            //Invalidate Entries that are to be removed
+            for(int i = 0; i < plis.size(); i++) {
+                invalidateRecords(deleted, i);
+            }
+        }
+
+
+
+    }
+
+    private void invalidateRecords(Collection<Integer> oldRecords, int attribute){
+
+        for(int id : oldRecords) {
+            int clusterId = compressedRecords.get(id)[attribute];
+            if(clusterId > -1) {
+                IntArrayList cluster =  plis.get(attribute).getCluster(clusterId);
+                cluster.remove((Integer) id);
+                /*
+                Do we need this? THis should release some space
+                if(cluster.size() == 0) {
+                    plis.get(attribute).setCluster(clusterId, null);
+                }
+            }
+        }
+*/
 
     }
 
@@ -173,7 +204,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         return clusterIds;
     }
 
-    public List<PositionListIndex> getPlis() {
+    public List<? extends PositionListIndex> getPlis() {
         return plis;
     }
 

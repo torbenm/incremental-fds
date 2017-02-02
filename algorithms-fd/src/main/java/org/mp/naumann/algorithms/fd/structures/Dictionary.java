@@ -5,13 +5,22 @@ import java.util.Map;
 
 public class Dictionary<T> {
 
-    public static final int NULL = 0;
+    private static final int NULL = 0;
     private final Map<T, Integer> dictionary = new HashMap<>();
     private int nextValue = 1;
+    private final boolean isNullEqualNull;
 
-    public int getOrAdd(T value) {
+    public Dictionary() {
+        this(false);
+    }
+
+    public Dictionary(boolean isNullEqualNull) {
+        this.isNullEqualNull = isNullEqualNull;
+    }
+
+    public Integer getOrAdd(T value) {
         if (value == null) {
-            return NULL;
+            return isNullEqualNull? NULL : null;
         }
         Integer dictValue = dictionary.get(value);
         if (dictValue == null) {
@@ -21,7 +30,4 @@ public class Dictionary<T> {
         return dictValue;
     }
 
-    public Map<T, Integer> getMap() {
-        return dictionary;
-    }
 }

@@ -2,6 +2,7 @@ package org.mp.naumann.algorithms.fd.incremental.validator;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.MemoryGuardian;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
@@ -15,8 +16,8 @@ import java.util.List;
 
 public class GeneralizingValidator extends Validator<Boolean> {
 
-    public GeneralizingValidator(FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
-        super(negCover, posCover, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian);
+    public GeneralizingValidator(IncrementalFDConfiguration configuration, FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
+        super(configuration, posCover, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian, negCover);
         findValid = true;
     }
 
@@ -53,6 +54,9 @@ public class GeneralizingValidator extends Validator<Boolean> {
         // Thus we must remove all from the previous level
         clearPreviousLevel(validationResult.validFDs);
 
+        if(configuration.usingPruneGeneralizations())
+            removeGeneralizations(validationResult.invalidFDs);
+
         // Generate new FDs from the invalid FDs and add them to the next level as well
         // In contrast to the "Normal" Validator, as we go bottom up, we create the next level out of the valid FDs
         int candidates = generateNextLevel(validationResult.validFDs);
@@ -60,6 +64,7 @@ public class GeneralizingValidator extends Validator<Boolean> {
         this.level--;
         return candidates;
     }
+
 
     @Override
     protected Boolean switchToSampler(List<IntegerPair> comparisonSuggestions) {
@@ -90,6 +95,13 @@ public class GeneralizingValidator extends Validator<Boolean> {
 
     private int generateNextLevel(List<FD> validFDs){
         return validFDs.stream().mapToInt(this::generateNextLevel).sum();
+    }
+
+    private int removeGeneralizations(List<FD> invalidFDs) {
+        // As each invalid FD, such as ADB -/-> C means we don't have to look at
+        // A -> C, B -> C, D -> C, AD -> C, AB -> C, DB -> C,
+        // we should drop all possible generalizations.
+        return invalidFDs.stream().mapToInt(fd -> this.posCover.removeFdAndGeneralizations(fd.lhs, fd.rhs)).sum();
     }
 
     private int generateNextLevel(FD validFD){

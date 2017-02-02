@@ -77,7 +77,8 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
     @Override
     public void addResultListener(ResultListener<IncrementalFDResult> listener) {
-        this.resultListeners.add(listener);
+        if(listener != null)
+            this.resultListeners.add(listener);
     }
 
     @Override
@@ -93,16 +94,16 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
         List<Integer> pliOrder = pliBuilder.getPliOrder();
         List<String> orderedColumns = pliOrder.stream().map(columns::get).collect(Collectors.toList());
-        List<HashMap<Integer, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
+        List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
         if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {
             bloomPruning = new BloomPruningStrategy(orderedColumns).addGenerator(new AllCombinationsBloomGenerator(2));
-            bloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder, pliBuilder.getDictionary());
+            bloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder);
         }
 
         if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM_ADVANCED)) {
             advancedBloomPruning = new BloomPruningStrategy(orderedColumns)
                     .addGenerator(new CurrentFDBloomGenerator(posCover));
-            advancedBloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder, pliBuilder.getDictionary());
+            advancedBloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder);
         }
         if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.SIMPLE)) {
             simplePruning = new ExistingValuesPruningStrategy(columns);
@@ -123,20 +124,20 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
         SpeedBenchmark.begin(BenchmarkLevel.UNIQUE);
         CompressedDiff diff = dataStructureBuilder.update(batch);
-        SpeedBenchmark.end(BenchmarkLevel.UNIQUE, "Built diff");
+        SpeedBenchmark.end(BenchmarkLevel.UNIQUE, "BUILD DIFF");
 
-        List<PositionListIndex> plis = dataStructureBuilder.getPlis();
+        List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecord();
         validateTopDown(batch, diff, plis, compressedRecords);
-        validateBottomUp(diff, compressedRecords, plis);
+        int v = validateBottomUp(diff, compressedRecords, plis);
         List<FunctionalDependency> fds = new ArrayList<>();
         posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
         SpeedBenchmark.end(BenchmarkLevel.METHOD_HIGH_LEVEL, "Processed one batch, inner measuring");
-        return new IncrementalFDResult(fds, 0, 0);
+        return new IncrementalFDResult(fds, v, 0);
     }
 
-    protected void validateTopDown(Batch batch, CompressedDiff diff, List<PositionListIndex> plis, CompressedRecords compressedRecords) throws AlgorithmExecutionException {
-        SpecializingValidator validator = new SpecializingValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
+    protected void validateTopDown(Batch batch, CompressedDiff diff, List<? extends PositionListIndex> plis, CompressedRecords compressedRecords) throws AlgorithmExecutionException {
+        SpecializingValidator validator = new SpecializingValidator(version, negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
         IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
                 valueComparator, this.memoryGuardian);
 
@@ -178,19 +179,23 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         FDLogger.log(Level.FINE, "Made " + validations + " validations");
     }
 
-    public void validateBottomUp(CompressedDiff diff, CompressedRecords compressedRecords, List<PositionListIndex> plis) throws AlgorithmExecutionException {
+    public int validateBottomUp(CompressedDiff diff, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis) throws AlgorithmExecutionException {
         if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)){
+
 
             //FDTree posCover = new FDTree(columns.size(), -1);
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Finished basic setup.");
-            GeneralizingValidator validator = new GeneralizingValidator(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, false, memoryGuardian);
+            GeneralizingValidator validator = new GeneralizingValidator(version, negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
 
             IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Initialised valdiator and inductor");
-            List<OpenBitSet> affected = violationCollection.getAffected(negCover, diff.getDeletedRecords());
+            List<OpenBitSet> affected = violationCollection.getAffected(negCover, diff.getDeletedRecords().keySet());
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Received affected records");
 
-            int induct = inductor.generalisePositiveCover(posCover, affected, violationCollection.getInvalidFds(), columns.size());
+            IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
+                    valueComparator, this.memoryGuardian);
+
+            int induct = inductor.generalizePositiveCover(posCover, affected, violationCollection.getInvalidFds(), columns.size());
             FDLogger.log(Level.INFO, "Added " + induct + " candidates to check, depth now at "+posCover.getDepth());
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Inducted candidates into positive cover");
             boolean theresmore;
@@ -204,7 +209,9 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             int validations = validator.getValidations();
             FDLogger.log(Level.FINE, "Pruned " + pruned + " validations");
             FDLogger.log(Level.FINE, "Made " + validations + " validations");
+            return validations;
         }
+        return 0;
     }
 
     private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {
