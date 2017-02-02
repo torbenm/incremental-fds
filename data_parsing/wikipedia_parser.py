@@ -695,17 +695,24 @@ def statementToString(attributes, entry):
     return outputString
 
 
-def readInfoboxConfigFromFile():
-    concatLines = ""
-    with open("infobox_config.json", "r", encoding="utf-8") as infile:
+def readInfoboxConfigFromFile(file):
+    outputList = []
+    with open(file, "r", encoding="utf-8") as infile:
         for line in infile:
-            concatLines += line
+            outputList.append(line)
 
-    return json.loads(concatLines)
+    return json.loads("".join(outputList))
 
+
+def readInfoboxConfig():
+    infoboxConfig = {}
+    directory = "infobox_configs/"
+    for file in os.listdir(directory):
+        infoboxConfig.update(readInfoboxConfigFromFile(directory + file))
+    return infoboxConfig
 
 if __name__ == "__main__":
     # attributes should be provided via infobox_config.json
-    infoboxConfig = readInfoboxConfigFromFile()
+    infoboxConfig = readInfoboxConfig()
 
     parseInfoboxUpdatesToCsv(infoboxConfig)
