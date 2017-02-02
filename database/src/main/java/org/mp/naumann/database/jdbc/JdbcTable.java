@@ -22,7 +22,6 @@ class JdbcTable implements Table {
     private Connection conn;
     private String schema, name, fullName;
     private List<Column<String>> columns;
-    private int columnCount = -1;
     private int limit = -1;
 
     JdbcTable(String schema, String name, Connection conn) {
@@ -53,16 +52,8 @@ class JdbcTable implements Table {
     }
 
     @Override
-    public int numberOfColumns() {
-        if (columnCount == -1) {
-            try (java.sql.Statement stmt = conn.createStatement()) {
-                try (ResultSet rs = stmt.executeQuery(String.format("SELECT * FROM %s LIMIT 1", fullName))) {
-                    columnCount = rs.getMetaData().getColumnCount();
-                }
-            } catch (SQLException ignored) {
-            }
-        }
-        return columnCount;
+    public int numberOfColumns(){
+        return getColumns().size();
     }
 
     @Override
@@ -81,7 +72,8 @@ class JdbcTable implements Table {
                 if (columns.isEmpty()) {
                     try (ResultSet rs = meta.getColumns(null, schema, schema + "." + name, null)) {
                         while (rs.next()) {
-                            columns.add(new StringColumn(rs.getString(4), JDBCType.valueOf(rs.getInt(5))));
+							String name = rs.getString(4);
+							columns.add(new StringColumn(name, JDBCType.valueOf(rs.getInt(5))));
                         }
                     }
                 }

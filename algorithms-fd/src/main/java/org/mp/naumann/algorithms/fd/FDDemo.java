@@ -1,6 +1,5 @@
 package org.mp.naumann.algorithms.fd;
 
-import ResourceConnection.ResourceType;
 import org.mp.naumann.algorithms.InitialAlgorithm;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
@@ -13,6 +12,8 @@ import org.mp.naumann.database.utils.ConnectionManager;
 import java.util.List;
 import java.util.logging.Level;
 
+import ResourceConnection.ResourceConnector;
+
 public class FDDemo {
 
 	public static void main(String[] args) throws ClassNotFoundException, ConnectionException {
@@ -20,7 +21,7 @@ public class FDDemo {
 		SpeedBenchmark.enable();
         SpeedBenchmark.addEventListener(System.out::println);
         SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
-        DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceType.TEST, ","));
+        DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceConnector.TEST, ","));
 		SpeedBenchmark.lap(BenchmarkLevel.ALGORITHM, "Loaded dataconnector");
 		InitialAlgorithm<List<FunctionalDependency>, ?> hyfd = new FDInitialAlgorithm("hyfd", dc,
                // "benchmark",

@@ -1,6 +1,5 @@
 package org.mp.naumann.algorithms.fd.fixtures;
 
-import ResourceConnection.ResourceType;
 import com.google.common.collect.ImmutableList;
 
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
@@ -14,6 +13,8 @@ import org.mp.naumann.database.utils.ConnectionManager;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import ResourceConnection.ResourceConnector;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -40,7 +41,7 @@ public class AbaloneFixture implements AlgorithmFixture{
 
 
     public Table getInputGenerator() throws ConnectionException {
-        JdbcDataConnector jdbcDataConnector = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceType.TEST, ","));
+        JdbcDataConnector jdbcDataConnector = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceConnector.TEST, ","));
         Table t = jdbcDataConnector.getTable("test", relationName);
         return t;
     }

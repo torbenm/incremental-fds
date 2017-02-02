@@ -1,7 +1,5 @@
 package org.mp.naumann.database.utils;
 
-import ResourceConnection.ResourceConnector;
-import ResourceConnection.ResourceType;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.jdbc.ConnectionInfo;
 
@@ -11,6 +9,8 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Properties;
+
+import ResourceConnection.ResourceConnector;
 
 public class ConnectionManager {
 
@@ -53,8 +53,8 @@ public class ConnectionManager {
         return getConnection("org.postgresql.Driver", getPostgresConnectionInfo());
     }
 
-    public static Connection getCsvConnection(ResourceType resourceType, String separator) throws ConnectionException {
-        String resourcePath = ResourceConnector.getResourcePath(resourceType, "");
+    public static Connection getCsvConnection(String folder, String separator) throws ConnectionException {
+        String resourcePath = ResourceConnector.getResourcePath(folder, "");
         ConnectionInfo ci = new ConnectionInfo();
         ci.connectionString = "jdbc:relique:csv:" + resourcePath + "?separator=" + separator;
         return getConnection("org.relique.jdbc.csv.CsvDriver", ci);

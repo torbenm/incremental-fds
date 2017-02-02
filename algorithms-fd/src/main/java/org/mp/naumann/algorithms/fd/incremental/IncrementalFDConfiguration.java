@@ -12,7 +12,7 @@ public class IncrementalFDConfiguration {
 
     private final Collection<PruningStrategy> pruningStrategies = new ArrayList<>();
     private final String versionName;
-    private boolean sampling = false;
+    private boolean sampling = true;
     private boolean clusterPruning = true;
     private boolean innerClusterPruning = false;
     private boolean enhancedClusterPruning = false;

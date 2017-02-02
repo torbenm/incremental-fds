@@ -14,7 +14,7 @@ import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
-import ResourceConnection.ResourceType;
+import ResourceConnection.ResourceConnector;
 
 public class AverageAlgorithmBenchmark implements AlgorithmBenchmark {
 
@@ -31,7 +31,7 @@ public class AverageAlgorithmBenchmark implements AlgorithmBenchmark {
         batchSource = new FixedSizeBatchSource(file, "", "", batchSize);
         DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
 
-        JdbcDataConnector jdbcDataConnector = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceType.BENCHMARK, ","));
+        JdbcDataConnector jdbcDataConnector = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceConnector.BENCHMARK, ","));
         initialAlgorithm = new AverageInitialAlgorithm(column, table, jdbcDataConnector, "benchmark");
 
         incrementalAlgorithm = new AverageIncrementalAlgorithm(column);

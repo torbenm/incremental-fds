@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.logging.Level;
 
 import ResourceConnection.ResourceConnector;
-import ResourceConnection.ResourceType;
 
 public class IncrementalFDDemo {
 
@@ -30,7 +29,7 @@ public class IncrementalFDDemo {
        private static final String schema = "";
        private static final String tableName = "simple";
        private static final int batchSize = 200;
-    private static final ResourceType resourceType = ResourceType.BASELINE;//*/
+    private static final String resourceType = ResourceConnector.BASELINE;//*/
   /*    private static final String batchFileName = "deletes.deletesample.csv";
        private static final String schema = "";
        private static final String tableName = "test.deletesample";
@@ -66,7 +65,7 @@ public class IncrementalFDDemo {
             FDIntermediateDatastructure ds = hyfd.getIntermediateDataStructure();
 
             // create batch source & processor for inserts
-            String batchFile = ResourceConnector.getResourcePath(ResourceType.FULL_BATCHES, batchFileName);
+            String batchFile = ResourceConnector.getResourcePath(ResourceConnector.FULL_BATCHES, batchFileName);
             StreamableBatchSource batchSource = new FixedSizeBatchSource(batchFile, schema, tableName, batchSize);
             DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
             BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
