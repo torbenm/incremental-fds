@@ -11,7 +11,7 @@ import java.util.Map;
 
 public interface ViolationCollection extends Serializable{
 
-    void add(OpenBitSet attr, int violatingRecord);
+    void add(OpenBitSet attr, int violatingRecord1, int violatingRecord2);
     List<OpenBitSet> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords);
     void addInvalidFd(Collection<OpenBitSetFD> fd);
     List<OpenBitSetFD> getInvalidFds();

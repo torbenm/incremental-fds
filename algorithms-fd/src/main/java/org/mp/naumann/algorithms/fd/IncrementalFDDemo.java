@@ -59,11 +59,14 @@ public class IncrementalFDDemo {
     );
 
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
-        FDLogger.setLevel(Level.INFO);
+        FDLogger.setLevel(Level.FINE);
 
-        IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom");
+        IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom")
+                .addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)
+                .setViolationCollectionType(IncrementalFDConfiguration.ViolationCollections.FIRST_VIOLATING_VALUES)
+                .setViolationCollectionSize(10);
 
-        IncrementalFDRunConfiguration runConfig = adultInsert;
+        IncrementalFDRunConfiguration runConfig = adult;
 
 
         SpeedBenchmark.enable();

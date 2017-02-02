@@ -185,8 +185,9 @@ public class IncrementalFDConfiguration {
         return violationCollectionSize;
     }
 
-    public void setViolationCollectionSize(int violationCollectionSize) {
+    public IncrementalFDConfiguration setViolationCollectionSize(int violationCollectionSize) {
         this.violationCollectionSize = violationCollectionSize;
+        return this;
     }
 
     public ViolationCollections getViolationCollectionType() {

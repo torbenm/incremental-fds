@@ -19,7 +19,7 @@ import java.util.logging.Level;
 
 public class FirstViolatingValuesCollection implements ViolationCollection {
 
-    private final Map<OpenBitSet, Set<Integer>> violationsMapById = new HashMap<>();
+    private final Map<OpenBitSet, ViolatingPairCollection> violationsMapById = new HashMap<>();
     private final List<OpenBitSetFD> invalidFDs = new ArrayList<>();
     private final int capacity;
     private final Matcher matcher = new IntersectionMatcher();
@@ -37,16 +37,16 @@ public class FirstViolatingValuesCollection implements ViolationCollection {
 
 
     @Override
-    public void add(OpenBitSet orgAttr, int violatingRecord) {
+    public void add(OpenBitSet orgAttr, int violatingRecord1, int violatingRecord2) {
         OpenBitSet attrs = orgAttr.clone();
         if(!this.violationsMapById.containsKey(attrs)){
-            this.violationsMapById.put(attrs, new HashSet<>(capacity));
+            this.violationsMapById.put(attrs, new ViolatingPairCollection(new HashSet<>(capacity)));
         } else {
             if(this.violationsMapById.get(attrs).size() >= capacity){
                 return;
             }
         }
-        this.violationsMapById.get(attrs).add(violatingRecord);
+        this.violationsMapById.get(attrs).add(new ViolatingPair(violatingRecord1, violatingRecord2));
     }
 
 
@@ -54,8 +54,9 @@ public class FirstViolatingValuesCollection implements ViolationCollection {
     public List<OpenBitSet> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords) {
         List<OpenBitSet> affected = new ArrayList<>();
         int aff = 0, skip = 0;
-        for(Map.Entry<OpenBitSet, Set<Integer>> entry : violationsMapById.entrySet()) {
-            if(matcher.match(entry.getValue(), removedRecords)) {
+        for(Map.Entry<OpenBitSet, ViolatingPairCollection> entry : violationsMapById.entrySet()) {
+            entry.getValue().removeAllIntersections(removedRecords);
+            if(entry.getValue().size() < 1) {
                 affected.add(entry.getKey());
                 negativeCoverToUpdate.remove(entry.getKey());
                 aff++;
