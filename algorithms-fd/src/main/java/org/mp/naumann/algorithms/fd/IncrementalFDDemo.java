@@ -31,6 +31,15 @@ public class IncrementalFDDemo {
             ","
     );
 
+    private static final IncrementalFDRunConfiguration adultInsert = new IncrementalFDRunConfiguration(
+            "inserts.adult.csv",
+            "",
+            "benchmark.adult",
+            100,
+            ResourceConnector.BENCHMARK,
+            ","
+    );
+
     private static final IncrementalFDRunConfiguration adult = new IncrementalFDRunConfiguration(
             "deletes.adult.csv",
             "",
@@ -52,15 +61,9 @@ public class IncrementalFDDemo {
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
         FDLogger.setLevel(Level.INFO);
 
-        IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom")
-                .addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)
-                .setHashMapIdentification(true)
-                .useRemovalMap(true)
-                .usePruneGeneralizations(true)
-                .setViolationCollectionType(IncrementalFDConfiguration.ViolationCollections.FIRST_VIOLATING_VALUES)
-                .setStoreEqual(true);
+        IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom");
 
-        IncrementalFDRunConfiguration runConfig = adult;
+        IncrementalFDRunConfiguration runConfig = adultInsert;
 
 
         SpeedBenchmark.enable();
@@ -82,7 +85,8 @@ public class IncrementalFDDemo {
                 FDLogger.log(Level.INFO, String.format("Total performed validations: %s", listener.getValidationCount()));
                 FDLogger.log(Level.INFO, String.format("Total pruned validations: %s", listener.getPrunedCount()));
                 FDLogger.log(Level.INFO, String.format("Final FD count: %s", listener.getFDs().size()));
-                //listener.getFDs().forEach(f -> FDLogger.log(Level.INFO, f.toString()));
+                FDLogger.log(Level.FINEST, "\n");
+                listener.getFDs().forEach(f -> FDLogger.log(Level.FINEST, f.toString()));
             }
         };
         runner.run(runConfig, configuration);

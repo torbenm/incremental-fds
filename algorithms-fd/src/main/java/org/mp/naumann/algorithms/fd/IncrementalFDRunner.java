@@ -20,7 +20,6 @@ import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
 import java.util.List;
-import java.util.logging.Level;
 
 import ResourceConnection.ResourceConnector;
 
@@ -56,12 +55,12 @@ public interface IncrementalFDRunner {
 
             // create incremental algorithm
             SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
-            IncrementalFD algorithm = new IncrementalFD(table.getColumnNames(), runConfig.getTableName(),
+            IncrementalFD algorithm = new IncrementalFD(runConfig.getTableName(),
                     algoConfig);
             IncrementalFDResultListener listener = new IncrementalFDResultListener();
             algorithm.addResultListener(listener);
             algorithm.addResultListener(getResultListener());
-            algorithm.setIntermediateDataStructure(ds);
+            algorithm.initialize(ds);
 
             // process batch
             batchProcessor.addBatchHandler(algorithm);

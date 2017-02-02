@@ -10,7 +10,6 @@ import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.algorithms.fd.incremental.violations.SingleValueViolationCollection;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
@@ -229,4 +228,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		return valueComparator;
 	}
 
+	public List<String> getColumns() {
+		return attributeNames;
+	}
 }
