@@ -182,7 +182,8 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
             //FDTree posCover = new FDTree(columns.size(), -1);
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Finished basic setup.");
-            GeneralizingValidator validator = new GeneralizingValidator(version, negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
+            GeneralizingValidator validator = new GeneralizingValidator(version, negCover, posCover,
+                    compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian, violationCollection);
 
             IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Initialised valdiator and inductor");

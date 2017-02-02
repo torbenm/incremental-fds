@@ -15,4 +15,6 @@ public interface ViolationCollection extends Serializable{
     List<OpenBitSet> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords);
     void addInvalidFd(Collection<OpenBitSetFD> fd);
     List<OpenBitSetFD> getInvalidFds();
+
+    boolean isInvalid(OpenBitSet lhs, int rhs);
 }

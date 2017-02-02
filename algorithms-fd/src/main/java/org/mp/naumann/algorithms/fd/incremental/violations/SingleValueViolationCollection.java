@@ -44,6 +44,7 @@ public class SingleValueViolationCollection implements ViolationCollection {
                 negativeCoverToUpdate.remove(entry.getKey());
             }
         }
+        affected.parallelStream().forEach(violationMapById::remove);
         return affected;
     }
 
@@ -55,6 +56,11 @@ public class SingleValueViolationCollection implements ViolationCollection {
     @Override
     public List<OpenBitSetFD> getInvalidFds() {
         return invalidFDs;
+    }
+
+    @Override
+    public boolean isInvalid(OpenBitSet lhs, int rhs) {
+        return this.violationMapById.containsKey(lhs);
     }
 
 }

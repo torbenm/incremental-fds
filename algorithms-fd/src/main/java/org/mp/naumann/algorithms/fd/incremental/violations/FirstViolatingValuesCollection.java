@@ -79,6 +79,10 @@ public class FirstViolatingValuesCollection implements ViolationCollection {
         return invalidFDs;
     }
 
+    @Override
+    public boolean isInvalid(OpenBitSet lhs, int rhs) {
+        return violationsMapById.containsKey(lhs) && violationsMapById.get(lhs).size() > 0;
+    }
 
 
 }
