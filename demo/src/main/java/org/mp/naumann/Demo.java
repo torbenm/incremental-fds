@@ -1,7 +1,5 @@
 package org.mp.naumann;
 
-import ResourceConnection.ResourceConnector;
-import ResourceConnection.ResourceType;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.implementations.AverageDatastructure;
 import org.mp.naumann.algorithms.implementations.AverageIncrementalAlgorithm;
@@ -13,6 +11,9 @@ import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
+
+import ResourceConnection.ResourceConnector;
+import ResourceConnection.ResourceType;
 
 public class Demo {
 
@@ -31,8 +32,8 @@ public class Demo {
 
 		IncrementalAlgorithm<Double, AverageDatastructure> popAvg = new AverageIncrementalAlgorithm("population");
 		IncrementalAlgorithm<Double, AverageDatastructure> areaAvg = new AverageIncrementalAlgorithm("area");
-		popAvg.setIntermediateDataStructure(popDs);
-		areaAvg.setIntermediateDataStructure(areaDs);
+		popAvg.initialize(popDs);
+		areaAvg.initialize(areaDs);
 		popAvg.addResultListener(new PrintResultListener<>("population"));
 		areaAvg.addResultListener(new PrintResultListener<>("area"));
 		bp.addBatchHandler(popAvg);
