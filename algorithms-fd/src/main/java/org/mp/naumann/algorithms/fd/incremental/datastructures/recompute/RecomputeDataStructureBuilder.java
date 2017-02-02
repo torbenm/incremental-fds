@@ -11,7 +11,6 @@ import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuil
 import org.mp.naumann.algorithms.fd.incremental.datastructures.MapCompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
-import org.mp.naumann.database.statement.DeleteStatement;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
@@ -22,7 +21,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -34,7 +32,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     private final List<String> columns;
     private final Set<Integer> recordIds;
 
-    private List<PositionListIndex> plis;
+    private List<? extends PositionListIndex> plis;
     private CompressedRecords compressedRecords;
 
     public RecomputeDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns) {
@@ -105,10 +103,12 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         for (PositionListIndex pli : plis) {
             Map<Integer, Integer> invertedPli = new HashMap<>();
 
-            for (Entry<Integer, IntArrayList> cluster : pli.getClusterEntries()) {
-                for (int recordId : cluster.getValue()) {
-                    invertedPli.put(recordId, cluster.getKey());
+            int clusterId = 0;
+            for (IntArrayList cluster : pli.getClusters()) {
+                for (int recordId : cluster) {
+                    invertedPli.put(recordId, clusterId);
                 }
+                clusterId++;
             }
             invertedPlis.add(invertedPli);
         }
@@ -174,7 +174,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         return clusterIds;
     }
 
-    public List<PositionListIndex> getPlis() {
+    public List<? extends PositionListIndex> getPlis() {
         return plis;
     }
 

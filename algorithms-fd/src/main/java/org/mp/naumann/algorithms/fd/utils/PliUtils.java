@@ -6,7 +6,6 @@ import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map.Entry;
 
 public class PliUtils {
 
@@ -16,12 +15,14 @@ public class PliUtils {
         int[][] invertedPlis = new int[plis.size()][];
         for (int attr = 0; attr < plis.size(); attr++) {
             int[] invertedPli = new int[numRecords];
-            Arrays.fill(invertedPli, UNIQUE_VALUE);
+            Arrays.fill(invertedPli, -1);
 
-            for (Entry<Integer, IntArrayList> cluster : plis.get(attr).getClusterEntries()) {
-                for (int recordId : cluster.getValue()) {
-                    invertedPli[recordId] = cluster.getKey();
+            int clusterId = 0;
+            for (IntArrayList cluster : plis.get(attr).getClusters()) {
+                for (int recordId : cluster) {
+                    invertedPli[recordId] = clusterId;
                 }
+                clusterId++;
             }
             invertedPlis[attr] = invertedPli;
         }

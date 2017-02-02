@@ -2,12 +2,12 @@ package org.mp.naumann.algorithms.fd.structures;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
-import java.util.Map.Entry;
+import java.util.Collection;
 
 public interface IPositionListIndex {
-
     int getAttribute();
 
-    Iterable<Entry<Integer, IntArrayList>> getClusterEntries();
+    Collection<IntArrayList> getClusters();
     IntArrayList getCluster(int index);
+    void setCluster(int index, IntArrayList value);
 }

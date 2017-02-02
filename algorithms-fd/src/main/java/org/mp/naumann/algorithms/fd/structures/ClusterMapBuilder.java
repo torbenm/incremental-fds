@@ -30,16 +30,16 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class ClusterMapBuilder {
+
     private int numRecords = 0;
-    private final List<HashMap<Integer, IntArrayList>> clusterMaps;
-    private final Dictionary<String> dictionary = new Dictionary<>();
+    private final List<HashMap<String, IntArrayList>> clusterMaps;
     private final HashMap<Long, IntArrayList> hashedRecords;
 
-    public List<HashMap<Integer, IntArrayList>> getClusterMaps() {
+
+    public List<HashMap<String, IntArrayList>> getClusterMaps() {
         return clusterMaps;
     }
 
@@ -54,6 +54,7 @@ public class ClusterMapBuilder {
         }
         hashedRecords = new HashMap<>();
     }
+
 
     /**
      * Calculates the clusterMap for each column of a given relation.
@@ -79,24 +80,34 @@ public class ClusterMapBuilder {
         HashCodeBuilder hashCodeBuilder = new HashCodeBuilder();
 
         for (String value : record) {
-            hashCodeBuilder.append(value);
-            int dictValue = dictionary.getOrAdd(value);
-            HashMap<Integer, IntArrayList> clusterMap = clusterMaps.get(attributeId);
-            if (clusterMap.containsKey(dictValue)) {
-                clusterMap.get(dictValue).add(recId);
-            } else {
+            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
+            if (clusterMap.containsKey(value)) {
+                clusterMap.get(value).add(recId);
+            }
+            else {
                 IntArrayList newCluster = new IntArrayList();
                 newCluster.add(recId);
-                clusterMap.put(dictValue, newCluster);
+                clusterMap.put(value, newCluster);
             }
 
             attributeId++;
         }
-        //TODO: Handling of duplicates
-        // if(this.hashedRecords.containsKey(hashCodeBuilder.build()))
+        this.numRecords++;
         addRecordToHashMap(hashCodeBuilder.build(), recId);
         return recId;
     }
+
+
+    public void addRecords(Collection<? extends Iterable<String>> records) {
+        if (records.size() > Integer.MAX_VALUE)
+            throw new RuntimeException("PLI encoding into integer based PLIs is not possible, because the number of records in the dataset exceeds Integer.MAX_VALUE. Use long based plis instead! (NumRecords = " + records.size() + " and Integer.MAX_VALUE = " + Integer.MAX_VALUE);
+
+        for (Iterable<String> record : records) {
+            addRecord(record);
+        }
+    }
+
+
 
     private void addRecordToHashMap(long hashcode, int recId){
         if(!hashedRecords.containsKey(hashcode))
@@ -117,45 +128,29 @@ public class ClusterMapBuilder {
     }
 
 
-
-    public Collection<Integer> removeRecord(Iterable<String> record) {
-        int attributeId = 0;
-        List<IntArrayList> clusters = new ArrayList<>();
-        for (String value : record) {
-            HashMap<Integer, IntArrayList> clusterMap = clusterMaps.get(attributeId);
-            Integer dictValue = dictionary.getOrAdd(value);
-            IntArrayList cluster = clusterMap.get(dictValue);
-            if (cluster == null || cluster.isEmpty()) {
-                return Collections.emptyList();
-            }
-            clusters.add(cluster);
-            attributeId++;
-        }
-        clusters.sort(Comparator.comparingInt(Collection::size));
-        Set<Integer> matching = null;
-        for (IntArrayList cluster : clusters) {
-            if (matching == null) {
-                matching = new HashSet<>(cluster);
-            } else {
-                matching.retainAll(cluster);
-            }
-        }
-        Set<Integer> toRemove = matching;
-        clusters.forEach(c -> c.removeAll(toRemove));
-        return matching;
-    }
-
-
-    public void addRecords(Collection<? extends Iterable<String>> records) {
-        if (records.size() > Integer.MAX_VALUE)
-            throw new RuntimeException("PLI encoding into integer based PLIs is not possible, because the number of records in the dataset exceeds Integer.MAX_VALUE. Use long based plis instead! (NumRecords = " + records.size() + " and Integer.MAX_VALUE = " + Integer.MAX_VALUE);
-
-        for (Iterable<String> record : records) {
-            addRecord(record);
-        }
-    }
-
-    public Dictionary<String> getDictionary() {
-        return dictionary;
-    }
+	public Collection<Integer> removeRecord(Iterable<String> record) {
+		int attributeId = 0;
+		List<IntArrayList> clusters = new ArrayList<>();
+		for (String value : record) {
+			HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
+			IntArrayList cluster = clusterMap.get(value);
+			if (cluster == null || cluster.isEmpty()) {
+				return Collections.emptyList();
+			}
+			clusters.add(cluster);
+			attributeId++;
+		}
+		clusters.sort(Comparator.comparingInt(Collection::size));
+		Set<Integer> matching = null;
+		for (IntArrayList cluster : clusters) {
+			if (matching == null) {
+				matching = new HashSet<>(cluster);
+			} else {
+				matching.retainAll(cluster);
+			}
+		}
+		Set<Integer> toRemove = matching;
+		clusters.forEach(c -> c.removeAll(toRemove));
+		return matching;
+	}
 }

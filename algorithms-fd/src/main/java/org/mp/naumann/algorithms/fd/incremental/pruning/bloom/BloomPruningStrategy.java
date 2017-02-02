@@ -9,7 +9,6 @@ import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.CardinalitySet;
 import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
-import org.mp.naumann.algorithms.fd.structures.Dictionary;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.database.statement.InsertStatement;
@@ -42,23 +41,18 @@ public class BloomPruningStrategy {
         this.columns = columns;
     }
 
-    private List<String[]> invertRecords(int numRecords, List<HashMap<Integer, IntArrayList>> clusterMaps, List<Integer> pliOrder, Dictionary<String> dictionary) {
+    private List<String[]> invertRecords(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<Integer> pliOrder) {
         FDLogger.log(Level.FINER, "Inverting records...");
         List<String[]> invertedRecords = new ArrayList<>(numRecords);
         for (int i = 0; i < numRecords; i++) {
             invertedRecords.add(new String[columns.size()]);
         }
-        Map<Integer, String> invertedDictionary = new HashMap<>();
-        for(Entry<String, Integer> entry : dictionary.getMap().entrySet()) {
-            invertedDictionary.put(entry.getValue(), entry.getKey());
-        }
         int i = 0;
         for (int columnId : pliOrder) {
-            HashMap<Integer, IntArrayList> clusterMap = clusterMaps.get(columnId);
-            for (Entry<Integer, IntArrayList> entry : clusterMap.entrySet()) {
-                String value = invertedDictionary.get(entry.getKey());
+            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(columnId);
+            for (Entry<String, IntArrayList> entry : clusterMap.entrySet()) {
                 for (int id : entry.getValue()) {
-                    invertedRecords.get(id)[i] = value;
+                    invertedRecords.get(id)[i] = entry.getKey();
                 }
             }
             i++;
@@ -134,8 +128,8 @@ public class BloomPruningStrategy {
         return filter.mightContain(combination);
     }
 
-    public void initialize(List<HashMap<Integer, IntArrayList>> clusterMaps, int numRecords, List<Integer> pliOrder, Dictionary<String> dictionary) {
-        Collection<String[]> invertedRecords = invertRecords(numRecords, clusterMaps, pliOrder, dictionary);
+    public void initialize(List<HashMap<String, IntArrayList>> clusterMaps, int numRecords, List<Integer> pliOrder) {
+        Collection<String[]> invertedRecords = invertRecords(numRecords, clusterMaps, pliOrder);
         initialize(invertedRecords);
     }
 

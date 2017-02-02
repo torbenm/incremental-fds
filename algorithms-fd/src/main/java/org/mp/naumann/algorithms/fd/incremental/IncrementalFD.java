@@ -92,16 +92,16 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
         List<Integer> pliOrder = pliBuilder.getPliOrder();
         List<String> orderedColumns = pliOrder.stream().map(columns::get).collect(Collectors.toList());
-        List<HashMap<Integer, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
+        List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
         if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {
             bloomPruning = new BloomPruningStrategy(orderedColumns).addGenerator(new AllCombinationsBloomGenerator(2));
-            bloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder, pliBuilder.getDictionary());
+            bloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder);
         }
 
         if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM_ADVANCED)) {
             advancedBloomPruning = new BloomPruningStrategy(orderedColumns)
                     .addGenerator(new CurrentFDBloomGenerator(posCover));
-            advancedBloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder, pliBuilder.getDictionary());
+            advancedBloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder);
         }
         if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.SIMPLE)) {
             simplePruning = new ExistingValuesPruningStrategy(columns);
@@ -125,13 +125,13 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         FDLogger.log(Level.FINE, "Started IncrementalFD for new Batch");
         SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
 
-         SpeedBenchmark.begin(BenchmarkLevel.UNIQUE);
+        SpeedBenchmark.begin(BenchmarkLevel.UNIQUE);
         CompressedDiff diff = dataStructureBuilder.update(batch);
         SpeedBenchmark.end(BenchmarkLevel.UNIQUE, "BUILD DIFF");
 
-        List<PositionListIndex> plis = dataStructureBuilder.getPlis();
+        List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecord();
-        //validateTopDown(batch, diff, plis, compressedRecords);
+        validateTopDown(batch, diff, plis, compressedRecords);
         int v = validateBottomUp(diff, compressedRecords, plis);
         List<FunctionalDependency> fds = new ArrayList<>();
         posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
@@ -139,7 +139,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         return new IncrementalFDResult(fds, v, 0);
     }
 
-    protected void validateTopDown(Batch batch, CompressedDiff diff, List<PositionListIndex> plis, CompressedRecords compressedRecords) throws AlgorithmExecutionException {
+    protected void validateTopDown(Batch batch, CompressedDiff diff, List<? extends PositionListIndex> plis, CompressedRecords compressedRecords) throws AlgorithmExecutionException {
         SpecializingValidator validator = new SpecializingValidator(version, negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
         IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
                 intermediateDatastructure.getValueComparator(), this.memoryGuardian);
@@ -182,7 +182,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         FDLogger.log(Level.FINE, "Made " + validations + " validations");
     }
 
-    public int validateBottomUp(CompressedDiff diff, CompressedRecords compressedRecords, List<PositionListIndex> plis) throws AlgorithmExecutionException {
+    public int validateBottomUp(CompressedDiff diff, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis) throws AlgorithmExecutionException {
         if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)){
 
 
