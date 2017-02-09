@@ -80,7 +80,7 @@ public class BenchmarksApplication {
     public void run() throws IOException {
         int stopAfter = batchSize < 10 ? 100 : -1;
 
-        FDLogger.setLevel(Level.OFF);
+        FDLogger.setLevel(Level.FINEST);
         setUp();
 
         IncrementalFDConfiguration config = IncrementalFDConfiguration.getVersion(name);
@@ -105,7 +105,7 @@ public class BenchmarksApplication {
             //Reporter reporter = new GoogleSheetsReporter(spreadsheet, t.sheetName());
             Reporter reporter = new FileReporter("report.txt");
 
-            reporter.writeNewLine(t.sheetValues());
+            //reporter.writeNewLine(t.sheetValues());
 
         } catch (ConnectionException e) {
             e.printStackTrace();

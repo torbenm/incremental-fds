@@ -79,7 +79,7 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
             ds = initialAlgorithm.getIntermediateDataStructure();
         }
 
-        StreamableBatchSource batchSource = getBatchSource(schema, dataset, stopAfter);
+        /*StreamableBatchSource batchSource = getBatchSource(schema, dataset, stopAfter);
         DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
         BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 
@@ -90,7 +90,7 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
         batchProcessor.addBatchHandler(incrementalAlgorithm);
         SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
         batchSource.startStreaming();
-        SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Incremental algorithm for all batches");
+        SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Incremental algorithm for all batches");*/
 
         teardown();
     }
