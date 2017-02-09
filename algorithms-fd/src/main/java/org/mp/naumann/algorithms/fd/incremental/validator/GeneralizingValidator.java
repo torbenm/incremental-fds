@@ -5,6 +5,7 @@ import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.MemoryGuardian;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
@@ -16,9 +17,15 @@ import java.util.List;
 
 public class GeneralizingValidator extends Validator<Boolean> {
 
-    public GeneralizingValidator(IncrementalFDConfiguration configuration, FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
+    private final ViolationCollection violationCollection;
+
+    public GeneralizingValidator(IncrementalFDConfiguration configuration, FDSet negCover,
+                                 FDTree posCover, CompressedRecords compressedRecords,
+                                 List<? extends PositionListIndex> plis, float efficiencyThreshold,
+                                 boolean parallel, MemoryGuardian memoryGuardian, ViolationCollection violationCollection) {
         super(configuration, posCover, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian, negCover);
         findValid = true;
+        this.violationCollection = violationCollection;
     }
 
     @Override
@@ -94,7 +101,11 @@ public class GeneralizingValidator extends Validator<Boolean> {
 
 
     private int generateNextLevel(List<FD> validFDs){
-        return validFDs.stream().mapToInt(this::generateNextLevel).sum();
+        return validFDs.stream().filter(this::couldBeValid).mapToInt(this::generateNextLevel).sum();
+    }
+
+    private boolean couldBeValid(FD fd) {
+        return !violationCollection.isInvalid(fd.lhs, fd.rhs);
     }
 
     private int removeGeneralizations(List<FD> invalidFDs) {

@@ -50,14 +50,15 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         Set<Integer> insertedUpdate = addUpdateRecords(batch.getUpdateStatements());
         inserted.addAll(insertedUpdate);
         recordIds.addAll(inserted);
+
         Set<Integer> deleted = removeRecords(batch.getDeleteStatements());
         Set<Integer> deletedUpdate = removeUpdateRecords(batch.getUpdateStatements());
         deleted.addAll(deletedUpdate);
         recordIds.removeAll(deleted);
         Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
         deleted.parallelStream().forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));
-
         updateDataStructures(inserted, deleted);
+
         Map<Integer, int[]> insertedDiff = new HashMap<>(inserted.size());
         inserted.parallelStream().forEach(i -> insertedDiff.put(i, getCompressedRecord(i)));
         CompressedDiff diff = new CompressedDiff(insertedDiff, deletedDiff, new HashMap<>(0), new HashMap<>(0));
@@ -123,10 +124,6 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         RecordCompressor recordCompressor = new ArrayRecordCompressor(recordIds, plis, pliBuilder.getNumRecords());
         compressedRecords = recordCompressor.buildCompressedRecords();
     }
-/*
-    private void removeRecords(List<? extends Map<String, Collection<Integer>>> removalMap){
-        pliBuilder.removeRecords(removalMap);
-    }*/
 
     private void updateDataStructures(Set<Integer> inserted, Set<Integer> deleted) {
         updateDataStructures();
@@ -155,33 +152,6 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
                 plis.forEach(pli -> pli.setOtherClustersWithNewRecords(otherClustersWithNewRecords));
             }
         }
-/*
-        if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)){
-            //Invalidate Entries that are to be removed
-            for(int i = 0; i < plis.size(); i++) {
-                invalidateRecords(deleted, i);
-            }
-        }
-
-
-
-    }
-
-    private void invalidateRecords(Collection<Integer> oldRecords, int attribute){
-
-        for(int id : oldRecords) {
-            int clusterId = compressedRecords.get(id)[attribute];
-            if(clusterId > -1) {
-                IntArrayList cluster =  plis.get(attribute).getCluster(clusterId);
-                cluster.remove((Integer) id);
-                /*
-                Do we need this? THis should release some space
-                if(cluster.size() == 0) {
-                    plis.get(attribute).setCluster(clusterId, null);
-                }
-            }
-        }
-*/
 
     }
 

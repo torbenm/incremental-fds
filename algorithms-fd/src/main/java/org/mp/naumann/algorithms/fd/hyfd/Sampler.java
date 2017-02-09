@@ -270,8 +270,7 @@ class Sampler {
             if (this.valueComparator.isEqual(t1[i], t2[i]))
                 equalAttrs.set(i);
         }
-        violationCollection.add(equalAttrs, recId1);
-        violationCollection.add(equalAttrs, recId2);
+        violationCollection.add(equalAttrs, recId1, recId2);
     }
 
 

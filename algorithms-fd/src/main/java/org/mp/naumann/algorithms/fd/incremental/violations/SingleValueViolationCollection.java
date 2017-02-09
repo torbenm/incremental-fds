@@ -9,43 +9,48 @@ import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class SingleValueViolationCollection implements ViolationCollection {
 
-    private final Map<OpenBitSet, int[]> violationsMap = new HashMap<>();
-    private final Map<OpenBitSet, Integer> violationMapById = new HashMap<>();
+    private final Map<OpenBitSet, ViolatingPair> violationMapById = new HashMap<>();
     private final List<OpenBitSetFD> invalidFDs = new ArrayList<>();
     private final Matcher matcher = new IntersectionMatcher();
     private final IncrementalFDConfiguration configuration;
+    private int numAttributes = 0;
 
     public SingleValueViolationCollection(IncrementalFDConfiguration configuration) {
         this.configuration = configuration;
-        throw new IllegalArgumentException("DO NOT USE! Just left here for documentation and maybe further reuse.");
     }
 
 
     @Override
-    public void add(OpenBitSet attr, int violatingRecord) {
-        this.violationMapById.put(attr.clone(), violatingRecord);
+    public void add(OpenBitSet attr, int violatingRecord1, int violatingRecord2) {
+        this.violationMapById.put(attr.clone(), new ViolatingPair(violatingRecord1, violatingRecord2));
     }
 
 
     @Override
-    public List<OpenBitSet> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords) {
+    public Collection<OpenBitSetFD> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords) {
         List<OpenBitSet> affected = new ArrayList<>();
-        for(Map.Entry<OpenBitSet, Integer> entry : this.violationMapById.entrySet()) {
+        for(Map.Entry<OpenBitSet, ViolatingPair> entry : this.violationMapById.entrySet()) {
 
-            if(removedRecords.contains(entry.getValue())) {
+            if(removedRecords.contains(entry.getValue().getFirstRecord())
+                    || removedRecords.contains(entry.getValue().getSecondRecord())) {
                 affected.add(entry.getKey());
                 negativeCoverToUpdate.remove(entry.getKey());
             }
         }
-        return affected;
+        affected.parallelStream().forEach(violationMapById::remove);
+
+        return affected.parallelStream()
+                .map(obs -> BitSetUtils.toOpenBitSetFDCollection(obs, numAttributes))
+                .flatMap(Collection::stream).collect(Collectors.toList());
     }
 
     @Override
@@ -59,24 +64,12 @@ public class SingleValueViolationCollection implements ViolationCollection {
     }
 
     @Override
-    public String toString(){
-        StringBuilder s = new StringBuilder("Negative Cover\n");
-        s.append("=========\n");
-        for(Map.Entry<OpenBitSet, int[]> entry : violationsMap.entrySet()){
-            s.append(BitSetUtils.toString(entry.getKey()))
-                    .append(" ")
-                    .append(Arrays.toString(entry.getValue()))
-                    .append("\n");
-        }
-        s.append("=========\n");
-        s.append("Invalid FDs\n");
-        s.append("=========\n");
-        for(OpenBitSetFD invalidFD : invalidFDs){
-            s.append(BitSetUtils.toString(invalidFD.getLhs()))
-                    .append(" -> ").append(invalidFD.getRhs())
-                    .append("\n");
-        }
-        return s.toString();
+    public boolean isInvalid(OpenBitSet lhs, int rhs) {
+        return this.violationMapById.containsKey(lhs);
     }
 
+    @Override
+    public void setNumAttributes(int numAttributes) {
+        this.numAttributes = numAttributes;
+    }
 }

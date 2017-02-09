@@ -1,7 +1,8 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
-import org.mp.naumann.algorithms.fd.incremental.violations.FirstViolatingValuesCollection;
+import org.mp.naumann.algorithms.fd.incremental.violations.MultipleValuesViolationCollection;
 import org.mp.naumann.algorithms.fd.incremental.violations.SingleValueViolationCollection;
+import org.mp.naumann.algorithms.fd.incremental.violations.TreeViolationCollection;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ public class IncrementalFDConfiguration {
     private boolean storeEqual = true;
 
     private int violationCollectionSize = 5;
-    private ViolationCollections violationCollectionType = ViolationCollections.FIRST_VIOLATING_VALUES;
+    private ViolationCollections violationCollectionType = ViolationCollections.MULTIPLE_VIOLATING_VALUES;
 
 
     public boolean usingRemovalMap() {
@@ -185,8 +186,9 @@ public class IncrementalFDConfiguration {
         return violationCollectionSize;
     }
 
-    public void setViolationCollectionSize(int violationCollectionSize) {
+    public IncrementalFDConfiguration setViolationCollectionSize(int violationCollectionSize) {
         this.violationCollectionSize = violationCollectionSize;
+        return this;
     }
 
     public ViolationCollections getViolationCollectionType() {
@@ -202,8 +204,10 @@ public class IncrementalFDConfiguration {
         switch(this.violationCollectionType){
             case SINGLE_VALUE:
                 return new SingleValueViolationCollection(this);
-            case FIRST_VIOLATING_VALUES:
-                return new FirstViolatingValuesCollection(this, violationCollectionSize);
+            case MULTIPLE_VIOLATING_VALUES:
+                return new MultipleValuesViolationCollection(this, violationCollectionSize);
+            case TREE_STRUCTURE:
+                return new TreeViolationCollection(this);
         }
         return null;
     }
@@ -214,7 +218,8 @@ public class IncrementalFDConfiguration {
 
     public enum ViolationCollections {
         SINGLE_VALUE,
-        FIRST_VIOLATING_VALUES
+        MULTIPLE_VIOLATING_VALUES,
+        TREE_STRUCTURE
     }
 
 }

@@ -27,6 +27,7 @@ import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.database.data.ColumnIdentifier;
@@ -187,17 +188,18 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
             //FDTree posCover = new FDTree(columns.size(), -1);
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Finished basic setup.");
-            GeneralizingValidator validator = new GeneralizingValidator(version, negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
+            GeneralizingValidator validator = new GeneralizingValidator(version, negCover, posCover,
+                    compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian, violationCollection);
 
             IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Initialised valdiator and inductor");
-            List<OpenBitSet> affected = violationCollection.getAffected(negCover, diff.getDeletedRecords().keySet());
+            Collection<OpenBitSetFD> affected = violationCollection.getAffected(negCover, diff.getDeletedRecords().keySet());
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Received affected records");
 
             IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
                     valueComparator, this.memoryGuardian);
 
-            int induct = inductor.generalizePositiveCover(posCover, affected, violationCollection.getInvalidFds(), columns.size());
+            int induct = inductor.generalizePositiveCover(posCover, affected, violationCollection.getInvalidFds());
             FDLogger.log(Level.INFO, "Added " + induct + " candidates to check, depth now at "+posCover.getDepth());
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Inducted candidates into positive cover");
             boolean theresmore;

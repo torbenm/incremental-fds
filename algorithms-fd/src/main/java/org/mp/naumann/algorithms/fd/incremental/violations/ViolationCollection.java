@@ -7,12 +7,14 @@ import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 public interface ViolationCollection extends Serializable{
 
-    void add(OpenBitSet attr, int violatingRecord);
-    List<OpenBitSet> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords);
+    void add(OpenBitSet attr, int violatingRecord1, int violatingRecord2);
+    Collection<OpenBitSetFD> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords);
     void addInvalidFd(Collection<OpenBitSetFD> fd);
     List<OpenBitSetFD> getInvalidFds();
+
+    boolean isInvalid(OpenBitSet lhs, int rhs);
+    default void setNumAttributes(int numAttributes){};
 }
