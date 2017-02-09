@@ -25,7 +25,7 @@ class MapRecordCompressor implements RecordCompressor {
 
     @Override
     public CompressedRecords buildCompressedRecords() {
-        MapCompressedRecords compressedRecords = new MapCompressedRecords(recordIds.size());
+        MapCompressedRecords compressedRecords = new MapCompressedRecords(recordIds.size(), plis.size());
         List<Map<Integer, Integer>> invertedPlis = invertPlis();
         for (int recordId : recordIds) {
             compressedRecords.put(recordId, fetchRecordFrom(recordId, invertedPlis));

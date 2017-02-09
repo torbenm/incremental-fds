@@ -35,7 +35,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
     private final List<Integer> pliOrder;
 
     private List<? extends PositionListIndex> plis;
-    private final MapCompressedRecords compressedRecords = new MapCompressedRecords();
+    private final MapCompressedRecords compressedRecords;
     private int nextRecordId;
 
     public IncrementalDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns) {
@@ -49,6 +49,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         this.version = version;
         this.columns = columns;
         this.nextRecordId = pliBuilder.getNumLastRecords();
+        this.compressedRecords = new MapCompressedRecords(nextRecordId, pliOrder.size());
         initialize(pliBuilder.getClusterMaps());
     }
 
