@@ -156,6 +156,29 @@ public class FDTreeElement {
         }
     }
 
+    int removeFdFromGeneralizations(OpenBitSet lhs, int rhs, int currentLhsAttr, OpenBitSet currentLhs){
+        int removed = 0;
+        if(this.isFd(rhs)) {
+            this.removeFd(rhs);
+            removed++;
+        }
+        if (this.children == null)
+            return removed;
+
+        while (currentLhsAttr >= 0) {
+            int nextLhsAttr = lhs.nextSetBit(currentLhsAttr + 1);
+
+            if ((this.children[currentLhsAttr] != null) && (this.children[currentLhsAttr].hasRhsAttribute(rhs))) {
+                currentLhs.set(currentLhsAttr);
+                removed += this.children[currentLhsAttr].removeFdFromGeneralizations(lhs, rhs, nextLhsAttr, currentLhs);
+                currentLhs.clear(currentLhsAttr);
+            }
+
+            currentLhsAttr = nextLhsAttr;
+        }
+        return removed;
+    }
+
     void getLevel(int level, int currentLevel, OpenBitSet currentLhs, List<FDTreeElementLhsPair> result) {
         if (level == currentLevel) {
             result.add(new FDTreeElementLhsPair(this, currentLhs.clone()));

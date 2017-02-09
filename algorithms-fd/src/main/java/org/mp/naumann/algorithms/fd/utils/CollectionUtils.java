@@ -2,6 +2,8 @@ package org.mp.naumann.algorithms.fd.utils;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
+import java.util.Collection;
+
 public class CollectionUtils {
 
 	// Simply concatenate the elements of an IntArrayList
@@ -21,5 +23,15 @@ public class CollectionUtils {
 		
 		return buffer.toString();
 	}
+
+	public static<T> boolean intersects(Collection<T> one, Collection<T> two){
+	    Collection<T> looped = one.size() < two.size() ? one : two;
+	    Collection<T> searcher = one.size() < two.size() ? two : one;
+	    for(T value : searcher){
+	        if(looped.contains(value))
+	            return true;
+        }
+        return false;
+    }
 
 }

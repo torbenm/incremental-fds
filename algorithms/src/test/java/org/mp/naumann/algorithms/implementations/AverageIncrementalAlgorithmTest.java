@@ -1,13 +1,6 @@
 package org.mp.naumann.algorithms.implementations;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.google.common.collect.Maps;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
@@ -19,7 +12,14 @@ import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.ListBatch;
 
-import com.google.common.collect.Maps;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.junit.Assert.assertEquals;
 
 public class AverageIncrementalAlgorithmTest {
 
@@ -50,7 +50,7 @@ public class AverageIncrementalAlgorithmTest {
 		AverageDatastructure ds = new AverageDatastructure();
 		ds.increaseSum(8);
 		ds.increaseCount(4);
-		alg.setIntermediateDataStructure(ds);
+		alg.initialize(ds);
 		alg.addResultListener(rl);
 		List<Statement> statements = toDeleteStatements(Arrays.asList("1", "2"));
 		Batch batch = new ListBatch(statements, SCHEMA, TABLE);
@@ -69,7 +69,7 @@ public class AverageIncrementalAlgorithmTest {
 		AverageDatastructure ds = new AverageDatastructure();
 		ds.increaseSum(8);
 		ds.increaseCount(4);
-		alg.setIntermediateDataStructure(ds);
+		alg.initialize(ds);
 		alg.addResultListener(rl);
 		List<Statement> statements = toUpdateStatements(Arrays.asList(Pair.of("2", "1"), Pair.of("4", "2")));
 		Batch batch = new ListBatch(statements, SCHEMA, TABLE);
@@ -88,7 +88,7 @@ public class AverageIncrementalAlgorithmTest {
 		AverageDatastructure ds = new AverageDatastructure();
 		ds.increaseSum(8);
 		ds.increaseCount(4);
-		alg.setIntermediateDataStructure(ds);
+		alg.initialize(ds);
 		alg.addResultListener(rl);
 		List<Statement> statements = new ArrayList<>();
 		statements.addAll(toUpdateStatements(Arrays.asList(Pair.of("2", "1"), Pair.of("4", "2"))));

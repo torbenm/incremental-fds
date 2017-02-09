@@ -1,6 +1,5 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
@@ -11,13 +10,11 @@ import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.algorithms.fd.incremental.violations.SingleValueViolationCollection;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.RecordCompressor;
-import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.FileUtils;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.database.InputReadException;
@@ -27,7 +24,6 @@ import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -56,27 +52,31 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 	private final IncrementalFDConfiguration configuration;
 
 
-    private final ViolationCollection violationCollection = new SingleValueViolationCollection();
+    private final ViolationCollection violationCollection;
 
     public HyFD(){
         this.configuration = IncrementalFDConfiguration.LATEST;
-        FDLogger.setCurrentAlgorithm(this);
+        violationCollection = configuration.createViolationCollection();
     }
 
 	public HyFD(IncrementalFDConfiguration configuration, Table table, FunctionalDependencyResultReceiver resultReceiver) {
+        FDLogger.setCurrentAlgorithm(this);
         this.configuration = configuration;
+        violationCollection = configuration.createViolationCollection();
         configure(table, resultReceiver);
 	}
 
 	public void configure(Table table, FunctionalDependencyResultReceiver resultReceiver){
         this.table = table;
         this.resultReceiver = resultReceiver;
+
     }
 
 	private void initialize(TableInput tableInput) {
 		this.tableName = tableInput.getName();
 		this.attributeNames = tableInput.getColumnNames();
 		this.numAttributes = this.attributeNames.size();
+		this.violationCollection.setNumAttributes(numAttributes);
 		if (this.valueComparator == null)
 			this.valueComparator = new ValueComparator(true);
 	}
@@ -229,4 +229,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		return valueComparator;
 	}
 
+	public List<String> getColumns() {
+		return attributeNames;
+	}
 }

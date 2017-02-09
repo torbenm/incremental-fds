@@ -8,6 +8,7 @@ import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -41,6 +42,25 @@ class IncrementalInductor {
 			nonFdLevel.clear();
 		}
 	}
+
+	public void removeGeneralizations(FDList nonFds){
+        for (int i = nonFds.getFdLevels().size() - 1; i >= 0; i--) {
+
+            List<OpenBitSet> nonFdLevel = nonFds.getFdLevels().get(i);
+            for (OpenBitSet lhs : nonFdLevel) {
+
+                OpenBitSet fullRhs = lhs.clone();
+                fullRhs.flip(0, fullRhs.size());
+
+                for(int rhs : BitSetUtils.iterable(fullRhs)){
+                    if(!posCover.containsFd(lhs, rhs))
+                        continue;
+                    posCover.removeFdAndGeneralizations(lhs, rhs);
+                }
+            }
+            nonFdLevel.clear();
+        }
+    }
 	
 	private int specializePositiveCover(OpenBitSet lhs, int rhs, FDList nonFds) {
 		int numAttributes = this.posCover.getChildren().length;
@@ -73,29 +93,20 @@ class IncrementalInductor {
 		return newFDs;
 	}
 
-    public int generalisePositiveCover(FDTree posCover, List<OpenBitSet> affectedNegativeCover, List<OpenBitSetFD> invalidFDs, int numAttributes){
-	    int newFunctionalDependenciesToCheck = 0;
-        for(OpenBitSet cover : affectedNegativeCover){
-            OpenBitSet flipped = cover.clone();
-            flipped.flip(0, numAttributes);
+    public int generalizePositiveCover(FDTree posCover, Collection<OpenBitSetFD> affectedNegativeCover, Collection<OpenBitSetFD> invalidFDs){
+        return generalizePositiveCover(posCover, affectedNegativeCover)
+                + generalizePositiveCover(posCover, invalidFDs);
+    }
 
-            for(int rhs = flipped.nextSetBit(0); rhs >= 0; rhs = flipped.nextSetBit(rhs + 1)){
-                if(!posCover.containsFd(cover, rhs)){
-                    posCover.addFunctionalDependency(cover, rhs);
-                    newFunctionalDependenciesToCheck++;
-                }
-            }
-
-        }
-
-        for(OpenBitSetFD invalidFD : invalidFDs){
+    private int generalizePositiveCover(FDTree posCover, Collection<OpenBitSetFD> fdsToCheck){
+        int newFunctionalDependenciesToCheck = 0;
+        for(OpenBitSetFD invalidFD : fdsToCheck){
             newFunctionalDependenciesToCheck++;
             if(!posCover.containsFd(invalidFD.getLhs(), invalidFD.getRhs())){
                 posCover.addFunctionalDependency(invalidFD.getLhs(), invalidFD.getRhs());
                 newFunctionalDependenciesToCheck++;
             }
         }
-
         return newFunctionalDependenciesToCheck;
     }
 }

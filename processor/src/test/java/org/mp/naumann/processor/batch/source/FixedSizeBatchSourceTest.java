@@ -1,9 +1,9 @@
 package org.mp.naumann.processor.batch.source;
 
-import ResourceConnection.ResourceConnector;
-import ResourceConnection.ResourceType;
 import org.junit.Before;
 import org.junit.Test;
+
+import ResourceConnection.ResourceConnector;
 
 public class FixedSizeBatchSourceTest {
 
@@ -12,7 +12,7 @@ public class FixedSizeBatchSourceTest {
     @Before
     public void init(){
         csv = new FixedSizeBatchSource(
-                ResourceConnector.getResourcePath(ResourceType.TEST, "test.csv"),
+                ResourceConnector.getResourcePath(ResourceConnector.TEST, "test.csv"),
                 "", "demotable", 5
         );
     }

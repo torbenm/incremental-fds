@@ -12,6 +12,8 @@ import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.database.statement.InsertStatement;
+import org.mp.naumann.database.statement.Statement;
+import org.mp.naumann.database.statement.UpdateStatement;
 import org.mp.naumann.processor.batch.Batch;
 
 import java.util.ArrayList;
@@ -41,19 +43,18 @@ public class BloomPruningStrategy {
         this.columns = columns;
     }
 
-    private List<String[]> invertRecords(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<Integer> pliSequence) {
+    private List<String[]> invertRecords(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<Integer> pliOrder) {
         FDLogger.log(Level.FINER, "Inverting records...");
         List<String[]> invertedRecords = new ArrayList<>(numRecords);
         for (int i = 0; i < numRecords; i++) {
             invertedRecords.add(new String[columns.size()]);
         }
         int i = 0;
-        for (int columnId : pliSequence) {
+        for (int columnId : pliOrder) {
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(columnId);
             for (Entry<String, IntArrayList> entry : clusterMap.entrySet()) {
-                String value = entry.getKey();
                 for (int id : entry.getValue()) {
-                    invertedRecords.get(id)[i] = value;
+                    invertedRecords.get(id)[i] = entry.getKey();
                 }
             }
             i++;
@@ -69,27 +70,13 @@ public class BloomPruningStrategy {
 
     public ValidationPruner analyzeBatch(Batch batch) {
         List<InsertStatement> inserts = batch.getInsertStatements();
+        List<UpdateStatement> updates = batch.getUpdateStatements();
         int oldRequest = requests;
         int oldBloomViolations = bloomViolations;
         int oldInnerViolations = innerViolations;
         CardinalitySet nonViolations = new CardinalitySet(columns.size());
         for (Entry<OpenBitSet, List<Integer>> combination : combinations.entrySet()) {
-            boolean isUniqueCombination = true;
-            Set<Collection<ColumnValue>> inner = new HashSet<>();
-            for (InsertStatement insert : inserts) {
-                Collection<ColumnValue> vc = getValues(toArray(insert.getValueMap()), combination.getValue());
-                if (inner.contains(vc)) {
-                    innerViolations++;
-                    isUniqueCombination = false;
-                } else if (mightContain(vc)) {
-                    bloomViolations++;
-                    isUniqueCombination = false;
-                }
-                if (!isUniqueCombination) {
-                    break;
-                }
-                inner.add(vc);
-            }
+            boolean isUniqueCombination = isUniqueCombination(inserts, updates, combination.getValue());
             if (isUniqueCombination) {
                 nonViolations.add(combination.getKey());
                 FDLogger.log(Level.FINEST, "All combinations new for columns " + combination.getValue());
@@ -112,6 +99,29 @@ public class BloomPruningStrategy {
         return new BloomValidationPruner(nonViolations);
     }
 
+    private boolean isUniqueCombination(List<InsertStatement> inserts, List<UpdateStatement> updates, List<Integer> combination) {
+        boolean isUniqueCombination = true;
+        Set<Collection<ColumnValue>> inner = new HashSet<>();
+        List<Map<String, String>> valueMaps = new ArrayList<>(inserts.size() + updates.size());
+        valueMaps.addAll(inserts.stream().map(Statement::getValueMap).collect(Collectors.toList()));
+        valueMaps.addAll(updates.stream().map(Statement::getValueMap).collect(Collectors.toList()));
+        for (Map<String, String> valueMap : valueMaps) {
+            Collection<ColumnValue> vc = getValues(toArray(valueMap), combination);
+            if (inner.contains(vc)) {
+                innerViolations++;
+                isUniqueCombination = false;
+            } else if (mightContain(vc)) {
+                bloomViolations++;
+                isUniqueCombination = false;
+            }
+            if (!isUniqueCombination) {
+                break;
+            }
+            inner.add(vc);
+        }
+        return isUniqueCombination;
+    }
+
     private String[] toArray(Map<String, String> record) {
         return columns.stream().map(record::get).toArray(String[]::new);
     }
@@ -129,8 +139,8 @@ public class BloomPruningStrategy {
         return filter.mightContain(combination);
     }
 
-    public void initialize(List<HashMap<String, IntArrayList>> clusterMaps, int numRecords, List<Integer> pliSequence) {
-        Collection<String[]> invertedRecords = invertRecords(numRecords, clusterMaps, pliSequence);
+    public void initialize(List<HashMap<String, IntArrayList>> clusterMaps, int numRecords, List<Integer> pliOrder) {
+        Collection<String[]> invertedRecords = invertRecords(numRecords, clusterMaps, pliOrder);
         initialize(invertedRecords);
     }
 

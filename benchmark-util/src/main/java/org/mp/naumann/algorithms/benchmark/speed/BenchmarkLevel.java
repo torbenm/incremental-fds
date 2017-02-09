@@ -6,5 +6,6 @@ public enum BenchmarkLevel {
     BATCH,
     METHOD_HIGH_LEVEL,
     METHOD_LOW_LEVEL,
-    OPERATION
+    OPERATION,
+    UNIQUE
 }
