@@ -20,6 +20,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.MapPositionListIndex;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 
 import java.util.ArrayList;
