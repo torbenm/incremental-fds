@@ -30,7 +30,7 @@ public class InitialAndIncrementalOneBatch extends BaseTestCase {
 
     @Override
     void setup() {
-        fileSource = new FileSource(filename, splitLine, batchSize);
+        fileSource = new FileSource(dataset, splitLine, batchSize);
         try {
             fileSource.doSplit();
         } catch (IOException e) {

@@ -32,7 +32,7 @@ import java.util.List;
 
 abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
-    final String filename;
+    final String dataset;
     private final IncrementalFDConfiguration config;
     private int stopAfter;
     private final IncrementalFDResultListener resultListener = new IncrementalFDResultListener();
@@ -41,8 +41,8 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
     private int status = 0;
 
-    BaseTestCase(String filename, IncrementalFDConfiguration config, int stopAfter) {
-        this.filename = filename;
+    BaseTestCase(String dataset, IncrementalFDConfiguration config, int stopAfter) {
+        this.dataset = dataset;
         this.stopAfter = stopAfter;
         this.config = config;
         SpeedBenchmark.addEventListener(this);
@@ -52,17 +52,16 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
     public void execute() throws ConnectionException, IOException {
         setup();
 
-        String tableName = "wcrosters";
         String schema = "";
 
         //Initial
         /*status = 1;
         try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceConnector.BASELINE, ","))) {
-            StreamableBatchSource batchSource = getBatchSource(schema, tableName, stopAfter);
             DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
+            StreamableBatchSource batchSource = getBatchSource(schema, dataset, stopAfter);
             BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 
-            Table table = dc.getTable("", FilenameUtils.removeExtension(filename));
+            Table table = dc.getTable("", FilenameUtils.removeExtension(dataset));
             HyFDInitialAlgorithm initialAlgorithm = new HyFDInitialAlgorithm(config, table);
             batchProcessor.addBatchHandler(getInitialBatchHandler(table, initialAlgorithm));
             SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
@@ -74,17 +73,17 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
         status = 2;
         FDIntermediateDatastructure ds;
         try (DataConnector dc = new JdbcDataConnector(getCsvConnection())) {
-            Table table = dc.getTable(schema, tableName);
+            Table table = dc.getTable(schema, dataset);
             HyFDInitialAlgorithm initialAlgorithm = new HyFDInitialAlgorithm(config, table);
             initialAlgorithm.execute();
             ds = initialAlgorithm.getIntermediateDataStructure();
         }
 
-        StreamableBatchSource batchSource = getBatchSource(schema, tableName, stopAfter);
+        StreamableBatchSource batchSource = getBatchSource(schema, dataset, stopAfter);
         DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
         BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 
-        IncrementalFD incrementalAlgorithm = new IncrementalFD(tableName, config);
+        IncrementalFD incrementalAlgorithm = new IncrementalFD(dataset, config);
         incrementalAlgorithm.initialize(ds);
         incrementalAlgorithm.addResultListener(resultListener);
 
@@ -105,7 +104,7 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
     public Object[] sheetValues() {
         return new Object[]{
                 new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
-                filename,
+                dataset,
                 config.getVersionName(),
                 getBatchSize(),
                 batchEvents.size(),
