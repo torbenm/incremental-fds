@@ -587,12 +587,10 @@ def parseInfoboxUpdatesToCsv(infoboxConfig):
         print("Grouping data...")
 
         baselineRecords, baselineInserts = splitBaselineDataInHalf(baselineRecords)
-        insertStatements = transformBaselineInsertsIntoUpdates(baselineInserts, attributes)
-        updateRecords = mergeInsertAndUpdateStatements(insertStatements, updateRecords)
+        insertRecords = transformBaselineInsertsIntoUpdates(baselineInserts, attributes)
 
+        updateRecords = mergeInsertAndUpdateStatements(insertRecords, updateRecords)
         updateRecords = determineFinalUpdateStatementType(updateRecords, baselineRecords, attributes)
-        # TODO: this is too easy, since it ignores reinserted records
-        insertRecords = [x for x in updateRecords if x["::action"] == "insert"]
 
         writeParsedDataToDisk(targetInfoboxType, baselineRecords, insertRecords, updateRecords, attributes)
 
