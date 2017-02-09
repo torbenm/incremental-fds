@@ -22,4 +22,5 @@ out/
 data_parsing/*
 !data_parsing/wikipedia_parser.py
 !data_parsing/infobox_config.json
+!data_parsing/build_final_table.py
 recordings/
