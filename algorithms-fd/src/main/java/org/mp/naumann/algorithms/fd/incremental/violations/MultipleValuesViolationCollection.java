@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-public class FirstViolatingValuesCollection implements ViolationCollection {
+public class MultipleValuesViolationCollection implements ViolationCollection {
 
     private final Map<OpenBitSet, ViolatingPairCollection> violationsMapById = new HashMap<>();
     private final List<OpenBitSetFD> invalidFDs = new ArrayList<>();
@@ -27,12 +27,12 @@ public class FirstViolatingValuesCollection implements ViolationCollection {
     private final IncrementalFDConfiguration configuration;
     private int numAttributes = 0;
 
-    public FirstViolatingValuesCollection( IncrementalFDConfiguration configuration, int capacity) {
+    public MultipleValuesViolationCollection(IncrementalFDConfiguration configuration, int capacity) {
         this.capacity = capacity;
         this.configuration = configuration;
     }
 
-    public FirstViolatingValuesCollection(IncrementalFDConfiguration configuration) {
+    public MultipleValuesViolationCollection(IncrementalFDConfiguration configuration) {
         this(configuration, 5);
     }
 

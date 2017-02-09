@@ -63,7 +63,7 @@ public class IncrementalFDDemo {
 
         IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom")
                 .addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)
-                .setViolationCollectionType(IncrementalFDConfiguration.ViolationCollections.TREE_STRUCTURE)
+                .setViolationCollectionType(IncrementalFDConfiguration.ViolationCollections.MULTIPLE_VIOLATING_VALUES)
                 .setViolationCollectionSize(10);
 
         IncrementalFDRunConfiguration runConfig = adult;
