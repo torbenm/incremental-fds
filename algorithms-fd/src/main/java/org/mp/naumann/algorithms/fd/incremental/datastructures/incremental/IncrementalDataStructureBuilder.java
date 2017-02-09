@@ -6,7 +6,9 @@ import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.MapCompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.Dictionary;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
@@ -14,7 +16,6 @@ import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.processor.batch.Batch;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -68,9 +69,9 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
 
     @Override
     public CompressedDiff update(Batch batch) {
+        List<InsertStatement> inserts = batch.getInsertStatements();
         Set<Integer> inserted = new HashSet<>();
         IncrementalClusterMapBuilder clusterMapBuilder = new IncrementalClusterMapBuilder(columns.size(), nextRecordId, dictionary);
-        List<InsertStatement> inserts = batch.getInsertStatements();
         for (InsertStatement insert : inserts) {
             Map<String, String> valueMap = insert.getValueMap();
             List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
@@ -102,11 +103,17 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
                 plis.forEach(pli -> pli.setOtherClustersWithNewRecords(otherClustersWithNewRecords));
             }
         }
-        if(version.usesInnerClusterPruning()) {
+        if (version.usesInnerClusterPruning()) {
             plis.forEach(pli -> pli.setNewRecords(inserted));
         }
         //TODO: deletes
-        return CompressedDiff.buildDiff(inserted, new ArrayList<>(), version, compressedRecords);
+        Map<Integer, int[]> insertedDiff = new HashMap<>(inserted.size());
+        if (version.usesPruningStrategy(PruningStrategy.SIMPLE)) {
+            for (int insert : inserted) {
+                insertedDiff.put(insert, compressedRecords.get(insert));
+            }
+        }
+        return new CompressedDiff(insertedDiff, new HashMap<>(0), new HashMap<>(0), new HashMap<>(0));
     }
 
     private void updateDataStructures(Collection<Integer> inserted, List<Map<Integer, IntArrayList>> clusterMaps) {
@@ -159,27 +166,4 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         return compressedRecords;
     }
 
-    private static class MapCompressedRecords implements CompressedRecords {
-
-        private final Map<Integer, int[]> compressedRecords = new HashMap<>();
-
-        @Override
-        public int[] get(int index) {
-            return compressedRecords.get(index);
-        }
-
-        @Override
-        public void fill(int index, int value) {
-            Arrays.fill(compressedRecords.get(index), value);
-        }
-
-        @Override
-        public int size() {
-            return compressedRecords.size();
-        }
-
-        public void put(Integer id, int[] record) {
-            compressedRecords.put(id, record);
-        }
-    }
 }

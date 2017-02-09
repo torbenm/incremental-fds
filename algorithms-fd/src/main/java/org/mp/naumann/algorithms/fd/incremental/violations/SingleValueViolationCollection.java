@@ -18,33 +18,31 @@ import java.util.Map;
 public class SingleValueViolationCollection implements ViolationCollection {
 
     private final Map<OpenBitSet, int[]> violationsMap = new HashMap<>();
+    private final Map<OpenBitSet, Integer> violationMapById = new HashMap<>();
     private final List<OpenBitSetFD> invalidFDs = new ArrayList<>();
     private final Matcher matcher = new IntersectionMatcher();
     private final IncrementalFDConfiguration configuration;
 
     public SingleValueViolationCollection(IncrementalFDConfiguration configuration) {
         this.configuration = configuration;
+        throw new IllegalArgumentException("DO NOT USE! Just left here for documentation and maybe further reuse.");
     }
 
-    @Override
-    public void add(OpenBitSet attrs, List<Integer> violatingValues) {
-        this.violationsMap.put(attrs.clone(), violatingValues.stream().mapToInt(r -> r).toArray());
-    }
 
     @Override
-    public List<OpenBitSet> getAffected(FDSet negativeCover, int[][] removedValues) {
+    public void add(OpenBitSet attr, int violatingRecord) {
+        this.violationMapById.put(attr.clone(), violatingRecord);
+    }
+
+
+    @Override
+    public List<OpenBitSet> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords) {
         List<OpenBitSet> affected = new ArrayList<>();
-        for(Map.Entry<OpenBitSet, int[]> entry : violationsMap.entrySet()) {
-            boolean anyMatch = false;
-            OpenBitSet attrs = entry.getKey();
-            for(int[] record : removedValues){
-                anyMatch = matcher.match(configuration.isStoreEqual(), attrs, entry.getValue(), record);
-                if(anyMatch) break;
-            }
+        for(Map.Entry<OpenBitSet, Integer> entry : this.violationMapById.entrySet()) {
 
-            if (anyMatch) {
+            if(removedRecords.contains(entry.getValue())) {
                 affected.add(entry.getKey());
-                negativeCover.remove(attrs);
+                negativeCoverToUpdate.remove(entry.getKey());
             }
         }
         return affected;

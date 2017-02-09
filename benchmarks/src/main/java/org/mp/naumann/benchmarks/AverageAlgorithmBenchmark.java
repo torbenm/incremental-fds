@@ -35,7 +35,7 @@ public class AverageAlgorithmBenchmark implements AlgorithmBenchmark {
         initialAlgorithm = new AverageInitialAlgorithm(column, table, jdbcDataConnector, "benchmark");
 
         incrementalAlgorithm = new AverageIncrementalAlgorithm(column);
-        incrementalAlgorithm.setIntermediateDataStructure(initialAlgorithm.getIntermediateDataStructure());
+        incrementalAlgorithm.initialize(initialAlgorithm.getIntermediateDataStructure());
         this.batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
         this.batchProcessor.addBatchHandler(incrementalAlgorithm);
     }

@@ -41,19 +41,18 @@ public class BloomPruningStrategy {
         this.columns = columns;
     }
 
-    private List<String[]> invertRecords(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<Integer> pliSequence) {
+    private List<String[]> invertRecords(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<Integer> pliOrder) {
         FDLogger.log(Level.FINER, "Inverting records...");
         List<String[]> invertedRecords = new ArrayList<>(numRecords);
         for (int i = 0; i < numRecords; i++) {
             invertedRecords.add(new String[columns.size()]);
         }
         int i = 0;
-        for (int columnId : pliSequence) {
+        for (int columnId : pliOrder) {
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(columnId);
             for (Entry<String, IntArrayList> entry : clusterMap.entrySet()) {
-                String value = entry.getKey();
                 for (int id : entry.getValue()) {
-                    invertedRecords.get(id)[i] = value;
+                    invertedRecords.get(id)[i] = entry.getKey();
                 }
             }
             i++;
@@ -129,8 +128,8 @@ public class BloomPruningStrategy {
         return filter.mightContain(combination);
     }
 
-    public void initialize(List<HashMap<String, IntArrayList>> clusterMaps, int numRecords, List<Integer> pliSequence) {
-        Collection<String[]> invertedRecords = invertRecords(numRecords, clusterMaps, pliSequence);
+    public void initialize(List<HashMap<String, IntArrayList>> clusterMaps, int numRecords, List<Integer> pliOrder) {
+        Collection<String[]> invertedRecords = invertRecords(numRecords, clusterMaps, pliOrder);
         initialize(invertedRecords);
     }
 

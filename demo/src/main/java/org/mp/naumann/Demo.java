@@ -31,8 +31,8 @@ public class Demo {
 
 		IncrementalAlgorithm<Double, AverageDatastructure> popAvg = new AverageIncrementalAlgorithm("population");
 		IncrementalAlgorithm<Double, AverageDatastructure> areaAvg = new AverageIncrementalAlgorithm("area");
-		popAvg.setIntermediateDataStructure(popDs);
-		areaAvg.setIntermediateDataStructure(areaDs);
+		popAvg.initialize(popDs);
+		areaAvg.initialize(areaDs);
 		popAvg.addResultListener(new PrintResultListener<>("population"));
 		areaAvg.addResultListener(new PrintResultListener<>("area"));
 		bp.addBatchHandler(popAvg);

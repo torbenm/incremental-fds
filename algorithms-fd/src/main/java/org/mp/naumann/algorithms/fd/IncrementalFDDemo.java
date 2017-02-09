@@ -1,6 +1,5 @@
 package org.mp.naumann.algorithms.fd;
 
-import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
@@ -20,6 +19,24 @@ public class IncrementalFDDemo {
             "test.deletesample",
             1800,
             ResourceConnector.TEST,
+            ","
+    );
+
+    private static final IncrementalFDRunConfiguration philippSample = new IncrementalFDRunConfiguration(
+            "simple.csv",
+            "",
+            "simple",
+            1800,
+            ResourceConnector.BASELINE,
+            ","
+    );
+
+    private static final IncrementalFDRunConfiguration adultInsert = new IncrementalFDRunConfiguration(
+            "inserts.adult.csv",
+            "",
+            "benchmark.adult",
+            100,
+            ResourceConnector.BENCHMARK,
             ","
     );
 
@@ -44,15 +61,9 @@ public class IncrementalFDDemo {
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
         FDLogger.setLevel(Level.INFO);
 
-        IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom")
-                .addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)
-                .setHashMapIdentification(true)
-                .useRemovalMap(true)
-                .usePruneGeneralizations(true)
-                .setViolationCollectionType(IncrementalFDConfiguration.ViolationCollections.FIRST_VIOLATING_VALUES)
-                .setStoreEqual(true);
+        IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom");
 
-        IncrementalFDRunConfiguration runConfig = adult;
+        IncrementalFDRunConfiguration runConfig = adultInsert;
 
 
         SpeedBenchmark.enable();
@@ -74,7 +85,8 @@ public class IncrementalFDDemo {
                 FDLogger.log(Level.INFO, String.format("Total performed validations: %s", listener.getValidationCount()));
                 FDLogger.log(Level.INFO, String.format("Total pruned validations: %s", listener.getPrunedCount()));
                 FDLogger.log(Level.INFO, String.format("Final FD count: %s", listener.getFDs().size()));
-                //listener.getFDs().forEach(f -> FDLogger.log(Level.INFO, f.toString()));
+                FDLogger.log(Level.FINEST, "\n");
+                listener.getFDs().forEach(f -> FDLogger.log(Level.FINEST, f.toString()));
             }
         };
         runner.run(runConfig, configuration);

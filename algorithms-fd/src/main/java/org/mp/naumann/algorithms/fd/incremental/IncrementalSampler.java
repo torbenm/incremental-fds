@@ -13,7 +13,6 @@ import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -61,23 +60,18 @@ class IncrementalSampler {
 		}
 
 		if (this.attributeRepresentants == null) { // if this is the first call of this method
-			FDLogger.log(Level.FINEST, "Sorting clusters ...");
-			long time = System.currentTimeMillis();
-			ClusterComparator comparator = new ClusterComparator(this.compressedRecords, this.compressedRecords.get(0).length - 1, 1);
-			for (PositionListIndex pli : this.plis) {
-				for (IntArrayList cluster : pli.getClusters()) {
-					Collections.sort(cluster, comparator);
-				}
-				comparator.incrementActiveKey();
-			}
-			FDLogger.log(Level.FINEST, "(" + (System.currentTimeMillis() - time) + "ms)");
-
 			FDLogger.log(Level.FINEST, "Running initial windows ...");
-			time = System.currentTimeMillis();
+			long time = System.currentTimeMillis();
 			this.attributeRepresentants = new ArrayList<>(numAttributes);
 			float efficiencyFactor = (int)Math.ceil(1 / this.efficiencyThreshold);
-			for (int i = 0; i < numAttributes; i++) {
-				AttributeRepresentant attributeRepresentant = new AttributeRepresentant(this.plis.get(i).getClusters(), efficiencyFactor, this.negCover, this.posCover, this, this.memoryGuardian);
+			ClusterComparator comparator = new ClusterComparator(this.compressedRecords, this.compressedRecords.getNumAttributes() - 1, 1);
+			for (PositionListIndex pli : this.plis) {
+				Collection<IntArrayList> clusters = pli.getClustersToCheck(true);
+				for (IntArrayList cluster : clusters) {
+					cluster.sort(comparator);
+				}
+				comparator.incrementActiveKey();
+				AttributeRepresentant attributeRepresentant = new AttributeRepresentant(clusters, efficiencyFactor, this.negCover, this.posCover, this, this.memoryGuardian);
 				attributeRepresentant.runNext(newNonFds, this.compressedRecords);
 				if (attributeRepresentant.getEfficiency() != 0)
 					this.attributeRepresentants.add(attributeRepresentant);

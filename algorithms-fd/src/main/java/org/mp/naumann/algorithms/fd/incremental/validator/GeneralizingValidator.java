@@ -22,6 +22,11 @@ public class GeneralizingValidator extends Validator<Boolean> {
     }
 
     @Override
+    protected boolean isTopDown() {
+        return false;
+    }
+
+    @Override
     protected boolean checkLevelBounds() {
         return level >= 0;
     }
