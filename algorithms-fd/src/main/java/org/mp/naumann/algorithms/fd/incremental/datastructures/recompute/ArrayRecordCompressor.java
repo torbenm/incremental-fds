@@ -30,7 +30,7 @@ class ArrayRecordCompressor implements RecordCompressor {
         for (int recordId : recordIds) {
             compressedRecords[recordId] = fetchRecordFrom(recordId, invertedPlis);
         }
-        return new ArrayCompressedRecords(compressedRecords);
+        return new ArrayCompressedRecords(compressedRecords, plis.size());
     }
 
     private int[][] invertPlis() {
