@@ -296,6 +296,8 @@ def findNewAndOldValues(update, newValues, oldValues, attributes):
 
 def addValuesToUpdateStatement(updateStatement, attributes, newValues, oldValues):
     for attribute in attributes:
+        if attribute == "article_title":
+            continue
         oldValue = ""
         newValue = ""
         compundValue = ""
@@ -381,11 +383,7 @@ def checkValidityOfUpdateStatement(updateStatement, attributes):
     return isValid
 
 
-def generateUpdateStatementFromData(dataByTitle, updateId, article, updateStatementsEntryBlueprint, currentId,
-                                    attributes):
-    if article == "Katie Bowden":
-        print("break")
-
+def generateUpdateStatementFromData(dataByTitle, updateId, article, updateStatementsEntryBlueprint, currentId, attributes):
     updateStatement = initUpdateRecord(article, updateStatementsEntryBlueprint, currentId)
 
     newValues = {}
@@ -393,8 +391,6 @@ def generateUpdateStatementFromData(dataByTitle, updateId, article, updateStatem
     for update in dataByTitle[article]["updates"][updateId]:
         newValues, oldValues = findNewAndOldValues(update, newValues, oldValues, attributes)
 
-    # TODO: this is probably wrong, the logic for how to determine the ::action has to be rethought
-    # which we do somewhere else, so we leave this for now
     if len(newValues) == 0:
         updateStatement["::action"] = "delete"
     else:
@@ -500,19 +496,26 @@ def applyInsertStatement(updateStatement, baselineDataTable, attributes):
         if attribute in newEntry:
             newEntry[attribute] = updateStatement[attribute]
     baselineDataTable[targetId] = newEntry
+    return baselineDataTable
 
 
 def applyDeleteStatement(updateStatement, baselineDataTable):
     targetId = str(updateStatement["::record"])
+    if targetId in baselineDataTable:
+        targetEntry = baselineDataTable[targetId]
 
-    targetEntry = baselineDataTable[targetId]
-    for attribute in updateStatement:
-        if attribute in targetEntry and updateStatement[attribute] != "" and attribute != "article_title":
-            targetEntry[attribute] = ""
+        for attribute in updateStatement:
+            if attribute in targetEntry and updateStatement[attribute] != "" and attribute != "article_title":
+                targetEntry[attribute] = ""
+    else:
+        updateStatement["toBeDeleted"] = True
+    return baselineDataTable
 
 
-def checkForTrueDeleteAndCorrect(updateStatement, baselineDataTable, trueDeleteCounter, falseDeleteCounter):
+
+def checkForTrueDeleteAndCorrect(updateStatement, baselineDataTable):
     targetId = str(updateStatement["::record"])
+
     targetEntry = baselineDataTable[targetId]
 
     hasNonEmptyFields = False
@@ -522,54 +525,55 @@ def checkForTrueDeleteAndCorrect(updateStatement, baselineDataTable, trueDeleteC
         if targetEntry[attribute] != "":
             hasNonEmptyFields = True
     if hasNonEmptyFields:
-        falseDeleteCounter += 1
         updateStatement["::action"] = "update"
     else:
-        trueDeleteCounter += 1
+        print("Deleting " + baselineDataTable[targetId]["article_title"])
+        del baselineDataTable[targetId]
 
-    return trueDeleteCounter, falseDeleteCounter
+    return baselineDataTable
 
 
-def applyUpdateStatement(updateStatement, baselineDataTable, updateMatchCounter, updateMismatchCounter):
+def applyUpdateStatement(updateStatement, baselineDataTable, attributes):
     targetId = str(updateStatement["::record"])
-    targetEntry = baselineDataTable[targetId]
 
-    for attribute in updateStatement:
-        if attribute in targetEntry and updateStatement[attribute] != "" and attribute != "article_title":
-            newValue = updateStatement[attribute].split("|")[1]
-            oldValue = updateStatement[attribute].split("|")[0]
-            if targetEntry[attribute] != oldValue:
-                # TODO: why?
-                updateMismatchCounter += 1
-            else:
-                updateMatchCounter += 1
-            targetEntry[attribute] = newValue
+    if targetId in baselineDataTable:
+        targetEntry = baselineDataTable[targetId]
 
-    return updateMatchCounter, updateMismatchCounter
+        for attribute in updateStatement:
+            if attribute in targetEntry and updateStatement[attribute] != "" and attribute != "article_title":
+                newValue = updateStatement[attribute].split("|")[1]
+                targetEntry[attribute] = newValue
+    else:
+        updateStatement["::action"] = "insert"
+        for attribute, value in updateStatement.items():
+            if attribute in ("article_title", "::action", "::record") or value == "":
+                continue
+            updateStatement[attribute] = value.split("|")[1]
+        baselineDataTable = applyInsertStatement(updateStatement, baselineDataTable, attributes)
+
+    return baselineDataTable
 
 
 def applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, attributes):
-    trueDeleteCounter = 0
-    falseDeleteCounter = 0
-    updateMatchCounter = 0
-    updateMismatchCounter = 0
     for updateStatement in updateStatements:
         statementType = updateStatement["::action"]
         if statementType == "insert":
-            applyInsertStatement(updateStatement, baselineDataTable, attributes)
+            baselineDataTable = applyInsertStatement(updateStatement, baselineDataTable, attributes)
         elif statementType == "delete":
-            applyDeleteStatement(updateStatement, baselineDataTable)
-            trueDeleteCounter, falseDeleteCounter = checkForTrueDeleteAndCorrect(updateStatement, baselineDataTable, trueDeleteCounter, falseDeleteCounter)
+            baselineDataTable = applyDeleteStatement(updateStatement, baselineDataTable)
+            if "toBeDeleted" not in updateStatement:
+                baselineDataTable = checkForTrueDeleteAndCorrect(updateStatement, baselineDataTable)
         elif statementType == "update":
-            updateMatchCounter, updateMismatchCounter = applyUpdateStatement(updateStatement, baselineDataTable,
-                                                                             updateMatchCounter, updateMismatchCounter)
-    print("true deletes: {}, false deletes: {}".format(trueDeleteCounter, falseDeleteCounter))
-    print("update matches: {}, update mismatches: {}".format(updateMatchCounter, updateMismatchCounter))
+            baselineDataTable = applyUpdateStatement(updateStatement, baselineDataTable, attributes)
+
+    updateStatements = [x for x in updateStatements if "toBeDeleted" not in x]
+    return updateStatements
 
 
 def determineFinalUpdateStatementType(updateStatements, baselineData, attributes):
     baselineDataTable = buildTableFromBaselineData(baselineData)
-    applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, attributes)
+    updateStatements = applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, attributes)
+    return updateStatements
 
 
 def parseInfoboxUpdatesToCsv(infoboxConfig):
@@ -583,10 +587,11 @@ def parseInfoboxUpdatesToCsv(infoboxConfig):
         print("Grouping data...")
 
         baselineRecords, baselineInserts = splitBaselineDataInHalf(baselineRecords)
-        insertStatements = transformBaselineInsertsIntoUpdates(baselineInserts, attributes,)
+        insertStatements = transformBaselineInsertsIntoUpdates(baselineInserts, attributes)
         updateRecords = mergeInsertAndUpdateStatements(insertStatements, updateRecords)
 
-        determineFinalUpdateStatementType(updateRecords, baselineRecords, attributes)
+        updateRecords = determineFinalUpdateStatementType(updateRecords, baselineRecords, attributes)
+        # TODO: this is too easy, since it ignores reinserted records
         insertRecords = [x for x in updateRecords if x["::action"] == "insert"]
 
         writeParsedDataToDisk(targetInfoboxType, baselineRecords, insertRecords, updateRecords, attributes)
@@ -608,6 +613,9 @@ def filterUpdatesBySelection(updateStatements, statementTypesToBeParsed):
 
 def writeParsedDataToDisk(targetInfoboxType, baselineData, insertRecords, updateStatements, attributes):
     createTargetDirectoriesIfNecessary()
+
+    attributes = list(attributes)
+    attributes.insert(0, "article_title")
 
     print("Writing baseline csv...")
     writeBaselineData(attributes, baselineData, targetInfoboxType)
@@ -635,32 +643,18 @@ def writeInsertOnlyRecords(attributes, insertRecords, targetInfoboxType):
 
 def writeBaselineData(attributes, baselineData, targetInfoboxType):
     baselineFilename = str("data/baseline/" + targetInfoboxType + "_baseline_data.csv").replace(" ", "_")
-    baselineAttributes = arrangeBaselineAttributes(attributes)
-    baselineRecordsStrings = transformRecordsToUniqueStringRepresentation(baselineAttributes, baselineData)
-    writeAsCsv(baselineFilename, baselineAttributes, baselineRecordsStrings)
+    baselineRecordsStrings = transformRecordsToUniqueStringRepresentation(attributes, baselineData)
+    writeAsCsv(baselineFilename, attributes, baselineRecordsStrings)
 
 
 def transformRecordsToUniqueStringRepresentation(attributes, records):
-    uniqueRecords = set()
     recordStrings = []
     for record in records:
-        recordString = statementToString(attributes, record)
-        if recordString not in uniqueRecords:
-            uniqueRecords.add(recordString)
-            recordStrings.append(recordString)
+        recordStrings.append(statementToString(attributes, record))
     return recordStrings
 
-
-def arrangeBaselineAttributes(attributes):
-    baselineAttributes = list(attributes)
-    baselineAttributes.insert(0, "article_title")
-
-    return baselineAttributes
-
-
 def arrangeUpdateAttributes(attributes):
-    updateAttributes = list(attributes)
-    updateAttributes.insert(0, "article_title")
+    updateAttributes = copy.deepcopy(attributes)
     updateAttributes.insert(0, "::action")
 
     return updateAttributes
