@@ -46,7 +46,7 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
         Table table = dc.getTable(schema, tableName);
         initialAlgorithm = new HyFDInitialAlgorithm(version, table);
 
-        incrementalAlgorithm = new IncrementalFD(((FixedSizeBatchSource)batchSource).getColumnNames(), tableName, version);
+        incrementalAlgorithm = new IncrementalFD(tableName, version);
 
         this.batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
         this.batchProcessor.addBatchHandler(incrementalAlgorithm);
@@ -105,7 +105,7 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
 
     @Override
     public void runIncremental() {
-        incrementalAlgorithm.setIntermediateDataStructure(initialAlgorithm.getIntermediateDataStructure());
+        incrementalAlgorithm.initialize(initialAlgorithm.getIntermediateDataStructure());
         incrementalAlgorithm.addResultListener(resultListener);
         SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
         getBatchSource().startStreaming();

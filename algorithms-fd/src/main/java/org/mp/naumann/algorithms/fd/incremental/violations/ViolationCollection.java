@@ -10,10 +10,11 @@ import java.util.List;
 
 public interface ViolationCollection extends Serializable{
 
-    void add(OpenBitSet attrs, List<Integer> violatingValues);
-
-    List<OpenBitSet> getAffected(FDSet negativeCoverToUpdate, int[][] removedValues);
+    void add(OpenBitSet attr, int violatingRecord1, int violatingRecord2);
+    Collection<OpenBitSetFD> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords);
     void addInvalidFd(Collection<OpenBitSetFD> fd);
-
     List<OpenBitSetFD> getInvalidFds();
+
+    boolean isInvalid(OpenBitSet lhs, int rhs);
+    default void setNumAttributes(int numAttributes){};
 }

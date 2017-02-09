@@ -35,6 +35,7 @@ import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -80,10 +81,14 @@ public abstract class PositionListIndex implements IPositionListIndex {
     }
 
 
-    public boolean refines(CompressedRecords compressedRecords, int rhsAttr) {
-        for (IntArrayList cluster : getClustersToCheck())
-            if (!this.probe(compressedRecords, rhsAttr, cluster))
+    public boolean refines(CompressedRecords compressedRecords, int rhsAttr, boolean topDown) {
+        Iterator<IntArrayList> it = getClustersToCheck(topDown);
+        while (it.hasNext()) {
+            IntArrayList cluster = it.next();
+            if (!this.probe(compressedRecords, rhsAttr, cluster)) {
                 return false;
+            }
+        }
         return true;
     }
 
@@ -103,7 +108,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
     }
 
 
-    public OpenBitSet refines(CompressedRecords compressedRecords, OpenBitSet lhs, OpenBitSet rhs, List<IntegerPair> comparisonSuggestions) {
+    public OpenBitSet refines(CompressedRecords compressedRecords, OpenBitSet lhs, OpenBitSet rhs, List<IntegerPair> comparisonSuggestions, boolean topDown) {
         int rhsSize = (int) rhs.cardinality();
         int lhsSize = (int) lhs.cardinality();
 
@@ -112,7 +117,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
 
         // TODO: Check if it is technically possible that this fd holds, i.e., if A1 has 2 clusters of size 10 and A2 has 2 clusters of size 10, then the intersection can have at most 4 clusters of size 5 (see join cardinality estimation)
 
-        int[] rhsAttrId2Index = new int[compressedRecords.get(0).length];
+        int[] rhsAttrId2Index = new int[compressedRecords.getNumAttributes()];
         int[] rhsAttrIndex2Id = new int[rhsSize];
         int index = 0;
         for (int rhsAttr = refinedRhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = refinedRhs.nextSetBit(rhsAttr + 1)) {
@@ -122,7 +127,9 @@ public abstract class PositionListIndex implements IPositionListIndex {
         }
 
         boolean useInnerClusterPruning = useInnerClusterPruning();
-        for (IntArrayList cluster : getClustersToCheck()) {
+        Iterator<IntArrayList> it = getClustersToCheck(topDown);
+        while (it.hasNext()) {
+            IntArrayList cluster = it.next();
             Object2ObjectOpenHashMap<ClusterIdentifier, ClusterIdentifierWithRecord> subClusters = new Object2ObjectOpenHashMap<>(cluster.size());
             ObjectOpenHashSet<ClusterIdentifier> haveOldRecord = null;
             if (useInnerClusterPruning) {
@@ -191,9 +198,14 @@ public abstract class PositionListIndex implements IPositionListIndex {
         clustersWithNewRecords = clusterIds.stream().map(this::getCluster).collect(Collectors.toList());
     }
 
-    private Collection<IntArrayList> getClustersToCheck() {
-        Collection<IntArrayList> toCheck = clustersWithNewRecords == null ? getClusters() : clustersWithNewRecords;
-        return toCheck.stream().filter(c -> c.size() > 1).collect(Collectors.toList());
+    public Iterator<IntArrayList> getClustersToCheck(boolean topDown) {
+        final Collection<IntArrayList> toCheck;
+        if (topDown) {
+            toCheck = clustersWithNewRecords == null ? getClusters() : clustersWithNewRecords;
+        } else {
+            toCheck = getClusters();
+        }
+        return toCheck.stream().filter(c -> c.size() > 1).iterator();
     }
 
     private ClusterIdentifier buildClusterIdentifier(OpenBitSet lhs, int lhsSize, int[] record) {
@@ -222,7 +234,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
         final int prime = 31;
         int result = 1;
 
-        List<IntOpenHashSet> setCluster = this.convertClustersToSets(getClusters());
+        List<IntOpenHashSet> setCluster = this.convertClustersToSets();
 
         Collections.sort(setCluster, new Comparator<IntSet>() {
             @Override
@@ -251,8 +263,8 @@ public abstract class PositionListIndex implements IPositionListIndex {
                 return false;
             }
         } else {
-            List<IntOpenHashSet> setCluster = this.convertClustersToSets(getClusters());
-            List<IntOpenHashSet> otherSetCluster = this.convertClustersToSets(getClusters());
+            List<IntOpenHashSet> setCluster = this.convertClustersToSets();
+            List<IntOpenHashSet> otherSetCluster = other.convertClustersToSets();
 
             for (IntOpenHashSet cluster : setCluster) {
                 if (!otherSetCluster.contains(cluster)) {
@@ -281,9 +293,9 @@ public abstract class PositionListIndex implements IPositionListIndex {
         return builder.toString();
     }
 
-    private List<IntOpenHashSet> convertClustersToSets(Collection<IntArrayList> listCluster) {
+    private List<IntOpenHashSet> convertClustersToSets() {
         List<IntOpenHashSet> setClusters = new LinkedList<>();
-        for (IntArrayList cluster : listCluster) {
+        for (IntArrayList cluster : getClusters()) {
             setClusters.add(new IntOpenHashSet(cluster));
         }
 
