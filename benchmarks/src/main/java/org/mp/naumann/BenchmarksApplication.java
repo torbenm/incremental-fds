@@ -9,10 +9,12 @@ import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.database.ConnectionException;
+import org.mp.naumann.reporter.FileReporter;
 import org.mp.naumann.reporter.GoogleSheetsReporter;
 import org.mp.naumann.reporter.Reporter;
 import org.mp.naumann.testcases.InitialAndIncrementalOneBatch;
 import org.mp.naumann.testcases.TestCase;
+import org.mp.naumann.testcases.VariableSizeBatches;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -31,6 +33,10 @@ public class BenchmarksApplication {
     private int splitLine = 15000;
     @Parameter(names = "--dataSet")
     private String dataSet = "benchmark.adultfull.csv";
+
+    @Parameter(names = "--mode")
+    private String mode = "variable";
+
     @Parameter(names = "--sampling", arity = 1)
     private Boolean useSampling;
     @Parameter(names = "--clusterPruning", arity = 1)
@@ -53,13 +59,7 @@ public class BenchmarksApplication {
         app.run();
     }
 
-    public void run() throws IOException {
-        int stopAfter = batchSize < 10 ? 100 : -1;
-
-        FDLogger.setLevel(Level.OFF);
-        setUp();
-
-        IncrementalFDConfiguration config = IncrementalFDConfiguration.getVersion(name);
+    private void adjustConfiguration(IncrementalFDConfiguration config) {
         if (useSampling != null) {
             config.setSampling(useSampling);
         }
@@ -75,16 +75,35 @@ public class BenchmarksApplication {
         if (recomputeDataStructures != null) {
             config.setRecomputeDataStructures(recomputeDataStructures);
         }
+    }
+
+    public void run() throws IOException {
+        int stopAfter = batchSize < 10 ? 100 : -1;
+
+        FDLogger.setLevel(Level.OFF);
+        setUp();
+
+        IncrementalFDConfiguration config = IncrementalFDConfiguration.getVersion(name);
+        adjustConfiguration(config);
 
         try {
-            TestCase t = new InitialAndIncrementalOneBatch(splitLine,
-                    batchSize,
-                    dataSet,
-                    config,
-                    stopAfter
-            );
+            TestCase t = null;
+
+            switch (mode) {
+                case "variable":
+                    t = new VariableSizeBatches(dataSet, config, stopAfter);
+                    break;
+                case "fixed":
+                    t = null;
+                    break;
+                case "singleFile":
+                    t = new InitialAndIncrementalOneBatch(splitLine, batchSize, dataSet, config, stopAfter);
+                    break;
+            }
+
             t.execute();
-            Reporter reporter = new GoogleSheetsReporter(spreadsheet, t.sheetName());
+            //Reporter reporter = new GoogleSheetsReporter(spreadsheet, t.sheetName());
+            Reporter reporter = new FileReporter("report.txt");
 
             reporter.writeNewLine(t.sheetValues());
 
