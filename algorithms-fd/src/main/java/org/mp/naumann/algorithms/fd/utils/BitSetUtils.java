@@ -61,6 +61,14 @@ public class BitSetUtils {
         };
     }
 
+    public static boolean isEqual(OpenBitSet a1, OpenBitSet a2){
+        for(int i = 0; i < a1.capacity(); i++){
+            if(a1.get(i) != a2.get(i))
+                return false;
+        }
+        return true;
+    }
+
     public static Collection<OpenBitSetFD> toOpenBitSetFDCollection(OpenBitSet bitSet, int numAttributes){
         Collection<OpenBitSetFD> openBitSetFDS = new ArrayList<>();
         OpenBitSet rhsFlipped = bitSet.clone();
@@ -69,6 +77,12 @@ public class BitSetUtils {
             openBitSetFDS.add(new OpenBitSetFD(bitSet.clone(), rhs));
         }
         return openBitSetFDS;
+    }
+
+    public static OpenBitSet generateAllOnesBitSet(int numAttributes){
+        OpenBitSet obs = new OpenBitSet();
+        obs.flip(0, numAttributes);
+        return obs;
     }
 
 }

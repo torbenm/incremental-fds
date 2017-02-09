@@ -207,7 +207,7 @@ public class IncrementalFDConfiguration {
             case MULTIPLE_VIOLATING_VALUES:
                 return new MultipleValuesViolationCollection(this, violationCollectionSize);
             case TREE_STRUCTURE:
-                return new TreeViolationCollection();
+                return new TreeViolationCollection(this);
         }
         return null;
     }

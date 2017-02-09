@@ -1,6 +1,6 @@
 package org.mp.naumann.algorithms.fd.incremental.violations;
 
-import org.mp.naumann.algorithms.fd.structures.IntegerPair;
+import org.mp.naumann.algorithms.fd.utils.PrintUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -1,9 +1,11 @@
 package org.mp.naumann.algorithms.fd.incremental.violations;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.violations.tree.ViolationTreeElement;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,9 +16,11 @@ public class TreeViolationCollection implements ViolationCollection {
     private final ViolationTreeElement rootElement;
     private final List<OpenBitSetFD> invalidFDs = new ArrayList<>();
     private int numAttributes;
+    private final IncrementalFDConfiguration configuration;
 
-    public TreeViolationCollection() {
-        this.rootElement = new ViolationTreeElement(new OpenBitSet(), -1);
+    public TreeViolationCollection(IncrementalFDConfiguration configuration) {
+        this.configuration = configuration;
+        this.rootElement = new ViolationTreeElement(new OpenBitSet(), -1, configuration.getViolationCollectionSize());
     }
 
     @Override
@@ -29,10 +33,9 @@ public class TreeViolationCollection implements ViolationCollection {
     @Override
     public Collection<OpenBitSetFD> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords) {
         Collection<OpenBitSetFD> affected = new ArrayList<>();
-        OpenBitSet allOnes = new OpenBitSet();
-        allOnes.flip(0, numAttributes);
         this.rootElement.findAffected(removedRecords,
-                allOnes, affected);
+                BitSetUtils.generateAllOnesBitSet(numAttributes), affected);
+
         affected.forEach(ofd -> negativeCoverToUpdate.remove(ofd.getLhs()));
         return affected;
     }
