@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
+package org.mp.naumann.algorithms.fd.incremental.datastructures;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
-import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 
 import java.util.Collection;
 import java.util.Map;
@@ -31,7 +30,7 @@ import java.util.Map;
  * (3, 5)). Clusters of size 1 are discarded. A position list index should be
  * created using the {@link PLIBuilder}.
  */
-class MapPositionListIndex extends PositionListIndex {
+public class MapPositionListIndex extends PositionListIndex {
 
     private final Map<Integer, IntArrayList> clusters;
 
@@ -50,12 +49,12 @@ class MapPositionListIndex extends PositionListIndex {
         clusters.put(index, value);
     }
 
-    MapPositionListIndex(int attribute, Map<Integer, IntArrayList> clusters) {
+    public MapPositionListIndex(int attribute, Map<Integer, IntArrayList> clusters) {
         super(attribute);
         this.clusters = clusters;
     }
 
-    Map<Integer,IntArrayList> getRawClusters() {
+    public Map<Integer,IntArrayList> getRawClusters() {
         return clusters;
     }
 }

@@ -12,6 +12,8 @@ import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.database.statement.InsertStatement;
+import org.mp.naumann.database.statement.Statement;
+import org.mp.naumann.database.statement.UpdateStatement;
 import org.mp.naumann.processor.batch.Batch;
 
 import java.util.ArrayList;
@@ -68,27 +70,13 @@ public class BloomPruningStrategy {
 
     public ValidationPruner analyzeBatch(Batch batch) {
         List<InsertStatement> inserts = batch.getInsertStatements();
+        List<UpdateStatement> updates = batch.getUpdateStatements();
         int oldRequest = requests;
         int oldBloomViolations = bloomViolations;
         int oldInnerViolations = innerViolations;
         CardinalitySet nonViolations = new CardinalitySet(columns.size());
         for (Entry<OpenBitSet, List<Integer>> combination : combinations.entrySet()) {
-            boolean isUniqueCombination = true;
-            Set<Collection<ColumnValue>> inner = new HashSet<>();
-            for (InsertStatement insert : inserts) {
-                Collection<ColumnValue> vc = getValues(toArray(insert.getValueMap()), combination.getValue());
-                if (inner.contains(vc)) {
-                    innerViolations++;
-                    isUniqueCombination = false;
-                } else if (mightContain(vc)) {
-                    bloomViolations++;
-                    isUniqueCombination = false;
-                }
-                if (!isUniqueCombination) {
-                    break;
-                }
-                inner.add(vc);
-            }
+            boolean isUniqueCombination = isUniqueCombination(inserts, updates, combination.getValue());
             if (isUniqueCombination) {
                 nonViolations.add(combination.getKey());
                 FDLogger.log(Level.FINEST, "All combinations new for columns " + combination.getValue());
@@ -109,6 +97,29 @@ public class BloomPruningStrategy {
         FDLogger.log(Level.FINER, "Found " + bloomViolations + " total violations in filter");
         FDLogger.log(Level.FINER, "Found " + innerViolations + " total inner violations");
         return new BloomValidationPruner(nonViolations);
+    }
+
+    private boolean isUniqueCombination(List<InsertStatement> inserts, List<UpdateStatement> updates, List<Integer> combination) {
+        boolean isUniqueCombination = true;
+        Set<Collection<ColumnValue>> inner = new HashSet<>();
+        List<Map<String, String>> valueMaps = new ArrayList<>(inserts.size() + updates.size());
+        valueMaps.addAll(inserts.stream().map(Statement::getValueMap).collect(Collectors.toList()));
+        valueMaps.addAll(updates.stream().map(Statement::getValueMap).collect(Collectors.toList()));
+        for (Map<String, String> valueMap : valueMaps) {
+            Collection<ColumnValue> vc = getValues(toArray(valueMap), combination);
+            if (inner.contains(vc)) {
+                innerViolations++;
+                isUniqueCombination = false;
+            } else if (mightContain(vc)) {
+                bloomViolations++;
+                isUniqueCombination = false;
+            }
+            if (!isUniqueCombination) {
+                break;
+            }
+            inner.add(vc);
+        }
+        return isUniqueCombination;
     }
 
     private String[] toArray(Map<String, String> record) {

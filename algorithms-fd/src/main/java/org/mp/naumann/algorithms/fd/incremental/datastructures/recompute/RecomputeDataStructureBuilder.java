@@ -1,21 +1,19 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
-import org.mp.naumann.algorithms.fd.incremental.datastructures.MapCompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
+import org.mp.naumann.database.statement.DeleteStatement;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.database.statement.Statement;
+import org.mp.naumann.database.statement.UpdateStatement;
 import org.mp.naumann.processor.batch.Batch;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,88 +47,82 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
 
     public CompressedDiff update(Batch batch) {
         Set<Integer> inserted = addRecords(batch.getInsertStatements());
+        Set<Integer> insertedUpdate = addUpdateRecords(batch.getUpdateStatements());
+        inserted.addAll(insertedUpdate);
         recordIds.addAll(inserted);
 
         Set<Integer> deleted = removeRecords(batch.getDeleteStatements());
+        Set<Integer> deletedUpdate = removeUpdateRecords(batch.getUpdateStatements());
+        deleted.addAll(deletedUpdate);
         recordIds.removeAll(deleted);
-
         Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
-        if (version.usesPruningStrategy(PruningStrategy.ANNOTATION)) {
-            for (int delete : deleted) {
-                deletedDiff.put(delete, compressedRecords.get(delete));
-            }
-        }
+        deleted.parallelStream().forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));
         updateDataStructures(inserted, deleted);
 
         Map<Integer, int[]> insertedDiff = new HashMap<>(inserted.size());
-        if (version.usesPruningStrategy(PruningStrategy.SIMPLE)) {
-            for (int insert : inserted) {
-                insertedDiff.put(insert, compressedRecords.get(insert));
-            }
-        }
+        inserted.parallelStream().forEach(i -> insertedDiff.put(i, getCompressedRecord(i)));
         CompressedDiff diff = new CompressedDiff(insertedDiff, deletedDiff, new HashMap<>(0), new HashMap<>(0));
         return diff;
     }
 
-    private Set<Integer> removeRecords(List<? extends Statement> deletes){
+    private int[] getCompressedRecord(int record) {
+        return version.usesPruningStrategy(PruningStrategy.ANNOTATION) || version.usesPruningStrategy(PruningStrategy.SIMPLE)? compressedRecords.get(record) : null;
+    }
+
+    private Set<Integer> removeUpdateRecords(List<UpdateStatement> updates) {
         Set<Integer> ids = new HashSet<>();
-        for (Statement delete : deletes) {
-            Map<String, String> valueMap = delete.getValueMap();
-            List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
-            ids.addAll(pliBuilder.removeRecord(values));
-       }
+        for (UpdateStatement update : updates) {
+            Map<String, String> valueMap = update.getOldValueMap();
+            Collection<Integer> removed = removeRecord(valueMap);
+            ids.addAll(removed);
+        }
         return ids;
     }
 
-    private Set<Integer> addRecords(List<InsertStatement> inserts){
+    private Set<Integer> addUpdateRecords(List<UpdateStatement> updates) {
         Set<Integer> inserted = new HashSet<>();
-        for (Statement insert : inserts) {
-            Map<String, String> valueMap = insert.getValueMap();
-            List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
-            int id = pliBuilder.addRecord(values);
+        for (Statement update : updates) {
+            Map<String, String> valueMap = update.getValueMap();
+            int id = addRecord(valueMap);
             inserted.add(id);
         }
         return inserted;
     }
 
+    private Set<Integer> removeRecords(List<DeleteStatement> deletes) {
+        Set<Integer> ids = new HashSet<>();
+        for (Statement delete : deletes) {
+            Map<String, String> valueMap = delete.getValueMap();
+            Collection<Integer> removed = removeRecord(valueMap);
+            ids.addAll(removed);
+        }
+        return ids;
+    }
+
+    private Collection<Integer> removeRecord(Map<String, String> valueMap) {
+        List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
+        return pliBuilder.removeRecord(values);
+    }
+
+    private Set<Integer> addRecords(List<InsertStatement> inserts) {
+        Set<Integer> inserted = new HashSet<>();
+        for (Statement insert : inserts) {
+            Map<String, String> valueMap = insert.getValueMap();
+            int id = addRecord(valueMap);
+            inserted.add(id);
+        }
+        return inserted;
+    }
+
+    private int addRecord(Map<String, String> valueMap) {
+        List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
+        return pliBuilder.addRecord(values);
+    }
+
     private void updateDataStructures() {
         plis = pliBuilder.fetchPositionListIndexes();
-        compressedRecords = buildCompressedRecords();
-    }
-
-    private List<Map<Integer, Integer>> invertPlis() {
-        List<Map<Integer, Integer>> invertedPlis = new ArrayList<>();
-        for (PositionListIndex pli : plis) {
-            Map<Integer, Integer> invertedPli = new HashMap<>();
-
-            int clusterId = 0;
-            for (IntArrayList cluster : pli.getClusters()) {
-                for (int recordId : cluster) {
-                    invertedPli.put(recordId, clusterId);
-                }
-                clusterId++;
-            }
-            invertedPlis.add(invertedPli);
-        }
-        return invertedPlis;
-    }
-
-    private CompressedRecords buildCompressedRecords() {
-        MapCompressedRecords compressedRecords = new MapCompressedRecords();
-        List<Map<Integer, Integer>> invertedPlis = invertPlis();
-        for (int recordId : recordIds) {
-            compressedRecords.put(recordId, fetchRecordFrom(recordId, invertedPlis));
-        }
-        return compressedRecords;
-    }
-
-    private static int[] fetchRecordFrom(int recordId, List<Map<Integer, Integer>> invertedPlis) {
-        int numAttributes = invertedPlis.size();
-        int[] record = new int[numAttributes];
-        for (int i = 0; i < numAttributes; i++) {
-            record[i] = invertedPlis.get(i).getOrDefault(recordId, PliUtils.UNIQUE_VALUE);
-        }
-        return record;
+        RecordCompressor recordCompressor = new ArrayRecordCompressor(recordIds, plis, pliBuilder.getNumRecords());
+        compressedRecords = recordCompressor.buildCompressedRecords();
     }
 
     private void updateDataStructures(Set<Integer> inserted, Set<Integer> deleted) {
@@ -181,4 +173,5 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     public CompressedRecords getCompressedRecord() {
         return compressedRecords;
     }
+
 }
