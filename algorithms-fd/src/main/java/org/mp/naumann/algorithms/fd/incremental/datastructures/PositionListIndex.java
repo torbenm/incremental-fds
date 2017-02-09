@@ -35,6 +35,7 @@ import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -81,9 +82,13 @@ public abstract class PositionListIndex implements IPositionListIndex {
 
 
     public boolean refines(CompressedRecords compressedRecords, int rhsAttr, boolean topDown) {
-        for (IntArrayList cluster : getClustersToCheck(topDown))
-            if (!this.probe(compressedRecords, rhsAttr, cluster))
+        Iterator<IntArrayList> it = getClustersToCheck(topDown);
+        while (it.hasNext()) {
+            IntArrayList cluster = it.next();
+            if (!this.probe(compressedRecords, rhsAttr, cluster)) {
                 return false;
+            }
+        }
         return true;
     }
 
@@ -122,7 +127,9 @@ public abstract class PositionListIndex implements IPositionListIndex {
         }
 
         boolean useInnerClusterPruning = useInnerClusterPruning();
-        for (IntArrayList cluster : getClustersToCheck(topDown)) {
+        Iterator<IntArrayList> it = getClustersToCheck(topDown);
+        while (it.hasNext()) {
+            IntArrayList cluster = it.next();
             Object2ObjectOpenHashMap<ClusterIdentifier, ClusterIdentifierWithRecord> subClusters = new Object2ObjectOpenHashMap<>(cluster.size());
             ObjectOpenHashSet<ClusterIdentifier> haveOldRecord = null;
             if (useInnerClusterPruning) {
@@ -191,14 +198,14 @@ public abstract class PositionListIndex implements IPositionListIndex {
         clustersWithNewRecords = clusterIds.stream().map(this::getCluster).collect(Collectors.toList());
     }
 
-    public Collection<IntArrayList> getClustersToCheck(boolean topDown) {
+    public Iterator<IntArrayList> getClustersToCheck(boolean topDown) {
         final Collection<IntArrayList> toCheck;
         if (topDown) {
             toCheck = clustersWithNewRecords == null ? getClusters() : clustersWithNewRecords;
         } else {
             toCheck = getClusters();
         }
-        return toCheck.stream().filter(c -> c.size() > 1).collect(Collectors.toList());
+        return toCheck.stream().filter(c -> c.size() > 1).iterator();
     }
 
     private ClusterIdentifier buildClusterIdentifier(OpenBitSet lhs, int lhsSize, int[] record) {

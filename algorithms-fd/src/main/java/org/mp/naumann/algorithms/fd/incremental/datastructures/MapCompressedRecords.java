@@ -7,7 +7,19 @@ import java.util.Map;
 
 public class MapCompressedRecords implements CompressedRecords {
 
-    private final Map<Integer, int[]> compressedRecords = new HashMap<>();
+    private final Map<Integer, int[]> compressedRecords;
+
+    private MapCompressedRecords(Map<Integer, int[]> compressedRecords) {
+        this.compressedRecords = compressedRecords;
+    }
+
+    public MapCompressedRecords() {
+        this(new HashMap<>());
+    }
+
+    public MapCompressedRecords(int initialSize) {
+        this(new HashMap<>(initialSize));
+    }
 
     @Override
     public int[] get(int index) {
