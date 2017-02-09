@@ -2,6 +2,7 @@ package org.mp.naumann.algorithms.fd.incremental;
 
 import org.mp.naumann.algorithms.fd.incremental.violations.FirstViolatingValuesCollection;
 import org.mp.naumann.algorithms.fd.incremental.violations.SingleValueViolationCollection;
+import org.mp.naumann.algorithms.fd.incremental.violations.TreeViolationCollection;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 
 import java.util.ArrayList;
@@ -205,6 +206,8 @@ public class IncrementalFDConfiguration {
                 return new SingleValueViolationCollection(this);
             case FIRST_VIOLATING_VALUES:
                 return new FirstViolatingValuesCollection(this, violationCollectionSize);
+            case TREE_STRUCTURE:
+                return new TreeViolationCollection();
         }
         return null;
     }
@@ -215,7 +218,8 @@ public class IncrementalFDConfiguration {
 
     public enum ViolationCollections {
         SINGLE_VALUE,
-        FIRST_VIOLATING_VALUES
+        FIRST_VIOLATING_VALUES,
+        TREE_STRUCTURE
     }
 
 }

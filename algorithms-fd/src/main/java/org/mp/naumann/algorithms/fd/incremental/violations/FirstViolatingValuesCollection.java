@@ -7,6 +7,7 @@ import org.mp.naumann.algorithms.fd.incremental.violations.matcher.IntersectionM
 import org.mp.naumann.algorithms.fd.incremental.violations.matcher.Matcher;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,8 +15,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class FirstViolatingValuesCollection implements ViolationCollection {
 
@@ -24,6 +25,7 @@ public class FirstViolatingValuesCollection implements ViolationCollection {
     private final int capacity;
     private final Matcher matcher = new IntersectionMatcher();
     private final IncrementalFDConfiguration configuration;
+    private int numAttributes = 0;
 
     public FirstViolatingValuesCollection( IncrementalFDConfiguration configuration, int capacity) {
         this.capacity = capacity;
@@ -51,7 +53,7 @@ public class FirstViolatingValuesCollection implements ViolationCollection {
 
 
     @Override
-    public List<OpenBitSet> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords) {
+    public Collection<OpenBitSetFD> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords) {
         List<OpenBitSet> affected = new ArrayList<>();
         int aff = 0, skip = 0;
         for(Map.Entry<OpenBitSet, ViolatingPairCollection> entry : violationsMapById.entrySet()) {
@@ -65,7 +67,9 @@ public class FirstViolatingValuesCollection implements ViolationCollection {
             }
         }
         FDLogger.log(Level.FINE, "In search for violations, matched "+ aff+ ", skipped "+ skip);
-        return affected;
+        return affected.parallelStream()
+                .map(obs -> BitSetUtils.toOpenBitSetFDCollection(obs, numAttributes))
+                .flatMap(Collection::stream).collect(Collectors.toList());
     }
 
 
@@ -84,5 +88,8 @@ public class FirstViolatingValuesCollection implements ViolationCollection {
         return violationsMapById.containsKey(lhs) && violationsMapById.get(lhs).size() > 0;
     }
 
-
+    @Override
+    public void setNumAttributes(int numAttributes) {
+        this.numAttributes = numAttributes;
+    }
 }

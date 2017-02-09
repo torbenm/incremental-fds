@@ -9,11 +9,12 @@ import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class SingleValueViolationCollection implements ViolationCollection {
 
@@ -21,6 +22,7 @@ public class SingleValueViolationCollection implements ViolationCollection {
     private final List<OpenBitSetFD> invalidFDs = new ArrayList<>();
     private final Matcher matcher = new IntersectionMatcher();
     private final IncrementalFDConfiguration configuration;
+    private int numAttributes = 0;
 
     public SingleValueViolationCollection(IncrementalFDConfiguration configuration) {
         this.configuration = configuration;
@@ -34,7 +36,7 @@ public class SingleValueViolationCollection implements ViolationCollection {
 
 
     @Override
-    public List<OpenBitSet> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords) {
+    public Collection<OpenBitSetFD> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords) {
         List<OpenBitSet> affected = new ArrayList<>();
         for(Map.Entry<OpenBitSet, ViolatingPair> entry : this.violationMapById.entrySet()) {
 
@@ -45,7 +47,10 @@ public class SingleValueViolationCollection implements ViolationCollection {
             }
         }
         affected.parallelStream().forEach(violationMapById::remove);
-        return affected;
+
+        return affected.parallelStream()
+                .map(obs -> BitSetUtils.toOpenBitSetFDCollection(obs, numAttributes))
+                .flatMap(Collection::stream).collect(Collectors.toList());
     }
 
     @Override
@@ -63,4 +68,8 @@ public class SingleValueViolationCollection implements ViolationCollection {
         return this.violationMapById.containsKey(lhs);
     }
 
+    @Override
+    public void setNumAttributes(int numAttributes) {
+        this.numAttributes = numAttributes;
+    }
 }

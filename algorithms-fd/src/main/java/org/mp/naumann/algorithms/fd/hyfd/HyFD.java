@@ -76,6 +76,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		this.tableName = tableInput.getName();
 		this.attributeNames = tableInput.getColumnNames();
 		this.numAttributes = this.attributeNames.size();
+		this.violationCollection.setNumAttributes(numAttributes);
 		if (this.valueComparator == null)
 			this.valueComparator = new ValueComparator(true);
 	}

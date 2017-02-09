@@ -1,8 +1,10 @@
 package org.mp.naumann.algorithms.fd.utils;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -57,6 +59,16 @@ public class BitSetUtils {
                 return tmp;
             }
         };
+    }
+
+    public static Collection<OpenBitSetFD> toOpenBitSetFDCollection(OpenBitSet bitSet, int numAttributes){
+        Collection<OpenBitSetFD> openBitSetFDS = new ArrayList<>();
+        OpenBitSet rhsFlipped = bitSet.clone();
+        rhsFlipped.flip(0, numAttributes);
+        for(int rhs : BitSetUtils.iterable(rhsFlipped)){
+            openBitSetFDS.add(new OpenBitSetFD(bitSet.clone(), rhs));
+        }
+        return openBitSetFDS;
     }
 
 }
