@@ -19,8 +19,8 @@ import java.util.logging.Level;
 public class SpecializingValidator extends Validator<List<IntegerPair>> {
 
 
-    public SpecializingValidator(IncrementalFDConfiguration configuration, FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
-        super(configuration, posCover, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian, negCover);
+    public SpecializingValidator(IncrementalFDConfiguration configuration, FDSet negCover, FDTree posCover, int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian) {
+        super(configuration, posCover, numRecords, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian, negCover);
     }
 
     @Override

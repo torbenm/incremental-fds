@@ -35,7 +35,7 @@ public class IncrementalFDDemo {
             "inserts.adult.csv",
             "",
             "benchmark.adult",
-            100,
+            5000,
             ResourceConnector.BENCHMARK,
             ","
     );
@@ -61,10 +61,7 @@ public class IncrementalFDDemo {
     public static void main(String[] args) throws ClassNotFoundException, ConnectionException, AlgorithmExecutionException {
         FDLogger.setLevel(Level.FINE);
 
-        IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom")
-                .addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)
-                .setViolationCollectionType(IncrementalFDConfiguration.ViolationCollections.TREE_STRUCTURE)
-                .setViolationCollectionSize(5);
+        IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom");
 
         IncrementalFDRunConfiguration runConfig = adult;
 

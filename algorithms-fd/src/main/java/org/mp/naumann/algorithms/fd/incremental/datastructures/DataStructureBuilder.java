@@ -13,4 +13,6 @@ public interface DataStructureBuilder {
     List<? extends PositionListIndex> getPlis();
 
     CompressedRecords getCompressedRecord();
+
+    int getNumRecords();
 }

@@ -140,7 +140,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     }
 
     private int validateTopDown(Batch batch, CompressedDiff diff, List<? extends PositionListIndex> plis, CompressedRecords compressedRecords) throws AlgorithmExecutionException {
-        SpecializingValidator validator = new SpecializingValidator(version, negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
+        SpecializingValidator validator = new SpecializingValidator(version, negCover, posCover, dataStructureBuilder.getNumRecords(), compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
         IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
                 valueComparator, this.memoryGuardian);
 
@@ -188,7 +188,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             //FDTree posCover = new FDTree(columns.size(), -1);
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Finished basic setup.");
               GeneralizingValidator validator = new GeneralizingValidator(version, negCover, posCover,
-                    compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian, violationCollection);
+                    dataStructureBuilder.getNumRecords(), compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian, violationCollection);
 
             IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Initialised valdiator and inductor");

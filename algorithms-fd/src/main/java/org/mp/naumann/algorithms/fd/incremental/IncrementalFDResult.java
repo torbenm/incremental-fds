@@ -9,7 +9,7 @@ public class IncrementalFDResult {
     private final int validationCount, prunedCount;
     private final List<FunctionalDependency> fds;
 
-    IncrementalFDResult(List<FunctionalDependency> fds, int validationCount, int prunedCount) {
+    public IncrementalFDResult(List<FunctionalDependency> fds, int validationCount, int prunedCount) {
         this.fds = fds;
         this.validationCount = validationCount;
         this.prunedCount = prunedCount;

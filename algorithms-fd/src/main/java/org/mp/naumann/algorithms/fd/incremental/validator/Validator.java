@@ -48,11 +48,11 @@ public abstract class Validator<T> {
         validationPruners.add(ValidationPruner);
     }
 
-    public Validator(IncrementalFDConfiguration configuration, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian, FDSet negCover) {
+    public Validator(IncrementalFDConfiguration configuration, FDTree posCover, int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian, FDSet negCover) {
         this.configuration = configuration;
         this.negCover = negCover;
         this.posCover = posCover;
-        this.numRecords = compressedRecords.size();
+        this.numRecords = numRecords;
         this.plis = plis;
         this.compressedRecords = compressedRecords;
         this.efficiencyThreshold = efficiencyThreshold;

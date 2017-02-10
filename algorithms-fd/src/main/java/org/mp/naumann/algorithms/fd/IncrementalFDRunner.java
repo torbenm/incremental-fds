@@ -1,10 +1,14 @@
 package org.mp.naumann.algorithms.fd;
 
+import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
+import org.mp.naumann.algorithms.fd.incremental.test.IncrementalFD;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDResult;
+import org.mp.naumann.algorithms.fd.incremental.test.Lattice;
+import org.mp.naumann.algorithms.fd.incremental.test.LatticeBuilder;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.database.ConnectionException;
@@ -19,7 +23,11 @@ import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import ResourceConnection.ResourceConnector;
 
@@ -46,6 +54,7 @@ public interface IncrementalFDRunner {
 
             FDIntermediateDatastructure ds = hyfd.getIntermediateDataStructure();
 
+            LatticeBuilder prev = LatticeBuilder.build(ds.getPosCover());
             // create batch source & processor for inserts
             String batchFile = ResourceConnector.getResourcePath(ResourceConnector.FULL_BATCHES, runConfig.getBatchFileName());
             StreamableBatchSource batchSource = new FixedSizeBatchSource(batchFile, runConfig.getSchema(),
@@ -67,9 +76,41 @@ public interface IncrementalFDRunner {
             batchSource.startStreaming();
             afterIncremental(listener);
             SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Finished processing 1 batch");
+            LatticeBuilder after = LatticeBuilder.build(ds.getPosCover());
+            List<String> columns = ds.getColumns();
+            List<String> actualColumns = ds.getPliBuilder().getPliOrder().stream().map(columns::get).collect(Collectors.toList());
+//            diff(actualColumns, prev.getValidFds(), algorithm.getValidFds(), false);
+//            diff(actualColumns, prev.getInvalidFds(), algorithm.getInvalidFds(), true);
         }
     }
 
+    default void diff(List<String> actualColumns, Lattice prev, Lattice after, boolean flip) {
+        List<OpenBitSetFD> prevFd = prev.getFunctionalDependencies();
+        List<OpenBitSetFD> afterFd = after.getFunctionalDependencies();
+        if(flip) {
+            prevFd.forEach(fd -> fd.getLhs().flip(0, actualColumns.size()));
+            afterFd.forEach(fd -> fd.getLhs().flip(0, actualColumns.size()));
+        }
+        Set<OpenBitSetFD> onlyPrev = new HashSet<>(prevFd);
+        onlyPrev.removeAll(afterFd);
+        Set<OpenBitSetFD> onlyAfter = new HashSet<>(afterFd);
+        onlyAfter.removeAll(prevFd);
+        System.out.println(prevFd.size() + "->" + afterFd.size());
+        System.out.println("old");
+        onlyPrev.stream().map(fd -> pretty(fd, actualColumns)).forEach(System.out::println);
+        System.out.println("new");
+        onlyAfter.stream().map(fd -> pretty(fd, actualColumns)).forEach(System.out::println);
+    }
+
+    static String pretty(OpenBitSetFD fd, List<String> actualColumns) {
+        OpenBitSet lhs = fd.getLhs();
+        List<String> l = new ArrayList<>();
+        for(int lhsAttr = lhs.nextSetBit(0); lhsAttr >= 0; lhsAttr = lhs.nextSetBit(lhsAttr + 1)) {
+            l.add(actualColumns.get(lhsAttr));
+        }
+        String r = actualColumns.get(fd.getRhs());
+        return l + "->" + r;
+    }
 
 
 }

@@ -167,4 +167,9 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         return compressedRecords;
     }
 
+    @Override
+    public int getNumRecords() {
+        return compressedRecords.size();
+    }
+
 }

@@ -174,4 +174,9 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         return compressedRecords;
     }
 
+    @Override
+    public int getNumRecords() {
+        return recordIds.size();
+    }
+
 }

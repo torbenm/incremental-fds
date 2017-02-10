@@ -20,10 +20,10 @@ public class GeneralizingValidator extends Validator<Boolean> {
     private final ViolationCollection violationCollection;
 
     public GeneralizingValidator(IncrementalFDConfiguration configuration, FDSet negCover,
-                                 FDTree posCover, CompressedRecords compressedRecords,
+                                 FDTree posCover, int numRecords, CompressedRecords compressedRecords,
                                  List<? extends PositionListIndex> plis, float efficiencyThreshold,
                                  boolean parallel, MemoryGuardian memoryGuardian, ViolationCollection violationCollection) {
-        super(configuration, posCover, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian, negCover);
+        super(configuration, posCover, numRecords, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian, negCover);
         findValid = true;
         this.violationCollection = violationCollection;
     }

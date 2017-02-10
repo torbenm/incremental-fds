@@ -3,11 +3,10 @@ package org.mp.naumann.algorithms.fd.structures;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
-import org.mp.naumann.database.data.ColumnCombination;
-import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
+import org.mp.naumann.database.data.ColumnCombination;
+import org.mp.naumann.database.data.ColumnIdentifier;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -258,6 +257,25 @@ public class FDTreeElement {
             if (element != null) {
                 lhs.set(childAttr);
                 element.addFunctionalDependenciesInto(functionalDependencies, lhs, columnIdentifiers, plis);
+                lhs.clear(childAttr);
+            }
+        }
+    }
+
+    void addFunctionalDependenciesInto(List<OpenBitSetFD> functionalDependencies, OpenBitSet lhs) {
+
+        for (int rhs = this.rhsFds.nextSetBit(0); rhs >= 0; rhs = this.rhsFds.nextSetBit(rhs + 1)) {
+            functionalDependencies.add(new OpenBitSetFD(lhs.clone(), rhs));
+        }
+
+        if (this.getChildren() == null)
+            return;
+
+        for (int childAttr = 0; childAttr < this.numAttributes; childAttr++) {
+            FDTreeElement element = this.getChildren()[childAttr];
+            if (element != null) {
+                lhs.set(childAttr);
+                element.addFunctionalDependenciesInto(functionalDependencies, lhs);
                 lhs.clear(childAttr);
             }
         }
