@@ -112,6 +112,9 @@ public class LatticeElement {
 
     void removeSpecializations(OpenBitSetFD fd, int currentAttr, boolean isSpecialized) {
         // If this is the last attribute of lhs, remove the fd-mark from the rhs
+        if (!isMarked(fd.getRhs())) {
+            return;
+        }
         int nextLhsAttr = fd.getLhs().nextSetBit(currentAttr);
         if (isSpecialized && nextLhsAttr < 0) {
             this.removeFd(fd.getRhs());
@@ -120,7 +123,7 @@ public class LatticeElement {
 
         if ((this.children != null)) {
             int limit = nextLhsAttr;
-            if(nextLhsAttr < 0) {
+            if (nextLhsAttr < 0) {
                 limit = numAttributes - 1;
             }
             for (int attr = currentAttr; attr <= limit; attr++) {
@@ -140,6 +143,31 @@ public class LatticeElement {
         if (!this.isFd(fd.getRhs()) && this.isLastNodeOf(fd.getRhs())) {
             this.unmark(fd.getRhs());
         }
+    }
+
+    boolean removeRecursive(OpenBitSetFD fd, int currentLhsAttr) {
+        // If this is the last attribute of lhs, remove the fd-mark from the rhs
+        if (currentLhsAttr < 0) {
+            this.removeFd(fd.getRhs());
+            return true;
+        }
+
+        if ((this.children != null) && (this.children[currentLhsAttr] != null)) {
+            // Move to the next child with the next lhs attribute
+            if (!this.children[currentLhsAttr].removeRecursive(fd, fd.getLhs().nextSetBit(currentLhsAttr + 1)))
+                return false; // This is a shortcut: if the child was unable to remove the rhs, then this node can also not remove it
+
+            // Delete the child node if it has no rhs attributes any more
+            if (this.children[currentLhsAttr].hasNoMarked())
+                this.children[currentLhsAttr] = null;
+        }
+
+        // Check if another child requires the rhs and if not, remove it from this node
+        if (this.isLastNodeOf(fd.getRhs())) {
+            this.unmark(fd.getRhs());
+            return true;
+        }
+        return false;
     }
 
     public OpenBitSet getRhs() {
@@ -162,6 +190,27 @@ public class LatticeElement {
                 element.addFunctionalDependenciesInto(functionalDependencies, lhs);
                 lhs.clear(childAttr);
             }
+        }
+    }
+
+    void getFdAndGeneralizations(OpenBitSetFD fd, int currentLhsAttr, OpenBitSet currentLhs,
+                                 List<OpenBitSet> foundLhs) {
+        if (this.isFd(fd.getRhs()))
+            foundLhs.add(currentLhs.clone());
+
+        if (this.children == null)
+            return;
+
+        while (currentLhsAttr >= 0) {
+            int nextLhsAttr = fd.getLhs().nextSetBit(currentLhsAttr + 1);
+
+            if ((this.children[currentLhsAttr] != null) && (this.children[currentLhsAttr].isMarked(fd.getRhs()))) {
+                currentLhs.set(currentLhsAttr);
+                this.children[currentLhsAttr].getFdAndGeneralizations(fd, nextLhsAttr, currentLhs, foundLhs);
+                currentLhs.clear(currentLhsAttr);
+            }
+
+            currentLhsAttr = nextLhsAttr;
         }
     }
 }

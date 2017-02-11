@@ -45,6 +45,11 @@ public class NonFDValidator extends Validator {
     }
 
     @Override
+    protected boolean switchToSampler(int previousNumInvalidFds, int numInvalidFds, int numValidFds) {
+        return false;
+    }
+
+    @Override
     protected List<OpenBitSetFD> generateSpecializations(OpenBitSetFD fd)  {
         OpenBitSet lhs = fd.getLhs().clone();
         int rhs = fd.getRhs();

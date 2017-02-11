@@ -23,7 +23,6 @@ import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Row;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;

@@ -12,7 +12,7 @@ public class Lattice extends LatticeElement {
 
     private int depth = 0;
 
-    public Lattice(int numAttributes) {
+    Lattice(int numAttributes) {
         super(numAttributes);
     }
 
@@ -70,5 +70,21 @@ public class Lattice extends LatticeElement {
         return functionalDependencies;
     }
 
+    public void removeFunctionalDependency(OpenBitSetFD fd) {
+        int currentLhsAttr = fd.getLhs().nextSetBit(0);
+        this.removeRecursive(fd, currentLhsAttr);
+    }
 
+    public List<OpenBitSet> getFdAndGeneralizations(OpenBitSetFD fd) {
+        List<OpenBitSet> foundLhs = new ArrayList<>();
+        OpenBitSet currentLhs = new OpenBitSet();
+        int nextLhsAttr = fd.getLhs().nextSetBit(0);
+        this.getFdAndGeneralizations(fd, nextLhsAttr, currentLhs, foundLhs);
+        return foundLhs;
+    }
+
+
+    public int getNumAttributes() {
+        return numAttributes;
+    }
 }

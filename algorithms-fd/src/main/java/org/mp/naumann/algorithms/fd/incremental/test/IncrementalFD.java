@@ -10,6 +10,7 @@ import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
+import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
@@ -18,7 +19,10 @@ import org.mp.naumann.algorithms.fd.incremental.IncrementalFDResult;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.RecomputeDataStructureBuilder;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
+import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
+import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
@@ -32,6 +36,7 @@ import java.util.logging.Level;
 public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, FDIntermediateDatastructure> {
 
     private static final boolean VALIDATE_PARALLEL = true;
+    private static final float EFFICIENCY_THRESHOLD = 0.01f;
     private IncrementalFDConfiguration version = IncrementalFDConfiguration.LATEST;
 
     private List<String> columns;
@@ -42,6 +47,8 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     private Lattice validFds;
     private Lattice invalidFds;
     private List<Integer> pliOrder;
+    private FDSet negCover;
+    private ValueComparator valueComparator;
 
     public IncrementalFD(String tableName, IncrementalFDConfiguration version) {
         this(tableName);
@@ -69,6 +76,8 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     public void initialize(FDIntermediateDatastructure intermediateDatastructure) {
         FDLogger.log(Level.FINE, "Initializing IncrementalFD");
         this.columns = intermediateDatastructure.getColumns();
+        this.negCover = intermediateDatastructure.getNegCover();
+        this.valueComparator = intermediateDatastructure.getValueComparator();
 
         PLIBuilder pliBuilder = intermediateDatastructure.getPliBuilder();
 
@@ -98,8 +107,25 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecord();
         int validations = 0;
         if (!diff.getInsertedRecords().isEmpty()) {
-            Validator validator = new FDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, VALIDATE_PARALLEL, validFds, invalidFds);
-            validator.validate();
+            IncrementalSampler sampler = new IncrementalSampler(negCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, valueComparator);
+            Inductor inductor = new Inductor(invalidFds, validFds);
+            Validator validator = new FDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, VALIDATE_PARALLEL, validFds, invalidFds, EFFICIENCY_THRESHOLD);
+
+            List<IntegerPair> comparisonSuggestions;
+            int i = 1;
+            do {
+                FDLogger.log(Level.FINE, "Started round " + i);
+                FDLogger.log(Level.FINE, "Validating positive cover");
+                comparisonSuggestions = validator.validate();
+                if (version.usesSampling() && comparisonSuggestions != null) {
+                    FDLogger.log(Level.FINE, "Enriching negative cover");
+                    FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
+                    FDLogger.log(Level.FINE, "Updating positive cover");
+                    inductor.updatePositiveCover(newNonFds);
+                }
+                SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round " + i++);
+            } while (comparisonSuggestions != null);
+
             validations += validator.getValidations();
         }
         if (!diff.getDeletedRecords().isEmpty()) {

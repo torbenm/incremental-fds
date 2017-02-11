@@ -2,6 +2,7 @@ package org.mp.naumann.algorithms.fd.incremental.test;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
+import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
@@ -16,6 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 public abstract class Validator {
 
@@ -27,7 +29,7 @@ public abstract class Validator {
     protected CompressedRecords compressedRecords;
     private int validations = 0;
 
-    public Validator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel) {
+    Validator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel) {
         this.numRecords = numRecords;
         this.plis = plis;
         this.compressedRecords = compressedRecords;
@@ -39,7 +41,7 @@ public abstract class Validator {
         }
     }
 
-    public int getValidations() {
+    int getValidations() {
         return validations;
     }
 
@@ -69,9 +71,6 @@ public abstract class Validator {
 
             LatticeElement element = this.elementLhsPair.getElement();
             OpenBitSet lhs = this.elementLhsPair.getLhs();
-            if(!isTopDown()) {
-                lhs.flip(0, numAttributes);
-            }
             OpenBitSet rhs = element.getRhs();
 
             int rhsSize = (int) rhs.cardinality();
@@ -81,9 +80,6 @@ public abstract class Validator {
 
             if (lhs.isEmpty()) {
                 // Check if rhs is unique
-                if(!isTopDown()) {
-                    lhs.flip(0, numAttributes);
-                }
                 for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
                     if (!Validator.this.plis.get(rhsAttr).isConstant(Validator.this.numRecords)) {
                         handleInvalidRhs(result, element, lhs, rhsAttr);
@@ -96,9 +92,6 @@ public abstract class Validator {
             else if (lhs.cardinality() == 1) {
                 // Check if lhs from plis refines rhs
                 int lhsAttribute = lhs.nextSetBit(0);
-                if(!isTopDown()) {
-                    lhs.flip(0, numAttributes);
-                }
                 for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
                     if (!Validator.this.plis.get(lhsAttribute).refines(Validator.this.compressedRecords, rhsAttr, Validator.this.isTopDown())) {
                         handleInvalidRhs(result, element, lhs, rhsAttr);
@@ -115,10 +108,6 @@ public abstract class Validator {
                 lhs.clear(firstLhsAttr);
                 OpenBitSet validRhs = Validator.this.plis.get(firstLhsAttr).refines(Validator.this.compressedRecords, lhs, rhs, result.comparisonSuggestions, Validator.this.isTopDown());
                 lhs.set(firstLhsAttr);
-
-                if(!isTopDown()) {
-                    lhs.flip(0, numAttributes);
-                }
 
                 OpenBitSet invalidRhs = rhs.clone();
                 invalidRhs.andNot(validRhs);
@@ -139,14 +128,14 @@ public abstract class Validator {
         private void handleValidRhs(ValidationResult result, LatticeElement element, OpenBitSet lhs, int rhsAttr) {
             validRhs(element, rhsAttr);
             if(collectValid()) {
-                result.collectedFDs.add(new OpenBitSetFD(lhs, rhsAttr));
+                result.collectedFDs.add(new OpenBitSetFD(lhs.clone(), rhsAttr));
             }
         }
 
         private void handleInvalidRhs(ValidationResult result, LatticeElement element, OpenBitSet lhs, int rhsAttr) {
             invalidRhs(element, rhsAttr);
             if (collectInvalid()) {
-                result.collectedFDs.add(new OpenBitSetFD(lhs, rhsAttr));
+                result.collectedFDs.add(new OpenBitSetFD(lhs.clone(), rhsAttr));
             }
         }
     }
@@ -198,28 +187,48 @@ public abstract class Validator {
 
     protected abstract boolean isTopDown();
 
-    public void validate() throws AlgorithmExecutionException {
-        validateLattice(getLattice(), getInverseLattice());
+    List<IntegerPair> validate() throws AlgorithmExecutionException {
+        return validateLattice(getLattice(), getInverseLattice());
     }
 
     protected abstract Lattice getLattice();
 
     protected abstract Lattice getInverseLattice();
 
-    private void validateLattice(Lattice lattice, Lattice inverseLattice) throws AlgorithmExecutionException {
+    private List<IntegerPair> validateLattice(Lattice lattice, Lattice inverseLattice) throws AlgorithmExecutionException {
+        List<IntegerPair> comparisonSuggestions = new ArrayList<>();
+        int previousNumInvalidFds = 0;
         while (level <= lattice.getDepth()) {
             Collection<LhsRhsPair> currentLevel = lattice.getLevel(level);
+            if(!isTopDown()) {
+                currentLevel.forEach(pair -> pair.getLhs().flip(0, numAttributes));
+            }
             ValidationResult result = validate(currentLevel);
             validations += result.validations;
+            comparisonSuggestions.addAll(result.comparisonSuggestions);
+            int candidates = 0;
             for (OpenBitSetFD fd : result.collectedFDs) {
+                if(!isTopDown()) {
+                    fd.getLhs().flip(0, numAttributes);
+                }
                 OpenBitSetFD flippedFd = flip(fd);
                 inverseLattice.addFunctionalDependency(flippedFd);
                 inverseLattice.removeSpecializations(flippedFd);
                 List<OpenBitSetFD> specializations = generateSpecializations(fd);
+                candidates += specializations.size();
                 for (OpenBitSetFD specialization : specializations) {
                     lattice.addFunctionalDependency(specialization);
                 }
             }
+            int numInvalidFds = result.collectedFDs.size();
+            int numValidFds = result.validations - numInvalidFds;
+            FDLogger.log(Level.FINER, result.intersections + " intersections; " + result.validations + " validations; " + numInvalidFds + " invalid; " + candidates + " new candidates; --> " + numValidFds + " FDs");
+
+            // Decide if we continue validating the next level or if we go back into the sampling phase
+            if (switchToSampler(previousNumInvalidFds, numInvalidFds, numValidFds)) {
+                return comparisonSuggestions;
+            }
+            previousNumInvalidFds = numInvalidFds;
             level++;
         }
 
@@ -232,7 +241,11 @@ public abstract class Validator {
                 e.printStackTrace();
             }
         }
+
+        return null;
     }
+
+    protected abstract boolean switchToSampler(int previousNumInvalidFds, int numInvalidFds, int numValidFds);
 
     protected abstract List<OpenBitSetFD> generateSpecializations(OpenBitSetFD fd);
 

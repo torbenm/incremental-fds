@@ -12,11 +12,13 @@ public class FDValidator extends Validator {
 
     private final Lattice validFds;
     private final Lattice invalidFds;
+    private float efficiencyThreshold;
 
-    public FDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice validFds, Lattice invalidFds) {
+    public FDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice validFds, Lattice invalidFds, float efficiencyThreshold) {
         super(numRecords, compressedRecords, plis, parallel);
         this.validFds = validFds;
         this.invalidFds = invalidFds;
+        this.efficiencyThreshold = efficiencyThreshold;
     }
 
     @Override
@@ -42,6 +44,11 @@ public class FDValidator extends Validator {
     @Override
     protected Lattice getInverseLattice() {
         return invalidFds;
+    }
+
+    @Override
+    protected boolean switchToSampler(int previousNumInvalidFds, int numInvalidFds, int numValidFds) {
+        return isTopDown() && (numInvalidFds > numValidFds * this.efficiencyThreshold) && (previousNumInvalidFds < numInvalidFds);
     }
 
     @Override
