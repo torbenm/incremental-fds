@@ -18,11 +18,6 @@ public class ArrayCompressedRecords implements CompressedRecords {
     }
 
     @Override
-    public int size() {
-        return compressedRecords.length;
-    }
-
-    @Override
     public int getNumAttributes() {
         return numAttributes;
     }

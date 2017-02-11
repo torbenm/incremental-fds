@@ -8,7 +8,7 @@ import org.mp.naumann.algorithms.benchmark.speed.SpeedEvent;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedEventListener;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.HyFDInitialAlgorithm;
-import org.mp.naumann.algorithms.fd.incremental.deprecated.IncrementalFD;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.database.ConnectionException;

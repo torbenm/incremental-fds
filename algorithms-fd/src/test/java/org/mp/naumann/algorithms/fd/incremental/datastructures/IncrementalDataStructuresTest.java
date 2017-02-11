@@ -62,7 +62,6 @@ public class IncrementalDataStructuresTest {
         assertEquals(3, plis.get(2).size());
         assertEquals(4, plis.get(3).size());
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecords();
-        assertEquals(4, compressedRecords.size());
         // first column is the same for every record
         assertNotEquals(PliUtils.UNIQUE_VALUE, compressedRecords.get(0)[0]);
         assertEquals(compressedRecords.get(0)[0], compressedRecords.get(1)[0]);

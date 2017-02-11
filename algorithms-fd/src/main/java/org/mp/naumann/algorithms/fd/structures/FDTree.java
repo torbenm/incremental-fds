@@ -150,7 +150,7 @@ public class FDTree extends FDTreeElement {
 		return functionalDependencies;
 	}
 
-	public List<OpenBitSetFD> getFunctionalDependencies() {
+	List<OpenBitSetFD> getFunctionalDependencies() {
 		List<OpenBitSetFD> functionalDependencies = new ArrayList<>();
 		this.addFunctionalDependenciesInto(functionalDependencies, new OpenBitSet());
 		return functionalDependencies;

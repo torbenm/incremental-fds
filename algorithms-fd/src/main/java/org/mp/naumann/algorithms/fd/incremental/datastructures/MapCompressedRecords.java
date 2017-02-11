@@ -28,7 +28,6 @@ public class MapCompressedRecords implements CompressedRecords {
         return compressedRecords.get(index);
     }
 
-    @Override
     public int size() {
         return compressedRecords.size();
     }

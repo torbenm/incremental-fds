@@ -150,7 +150,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
-        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialised Sampler, IncrementalInductor and IncrementalValidator");
+        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialised Sampler, Inductor and Validator");
         SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
         int i = 1;
 		do {

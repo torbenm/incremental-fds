@@ -4,7 +4,5 @@ public interface CompressedRecords {
 
     int[] get(int index);
 
-    int size();
-
     int getNumAttributes();
 }
