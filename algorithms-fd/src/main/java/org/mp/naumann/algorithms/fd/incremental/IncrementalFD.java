@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 
 public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, FDIntermediateDatastructure> {
 
-    private static final boolean VALIDATE_PARALLEL = true;
+    private static final boolean VALIDATE_PARALLEL = false;
     private static final float EFFICIENCY_THRESHOLD = 0.01f;
 
     private final List<ResultListener<IncrementalFDResult>> resultListeners = new ArrayList<>();
@@ -141,7 +141,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         FDLogger.log(Level.FINER, "Started updating data structures");
         CompressedDiff diff = dataStructureBuilder.update(batch);
         List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
-        CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecord();
+        CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecords();
         FDLogger.log(Level.FINER, "Finished updating data structures");
 
         int validations = 0;

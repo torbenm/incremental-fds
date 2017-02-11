@@ -31,10 +31,6 @@ class IncrementalClusterMapBuilder {
     private final List<Map<Integer, IntArrayList>> clusterMaps;
     private final Dictionary<String> dictionary;
 
-    int getNextRecordId() {
-        return nextRecordId;
-    }
-
     List<Map<Integer, IntArrayList>> getClusterMaps() {
         return clusterMaps;
     }
@@ -42,7 +38,7 @@ class IncrementalClusterMapBuilder {
     IncrementalClusterMapBuilder(int numAttributes, int nextRecordId, Dictionary<String> dictionary) {
         this.dictionary = dictionary;
         this.nextRecordId = nextRecordId;
-        clusterMaps = new ArrayList<>();
+        this.clusterMaps = new ArrayList<>(numAttributes);
         for (int i = 0; i < numAttributes; i++) {
             clusterMaps.add(new HashMap<>());
         }
@@ -54,7 +50,9 @@ class IncrementalClusterMapBuilder {
         for (String value : record) {
             Map<Integer, IntArrayList> clusterMap = clusterMaps.get(attributeId);
             Integer dictValue = dictionary.getOrAdd(value);
-            if (dictValue == null) continue;
+            if (dictValue == null) {
+                continue;
+            }
             if (clusterMap.containsKey(dictValue)) {
                 clusterMap.get(dictValue).add(recId);
             } else {
@@ -66,5 +64,9 @@ class IncrementalClusterMapBuilder {
             attributeId++;
         }
         return recId;
+    }
+
+    void flush() {
+        clusterMaps.forEach(Map::clear);
     }
 }

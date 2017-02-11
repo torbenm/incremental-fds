@@ -41,4 +41,8 @@ public class MapCompressedRecords implements CompressedRecords {
     public void put(Integer id, int[] record) {
         compressedRecords.put(id, record);
     }
+
+    public void remove(int recordId) {
+        compressedRecords.remove(recordId);
+    }
 }

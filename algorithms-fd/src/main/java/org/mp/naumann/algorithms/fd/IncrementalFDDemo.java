@@ -63,7 +63,7 @@ public class IncrementalFDDemo {
 
         IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom");
 
-        IncrementalFDRunConfiguration runConfig = adultInsert;
+        IncrementalFDRunConfiguration runConfig = adult;
 
 
         SpeedBenchmark.enable();

@@ -56,11 +56,13 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         deleted.addAll(deletedUpdate);
         recordIds.removeAll(deleted);
         Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
-        deleted.parallelStream().forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));
+        deleted.forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));
+
         updateDataStructures(inserted, deleted);
 
         Map<Integer, int[]> insertedDiff = new HashMap<>(inserted.size());
-        inserted.parallelStream().forEach(i -> insertedDiff.put(i, getCompressedRecord(i)));
+        inserted.forEach(i -> insertedDiff.put(i, getCompressedRecord(i)));
+
         return new CompressedDiff(insertedDiff, deletedDiff, new HashMap<>(0), new HashMap<>(0));
     }
 
@@ -79,13 +81,13 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     }
 
     private Set<Integer> addUpdateRecords(List<UpdateStatement> updates) {
-        Set<Integer> inserted = new HashSet<>();
+        Set<Integer> updated = new HashSet<>();
         for (Statement update : updates) {
             Map<String, String> valueMap = update.getValueMap();
             int id = addRecord(valueMap);
-            inserted.add(id);
+            updated.add(id);
         }
-        return inserted;
+        return updated;
     }
 
     private Set<Integer> removeRecords(List<DeleteStatement> deletes) {
@@ -169,7 +171,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         return plis;
     }
 
-    public CompressedRecords getCompressedRecord() {
+    public CompressedRecords getCompressedRecords() {
         return compressedRecords;
     }
 

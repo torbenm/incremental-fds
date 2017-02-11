@@ -129,7 +129,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         SpeedBenchmark.end(BenchmarkLevel.UNIQUE, "BUILD DIFF");
 
         List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
-        CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecord();
+        CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecords();
         int validations = 0;
         if (!diff.getInsertedRecords().isEmpty()) {
             validations += validateTopDown(batch, diff, plis, compressedRecords);
