@@ -1,61 +1,56 @@
-package org.mp.naumann.algorithms.fd.incremental.test;
+package org.mp.naumann.algorithms.fd.incremental;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.structures.Lattice;
+import org.mp.naumann.algorithms.fd.structures.LatticeElement;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class NonFDValidator extends Validator {
+public class FDValidator extends IncrementalValidator {
 
     private final Lattice fds;
     private final Lattice nonFds;
+    private float efficiencyThreshold;
 
-    public NonFDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds) {
+    FDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds, float efficiencyThreshold) {
         super(numRecords, compressedRecords, plis, parallel);
         this.fds = fds;
         this.nonFds = nonFds;
-    }
-
-    @Override
-    protected boolean collectInvalid() {
-        return false;
-    }
-
-    @Override
-    protected boolean collectValid() {
-        return true;
+        this.efficiencyThreshold = efficiencyThreshold;
     }
 
     @Override
     protected boolean isTopDown() {
-        return false;
+        return true;
     }
 
     @Override
     protected Lattice getLattice() {
-        return nonFds;
-    }
-
-    @Override
-    protected Lattice getInverseLattice() {
         return fds;
     }
 
     @Override
+    protected Lattice getInverseLattice() {
+        return nonFds;
+    }
+
+    @Override
     protected boolean switchToSampler(int previousNumInvalidFds, int numInvalidFds, int numValidFds) {
-        return false;
+        return isTopDown() && (numInvalidFds > numValidFds * this.efficiencyThreshold) && (previousNumInvalidFds < numInvalidFds);
     }
 
     @Override
     protected List<OpenBitSetFD> generateSpecializations(OpenBitSetFD fd)  {
-        OpenBitSet lhs = fd.getLhs().clone();
+        OpenBitSet lhs = fd.getLhs();
         int rhs = fd.getRhs();
         List<OpenBitSetFD> specializations = new ArrayList<>();
         for (int extensionAttribute = 0; extensionAttribute < numAttributes; extensionAttribute++) {
-            if (lhs.fastGet(extensionAttribute) // AA -> B is trivial
+            if (rhs == extensionAttribute // AB -> B is trivial
+                    || lhs.fastGet(extensionAttribute) // AA -> B is trivial
+                    || fds.containsFdOrGeneralization(new OpenBitSetFD(lhs, extensionAttribute)) // if A -> B, then AB -> C cannot be minimal
                     ) {
                 continue;
             }
@@ -69,11 +64,11 @@ public class NonFDValidator extends Validator {
 
     @Override
     protected void validRhs(LatticeElement elem, int rhs) {
-        elem.removeFd(rhs);
+        // No-op
     }
 
     @Override
     protected void invalidRhs(LatticeElement elem, int rhs) {
-        // No-op
+        elem.removeFd(rhs);
     }
 }

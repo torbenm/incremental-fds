@@ -1,7 +1,6 @@
-package org.mp.naumann.algorithms.fd.incremental.test;
+package org.mp.naumann.algorithms.fd.structures;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.List;
 
@@ -30,7 +29,7 @@ public class LatticeElement {
         this.rhs.fastSet(rhsAttribute);
     }
 
-    void removeFd(int rhsAttribute) {
+    public void removeFd(int rhsAttribute) {
         this.rhs.fastClear(rhsAttribute);
         this.unmark(rhsAttribute);
     }

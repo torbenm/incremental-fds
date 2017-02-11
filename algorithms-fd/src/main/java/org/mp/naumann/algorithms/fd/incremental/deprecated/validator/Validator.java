@@ -1,11 +1,11 @@
-package org.mp.naumann.algorithms.fd.incremental.validator;
+package org.mp.naumann.algorithms.fd.incremental.deprecated.validator;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.algorithms.fd.incremental.MemoryGuardian;
+import org.mp.naumann.algorithms.fd.incremental.deprecated.MemoryGuardian;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+@Deprecated
 public abstract class Validator<T> {
 
     protected FDSet negCover;
@@ -141,24 +142,6 @@ public abstract class Validator<T> {
 
 
         return validationResult;
-    }
-
-
-
-
-    protected List<FDTreeElementLhsPair> pruneLevel(List<FDTreeElementLhsPair> lvl) {
-        List<FDTreeElementLhsPair> currentLevel = new ArrayList<>();
-        for (FDTreeElementLhsPair fd : lvl) {
-            if (validationPruners.stream().anyMatch(ps -> ps.cannotBeViolated(fd))) {
-                pruned++;
-            } else {
-                currentLevel.add(fd);
-            }
-        }
-       /* FDLogger.log(Level.FINEST, "Will validate: ");
-        currentLevel.stream().map(FDTreeElementLhsPair::getLhs).map(BitSetUtils::collectSetBits)
-                .forEach(v -> FDLogger.log(Level.FINEST, v.toString())); */
-        return currentLevel;
     }
 
     protected OpenBitSet extendWith(OpenBitSet lhs, int rhs, int extensionAttr) {

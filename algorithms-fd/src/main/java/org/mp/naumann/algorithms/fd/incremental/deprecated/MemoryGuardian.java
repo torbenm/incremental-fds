@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.incremental;
+package org.mp.naumann.algorithms.fd.incremental.deprecated;
 
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
@@ -9,6 +9,7 @@ import java.lang.management.ManagementFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Deprecated
 public class MemoryGuardian {
 
 	private final static Logger LOG = Logger.getLogger(MemoryGuardian.class.getName());

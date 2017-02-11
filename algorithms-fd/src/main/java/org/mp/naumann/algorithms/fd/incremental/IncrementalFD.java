@@ -3,15 +3,15 @@ package org.mp.naumann.algorithms.fd.incremental;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
+import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
-import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalValidator.ValidatorResult;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.incremental.IncrementalDataStructureBuilder;
@@ -20,15 +20,15 @@ import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.AllCombinationsBlo
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.BloomPruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.CurrentFDBloomGenerator;
 import org.mp.naumann.algorithms.fd.incremental.pruning.simple.ExistingValuesPruningStrategy;
-import org.mp.naumann.algorithms.fd.incremental.validator.GeneralizingValidator;
-import org.mp.naumann.algorithms.fd.incremental.validator.SpecializingValidator;
-import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
+import org.mp.naumann.algorithms.fd.structures.Lattice;
+import org.mp.naumann.algorithms.fd.structures.LatticeBuilder;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.algorithms.result.ResultListener;
+import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.processor.batch.Batch;
 
@@ -43,20 +43,21 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
     private static final boolean VALIDATE_PARALLEL = true;
     private static final float EFFICIENCY_THRESHOLD = 0.01f;
+
+    private final List<ResultListener<IncrementalFDResult>> resultListeners = new ArrayList<>();
+    private final String tableName;
     private IncrementalFDConfiguration version = IncrementalFDConfiguration.LATEST;
 
     private List<String> columns;
-    private FDTree posCover;
-    private final String tableName;
-    private final List<ResultListener<IncrementalFDResult>> resultListeners = new ArrayList<>();
-    private MemoryGuardian memoryGuardian = new MemoryGuardian(true);
-
+    private List<Integer> pliOrder;
     private DataStructureBuilder dataStructureBuilder;
+    private Lattice fds;
+    private Lattice nonFds;
+    private FDSet agreeSets;
+    private ValueComparator valueComparator;
+
     private ExistingValuesPruningStrategy simplePruning;
     private BloomPruningStrategy bloomPruning;
-    private FDSet negCover;
-    private ViolationCollection violationCollection;
-    private ValueComparator valueComparator;
 
     public IncrementalFD(String tableName, IncrementalFDConfiguration version) {
         this(tableName);
@@ -76,75 +77,101 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
     @Override
     public void addResultListener(ResultListener<IncrementalFDResult> listener) {
-        if(listener != null)
+        if (listener != null) {
             this.resultListeners.add(listener);
+        }
     }
 
     @Override
     public void initialize(FDIntermediateDatastructure intermediateDatastructure) {
-        FDLogger.log(Level.FINE, "Initializing IncrementalFD");
+        FDLogger.log(Level.INFO, "Initializing IncrementalFD");
         this.columns = intermediateDatastructure.getColumns();
+        this.agreeSets = intermediateDatastructure.getNegCover();
         this.valueComparator = intermediateDatastructure.getValueComparator();
-        this.posCover = intermediateDatastructure.getPosCover();
-        this.negCover = intermediateDatastructure.getNegCover();
-        this.violationCollection = intermediateDatastructure.getViolatingValues();
 
         PLIBuilder pliBuilder = intermediateDatastructure.getPliBuilder();
+        this.pliOrder = pliBuilder.getPliOrder();
 
-        List<Integer> pliOrder = pliBuilder.getPliOrder();
-        List<String> orderedColumns = pliOrder.stream().map(columns::get).collect(Collectors.toList());
-        List<HashMap<String, IntArrayList>> clusterMaps = intermediateDatastructure.getPliBuilder().getClusterMaps();
-        if(usesBloomPruning()) {
+        FDTree posCover = intermediateDatastructure.getPosCover();
+        LatticeBuilder builder = LatticeBuilder.build(posCover);
+        this.fds = builder.getFds();
+        this.nonFds = builder.getNonFds();
+
+        if (version.recomputesDataStructures()) {
+            dataStructureBuilder = new RecomputeDataStructureBuilder(pliBuilder, this.version, this.columns, this.pliOrder);
+        } else {
+            dataStructureBuilder = new IncrementalDataStructureBuilder(pliBuilder, this.version, this.columns, this.pliOrder);
+        }
+
+        initializePruningStrategies(pliBuilder);
+        FDLogger.log(Level.INFO, "Finished initializing IncrementalFD");
+    }
+
+    private void initializePruningStrategies(PLIBuilder pliBuilder) {
+        if (usesBloomPruning()) {
+            List<String> orderedColumns = pliOrder.stream().map(columns::get).collect(Collectors.toList());
+            List<HashMap<String, IntArrayList>> clusterMaps = pliBuilder.getClusterMaps();
             bloomPruning = new BloomPruningStrategy(orderedColumns);
             if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {
                 bloomPruning.addGenerator(new AllCombinationsBloomGenerator(2));
             }
             if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM_ADVANCED)) {
-                bloomPruning.addGenerator(new CurrentFDBloomGenerator(posCover));
+                bloomPruning.addGenerator(new CurrentFDBloomGenerator(fds));
             }
             bloomPruning.initialize(clusterMaps, pliBuilder.getNumLastRecords(), pliOrder);
         }
         if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.SIMPLE)) {
             simplePruning = new ExistingValuesPruningStrategy(columns);
         }
-        if(version.recomputesDataStructures()) {
-            dataStructureBuilder = new RecomputeDataStructureBuilder(pliBuilder, this.version, this.columns, pliOrder);
-        } else {
-            dataStructureBuilder = new IncrementalDataStructureBuilder(pliBuilder, this.version, this.columns, pliOrder);
-        }
-        FDLogger.log(Level.FINEST, intermediateDatastructure.getViolatingValues().toString());
+    }
+
+    private boolean usesBloomPruning() {
+        return version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM) || version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM_ADVANCED);
+    }
+
+    private void prettyPrint(List<OpenBitSetFD> fds) {
+        List<FunctionalDependency> pretty = getFunctionalDependencies(fds);
+        pretty.forEach(System.out::println);
     }
 
     @Override
     public IncrementalFDResult execute(Batch batch) throws AlgorithmExecutionException {
-        FDLogger.log(Level.FINE, "Started IncrementalFD for new Batch");
-        SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
+        FDLogger.log(Level.INFO, "Started IncrementalFD for new Batch");
 
-        SpeedBenchmark.begin(BenchmarkLevel.UNIQUE);
+        FDLogger.log(Level.FINER, "Started updating data structures");
         CompressedDiff diff = dataStructureBuilder.update(batch);
-        SpeedBenchmark.end(BenchmarkLevel.UNIQUE, "BUILD DIFF");
-
         List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecord();
+        FDLogger.log(Level.FINER, "Finished updating data structures");
+
         int validations = 0;
+        int pruned = 0;
+
         if (!diff.getInsertedRecords().isEmpty()) {
-            validations += validateTopDown(batch, diff, plis, compressedRecords);
+            ValidatorResult result = validateFDs(plis, compressedRecords, batch, diff);
+            validations += result.getValidations();
+            pruned += result.getPruned();
         }
+
         if (!diff.getDeletedRecords().isEmpty()) {
-            validations += validateBottomUp(diff, compressedRecords, plis);
+            ValidatorResult result = validateNonFDs(plis, compressedRecords);
+            validations += result.getValidations();
+            pruned += result.getPruned();
         }
-        List<FunctionalDependency> fds = new ArrayList<>();
-        posCover.addFunctionalDependenciesInto(fds::add, this.buildColumnIdentifiers(), plis);
-        SpeedBenchmark.end(BenchmarkLevel.METHOD_HIGH_LEVEL, "Processed one batch, inner measuring");
-        return new IncrementalFDResult(fds, validations, 0);
+
+        List<OpenBitSetFD> fds = this.fds.getFunctionalDependencies();
+        List<FunctionalDependency> result = getFunctionalDependencies(fds);
+        FDLogger.log(Level.INFO, "Finished IncrementalFD for new Batch");
+        return new IncrementalFDResult(result, validations, pruned);
     }
 
-    private int validateTopDown(Batch batch, CompressedDiff diff, List<? extends PositionListIndex> plis, CompressedRecords compressedRecords) throws AlgorithmExecutionException {
-        SpecializingValidator validator = new SpecializingValidator(version, negCover, posCover, dataStructureBuilder.getNumRecords(), compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian);
-        IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
-                valueComparator, this.memoryGuardian);
+    private ValidatorResult validateFDs(List<? extends PositionListIndex> plis, CompressedRecords compressedRecords, Batch batch, CompressedDiff diff) throws AlgorithmExecutionException {
+        FDLogger.log(Level.FINE, "Started validating FDs");
 
-        IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
+        IncrementalSampler sampler = new IncrementalSampler(agreeSets, compressedRecords, plis, EFFICIENCY_THRESHOLD, valueComparator);
+        IncrementalInductor inductor = new IncrementalInductor(nonFds, fds, pliOrder.size());
+        IncrementalValidator validator = new FDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, VALIDATE_PARALLEL, fds, nonFds, EFFICIENCY_THRESHOLD);
+
         if (usesBloomPruning()) {
             validator.addValidationPruner(bloomPruning.analyzeBatch(batch));
         }
@@ -152,76 +179,54 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             validator.addValidationPruner(simplePruning.analyzeDiff(diff));
         }
 
-        FDLogger.log(Level.FINE, "Finished building pruning strategies");
-
-
         List<IntegerPair> comparisonSuggestions;
         int i = 1;
         do {
-            FDLogger.log(Level.FINE, "Started round " + i);
-            FDLogger.log(Level.FINE, "Validating positive cover");
-            comparisonSuggestions = validator.validatePositiveCover();
+            FDLogger.log(Level.FINER, "Started round " + i);
+            FDLogger.log(Level.FINER, "Validating positive cover");
+            comparisonSuggestions = validator.validate();
             if (version.usesSampling() && comparisonSuggestions != null) {
-                FDLogger.log(Level.FINE, "Enriching negative cover");
+                FDLogger.log(Level.FINER, "Enriching agree sets");
                 FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
-                FDLogger.log(Level.FINE, "Updating positive cover");
+                FDLogger.log(Level.FINER, "Updating positive cover");
                 inductor.updatePositiveCover(newNonFds);
             }
-            SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round " + i++);
+            FDLogger.log(Level.FINER, "Finished round " + i++);
         } while (comparisonSuggestions != null);
-        // Return result
-        int pruned = validator.getPruned();
-        int validations = validator.getValidations();
-        FDLogger.log(Level.FINE, "Pruned " + pruned + " validations");
-        FDLogger.log(Level.FINE, "Made " + validations + " validations");
-        return validations;
+
+        FDLogger.log(Level.FINE, "Finished validating FDs");
+        return validator.getValidatorResult();
     }
 
-    private boolean usesBloomPruning() {
-        return version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM) || version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM_ADVANCED);
+    private ValidatorResult validateNonFDs(List<? extends PositionListIndex> plis, CompressedRecords compressedRecords) throws AlgorithmExecutionException {
+        FDLogger.log(Level.FINE, "Started validating non-FDs");
+        IncrementalValidator validator = new NonFDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, VALIDATE_PARALLEL, fds, nonFds);
+        validator.validate();
+        FDLogger.log(Level.FINE, "Finished validating non-FDs");
+        return validator.getValidatorResult();
     }
 
-    private int validateBottomUp(CompressedDiff diff, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis) throws AlgorithmExecutionException {
-        if(version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)){
-
-
-            //FDTree posCover = new FDTree(columns.size(), -1);
-            SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Finished basic setup.");
-              GeneralizingValidator validator = new GeneralizingValidator(version, negCover, posCover,
-                    dataStructureBuilder.getNumRecords(), compressedRecords, plis, EFFICIENCY_THRESHOLD, VALIDATE_PARALLEL, memoryGuardian, violationCollection);
-
-            IncrementalInductor inductor = new IncrementalInductor(negCover, posCover, this.memoryGuardian);
-            SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Initialised valdiator and inductor");
-            Collection<OpenBitSetFD> affected = violationCollection.getAffected(negCover, diff.getDeletedRecords().keySet());
-            SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Received affected records");
-
-            IncrementalSampler sampler = new IncrementalSampler(negCover, posCover, compressedRecords, plis, EFFICIENCY_THRESHOLD,
-                    valueComparator, this.memoryGuardian);
-
-            int induct = inductor.generalizePositiveCover(posCover, affected, violationCollection.getInvalidFds());
-            FDLogger.log(Level.INFO, "Added " + induct + " candidates to check, depth now at "+posCover.getDepth());
-            SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Inducted candidates into positive cover");
-            boolean theresmore;
+    private List<FunctionalDependency> getFunctionalDependencies(List<OpenBitSetFD> fds) {
+        List<FunctionalDependency> result = new ArrayList<>(fds.size());
+        ObjectArrayList<ColumnIdentifier> columnIdentifiers = buildColumnIdentifiers();
+        for (OpenBitSetFD fd : fds) {
+            OpenBitSet lhs = fd.getLhs();
+            ColumnIdentifier[] cols = new ColumnIdentifier[(int) fd.getLhs().cardinality()];
             int i = 0;
-            do{
-                theresmore = validator.validatePositiveCover();
-                SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round " + i++);
-            } while (theresmore);
-
-            int pruned = validator.getPruned();
-            int validations = validator.getValidations();
-            FDLogger.log(Level.FINE, "Pruned " + pruned + " validations");
-            FDLogger.log(Level.FINE, "Made " + validations + " validations");
-            return validations;
+            for (int lhsAttr = lhs.nextSetBit(0); lhsAttr >= 0; lhsAttr = lhs.nextSetBit(lhsAttr + 1)) {
+                cols[i++] = columnIdentifiers.get(pliOrder.get(lhsAttr));
+            }
+            ColumnIdentifier rhs = columnIdentifiers.get(pliOrder.get(fd.getRhs()));
+            result.add(new FunctionalDependency(new ColumnCombination(cols), rhs));
         }
-        return 0;
+        return result;
     }
 
     private ObjectArrayList<ColumnIdentifier> buildColumnIdentifiers() {
         ObjectArrayList<ColumnIdentifier> columnIdentifiers = new ObjectArrayList<>(this.columns.size());
-        for (String attributeName : this.columns)
+        for (String attributeName : this.columns) {
             columnIdentifiers.add(new ColumnIdentifier(this.tableName, attributeName));
+        }
         return columnIdentifiers;
     }
-
 }

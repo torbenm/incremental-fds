@@ -3,7 +3,7 @@ package org.mp.naumann.algorithms.fd.incremental.pruning.bloom;
 import org.apache.lucene.util.OpenBitSet;
 import org.junit.Test;
 import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
-import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
+import org.mp.naumann.algorithms.fd.structures.LatticeElementLhsPair;
 import org.mp.naumann.database.statement.DefaultInsertStatement;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
@@ -48,8 +48,8 @@ public class SimpleBloomTest {
         lhs.fastSet(0);
         lhs.fastSet(1);
         lhs.fastSet(2);
-        assertTrue(strategy2.cannotBeViolated(new FDTreeElementLhsPair(null, lhs)));
-        assertFalse(strategy1.cannotBeViolated(new FDTreeElementLhsPair(null, lhs)));
+        assertTrue(strategy2.cannotBeViolated(new LatticeElementLhsPair(lhs, null)));
+        assertFalse(strategy1.cannotBeViolated(new LatticeElementLhsPair(lhs, null)));
     }
 
     @Test
@@ -69,9 +69,9 @@ public class SimpleBloomTest {
         ValidationPruner strategy = builder.analyzeBatch(batch);
         OpenBitSet lhs = new OpenBitSet(columns.size());
         lhs.fastSet(0);
-        assertTrue(strategy.cannotBeViolated(new FDTreeElementLhsPair(null, lhs)));
+        assertTrue(strategy.cannotBeViolated(new LatticeElementLhsPair(lhs, null)));
         strategy = builder.analyzeBatch(batch);
-        assertFalse(strategy.cannotBeViolated(new FDTreeElementLhsPair(null, lhs)));
+        assertFalse(strategy.cannotBeViolated(new LatticeElementLhsPair(lhs, null)));
     }
 
     @Test
@@ -92,7 +92,7 @@ public class SimpleBloomTest {
         ValidationPruner strategy = builder.analyzeBatch(batch);
         OpenBitSet lhs = new OpenBitSet(columns.size());
         lhs.fastSet(0);
-        assertFalse(strategy.cannotBeViolated(new FDTreeElementLhsPair(null, lhs)));
+        assertFalse(strategy.cannotBeViolated(new LatticeElementLhsPair(lhs, null)));
     }
 
 }

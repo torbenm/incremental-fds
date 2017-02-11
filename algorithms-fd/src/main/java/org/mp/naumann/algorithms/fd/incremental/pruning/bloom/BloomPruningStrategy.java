@@ -7,9 +7,9 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.incremental.CardinalitySet;
+import org.mp.naumann.algorithms.fd.incremental.pruning.CardinalitySet;
 import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
-import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
+import org.mp.naumann.algorithms.fd.structures.LatticeElementLhsPair;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.database.statement.Statement;
@@ -182,7 +182,7 @@ public class BloomPruningStrategy {
         }
 
         @Override
-        public boolean cannotBeViolated(FDTreeElementLhsPair fd) {
+        public boolean cannotBeViolated(LatticeElementLhsPair fd) {
             OpenBitSet canBeViolated = fd.getLhs().clone();
             int depth = Math.min(nonViolations.getDepth(), (int) fd.getLhs().cardinality());
             for (int level = depth; level >= 0; level--) {

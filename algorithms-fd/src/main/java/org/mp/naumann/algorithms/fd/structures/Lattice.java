@@ -1,7 +1,6 @@
-package org.mp.naumann.algorithms.fd.incremental.test;
+package org.mp.naumann.algorithms.fd.structures;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,7 +15,7 @@ public class Lattice extends LatticeElement {
         super(numAttributes);
     }
 
-    void addFunctionalDependency(OpenBitSetFD fd) {
+    public void addFunctionalDependency(OpenBitSetFD fd) {
         LatticeElement node = find(fd.getLhs(), elem -> elem.mark(fd.getRhs()));
         node.addFd(fd.getRhs());
         depth = (int) Math.max(depth, fd.getLhs().cardinality());
@@ -42,17 +41,17 @@ public class Lattice extends LatticeElement {
         return currentNode;
     }
 
-    void removeSpecializations(OpenBitSetFD fd) {
+    public void removeSpecializations(OpenBitSetFD fd) {
         int nextAttr = 0;
         this.removeSpecializations(fd, nextAttr, false);
     }
 
-    boolean containsFdOrGeneralization(OpenBitSetFD fd) {
+    public boolean containsFdOrGeneralization(OpenBitSetFD fd) {
         int nextLhsAttr = fd.getLhs().nextSetBit(0);
         return this.containsFdOrGeneralization(fd, nextLhsAttr);
     }
 
-    Collection<LatticeElementLhsPair> getLevel(int level) {
+    public Collection<LatticeElementLhsPair> getLevel(int level) {
         List<LatticeElementLhsPair> result = new ArrayList<>();
         OpenBitSet currentLhs = new OpenBitSet();
         int currentLevel = 0;
@@ -60,7 +59,7 @@ public class Lattice extends LatticeElement {
         return result;
     }
 
-    int getDepth() {
+    public int getDepth() {
         return depth;
     }
 

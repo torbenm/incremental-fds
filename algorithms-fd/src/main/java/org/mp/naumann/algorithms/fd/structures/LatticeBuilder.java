@@ -1,8 +1,6 @@
-package org.mp.naumann.algorithms.fd.incremental.test;
+package org.mp.naumann.algorithms.fd.structures;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.structures.FDTree;
-import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.ArrayList;
 import java.util.Collections;

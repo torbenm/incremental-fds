@@ -1,10 +1,10 @@
-package org.mp.naumann.algorithms.fd.incremental.validator;
+package org.mp.naumann.algorithms.fd.incremental.deprecated.validator;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.algorithms.fd.incremental.MemoryGuardian;
+import org.mp.naumann.algorithms.fd.incremental.deprecated.MemoryGuardian;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
@@ -16,6 +16,7 @@ import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
 import java.util.List;
 import java.util.logging.Level;
 
+@Deprecated
 public class SpecializingValidator extends Validator<List<IntegerPair>> {
 
 
@@ -40,7 +41,7 @@ public class SpecializingValidator extends Validator<List<IntegerPair>> {
 
     @Override
     protected List<FDTreeElementLhsPair> getInitialLevel() {
-        return pruneLevel(FDTreeUtils.getFdLevel(posCover, level));
+        return FDTreeUtils.getFdLevel(posCover, level);
     }
 
     @Override

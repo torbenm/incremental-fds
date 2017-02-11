@@ -3,11 +3,11 @@ package org.mp.naumann.algorithms.fd;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
-import org.mp.naumann.algorithms.fd.incremental.test.IncrementalFD;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDResult;
-import org.mp.naumann.algorithms.fd.incremental.test.Lattice;
-import org.mp.naumann.algorithms.fd.incremental.test.LatticeBuilder;
+import org.mp.naumann.algorithms.fd.structures.Lattice;
+import org.mp.naumann.algorithms.fd.structures.LatticeBuilder;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.algorithms.result.ResultListener;
@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import ResourceConnection.ResourceConnector;
 
@@ -76,11 +75,6 @@ public interface IncrementalFDRunner {
             batchSource.startStreaming();
             afterIncremental(listener);
             SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Finished processing 1 batch");
-            LatticeBuilder after = LatticeBuilder.build(ds.getPosCover());
-            List<String> columns = ds.getColumns();
-            List<String> actualColumns = ds.getPliBuilder().getPliOrder().stream().map(columns::get).collect(Collectors.toList());
-//            diff(actualColumns, prev.getFds(), algorithm.getFds(), false);
-//            diff(actualColumns, prev.getInvalidFds(), algorithm.getInvalidFds(), true);
         }
     }
 

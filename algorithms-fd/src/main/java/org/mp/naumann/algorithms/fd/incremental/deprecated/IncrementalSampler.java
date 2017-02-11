@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.incremental.test;
+package org.mp.naumann.algorithms.fd.incremental.deprecated;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -8,6 +8,7 @@ import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
+import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
@@ -22,21 +23,26 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+@Deprecated
 class IncrementalSampler {
 
     private FDSet negCover;
+    private FDTree posCover;
     private CompressedRecords compressedRecords;
     private List<? extends PositionListIndex> plis;
     private float efficiencyThreshold;
     private ValueComparator valueComparator;
     private List<AttributeRepresentant> attributeRepresentants = null;
+    private MemoryGuardian memoryGuardian;
 
-    public IncrementalSampler(FDSet negCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator) {
+    public IncrementalSampler(FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian) {
         this.negCover = negCover;
+        this.posCover = posCover;
         this.compressedRecords = compressedRecords;
         this.plis = plis;
         this.efficiencyThreshold = efficiencyThreshold;
         this.valueComparator = valueComparator;
+        this.memoryGuardian = memoryGuardian;
     }
 
     public FDList enrichNegativeCover(List<IntegerPair> comparisonSuggestions) {
@@ -44,7 +50,7 @@ class IncrementalSampler {
 
         FDLogger.log(Level.FINEST, "Investigating comparison suggestions ... ");
         FDList newNonFds = new FDList(numAttributes, this.negCover.getMaxDepth());
-        OpenBitSet equalAttrs = new OpenBitSet(this.compressedRecords.getNumAttributes());
+        OpenBitSet equalAttrs = new OpenBitSet(this.posCover.getNumAttributes());
         for (IntegerPair comparisonSuggestion : comparisonSuggestions) {
             this.match(equalAttrs, comparisonSuggestion.a(), comparisonSuggestion.b());
 
@@ -52,6 +58,9 @@ class IncrementalSampler {
                 OpenBitSet equalAttrsCopy = equalAttrs.clone();
                 this.negCover.add(equalAttrsCopy);
                 newNonFds.add(equalAttrsCopy);
+
+                this.memoryGuardian.memoryChanged(1);
+                this.memoryGuardian.match(this.negCover, this.posCover, newNonFds);
             }
         }
 
@@ -65,7 +74,7 @@ class IncrementalSampler {
                 Iterator<IntArrayList> it = pli.getClustersToCheck(true);
                 List<IntArrayList> clusters = StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.CONCURRENT), true).map(c -> sort(comparator, c)).collect(Collectors.toList());
                 comparator.incrementActiveKey();
-                AttributeRepresentant attributeRepresentant = new AttributeRepresentant(clusters, efficiencyFactor, this.negCover, this);
+                AttributeRepresentant attributeRepresentant = new AttributeRepresentant(clusters, efficiencyFactor, this.negCover, this.posCover, this, this.memoryGuardian);
                 attributeRepresentant.runNext(newNonFds, this.compressedRecords);
                 if (attributeRepresentant.getEfficiency() != 0)
                     this.attributeRepresentants.add(attributeRepresentant);
@@ -141,7 +150,9 @@ class IncrementalSampler {
         private float efficiencyFactor;
         private List<IntArrayList> clusters;
         private FDSet negCover;
+        private FDTree posCover;
         private IncrementalSampler sampler;
+        private MemoryGuardian memoryGuardian;
 
         public float getEfficiencyFactor() {
             return this.efficiencyFactor;
@@ -165,11 +176,13 @@ class IncrementalSampler {
             return (int) (sumNonFds * (this.efficiencyFactor / sumComparisons));
         }
 
-        public AttributeRepresentant(List<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, IncrementalSampler sampler) {
+        public AttributeRepresentant(List<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, FDTree posCover, IncrementalSampler sampler, MemoryGuardian memoryGuardian) {
             this.clusters = clusters;
             this.efficiencyFactor = efficiencyFactor;
             this.negCover = negCover;
+            this.posCover = posCover;
             this.sampler = sampler;
+            this.memoryGuardian = memoryGuardian;
         }
 
         @Override
@@ -182,7 +195,7 @@ class IncrementalSampler {
             this.windowDistance++;
             int numNewNonFds = 0;
             int numComparisons = 0;
-            OpenBitSet equalAttrs = new OpenBitSet(compressedRecords.getNumAttributes());
+            OpenBitSet equalAttrs = new OpenBitSet(this.posCover.getNumAttributes());
 
             int previousNegCoverSize = newNonFds.size();
             Iterator<IntArrayList> clusterIterator = this.clusters.iterator();
@@ -204,6 +217,9 @@ class IncrementalSampler {
                         OpenBitSet equalAttrsCopy = equalAttrs.clone();
                         this.negCover.add(equalAttrsCopy);
                         newNonFds.add(equalAttrsCopy);
+
+                        this.memoryGuardian.memoryChanged(1);
+                        this.memoryGuardian.match(this.negCover, this.posCover, newNonFds);
                     }
                     numComparisons++;
                 }

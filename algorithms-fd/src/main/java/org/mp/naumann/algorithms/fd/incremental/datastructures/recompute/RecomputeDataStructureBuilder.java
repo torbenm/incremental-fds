@@ -61,8 +61,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
 
         Map<Integer, int[]> insertedDiff = new HashMap<>(inserted.size());
         inserted.parallelStream().forEach(i -> insertedDiff.put(i, getCompressedRecord(i)));
-        CompressedDiff diff = new CompressedDiff(insertedDiff, deletedDiff, new HashMap<>(0), new HashMap<>(0));
-        return diff;
+        return new CompressedDiff(insertedDiff, deletedDiff, new HashMap<>(0), new HashMap<>(0));
     }
 
     private int[] getCompressedRecord(int record) {
