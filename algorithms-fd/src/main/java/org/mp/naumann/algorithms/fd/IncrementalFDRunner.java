@@ -79,7 +79,7 @@ public interface IncrementalFDRunner {
             LatticeBuilder after = LatticeBuilder.build(ds.getPosCover());
             List<String> columns = ds.getColumns();
             List<String> actualColumns = ds.getPliBuilder().getPliOrder().stream().map(columns::get).collect(Collectors.toList());
-//            diff(actualColumns, prev.getValidFds(), algorithm.getValidFds(), false);
+//            diff(actualColumns, prev.getFds(), algorithm.getFds(), false);
 //            diff(actualColumns, prev.getInvalidFds(), algorithm.getInvalidFds(), true);
         }
     }

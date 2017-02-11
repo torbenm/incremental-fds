@@ -89,9 +89,9 @@ public class LatticeElement {
         return markedRhs.isEmpty();
     }
 
-    void getLevel(int level, int currentLevel, OpenBitSet currentLhs, List<LhsRhsPair> result) {
+    void getLevel(int level, int currentLevel, OpenBitSet currentLhs, List<LatticeElementLhsPair> result) {
         if (level == currentLevel && !rhs.isEmpty()) {
-            result.add(new LhsRhsPair(currentLhs.clone(), this));
+            result.add(new LatticeElementLhsPair(currentLhs.clone(), this));
         } else {
             currentLevel++;
             if (this.children == null) {

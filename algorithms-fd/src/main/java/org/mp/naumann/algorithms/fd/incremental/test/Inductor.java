@@ -12,10 +12,12 @@ class Inductor {
 
     private Lattice negCover;
     private Lattice posCover;
+    private final int numAttributes;
 
-    public Inductor(Lattice negCover, Lattice posCover) {
+    public Inductor(Lattice negCover, Lattice posCover, int numAttributes) {
         this.negCover = negCover;
         this.posCover = posCover;
+        this.numAttributes = numAttributes;
     }
 
     public void updatePositiveCover(FDList nonFds) {
@@ -77,7 +79,7 @@ class Inductor {
 
     private OpenBitSetFD flip(OpenBitSetFD fd) {
         OpenBitSet lhs = fd.getLhs().clone();
-        lhs.flip(0, posCover.getNumAttributes());
+        lhs.flip(0, numAttributes);
         return new OpenBitSetFD(lhs, fd.getRhs());
     }
 

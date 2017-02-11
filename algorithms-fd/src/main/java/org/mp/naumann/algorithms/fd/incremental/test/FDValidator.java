@@ -10,14 +10,14 @@ import java.util.List;
 
 public class FDValidator extends Validator {
 
-    private final Lattice validFds;
-    private final Lattice invalidFds;
+    private final Lattice fds;
+    private final Lattice nonFds;
     private float efficiencyThreshold;
 
-    public FDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice validFds, Lattice invalidFds, float efficiencyThreshold) {
+    public FDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds, float efficiencyThreshold) {
         super(numRecords, compressedRecords, plis, parallel);
-        this.validFds = validFds;
-        this.invalidFds = invalidFds;
+        this.fds = fds;
+        this.nonFds = nonFds;
         this.efficiencyThreshold = efficiencyThreshold;
     }
 
@@ -38,12 +38,12 @@ public class FDValidator extends Validator {
 
     @Override
     protected Lattice getLattice() {
-        return validFds;
+        return fds;
     }
 
     @Override
     protected Lattice getInverseLattice() {
-        return invalidFds;
+        return nonFds;
     }
 
     @Override
@@ -59,16 +59,14 @@ public class FDValidator extends Validator {
         for (int extensionAttribute = 0; extensionAttribute < numAttributes; extensionAttribute++) {
             if (rhs == extensionAttribute // AB -> B is trivial
                     || lhs.fastGet(extensionAttribute) // AA -> B is trivial
-                    || validFds.containsFdOrGeneralization(new OpenBitSetFD(lhs, extensionAttribute)) // if A -> B, then AB -> C cannot be minimal
+                    || fds.containsFdOrGeneralization(new OpenBitSetFD(lhs, extensionAttribute)) // if A -> B, then AB -> C cannot be minimal
                     ) {
                 continue;
             }
             OpenBitSet specializedLhs = lhs.clone();
             specializedLhs.fastSet(extensionAttribute);
             OpenBitSetFD specialization = new OpenBitSetFD(specializedLhs, rhs);
-            if (!validFds.containsFdOrGeneralization(specialization)) {
-                specializations.add(specialization);
-            }
+            specializations.add(specialization);
         }
         return specializations;
     }

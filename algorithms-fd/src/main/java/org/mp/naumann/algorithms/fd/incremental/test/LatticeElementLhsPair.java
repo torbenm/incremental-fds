@@ -2,12 +2,12 @@ package org.mp.naumann.algorithms.fd.incremental.test;
 
 import org.apache.lucene.util.OpenBitSet;
 
-public class LhsRhsPair {
+public class LatticeElementLhsPair {
 
     private final OpenBitSet lhs;
     private final LatticeElement element;
 
-    public LhsRhsPair(OpenBitSet lhs, LatticeElement element) {
+    public LatticeElementLhsPair(OpenBitSet lhs, LatticeElement element) {
         this.lhs = lhs;
         this.element = element;
     }

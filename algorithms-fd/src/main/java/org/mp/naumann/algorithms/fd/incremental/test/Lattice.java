@@ -52,8 +52,8 @@ public class Lattice extends LatticeElement {
         return this.containsFdOrGeneralization(fd, nextLhsAttr);
     }
 
-    Collection<LhsRhsPair> getLevel(int level) {
-        List<LhsRhsPair> result = new ArrayList<>();
+    Collection<LatticeElementLhsPair> getLevel(int level) {
+        List<LatticeElementLhsPair> result = new ArrayList<>();
         OpenBitSet currentLhs = new OpenBitSet();
         int currentLevel = 0;
         this.getLevel(level, currentLevel, currentLhs, result);
@@ -81,10 +81,5 @@ public class Lattice extends LatticeElement {
         int nextLhsAttr = fd.getLhs().nextSetBit(0);
         this.getFdAndGeneralizations(fd, nextLhsAttr, currentLhs, foundLhs);
         return foundLhs;
-    }
-
-
-    public int getNumAttributes() {
-        return numAttributes;
     }
 }

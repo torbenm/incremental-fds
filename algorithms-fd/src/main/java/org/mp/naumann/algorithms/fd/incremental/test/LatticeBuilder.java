@@ -10,13 +10,13 @@ import java.util.List;
 
 public class LatticeBuilder {
 
-    private final Lattice validFds;
-    private final Lattice invalidFDs;
+    private final Lattice fds;
+    private final Lattice nonFds;
     private final int numAttributes;
 
     LatticeBuilder(int numAttributes) {
-        validFds = new Lattice(numAttributes);
-        invalidFDs = new Lattice(numAttributes);
+        fds = new Lattice(numAttributes);
+        nonFds = new Lattice(numAttributes);
         this.numAttributes = numAttributes;
     }
 
@@ -35,44 +35,47 @@ public class LatticeBuilder {
 
     private void buildPositiveCover(List<OpenBitSetFD> fds) {
         for (OpenBitSetFD fd : fds) {
-            validFds.addFunctionalDependency(fd);
+            this.fds.addFunctionalDependency(fd);
         }
     }
 
-    public Lattice getValidFds() {
-        return validFds;
+    public Lattice getFds() {
+        return fds;
     }
 
-    public Lattice getInvalidFds() {
-        return invalidFDs;
+    public Lattice getNonFds() {
+        return nonFds;
     }
 
     private void buildNegativeCover() {
-        List<OpenBitSet> currentLevel = Collections.singletonList(new OpenBitSet(numAttributes));
+        List<LhsRhsPair> currentLevel = Collections.singletonList(new LhsRhsPair(new OpenBitSet(numAttributes), new OpenBitSet(numAttributes)));
         while (!currentLevel.isEmpty()) {
-            for (OpenBitSet currentLhs : currentLevel) {
-                for (int rhs = currentLhs.nextSetBit(0); rhs >= 0; rhs = currentLhs.nextSetBit(rhs + 1)) {
-                    OpenBitSet flipped = currentLhs.clone();
+            for (LhsRhsPair current : currentLevel) {
+                for (int rhs = current.getRhs().nextSetBit(0); rhs >= 0; rhs = current.getRhs().nextSetBit(rhs + 1)) {
+                    OpenBitSet flipped = current.getLhs().clone();
                     flipped.flip(0, numAttributes);
                     OpenBitSetFD fd = new OpenBitSetFD(flipped, rhs);
                     if (!isValidFd(fd)) {
-                        OpenBitSetFD nonFd = new OpenBitSetFD(currentLhs, rhs);
+                        OpenBitSetFD nonFd = new OpenBitSetFD(current.getLhs(), rhs);
                         if (isMaximal(nonFd)) {
-                            invalidFDs.addFunctionalDependency(nonFd);
+                            current.getRhs().fastClear(rhs);
+                            nonFds.addFunctionalDependency(nonFd);
                         }
                     }
                 }
             }
-            List<OpenBitSet> nextLevel = new ArrayList<>();
-            for (OpenBitSet currentLhs : currentLevel) {
-                int nextSetBit = currentLhs.nextSetBit(0);
+            List<LhsRhsPair> nextLevel = new ArrayList<>();
+            for (LhsRhsPair current : currentLevel) {
+                int nextSetBit = current.getLhs().nextSetBit(0);
                 if (nextSetBit < 0) {
                     nextSetBit = numAttributes;
                 }
                 for (int lhsAttr = 0; lhsAttr < nextSetBit; lhsAttr++) {
-                    OpenBitSet lhs = currentLhs.clone();
+                    OpenBitSet lhs = current.getLhs().clone();
                     lhs.fastSet(lhsAttr);
-                    nextLevel.add(lhs);
+                    OpenBitSet rhs = current.getRhs().clone();
+                    rhs.fastSet(lhsAttr);
+                    nextLevel.add(new LhsRhsPair(lhs, rhs));
                 }
             }
             currentLevel = nextLevel;
@@ -80,10 +83,28 @@ public class LatticeBuilder {
     }
 
     private boolean isMaximal(OpenBitSetFD nonFd) {
-        return !invalidFDs.containsFdOrGeneralization(nonFd);
+        return !nonFds.containsFdOrGeneralization(nonFd);
     }
 
     private boolean isValidFd(OpenBitSetFD fd) {
-        return validFds.containsFdOrGeneralization(fd);
+        return fds.containsFdOrGeneralization(fd);
+    }
+
+    private static class LhsRhsPair {
+        private final OpenBitSet lhs;
+        private final OpenBitSet rhs;
+
+        private LhsRhsPair(OpenBitSet lhs, OpenBitSet rhs) {
+            this.lhs = lhs;
+            this.rhs = rhs;
+        }
+
+        public OpenBitSet getLhs() {
+            return lhs;
+        }
+
+        public OpenBitSet getRhs() {
+            return rhs;
+        }
     }
 }

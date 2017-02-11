@@ -10,13 +10,13 @@ import java.util.List;
 
 public class NonFDValidator extends Validator {
 
-    private final Lattice validFds;
-    private final Lattice invalidFds;
+    private final Lattice fds;
+    private final Lattice nonFds;
 
-    public NonFDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice validFds, Lattice invalidFds) {
+    public NonFDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds) {
         super(numRecords, compressedRecords, plis, parallel);
-        this.validFds = validFds;
-        this.invalidFds = invalidFds;
+        this.fds = fds;
+        this.nonFds = nonFds;
     }
 
     @Override
@@ -36,12 +36,12 @@ public class NonFDValidator extends Validator {
 
     @Override
     protected Lattice getLattice() {
-        return invalidFds;
+        return nonFds;
     }
 
     @Override
     protected Lattice getInverseLattice() {
-        return validFds;
+        return fds;
     }
 
     @Override
@@ -62,9 +62,7 @@ public class NonFDValidator extends Validator {
             OpenBitSet specializedLhs = lhs.clone();
             specializedLhs.fastSet(extensionAttribute);
             OpenBitSetFD specialization = new OpenBitSetFD(specializedLhs, rhs);
-            if (!invalidFds.containsFdOrGeneralization(specialization)) {
-                specializations.add(specialization);
-            }
+            specializations.add(specialization);
         }
         return specializations;
     }

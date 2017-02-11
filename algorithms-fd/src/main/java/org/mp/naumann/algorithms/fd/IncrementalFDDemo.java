@@ -35,7 +35,7 @@ public class IncrementalFDDemo {
             "inserts.adult.csv",
             "",
             "benchmark.adult",
-            5000,
+            10,
             ResourceConnector.BENCHMARK,
             ","
     );
@@ -44,7 +44,7 @@ public class IncrementalFDDemo {
             "deletes.adult.csv",
             "",
             "benchmark.adult",
-            1800,
+            10,
             ResourceConnector.BENCHMARK,
             ","
     );
@@ -63,11 +63,11 @@ public class IncrementalFDDemo {
 
         IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom");
 
-        IncrementalFDRunConfiguration runConfig = adultInsert;
+        IncrementalFDRunConfiguration runConfig = philippSample;
 
 
         SpeedBenchmark.enable();
-        SpeedBenchmark.addEventListener(System.out::println);
+//        SpeedBenchmark.addEventListener(System.out::println);
 
         IncrementalFDRunner runner = new IncrementalFDRunner() {
             @Override

@@ -27,7 +27,12 @@ public abstract class Validator {
     protected int numRecords;
     protected List<? extends PositionListIndex> plis;
     protected CompressedRecords compressedRecords;
-    private int validations = 0;
+    private final ValidatorResult validatorResult = new ValidatorResult();
+    private final List<ValidationPruner> validationPruners = new ArrayList<>();
+
+    public void addValidationPruner(ValidationPruner ValidationPruner) {
+        validationPruners.add(ValidationPruner);
+    }
 
     Validator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel) {
         this.numRecords = numRecords;
@@ -41,8 +46,21 @@ public abstract class Validator {
         }
     }
 
-    int getValidations() {
-        return validations;
+    public ValidatorResult getValidatorResult() {
+        return validatorResult;
+    }
+
+    public static class ValidatorResult {
+        private int validations = 0;
+        private int pruned = 0;
+
+        public int getValidations() {
+            return validations;
+        }
+
+        public int getPruned() {
+            return pruned;
+        }
     }
 
     private class ValidationResult {
@@ -50,6 +68,7 @@ public abstract class Validator {
         int intersections = 0;
         List<OpenBitSetFD> collectedFDs = new ArrayList<>();
         public List<IntegerPair> comparisonSuggestions = new ArrayList<>();
+
         public void add(ValidationResult other) {
             this.validations += other.validations;
             this.intersections += other.intersections;
@@ -59,13 +78,16 @@ public abstract class Validator {
     }
 
     private class ValidationTask implements Callable<ValidationResult> {
-        private LhsRhsPair elementLhsPair;
-        void setElementLhsPair(LhsRhsPair elementLhsPair) {
+        private LatticeElementLhsPair elementLhsPair;
+
+        void setElementLhsPair(LatticeElementLhsPair elementLhsPair) {
             this.elementLhsPair = elementLhsPair;
         }
-        ValidationTask(LhsRhsPair elementLhsPair) {
+
+        ValidationTask(LatticeElementLhsPair elementLhsPair) {
             this.elementLhsPair = elementLhsPair;
         }
+
         public ValidationResult call() throws Exception {
             ValidationResult result = new ValidationResult();
 
@@ -88,8 +110,7 @@ public abstract class Validator {
                     }
                     result.intersections++;
                 }
-            }
-            else if (lhs.cardinality() == 1) {
+            } else if (lhs.cardinality() == 1) {
                 // Check if lhs from plis refines rhs
                 int lhsAttribute = lhs.nextSetBit(0);
                 for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
@@ -100,8 +121,7 @@ public abstract class Validator {
                     }
                     result.intersections++;
                 }
-            }
-            else {
+            } else {
                 // Check if lhs from plis plus remaining inverted plis refines rhs
                 int firstLhsAttr = lhs.nextSetBit(0);
 
@@ -127,7 +147,7 @@ public abstract class Validator {
 
         private void handleValidRhs(ValidationResult result, LatticeElement element, OpenBitSet lhs, int rhsAttr) {
             validRhs(element, rhsAttr);
-            if(collectValid()) {
+            if (collectValid()) {
                 result.collectedFDs.add(new OpenBitSetFD(lhs.clone(), rhsAttr));
             }
         }
@@ -144,16 +164,15 @@ public abstract class Validator {
 
     protected abstract boolean collectValid();
 
-    private ValidationResult validateSequential(Collection<LhsRhsPair> currentLevel) throws AlgorithmExecutionException {
+    private ValidationResult validateSequential(Collection<LatticeElementLhsPair> currentLevel) throws AlgorithmExecutionException {
         ValidationResult validationResult = new ValidationResult();
 
         ValidationTask task = new ValidationTask(null);
-        for (LhsRhsPair elementLhsPair : currentLevel) {
+        for (LatticeElementLhsPair elementLhsPair : currentLevel) {
             task.setElementLhsPair(elementLhsPair);
             try {
                 validationResult.add(task.call());
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 throw new AlgorithmExecutionException(e.getMessage());
             }
@@ -162,11 +181,11 @@ public abstract class Validator {
         return validationResult;
     }
 
-    private ValidationResult validateParallel(Collection<LhsRhsPair> currentLevel) throws AlgorithmExecutionException {
+    private ValidationResult validateParallel(Collection<LatticeElementLhsPair> currentLevel) throws AlgorithmExecutionException {
         ValidationResult validationResult = new ValidationResult();
 
         List<Future<ValidationResult>> futures = new ArrayList<>();
-        for (LhsRhsPair elementLhsPair : currentLevel) {
+        for (LatticeElementLhsPair elementLhsPair : currentLevel) {
             ValidationTask task = new ValidationTask(elementLhsPair);
             futures.add(this.executor.submit(task));
         }
@@ -174,8 +193,7 @@ public abstract class Validator {
         for (Future<ValidationResult> future : futures) {
             try {
                 validationResult.add(future.get());
-            }
-            catch (ExecutionException | InterruptedException e) {
+            } catch (ExecutionException | InterruptedException e) {
                 this.executor.shutdownNow();
                 e.printStackTrace();
                 throw new AlgorithmExecutionException(e.getMessage());
@@ -195,49 +213,64 @@ public abstract class Validator {
 
     protected abstract Lattice getInverseLattice();
 
+    private List<LatticeElementLhsPair> pruneLevel(Collection<LatticeElementLhsPair> lvl) {
+        List<LatticeElementLhsPair> currentLevel = new ArrayList<>();
+        for (LatticeElementLhsPair fd : lvl) {
+            if (validationPruners.stream().anyMatch(ps -> ps.cannotBeViolated(fd))) {
+                validatorResult.pruned += fd.getElement().getRhs().cardinality();
+            } else {
+                currentLevel.add(fd);
+            }
+        }
+        return currentLevel;
+    }
+
     private List<IntegerPair> validateLattice(Lattice lattice, Lattice inverseLattice) throws AlgorithmExecutionException {
         List<IntegerPair> comparisonSuggestions = new ArrayList<>();
         int previousNumInvalidFds = 0;
         while (level <= lattice.getDepth()) {
-            Collection<LhsRhsPair> currentLevel = lattice.getLevel(level);
-            if(!isTopDown()) {
+            Collection<LatticeElementLhsPair> currentLevel = lattice.getLevel(level);
+            if (!isTopDown()) {
                 currentLevel.forEach(pair -> pair.getLhs().flip(0, numAttributes));
             }
-            ValidationResult result = validate(currentLevel);
-            validations += result.validations;
-            comparisonSuggestions.addAll(result.comparisonSuggestions);
+            ValidationResult result = validate(pruneLevel(currentLevel));
+            validatorResult.validations += result.validations;
+            if (isTopDown()) {
+                comparisonSuggestions.addAll(result.comparisonSuggestions);
+            }
             int candidates = 0;
             for (OpenBitSetFD fd : result.collectedFDs) {
-                if(!isTopDown()) {
+                if (!isTopDown()) {
                     fd.getLhs().flip(0, numAttributes);
                 }
                 OpenBitSetFD flippedFd = flip(fd);
                 inverseLattice.addFunctionalDependency(flippedFd);
                 inverseLattice.removeSpecializations(flippedFd);
                 List<OpenBitSetFD> specializations = generateSpecializations(fd);
-                candidates += specializations.size();
                 for (OpenBitSetFD specialization : specializations) {
-                    lattice.addFunctionalDependency(specialization);
+                    if (!lattice.containsFdOrGeneralization(specialization)) {
+                        candidates++;
+                        lattice.addFunctionalDependency(specialization);
+                    }
                 }
             }
             int numInvalidFds = result.collectedFDs.size();
             int numValidFds = result.validations - numInvalidFds;
             FDLogger.log(Level.FINER, result.intersections + " intersections; " + result.validations + " validations; " + numInvalidFds + " invalid; " + candidates + " new candidates; --> " + numValidFds + " FDs");
 
+            level++;
             // Decide if we continue validating the next level or if we go back into the sampling phase
             if (switchToSampler(previousNumInvalidFds, numInvalidFds, numValidFds)) {
                 return comparisonSuggestions;
             }
             previousNumInvalidFds = numInvalidFds;
-            level++;
         }
 
         if (this.executor != null) {
             this.executor.shutdown();
             try {
                 this.executor.awaitTermination(365, TimeUnit.DAYS);
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
@@ -255,11 +288,12 @@ public abstract class Validator {
         return new OpenBitSetFD(lhs, fd.getRhs());
     }
 
-    private ValidationResult validate(Collection<LhsRhsPair> currentLevel) throws AlgorithmExecutionException {
+    private ValidationResult validate(Collection<LatticeElementLhsPair> currentLevel) throws AlgorithmExecutionException {
         return (this.executor == null) ? this.validateSequential(currentLevel) : this.validateParallel(currentLevel);
     }
 
     protected abstract void validRhs(LatticeElement elem, int rhs);
+
     protected abstract void invalidRhs(LatticeElement elem, int rhs);
 
 }

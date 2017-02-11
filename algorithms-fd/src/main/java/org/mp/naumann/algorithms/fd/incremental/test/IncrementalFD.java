@@ -19,6 +19,7 @@ import org.mp.naumann.algorithms.fd.incremental.IncrementalFDResult;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.RecomputeDataStructureBuilder;
+import org.mp.naumann.algorithms.fd.incremental.test.Validator.ValidatorResult;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
@@ -44,10 +45,10 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     private final List<ResultListener<IncrementalFDResult>> resultListeners = new ArrayList<>();
 
     private DataStructureBuilder dataStructureBuilder;
-    private Lattice validFds;
-    private Lattice invalidFds;
+    private Lattice fds;
+    private Lattice nonFds;
     private List<Integer> pliOrder;
-    private FDSet negCover;
+    private FDSet agreeSets;
     private ValueComparator valueComparator;
 
     public IncrementalFD(String tableName, IncrementalFDConfiguration version) {
@@ -76,18 +77,15 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     public void initialize(FDIntermediateDatastructure intermediateDatastructure) {
         FDLogger.log(Level.FINE, "Initializing IncrementalFD");
         this.columns = intermediateDatastructure.getColumns();
-        this.negCover = intermediateDatastructure.getNegCover();
+        this.agreeSets = intermediateDatastructure.getNegCover();
         this.valueComparator = intermediateDatastructure.getValueComparator();
 
         PLIBuilder pliBuilder = intermediateDatastructure.getPliBuilder();
 
         this.pliOrder = pliBuilder.getPliOrder();
         LatticeBuilder builder = LatticeBuilder.build(intermediateDatastructure.getPosCover());
-        this.validFds = builder.getValidFds();
-        this.invalidFds = builder.getInvalidFds();
-        List<OpenBitSetFD> nonFds = invalidFds.getFunctionalDependencies();
-        List<OpenBitSetFD> fds = validFds.getFunctionalDependencies();
-        nonFds.forEach(nonFd -> nonFd.getLhs().flip(0, pliOrder.size()));
+        this.fds = builder.getFds();
+        this.nonFds = builder.getNonFds();
         dataStructureBuilder = new RecomputeDataStructureBuilder(pliBuilder, this.version, this.columns, pliOrder);
     }
 
@@ -106,37 +104,50 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecord();
         int validations = 0;
+        int pruned = 0;
         if (!diff.getInsertedRecords().isEmpty()) {
-            IncrementalSampler sampler = new IncrementalSampler(negCover, compressedRecords, plis, EFFICIENCY_THRESHOLD, valueComparator);
-            Inductor inductor = new Inductor(invalidFds, validFds);
-            Validator validator = new FDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, VALIDATE_PARALLEL, validFds, invalidFds, EFFICIENCY_THRESHOLD);
-
-            List<IntegerPair> comparisonSuggestions;
-            int i = 1;
-            do {
-                FDLogger.log(Level.FINE, "Started round " + i);
-                FDLogger.log(Level.FINE, "Validating positive cover");
-                comparisonSuggestions = validator.validate();
-                if (version.usesSampling() && comparisonSuggestions != null) {
-                    FDLogger.log(Level.FINE, "Enriching negative cover");
-                    FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
-                    FDLogger.log(Level.FINE, "Updating positive cover");
-                    inductor.updatePositiveCover(newNonFds);
-                }
-                SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round " + i++);
-            } while (comparisonSuggestions != null);
-
-            validations += validator.getValidations();
+            ValidatorResult result = validateFDs(plis, compressedRecords);
+            validations += result.getValidations();
+            pruned += result.getPruned();
         }
         if (!diff.getDeletedRecords().isEmpty()) {
-            Validator validator = new NonFDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, VALIDATE_PARALLEL, validFds, invalidFds);
-            validator.validate();
-            validations += validator.getValidations();
+            ValidatorResult result = validateNonFDs(plis, compressedRecords);
+            validations += result.getValidations();
+            pruned += result.getPruned();
         }
-        List<OpenBitSetFD> fds = validFds.getFunctionalDependencies();
+        List<OpenBitSetFD> fds = this.fds.getFunctionalDependencies();
         List<FunctionalDependency> result = getFunctionalDependencies(fds);
         SpeedBenchmark.end(BenchmarkLevel.METHOD_HIGH_LEVEL, "Processed one batch, inner measuring");
-        return new IncrementalFDResult(result, validations, 0);
+        return new IncrementalFDResult(result, validations, pruned);
+    }
+
+    private ValidatorResult validateFDs(List<? extends PositionListIndex> plis, CompressedRecords compressedRecords) throws AlgorithmExecutionException {
+        IncrementalSampler sampler = new IncrementalSampler(agreeSets, compressedRecords, plis, EFFICIENCY_THRESHOLD, valueComparator);
+        Inductor inductor = new Inductor(nonFds, fds, pliOrder.size());
+        Validator validator = new FDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, VALIDATE_PARALLEL, fds, nonFds, EFFICIENCY_THRESHOLD);
+
+        List<IntegerPair> comparisonSuggestions;
+        int i = 1;
+        do {
+            FDLogger.log(Level.FINE, "Started round " + i);
+            FDLogger.log(Level.FINE, "Validating positive cover");
+            comparisonSuggestions = validator.validate();
+            if (version.usesSampling() && comparisonSuggestions != null) {
+                FDLogger.log(Level.FINE, "Enriching negative cover");
+                FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
+                FDLogger.log(Level.FINE, "Updating positive cover");
+                inductor.updatePositiveCover(newNonFds);
+            }
+            SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round " + i++);
+        } while (comparisonSuggestions != null);
+
+        return validator.getValidatorResult();
+    }
+
+    private ValidatorResult validateNonFDs(List<? extends PositionListIndex> plis, CompressedRecords compressedRecords) throws AlgorithmExecutionException {
+        Validator validator = new NonFDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, VALIDATE_PARALLEL, fds, nonFds);
+        validator.validate();
+        return validator.getValidatorResult();
     }
 
     private List<FunctionalDependency> getFunctionalDependencies(List<OpenBitSetFD> fds) {
