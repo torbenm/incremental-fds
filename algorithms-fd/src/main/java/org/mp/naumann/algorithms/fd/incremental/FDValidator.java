@@ -4,7 +4,6 @@ import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.Lattice;
 import org.mp.naumann.algorithms.fd.structures.LatticeElement;
-import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,21 +42,18 @@ public class FDValidator extends IncrementalValidator {
     }
 
     @Override
-    protected List<OpenBitSetFD> generateSpecializations(OpenBitSetFD fd)  {
-        OpenBitSet lhs = fd.getLhs();
-        int rhs = fd.getRhs();
-        List<OpenBitSetFD> specializations = new ArrayList<>();
+    protected List<OpenBitSet> generateSpecializations(OpenBitSet lhs, int rhs)  {
+        List<OpenBitSet> specializations = new ArrayList<>();
         for (int extensionAttribute = 0; extensionAttribute < numAttributes; extensionAttribute++) {
             if (rhs == extensionAttribute // AB -> B is trivial
                     || lhs.fastGet(extensionAttribute) // AA -> B is trivial
-                    || fds.containsFdOrGeneralization(new OpenBitSetFD(lhs, extensionAttribute)) // if A -> B, then AB -> C cannot be minimal
+                    || fds.containsFdOrGeneralization(lhs, extensionAttribute) // if A -> B, then AB -> C cannot be minimal
                     ) {
                 continue;
             }
             OpenBitSet specializedLhs = lhs.clone();
             specializedLhs.fastSet(extensionAttribute);
-            OpenBitSetFD specialization = new OpenBitSetFD(specializedLhs, rhs);
-            specializations.add(specialization);
+            specializations.add(specializedLhs);
         }
         return specializations;
     }

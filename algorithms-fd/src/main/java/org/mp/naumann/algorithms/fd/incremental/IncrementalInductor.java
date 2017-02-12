@@ -3,7 +3,6 @@ package org.mp.naumann.algorithms.fd.incremental;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.structures.Lattice;
-import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.List;
 
@@ -48,23 +47,22 @@ class IncrementalInductor {
         int numAttributes = this.posCover.getChildren().length;
         int newFDs = 0;
         List<OpenBitSet> specLhss;
-        if (!(specLhss = this.posCover.getFdAndGeneralizations(new OpenBitSetFD(lhs, rhs))).isEmpty()) { // TODO: May be "while" instead of "if"?
+        if (!(specLhss = this.posCover.getFdAndGeneralizations(lhs, rhs)).isEmpty()) { // TODO: May be "while" instead of "if"?
             for (OpenBitSet specLhs : specLhss) {
-                OpenBitSetFD specFd = new OpenBitSetFD(specLhs, rhs);
-                this.posCover.removeFunctionalDependency(specFd);
+                this.posCover.removeFunctionalDependency(specLhs, rhs);
 
-                OpenBitSetFD flipped = flip(specFd);
-                if (!negCover.containsFdOrGeneralization(flipped)) {
-                    negCover.addFunctionalDependency(flipped);
-                    negCover.removeSpecializations(flipped);
+                OpenBitSet flipped = flip(specLhs);
+                if (!negCover.containsFdOrGeneralization(flipped, rhs)) {
+                    negCover.addFunctionalDependency(flipped, rhs);
+                    negCover.removeSpecializations(flipped, rhs);
                 }
 
                 for (int attr = numAttributes - 1; attr >= 0; attr--) { // TODO: Is iterating backwards a good or bad idea?
                     if (!lhs.get(attr) && (attr != rhs)) {
                         specLhs.set(attr);
 
-                        if (!this.posCover.containsFdOrGeneralization(specFd)) {
-                            this.posCover.addFunctionalDependency(specFd);
+                        if (!this.posCover.containsFdOrGeneralization(specLhs, rhs)) {
+                            this.posCover.addFunctionalDependency(specLhs, rhs);
                             newFDs++;
                         }
                         specLhs.clear(attr);
@@ -74,10 +72,10 @@ class IncrementalInductor {
         }
     }
 
-    private OpenBitSetFD flip(OpenBitSetFD fd) {
-        OpenBitSet lhs = fd.getLhs().clone();
-        lhs.flip(0, numAttributes);
-        return new OpenBitSetFD(lhs, fd.getRhs());
+    private OpenBitSet flip(OpenBitSet lhs) {
+        OpenBitSet flipped = lhs.clone();
+        flipped.flip(0, numAttributes);
+        return flipped;
     }
 
 }

@@ -15,10 +15,10 @@ public class Lattice extends LatticeElement {
         super(numAttributes);
     }
 
-    public void addFunctionalDependency(OpenBitSetFD fd) {
-        LatticeElement node = find(fd.getLhs(), elem -> elem.mark(fd.getRhs()));
-        node.addFd(fd.getRhs());
-        depth = (int) Math.max(depth, fd.getLhs().cardinality());
+    public void addFunctionalDependency(OpenBitSet lhs, int rhs) {
+        LatticeElement node = find(lhs, elem -> elem.mark(rhs));
+        node.addFd(rhs);
+        depth = (int) Math.max(depth, lhs.cardinality());
     }
 
     private LatticeElement find(OpenBitSet lhs, Consumer<LatticeElement> visitor) {
@@ -41,14 +41,14 @@ public class Lattice extends LatticeElement {
         return currentNode;
     }
 
-    public void removeSpecializations(OpenBitSetFD fd) {
+    public void removeSpecializations(OpenBitSet lhs, int rhs) {
         int nextAttr = 0;
-        this.removeSpecializations(fd, nextAttr, false);
+        this.removeSpecializations(lhs, rhs, nextAttr, false);
     }
 
-    public boolean containsFdOrGeneralization(OpenBitSetFD fd) {
-        int nextLhsAttr = fd.getLhs().nextSetBit(0);
-        return this.containsFdOrGeneralization(fd, nextLhsAttr);
+    public boolean containsFdOrGeneralization(OpenBitSet lhs, int rhs) {
+        int nextLhsAttr = lhs.nextSetBit(0);
+        return this.containsFdOrGeneralization(lhs, rhs, nextLhsAttr);
     }
 
     public Collection<LatticeElementLhsPair> getLevel(int level) {
@@ -69,16 +69,16 @@ public class Lattice extends LatticeElement {
         return functionalDependencies;
     }
 
-    public void removeFunctionalDependency(OpenBitSetFD fd) {
-        int currentLhsAttr = fd.getLhs().nextSetBit(0);
-        this.removeRecursive(fd, currentLhsAttr);
+    public void removeFunctionalDependency(OpenBitSet lhs, int rhs) {
+        int currentLhsAttr = lhs.nextSetBit(0);
+        this.removeRecursive(lhs, rhs, currentLhsAttr);
     }
 
-    public List<OpenBitSet> getFdAndGeneralizations(OpenBitSetFD fd) {
+    public List<OpenBitSet> getFdAndGeneralizations(OpenBitSet lhs, int rhs) {
         List<OpenBitSet> foundLhs = new ArrayList<>();
         OpenBitSet currentLhs = new OpenBitSet();
-        int nextLhsAttr = fd.getLhs().nextSetBit(0);
-        this.getFdAndGeneralizations(fd, nextLhsAttr, currentLhs, foundLhs);
+        int nextLhsAttr = lhs.nextSetBit(0);
+        this.getFdAndGeneralizations(lhs, rhs, nextLhsAttr, currentLhs, foundLhs);
         return foundLhs;
     }
 }

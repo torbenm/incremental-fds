@@ -8,12 +8,12 @@ public class LatticeElement {
 
     protected final int numAttributes;
     private LatticeElement[] children;
-    private final OpenBitSet rhs;
+    private final OpenBitSet rhsFds;
     private final OpenBitSet markedRhs;
 
     LatticeElement(int numAttributes) {
         this.numAttributes = numAttributes;
-        this.rhs = new OpenBitSet(numAttributes);
+        this.rhsFds = new OpenBitSet(numAttributes);
         this.markedRhs = new OpenBitSet(numAttributes);
     }
 
@@ -26,11 +26,11 @@ public class LatticeElement {
     }
 
     void addFd(int rhsAttribute) {
-        this.rhs.fastSet(rhsAttribute);
+        this.rhsFds.fastSet(rhsAttribute);
     }
 
     public void removeFd(int rhsAttribute) {
-        this.rhs.fastClear(rhsAttribute);
+        this.rhsFds.fastClear(rhsAttribute);
         this.unmark(rhsAttribute);
     }
 
@@ -42,8 +42,8 @@ public class LatticeElement {
         this.markedRhs.fastClear(rhsAttribute);
     }
 
-    boolean containsFdOrGeneralization(OpenBitSetFD fd, int currentLhsAttr) {
-        if (this.isFd(fd.getRhs())) {
+    boolean containsFdOrGeneralization(OpenBitSet lhs, int rhs, int currentLhsAttr) {
+        if (this.isFd(rhs)) {
             return true;
         }
 
@@ -52,16 +52,15 @@ public class LatticeElement {
             return false;
         }
 
-        OpenBitSet lhs = fd.getLhs();
         int nextLhsAttr = lhs.nextSetBit(currentLhsAttr + 1);
 
-        if ((this.children != null) && (this.children[currentLhsAttr] != null) && (this.children[currentLhsAttr].isMarked(fd.getRhs()))) {
-            if (this.children[currentLhsAttr].containsFdOrGeneralization(fd, nextLhsAttr)) {
+        if ((this.children != null) && (this.children[currentLhsAttr] != null) && (this.children[currentLhsAttr].isMarked(rhs))) {
+            if (this.children[currentLhsAttr].containsFdOrGeneralization(lhs, rhs, nextLhsAttr)) {
                 return true;
             }
         }
 
-        return this.containsFdOrGeneralization(fd, nextLhsAttr);
+        return this.containsFdOrGeneralization(lhs, rhs, nextLhsAttr);
     }
 
     private boolean isMarked(int rhs) {
@@ -69,7 +68,7 @@ public class LatticeElement {
     }
 
     private boolean isFd(int rhs) {
-        return this.rhs.fastGet(rhs);
+        return this.rhsFds.fastGet(rhs);
     }
 
     private boolean isLastNodeOf(int rhs) {
@@ -89,7 +88,7 @@ public class LatticeElement {
     }
 
     void getLevel(int level, int currentLevel, OpenBitSet currentLhs, List<LatticeElementLhsPair> result) {
-        if (level == currentLevel && !rhs.isEmpty()) {
+        if (level == currentLevel && !rhsFds.isEmpty()) {
             result.add(new LatticeElementLhsPair(currentLhs.clone(), this));
         } else {
             currentLevel++;
@@ -109,14 +108,14 @@ public class LatticeElement {
         }
     }
 
-    void removeSpecializations(OpenBitSetFD fd, int currentAttr, boolean isSpecialized) {
-        // If this is the last attribute of lhs, remove the fd-mark from the rhs
-        if (!isMarked(fd.getRhs())) {
+    void removeSpecializations(OpenBitSet lhs, int rhs, int currentAttr, boolean isSpecialized) {
+        // If this is the last attribute of lhs, remove the fd-mark from the rhsFds
+        if (!isMarked(rhs)) {
             return;
         }
-        int nextLhsAttr = fd.getLhs().nextSetBit(currentAttr);
+        int nextLhsAttr = lhs.nextSetBit(currentAttr);
         if (isSpecialized && nextLhsAttr < 0) {
-            this.removeFd(fd.getRhs());
+            this.removeFd(rhs);
             return;
         }
 
@@ -128,9 +127,9 @@ public class LatticeElement {
             for (int attr = currentAttr; attr <= limit; attr++) {
                 if (this.children[attr] != null) {
                     // Move to the next child with the next lhs attribute
-                    this.children[attr].removeSpecializations(fd, attr + 1, isSpecialized || attr != nextLhsAttr);
+                    this.children[attr].removeSpecializations(lhs, rhs, attr + 1, isSpecialized || attr != nextLhsAttr);
 
-                    // Delete the child node if it has no rhs attributes any more
+                    // Delete the child node if it has no rhsFds attributes any more
                     if (this.children[attr].hasNoMarked()) {
                         this.children[attr] = null;
                     }
@@ -138,49 +137,52 @@ public class LatticeElement {
             }
         }
 
-        // Check if another child requires the rhs and if not, remove it from this node
-        if (!this.isFd(fd.getRhs()) && this.isLastNodeOf(fd.getRhs())) {
-            this.unmark(fd.getRhs());
+        // Check if another child requires the rhsFds and if not, remove it from this node
+        if (!this.isFd(rhs) && this.isLastNodeOf(rhs)) {
+            this.unmark(rhs);
         }
     }
 
-    boolean removeRecursive(OpenBitSetFD fd, int currentLhsAttr) {
-        // If this is the last attribute of lhs, remove the fd-mark from the rhs
+    boolean removeRecursive(OpenBitSet lhs, int rhs, int currentLhsAttr) {
+        // If this is the last attribute of lhs, remove the fd-mark from the rhsFds
         if (currentLhsAttr < 0) {
-            this.removeFd(fd.getRhs());
+            this.removeFd(rhs);
             return true;
         }
 
         if ((this.children != null) && (this.children[currentLhsAttr] != null)) {
             // Move to the next child with the next lhs attribute
-            if (!this.children[currentLhsAttr].removeRecursive(fd, fd.getLhs().nextSetBit(currentLhsAttr + 1)))
-                return false; // This is a shortcut: if the child was unable to remove the rhs, then this node can also not remove it
+            if (!this.children[currentLhsAttr].removeRecursive(lhs, rhs, lhs.nextSetBit(currentLhsAttr + 1))) {
+                return false; // This is a shortcut: if the child was unable to remove the rhsFds, then this node can also not remove it
+            }
 
-            // Delete the child node if it has no rhs attributes any more
-            if (this.children[currentLhsAttr].hasNoMarked())
+            // Delete the child node if it has no rhsFds attributes any more
+            if (this.children[currentLhsAttr].hasNoMarked()) {
                 this.children[currentLhsAttr] = null;
+            }
         }
 
-        // Check if another child requires the rhs and if not, remove it from this node
-        if (this.isLastNodeOf(fd.getRhs())) {
-            this.unmark(fd.getRhs());
+        // Check if another child requires the rhsFds and if not, remove it from this node
+        if (this.isLastNodeOf(rhs)) {
+            this.unmark(rhs);
             return true;
         }
         return false;
     }
 
-    public OpenBitSet getRhs() {
-        return rhs;
+    public OpenBitSet getRhsFds() {
+        return rhsFds;
     }
 
     void addFunctionalDependenciesInto(List<OpenBitSetFD> functionalDependencies, OpenBitSet lhs) {
 
-        for (int rhs = this.rhs.nextSetBit(0); rhs >= 0; rhs = this.rhs.nextSetBit(rhs + 1)) {
+        for (int rhs = this.rhsFds.nextSetBit(0); rhs >= 0; rhs = this.rhsFds.nextSetBit(rhs + 1)) {
             functionalDependencies.add(new OpenBitSetFD(lhs.clone(), rhs));
         }
 
-        if (this.getChildren() == null)
+        if (this.getChildren() == null) {
             return;
+        }
 
         for (int childAttr = 0; childAttr < this.numAttributes; childAttr++) {
             LatticeElement element = this.getChildren()[childAttr];
@@ -192,20 +194,22 @@ public class LatticeElement {
         }
     }
 
-    void getFdAndGeneralizations(OpenBitSetFD fd, int currentLhsAttr, OpenBitSet currentLhs,
+    void getFdAndGeneralizations(OpenBitSet lhs, int rhs, int currentLhsAttr, OpenBitSet currentLhs,
                                  List<OpenBitSet> foundLhs) {
-        if (this.isFd(fd.getRhs()))
+        if (this.isFd(rhs)) {
             foundLhs.add(currentLhs.clone());
+        }
 
-        if (this.children == null)
+        if (this.children == null) {
             return;
+        }
 
         while (currentLhsAttr >= 0) {
-            int nextLhsAttr = fd.getLhs().nextSetBit(currentLhsAttr + 1);
+            int nextLhsAttr = lhs.nextSetBit(currentLhsAttr + 1);
 
-            if ((this.children[currentLhsAttr] != null) && (this.children[currentLhsAttr].isMarked(fd.getRhs()))) {
+            if ((this.children[currentLhsAttr] != null) && (this.children[currentLhsAttr].isMarked(rhs))) {
                 currentLhs.set(currentLhsAttr);
-                this.children[currentLhsAttr].getFdAndGeneralizations(fd, nextLhsAttr, currentLhs, foundLhs);
+                this.children[currentLhsAttr].getFdAndGeneralizations(lhs, rhs, nextLhsAttr, currentLhs, foundLhs);
                 currentLhs.clear(currentLhsAttr);
             }
 

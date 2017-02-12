@@ -1,10 +1,12 @@
 package org.mp.naumann.algorithms.fd.structures;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.FDLogger;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 
 public class LatticeBuilder {
 
@@ -12,7 +14,7 @@ public class LatticeBuilder {
     private final Lattice nonFds;
     private final int numAttributes;
 
-    LatticeBuilder(int numAttributes) {
+    private LatticeBuilder(int numAttributes) {
         fds = new Lattice(numAttributes);
         nonFds = new Lattice(numAttributes);
         this.numAttributes = numAttributes;
@@ -33,7 +35,7 @@ public class LatticeBuilder {
 
     private void buildPositiveCover(List<OpenBitSetFD> fds) {
         for (OpenBitSetFD fd : fds) {
-            this.fds.addFunctionalDependency(fd);
+            this.fds.addFunctionalDependency(fd.getLhs(), fd.getRhs());
         }
     }
 
@@ -46,18 +48,17 @@ public class LatticeBuilder {
     }
 
     private void buildNegativeCover() {
+        FDLogger.log(Level.FINER, "Building negative cover");
         List<LhsRhsPair> currentLevel = Collections.singletonList(new LhsRhsPair(new OpenBitSet(numAttributes), new OpenBitSet(numAttributes)));
         while (!currentLevel.isEmpty()) {
             for (LhsRhsPair current : currentLevel) {
                 for (int rhs = current.getRhs().nextSetBit(0); rhs >= 0; rhs = current.getRhs().nextSetBit(rhs + 1)) {
                     OpenBitSet flipped = current.getLhs().clone();
                     flipped.flip(0, numAttributes);
-                    OpenBitSetFD fd = new OpenBitSetFD(flipped, rhs);
-                    if (!isValidFd(fd)) {
-                        OpenBitSetFD nonFd = new OpenBitSetFD(current.getLhs(), rhs);
-                        if (isMaximal(nonFd)) {
-                            current.getRhs().fastClear(rhs);
-                            nonFds.addFunctionalDependency(nonFd);
+                    if (!isValidFd(flipped, rhs)) {
+                        current.getRhs().fastClear(rhs);
+                        if (isMaximal(current.getLhs(), rhs)) {
+                            nonFds.addFunctionalDependency(current.getLhs(), rhs);
                         }
                     }
                 }
@@ -78,14 +79,15 @@ public class LatticeBuilder {
             }
             currentLevel = nextLevel;
         }
+        FDLogger.log(Level.FINER, "Finsihed building negative cover");
     }
 
-    private boolean isMaximal(OpenBitSetFD nonFd) {
-        return !nonFds.containsFdOrGeneralization(nonFd);
+    private boolean isMaximal(OpenBitSet lhs, int rhs) {
+        return !nonFds.containsFdOrGeneralization(lhs, rhs);
     }
 
-    private boolean isValidFd(OpenBitSetFD fd) {
-        return fds.containsFdOrGeneralization(fd);
+    private boolean isValidFd(OpenBitSet lhs, int rhs) {
+        return fds.containsFdOrGeneralization(lhs, rhs);
     }
 
     private static class LhsRhsPair {

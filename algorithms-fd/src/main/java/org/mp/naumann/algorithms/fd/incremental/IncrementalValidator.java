@@ -106,7 +106,7 @@ public abstract class IncrementalValidator {
         List<LatticeElementLhsPair> currentLevel = new ArrayList<>();
         for (LatticeElementLhsPair fd : lvl) {
             if (validationPruners.stream().anyMatch(ps -> ps.cannotBeViolated(fd))) {
-                validatorResult.pruned += fd.getElement().getRhs().cardinality();
+                validatorResult.pruned += fd.getElement().getRhsFds().cardinality();
             } else {
                 currentLevel.add(fd);
             }
@@ -130,17 +130,19 @@ public abstract class IncrementalValidator {
             }
             int candidates = 0;
             for (OpenBitSetFD fd : result.collectedFDs) {
+                OpenBitSet lhs = fd.getLhs();
                 if (!isTopDown()) {
-                    fd.getLhs().flip(0, numAttributes);
+                    lhs.flip(0, numAttributes);
                 }
-                OpenBitSetFD flippedFd = flip(fd);
-                inverseLattice.addFunctionalDependency(flippedFd);
-                inverseLattice.removeSpecializations(flippedFd);
-                List<OpenBitSetFD> specializations = generateSpecializations(fd);
-                for (OpenBitSetFD specialization : specializations) {
-                    if (!lattice.containsFdOrGeneralization(specialization)) {
+                OpenBitSet flipped = flip(lhs);
+                int rhs = fd.getRhs();
+                inverseLattice.addFunctionalDependency(flipped, rhs);
+                inverseLattice.removeSpecializations(flipped, rhs);
+                List<OpenBitSet> specializations = generateSpecializations(lhs, rhs);
+                for (OpenBitSet specialization : specializations) {
+                    if (!lattice.containsFdOrGeneralization(specialization, rhs)) {
                         candidates++;
-                        lattice.addFunctionalDependency(specialization);
+                        lattice.addFunctionalDependency(specialization, rhs);
                     }
                 }
             }
@@ -171,12 +173,12 @@ public abstract class IncrementalValidator {
 
     protected abstract boolean switchToSampler(int previousNumInvalidFds, int numInvalidFds, int numValidFds);
 
-    protected abstract List<OpenBitSetFD> generateSpecializations(OpenBitSetFD fd);
+    protected abstract List<OpenBitSet> generateSpecializations(OpenBitSet lhs, int rhs);
 
-    private OpenBitSetFD flip(OpenBitSetFD fd) {
-        OpenBitSet lhs = fd.getLhs().clone();
-        lhs.flip(0, numAttributes);
-        return new OpenBitSetFD(lhs, fd.getRhs());
+    private OpenBitSet flip(OpenBitSet lhs) {
+        OpenBitSet flipped = lhs.clone();
+        flipped.flip(0, numAttributes);
+        return flipped;
     }
 
     private ValidationResult validate(Collection<LatticeElementLhsPair> currentLevel) throws AlgorithmExecutionException {
@@ -230,7 +232,7 @@ public abstract class IncrementalValidator {
 
             LatticeElement element = this.elementLhsPair.getElement();
             OpenBitSet lhs = this.elementLhsPair.getLhs();
-            OpenBitSet rhs = element.getRhs();
+            OpenBitSet rhs = element.getRhsFds();
 
             int rhsSize = (int) rhs.cardinality();
             if (rhsSize == 0) {
