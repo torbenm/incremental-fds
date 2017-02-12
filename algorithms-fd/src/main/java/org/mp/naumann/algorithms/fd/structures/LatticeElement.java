@@ -101,19 +101,20 @@ public class LatticeElement {
                     continue;
                 }
 
-                currentLhs.set(child);
+                currentLhs.fastSet(child);
                 this.children[child].getLevel(level, currentLevel, currentLhs, result);
-                currentLhs.clear(child);
+                currentLhs.fastClear(child);
             }
         }
     }
 
     void removeSpecializations(OpenBitSet lhs, int rhs, int currentAttr, boolean isSpecialized) {
-        // If this is the last attribute of lhs, remove the fd-mark from the rhsFds
+        // If rhs is not marked, we cannot reach any specializatioin from here
         if (!isMarked(rhs)) {
             return;
         }
         int nextLhsAttr = lhs.nextSetBit(currentAttr);
+        // If the whole lhs was read and the lhs is specialized, we can remove the rhs
         if (isSpecialized && nextLhsAttr < 0) {
             this.removeFd(rhs);
             return;
@@ -126,7 +127,8 @@ public class LatticeElement {
             }
             for (int attr = currentAttr; attr <= limit; attr++) {
                 if (this.children[attr] != null) {
-                    // Move to the next child with the next lhs attribute
+                    // Move to the next child with the next attribute
+                    // Either it is the next lhs attribute or another so we are specialized
                     this.children[attr].removeSpecializations(lhs, rhs, attr + 1, isSpecialized || attr != nextLhsAttr);
 
                     // Delete the child node if it has no rhsFds attributes any more
@@ -185,11 +187,11 @@ public class LatticeElement {
         }
 
         for (int childAttr = 0; childAttr < this.numAttributes; childAttr++) {
-            LatticeElement element = this.getChildren()[childAttr];
-            if (element != null) {
-                lhs.set(childAttr);
-                element.addFunctionalDependenciesInto(functionalDependencies, lhs);
-                lhs.clear(childAttr);
+            LatticeElement child = this.getChildren()[childAttr];
+            if (child != null) {
+                lhs.fastSet(childAttr);
+                child.addFunctionalDependenciesInto(functionalDependencies, lhs);
+                lhs.fastClear(childAttr);
             }
         }
     }
@@ -208,9 +210,9 @@ public class LatticeElement {
             int nextLhsAttr = lhs.nextSetBit(currentLhsAttr + 1);
 
             if ((this.children[currentLhsAttr] != null) && (this.children[currentLhsAttr].isMarked(rhs))) {
-                currentLhs.set(currentLhsAttr);
+                currentLhs.fastSet(currentLhsAttr);
                 this.children[currentLhsAttr].getFdAndGeneralizations(lhs, rhs, nextLhsAttr, currentLhs, foundLhs);
-                currentLhs.clear(currentLhsAttr);
+                currentLhs.fastClear(currentLhsAttr);
             }
 
             currentLhsAttr = nextLhsAttr;

@@ -59,13 +59,13 @@ class IncrementalInductor {
 
                 for (int attr = numAttributes - 1; attr >= 0; attr--) { // TODO: Is iterating backwards a good or bad idea?
                     if (!lhs.get(attr) && (attr != rhs)) {
-                        specLhs.set(attr);
+                        specLhs.fastSet(attr);
 
                         if (!this.posCover.containsFdOrGeneralization(specLhs, rhs)) {
                             this.posCover.addFunctionalDependency(specLhs, rhs);
                             newFDs++;
                         }
-                        specLhs.clear(attr);
+                        specLhs.fastClear(attr);
                     }
                 }
             }

@@ -225,7 +225,7 @@ class IncrementalSampler {
         equalAttrs.clear(0, t1.length);
         for (int i = 0; i < t1.length; i++) {
             if (this.valueComparator.isEqual(t1[i], t2[i])) {
-                equalAttrs.set(i);
+                equalAttrs.fastSet(i);
             }
         }
     }

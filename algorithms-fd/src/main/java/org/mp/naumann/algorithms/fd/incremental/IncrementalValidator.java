@@ -265,9 +265,9 @@ public abstract class IncrementalValidator {
                 // Check if lhs from plis plus remaining inverted plis refines rhs
                 int firstLhsAttr = lhs.nextSetBit(0);
 
-                lhs.clear(firstLhsAttr);
+                lhs.fastClear(firstLhsAttr);
                 OpenBitSet validRhs = IncrementalValidator.this.plis.get(firstLhsAttr).refines(IncrementalValidator.this.compressedRecords, lhs, rhs, result.comparisonSuggestions, IncrementalValidator.this.isTopDown());
-                lhs.set(firstLhsAttr);
+                lhs.fastSet(firstLhsAttr);
 
                 OpenBitSet invalidRhs = rhs.clone();
                 invalidRhs.andNot(validRhs);

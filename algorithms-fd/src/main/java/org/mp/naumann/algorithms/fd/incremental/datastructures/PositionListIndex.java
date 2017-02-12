@@ -75,8 +75,9 @@ public abstract class PositionListIndex implements IPositionListIndex {
     }
 
     public boolean isConstant(int numRecords) {
-        if (numRecords <= 1)
+        if (numRecords <= 1) {
             return true;
+        }
         return (getClusters().size() == 1) && (getClusters().iterator().next().size() == numRecords);
     }
 
@@ -96,13 +97,16 @@ public abstract class PositionListIndex implements IPositionListIndex {
         int rhsClusterId = compressedRecords.get(cluster.getInt(0))[rhsAttr];
 
         // If otherClusterId < 0, then this cluster must point into more than one other clusters
-        if (rhsClusterId == PliUtils.UNIQUE_VALUE)
+        if (rhsClusterId == PliUtils.UNIQUE_VALUE) {
             return false;
+        }
 
         // Check if all records of this cluster point into the same other cluster
-        for (int recordId : cluster)
-            if (compressedRecords.get(recordId)[rhsAttr] != rhsClusterId)
+        for (int recordId : cluster) {
+            if (compressedRecords.get(recordId)[rhsAttr] != rhsClusterId) {
                 return false;
+            }
+        }
 
         return true;
     }
@@ -137,8 +141,9 @@ public abstract class PositionListIndex implements IPositionListIndex {
             }
             for (int recordId : cluster) {
                 ClusterIdentifier subClusterIdentifier = this.buildClusterIdentifier(lhs, lhsSize, compressedRecords.get(recordId));
-                if (subClusterIdentifier == null)
+                if (subClusterIdentifier == null) {
                     continue;
+                }
 
                 boolean isOldRecord = false;
                 if (useInnerClusterPruning) {
@@ -159,15 +164,17 @@ public abstract class PositionListIndex implements IPositionListIndex {
                         if ((rhsCluster == PliUtils.UNIQUE_VALUE) || (rhsCluster != rhsClusters.get(rhsAttrId2Index[rhsAttr]))) {
                             comparisonSuggestions.add(new IntegerPair(recordId, rhsClusters.getRecord()));
 
-                            refinedRhs.clear(rhsAttr);
-                            if (refinedRhs.isEmpty())
+                            refinedRhs.fastClear(rhsAttr);
+                            if (refinedRhs.isEmpty()) {
                                 return refinedRhs;
+                            }
                         }
                     }
                 } else {
                     int[] rhsClusters = new int[rhsSize];
-                    for (int rhsAttr = 0; rhsAttr < rhsSize; rhsAttr++)
+                    for (int rhsAttr = 0; rhsAttr < rhsSize; rhsAttr++) {
                         rhsClusters[rhsAttr] = compressedRecords.get(recordId)[rhsAttrIndex2Id[rhsAttr]];
+                    }
                     subClusters.put(subClusterIdentifier, new ClusterIdentifierWithRecord(rhsClusters, recordId));
                     if (useInnerClusterPruning && isOldRecord) {
                         haveOldRecord.add(subClusterIdentifier);
@@ -215,8 +222,9 @@ public abstract class PositionListIndex implements IPositionListIndex {
         for (int lhsAttr = lhs.nextSetBit(0); lhsAttr >= 0; lhsAttr = lhs.nextSetBit(lhsAttr + 1)) {
             int clusterId = record[lhsAttr];
 
-            if (clusterId < 0)
+            if (clusterId < 0) {
                 return null;
+            }
 
             if (otherClustersWithNewRecords != null && !otherClustersWithNewRecords.get(lhsAttr).contains(clusterId)) {
                 return null;
