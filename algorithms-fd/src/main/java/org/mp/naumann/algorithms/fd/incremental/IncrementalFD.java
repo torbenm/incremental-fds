@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
+import org.mp.naumann.algorithms.benchmark.better.Benchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
@@ -137,11 +138,13 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     @Override
     public IncrementalFDResult execute(Batch batch) throws AlgorithmExecutionException {
         FDLogger.log(Level.INFO, "Started IncrementalFD for new Batch");
+        Benchmark benchmark = Benchmark.start("IncrementalFD for new Batch");
 
         FDLogger.log(Level.FINER, "Started updating data structures");
         CompressedDiff diff = dataStructureBuilder.update(batch);
         List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecords();
+        benchmark.finishSubtask("Update data structures");
         FDLogger.log(Level.FINER, "Finished updating data structures");
 
         int validations = 0;
@@ -151,25 +154,29 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             ValidatorResult result = validateFDs(plis, compressedRecords, batch, diff);
             validations += result.getValidations();
             pruned += result.getPruned();
+            benchmark.finishSubtask("Validate FDs");
         }
 
         if (!diff.getDeletedRecords().isEmpty()) {
             ValidatorResult result = validateNonFDs(plis, compressedRecords);
             validations += result.getValidations();
             pruned += result.getPruned();
+            benchmark.finishSubtask("Validate non-FDs");
         }
 
         List<OpenBitSetFD> fds = this.fds.getFunctionalDependencies();
         List<FunctionalDependency> result = getFunctionalDependencies(fds);
         FDLogger.log(Level.INFO, "Finished IncrementalFD for new Batch");
+        benchmark.finish();
         return new IncrementalFDResult(result, validations, pruned);
     }
 
     private ValidatorResult validateFDs(List<? extends PositionListIndex> plis, CompressedRecords compressedRecords, Batch batch, CompressedDiff diff) throws AlgorithmExecutionException {
         FDLogger.log(Level.FINE, "Started validating FDs");
+        Benchmark benchmark = Benchmark.start("Validate FDs", Benchmark.DEFAULT_LEVEL + 1);
 
         IncrementalSampler sampler = new IncrementalSampler(agreeSets, compressedRecords, plis, EFFICIENCY_THRESHOLD, valueComparator);
-        IncrementalInductor inductor = new IncrementalInductor(nonFds, fds, pliOrder.size());
+        IncrementalInductor inductor = new IncrementalInductor(nonFds, fds, compressedRecords.getNumAttributes());
         IncrementalValidator validator = new FDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, VALIDATE_PARALLEL, fds, nonFds, EFFICIENCY_THRESHOLD);
 
         if (usesBloomPruning()) {
@@ -182,18 +189,24 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         List<IntegerPair> comparisonSuggestions;
         int i = 1;
         do {
+            Benchmark innerBenchmark = Benchmark.start("Round " + i, Benchmark.DEFAULT_LEVEL + 2);
             FDLogger.log(Level.FINER, "Started round " + i);
             FDLogger.log(Level.FINER, "Validating positive cover");
             comparisonSuggestions = validator.validate();
+            innerBenchmark.finishSubtask("Validation");
             if (version.usesSampling() && comparisonSuggestions != null) {
                 FDLogger.log(Level.FINER, "Enriching agree sets");
                 FDList newNonFds = sampler.enrichNegativeCover(comparisonSuggestions);
+                innerBenchmark.finishSubtask("Sampling");
                 FDLogger.log(Level.FINER, "Updating positive cover");
                 inductor.updatePositiveCover(newNonFds);
+                innerBenchmark.finishSubtask("Inducing");
             }
+            innerBenchmark.finish();
             FDLogger.log(Level.FINER, "Finished round " + i++);
         } while (comparisonSuggestions != null);
 
+        benchmark.finish();
         FDLogger.log(Level.FINE, "Finished validating FDs");
         return validator.getValidatorResult();
     }

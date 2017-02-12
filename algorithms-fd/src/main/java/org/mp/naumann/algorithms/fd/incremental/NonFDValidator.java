@@ -35,7 +35,7 @@ public class NonFDValidator extends IncrementalValidator {
     }
 
     @Override
-    protected boolean switchToSampler(int previousNumInvalidFds, int numInvalidFds, int numValidFds) {
+    protected boolean interrupt(int previousNumInvalidFds, int numInvalidFds, int numValidFds) {
         return false;
     }
 

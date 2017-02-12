@@ -11,6 +11,7 @@ import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuil
 import org.mp.naumann.algorithms.fd.incremental.datastructures.MapCompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.Dictionary;
+import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.statement.DeleteStatement;
 import org.mp.naumann.database.statement.InsertStatement;
@@ -21,7 +22,6 @@ import org.mp.naumann.processor.batch.Batch;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -131,20 +131,8 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
             }
             clusters.add(cluster);
         }
-        if (clusters.isEmpty()) {
-            return Collections.emptyList();
-        }
-        clusters.sort(Comparator.comparingInt(Collection::size));
-        Set<Integer> matching = null;
-        for (IntArrayList cluster : clusters) {
-            if (matching == null) {
-                matching = new HashSet<>(cluster);
-            } else {
-                matching.retainAll(cluster);
-            }
-        }
-        Set<Integer> toRemove = matching;
-        clusters.forEach(c -> c.removeAll(toRemove));
+        Set<Integer> matching = CollectionUtils.intersection(clusters);
+        clusters.forEach(c -> c.removeAll(matching));
         return matching;
     }
 

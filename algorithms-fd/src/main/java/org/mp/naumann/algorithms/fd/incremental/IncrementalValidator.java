@@ -153,7 +153,7 @@ public abstract class IncrementalValidator {
             FDLogger.log(Level.FINER, "Finished validating level " + level);
             level++;
             // Decide if we continue validating the next level or if we go back into the sampling phase
-            if (switchToSampler(previousNumInvalidFds, numInvalidFds, numValidFds)) {
+            if (interrupt(previousNumInvalidFds, numInvalidFds, numValidFds)) {
                 return comparisonSuggestions;
             }
             previousNumInvalidFds = numInvalidFds;
@@ -171,7 +171,7 @@ public abstract class IncrementalValidator {
         return null;
     }
 
-    protected abstract boolean switchToSampler(int previousNumInvalidFds, int numInvalidFds, int numValidFds);
+    protected abstract boolean interrupt(int previousNumInvalidFds, int numInvalidFds, int numValidFds);
 
     protected abstract List<OpenBitSet> generateSpecializations(OpenBitSet lhs, int rhs);
 

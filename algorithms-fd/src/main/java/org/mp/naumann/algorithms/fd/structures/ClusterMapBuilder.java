@@ -19,15 +19,14 @@ package org.mp.naumann.algorithms.fd.structures;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 
+import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Row;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -137,20 +136,9 @@ public class ClusterMapBuilder {
             clusters.add(cluster);
             attributeId++;
         }
-        if (clusters.isEmpty()) {
-            return Collections.emptyList();
-        }
-        clusters.sort(Comparator.comparingInt(Collection::size));
-        Set<Integer> matching = null;
-        for (IntArrayList cluster : clusters) {
-            if (matching == null) {
-                matching = new HashSet<>(cluster);
-            } else {
-                matching.retainAll(cluster);
-            }
-        }
-        Set<Integer> toRemove = matching;
-        clusters.forEach(c -> c.removeAll(toRemove));
+        Set<Integer> matching = CollectionUtils.intersection(clusters);
+        clusters.forEach(c -> c.removeAll(matching));
         return matching;
     }
+
 }

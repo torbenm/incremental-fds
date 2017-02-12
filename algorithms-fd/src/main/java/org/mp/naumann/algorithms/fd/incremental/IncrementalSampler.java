@@ -3,6 +3,7 @@ package org.mp.naumann.algorithms.fd.incremental;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.benchmark.better.Benchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
@@ -23,6 +24,7 @@ import java.util.stream.StreamSupport;
 
 class IncrementalSampler {
 
+    private static final boolean SORT_PARALLEL = true;
     private FDSet agreeSets;
     private CompressedRecords compressedRecords;
     private List<? extends PositionListIndex> plis;
@@ -39,6 +41,7 @@ class IncrementalSampler {
     }
 
     FDList enrichNegativeCover(List<IntegerPair> comparisonSuggestions) {
+        Benchmark benchmark = Benchmark.start("Sampling", Benchmark.DEFAULT_LEVEL + 3);
         int numAttributes = this.compressedRecords.get(0).length;
 
         FDLogger.log(Level.FINEST, "Investigating comparison suggestions ... ");
@@ -54,6 +57,7 @@ class IncrementalSampler {
             }
         }
 
+        benchmark.finishSubtask("Processed comparison suggestions");
         if (this.attributeRepresentants == null) { // if this is the first call of this method
             FDLogger.log(Level.FINEST, "Running initial windows ...");
             long time = System.currentTimeMillis();
@@ -61,16 +65,28 @@ class IncrementalSampler {
             float efficiencyFactor = (int) Math.ceil(1 / this.efficiencyThreshold);
             ClusterComparator comparator = new ClusterComparator(this.compressedRecords, this.compressedRecords.getNumAttributes() - 1, 1);
             for (PositionListIndex pli : this.plis) {
+                Benchmark pliBenchmark = Benchmark.start("PLI " + pli.getAttribute(), Benchmark.DEFAULT_LEVEL + 4);
                 Iterator<IntArrayList> it = pli.getClustersToCheck(true);
-                List<IntArrayList> clusters = StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.CONCURRENT), true).map(c -> sort(comparator, c)).collect(Collectors.toList());
+                final List<IntArrayList> clusters;
+                if (SORT_PARALLEL) {
+                    clusters = StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.CONCURRENT), true).map(c -> sort(comparator, c)).collect(Collectors.toList());
+                } else {
+                    clusters = new ArrayList<>();
+                    while (it.hasNext()) {
+                        clusters.add(sort(comparator, it.next()));
+                    }
+                }
+                pliBenchmark.finishSubtask("Sorting");
                 comparator.incrementActiveKey();
                 AttributeRepresentant attributeRepresentant = new AttributeRepresentant(clusters, efficiencyFactor, this.agreeSets, this);
                 attributeRepresentant.runNext(newNonFds, this.compressedRecords);
                 if (attributeRepresentant.getEfficiency() != 0) {
                     this.attributeRepresentants.add(attributeRepresentant);
                 }
+                pliBenchmark.finishSubtask("Run");
+                pliBenchmark.finish();
             }
-            FDLogger.log(Level.FINEST, "(" + (System.currentTimeMillis() - time) + "ms)");
+            benchmark.finishSubtask("Initial windows");
         } else {
             // Lower the efficiency factor for this round
             for (AttributeRepresentant attributeRepresentant : this.attributeRepresentants) {
@@ -90,6 +106,8 @@ class IncrementalSampler {
                 queue.add(attributeRepresentant);
             }
         }
+        benchmark.finishSubtask("Next windows");
+        benchmark.finish();
 
         return newNonFds;
     }

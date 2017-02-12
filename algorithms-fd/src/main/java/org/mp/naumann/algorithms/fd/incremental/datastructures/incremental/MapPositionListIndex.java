@@ -48,17 +48,12 @@ class MapPositionListIndex extends PositionListIndex {
         return clusters.get(index);
     }
 
-    @Override
-    public void setCluster(int index, IntArrayList value) {
-        clusters.put(index, value);
-    }
-
-    public MapPositionListIndex(int attribute, Map<Integer, IntArrayList> clusters) {
+    MapPositionListIndex(int attribute, Map<Integer, IntArrayList> clusters) {
         super(attribute);
         this.clusters = clusters;
     }
 
-    public Map<Integer, IntArrayList> getRawClusters() {
+    Map<Integer, IntArrayList> getRawClusters() {
         return clusters;
     }
 }

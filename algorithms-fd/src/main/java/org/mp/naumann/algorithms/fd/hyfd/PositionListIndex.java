@@ -60,11 +60,6 @@ public class PositionListIndex implements IPositionListIndex {
         return this.clusters.get(index);
     }
 
-    @Override
-    public void setCluster(int index, IntArrayList value) {
-        this.clusters.set(index, value);
-    }
-
     public int getNumNonUniqueValues() {
         return this.numNonUniqueValues;
     }

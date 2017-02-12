@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd;
 
+import org.mp.naumann.algorithms.benchmark.better.Benchmark;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
@@ -35,7 +36,7 @@ public class IncrementalFDDemo {
             "inserts.adult.csv",
             "",
             "benchmark.adult",
-            10,
+            1000,
             ResourceConnector.BENCHMARK,
             ","
     );
@@ -44,7 +45,7 @@ public class IncrementalFDDemo {
             "deletes.adult.csv",
             "",
             "benchmark.adult",
-            10,
+            500,
             ResourceConnector.BENCHMARK,
             ","
     );
@@ -63,10 +64,12 @@ public class IncrementalFDDemo {
 
         IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom");
 
-        IncrementalFDRunConfiguration runConfig = adultInsert;
+        IncrementalFDRunConfiguration runConfig = adult;
 
 
         SpeedBenchmark.enable();
+        Benchmark.setMaxLevel(1);
+        Benchmark.addEventListener(FDLogger::info);
 //        SpeedBenchmark.addEventListener(System.out::println);
 
         IncrementalFDRunner runner = new IncrementalFDRunner() {

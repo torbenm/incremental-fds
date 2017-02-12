@@ -37,8 +37,9 @@ public class FDValidator extends IncrementalValidator {
     }
 
     @Override
-    protected boolean switchToSampler(int previousNumInvalidFds, int numInvalidFds, int numValidFds) {
-        return isTopDown() && (numInvalidFds > numValidFds * this.efficiencyThreshold) && (previousNumInvalidFds < numInvalidFds);
+    protected boolean interrupt(int previousNumInvalidFds, int numInvalidFds, int numValidFds) {
+        //TODO improve for incremental case
+        return (numInvalidFds > numValidFds * this.efficiencyThreshold) && (previousNumInvalidFds < numInvalidFds);
     }
 
     @Override
