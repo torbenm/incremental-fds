@@ -43,7 +43,7 @@ public class CollectionUtils {
         if (clusters.isEmpty()) {
             return Collections.emptySet();
         }
-        clusters.sort(Comparator.comparingInt(Collection::size));
+        clusters.sort(Comparator.comparingInt(c -> c.size()));
         Set<Integer> matching = null;
         for (Collection<Integer> cluster : clusters) {
             if (matching == null) {
