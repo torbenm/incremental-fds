@@ -39,11 +39,11 @@ public class CollectionUtils {
         return false;
     }
 
-    public static Set<Integer> intersection(List<? extends Collection<Integer>> clusters) {
+    public static Set<Integer> intersection(List<IntArrayList> clusters) {
         if (clusters.isEmpty()) {
             return Collections.emptySet();
         }
-        clusters.sort(Comparator.comparingInt(c -> c.size()));
+        clusters.sort(Comparator.comparingInt(Collection::size));
         Set<Integer> matching = null;
         for (Collection<Integer> cluster : clusters) {
             if (matching == null) {
