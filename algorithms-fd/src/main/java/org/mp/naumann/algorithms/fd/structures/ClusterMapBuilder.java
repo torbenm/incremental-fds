@@ -126,7 +126,7 @@ public class ClusterMapBuilder {
 
     public Collection<Integer> removeRecord(Iterable<String> record) {
         int attributeId = 0;
-        List<IntArrayList> clusters = new ArrayList<>();
+        List<Collection<Integer>> clusters = new ArrayList<>();
         for (String value : record) {
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
             IntArrayList cluster = clusterMap.get(value);

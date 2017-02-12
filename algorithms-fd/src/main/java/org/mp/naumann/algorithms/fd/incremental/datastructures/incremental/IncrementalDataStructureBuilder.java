@@ -121,7 +121,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
     }
 
     private Collection<Integer> removeRecord(List<String> record) {
-        List<IntArrayList> clusters = new ArrayList<>();
+        List<Collection<Integer>> clusters = new ArrayList<>();
         for (PositionListIndex pli : plis) {
             String value = record.get(pli.getAttribute());
             int dictValue = dictionary.getOrAdd(value);

@@ -39,13 +39,13 @@ public class CollectionUtils {
         return false;
     }
 
-    public static Set<Integer> intersection(List<IntArrayList> clusters) {
+    public static <T> Set<T> intersection(List<Collection<T>> clusters) {
         if (clusters.isEmpty()) {
             return Collections.emptySet();
         }
         clusters.sort(Comparator.comparingInt(Collection::size));
-        Set<Integer> matching = null;
-        for (Collection<Integer> cluster : clusters) {
+        Set<T> matching = null;
+        for (Collection<T> cluster : clusters) {
             if (matching == null) {
                 matching = new HashSet<>(cluster);
             } else {
