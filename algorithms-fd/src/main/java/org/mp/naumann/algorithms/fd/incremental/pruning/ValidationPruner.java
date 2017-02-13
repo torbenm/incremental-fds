@@ -4,6 +4,6 @@ import org.mp.naumann.algorithms.fd.structures.LatticeElementLhsPair;
 
 public interface ValidationPruner {
 
-    boolean cannotBeViolated(LatticeElementLhsPair fd);
+    boolean doesNotNeedValidation(LatticeElementLhsPair fd);
 
 }

@@ -48,8 +48,8 @@ public class SimpleBloomTest {
         lhs.fastSet(0);
         lhs.fastSet(1);
         lhs.fastSet(2);
-        assertTrue(strategy2.cannotBeViolated(new LatticeElementLhsPair(lhs, null)));
-        assertFalse(strategy1.cannotBeViolated(new LatticeElementLhsPair(lhs, null)));
+        assertTrue(strategy2.doesNotNeedValidation(new LatticeElementLhsPair(lhs, null)));
+        assertFalse(strategy1.doesNotNeedValidation(new LatticeElementLhsPair(lhs, null)));
     }
 
     @Test
@@ -69,9 +69,9 @@ public class SimpleBloomTest {
         ValidationPruner strategy = builder.analyzeBatch(batch);
         OpenBitSet lhs = new OpenBitSet(columns.size());
         lhs.fastSet(0);
-        assertTrue(strategy.cannotBeViolated(new LatticeElementLhsPair(lhs, null)));
+        assertTrue(strategy.doesNotNeedValidation(new LatticeElementLhsPair(lhs, null)));
         strategy = builder.analyzeBatch(batch);
-        assertFalse(strategy.cannotBeViolated(new LatticeElementLhsPair(lhs, null)));
+        assertFalse(strategy.doesNotNeedValidation(new LatticeElementLhsPair(lhs, null)));
     }
 
     @Test
@@ -92,7 +92,7 @@ public class SimpleBloomTest {
         ValidationPruner strategy = builder.analyzeBatch(batch);
         OpenBitSet lhs = new OpenBitSet(columns.size());
         lhs.fastSet(0);
-        assertFalse(strategy.cannotBeViolated(new LatticeElementLhsPair(lhs, null)));
+        assertFalse(strategy.doesNotNeedValidation(new LatticeElementLhsPair(lhs, null)));
     }
 
 }

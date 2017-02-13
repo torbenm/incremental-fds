@@ -105,13 +105,17 @@ public abstract class IncrementalValidator {
     private List<LatticeElementLhsPair> pruneLevel(Collection<LatticeElementLhsPair> lvl) {
         List<LatticeElementLhsPair> currentLevel = new ArrayList<>();
         for (LatticeElementLhsPair fd : lvl) {
-            if (validationPruners.stream().anyMatch(ps -> ps.cannotBeViolated(fd))) {
+            if (pruneElement(fd)) {
                 validatorResult.pruned += fd.getElement().getRhsFds().cardinality();
             } else {
                 currentLevel.add(fd);
             }
         }
         return currentLevel;
+    }
+
+    private boolean pruneElement(LatticeElementLhsPair fd) {
+        return validationPruners.stream().anyMatch(ps -> ps.doesNotNeedValidation(fd));
     }
 
     private List<IntegerPair> validateLattice(Lattice lattice, Lattice inverseLattice) throws AlgorithmExecutionException {
@@ -159,6 +163,8 @@ public abstract class IncrementalValidator {
             previousNumInvalidFds = numInvalidFds;
         }
 
+        end(comparisonSuggestions);
+
         if (this.executor != null) {
             this.executor.shutdown();
             try {
@@ -169,6 +175,10 @@ public abstract class IncrementalValidator {
         }
 
         return null;
+    }
+
+    protected void end(List<IntegerPair> comparisonSuggestions) {
+
     }
 
     protected abstract boolean interrupt(int previousNumInvalidFds, int numInvalidFds, int numValidFds);

@@ -12,11 +12,14 @@ import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalValidator.ValidatorResult;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.incremental.IncrementalDataStructureBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.RecomputeDataStructureBuilder;
+import org.mp.naumann.algorithms.fd.incremental.pruning.DeletePruner;
+import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.AllCombinationsBloomGenerator;
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.BloomPruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.CurrentFDBloomGenerator;
@@ -42,13 +45,11 @@ import java.util.stream.Collectors;
 
 public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, FDIntermediateDatastructure> {
 
-    private static final boolean VALIDATE_PARALLEL = false;
-    private static final float EFFICIENCY_THRESHOLD = 0.01f;
-
     private final List<ResultListener<IncrementalFDResult>> resultListeners = new ArrayList<>();
     private final String tableName;
+    private boolean validateParallel = false;
+    private float efficiencyThreshold = 0.01f;
     private IncrementalFDConfiguration version = IncrementalFDConfiguration.LATEST;
-
     private List<String> columns;
     private List<Integer> pliOrder;
     private DataStructureBuilder dataStructureBuilder;
@@ -56,20 +57,26 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     private Lattice nonFds;
     private FDSet agreeSets;
     private ValueComparator valueComparator;
-
     private ExistingValuesPruningStrategy simplePruning;
     private BloomPruningStrategy bloomPruning;
+    private DeletePruner deletePruner;
 
     public IncrementalFD(String tableName, IncrementalFDConfiguration version) {
         this(tableName);
         this.version = version;
     }
 
-
     public IncrementalFD(String tableName) {
         this.tableName = tableName;
     }
 
+    public void setValidateParallel(boolean validateParallel) {
+        this.validateParallel = validateParallel;
+    }
+
+    public void setEfficiencyThreshold(float efficiencyThreshold) {
+        this.efficiencyThreshold = efficiencyThreshold;
+    }
 
     @Override
     public Collection<ResultListener<IncrementalFDResult>> getResultListeners() {
@@ -104,6 +111,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             dataStructureBuilder = new IncrementalDataStructureBuilder(pliBuilder, this.version, this.columns, this.pliOrder);
         }
 
+        this.deletePruner = intermediateDatastructure.getPruner();
         initializePruningStrategies(pliBuilder);
         FDLogger.log(Level.INFO, "Finished initializing IncrementalFD");
     }
@@ -150,15 +158,15 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         int validations = 0;
         int pruned = 0;
 
-        if (!diff.getInsertedRecords().isEmpty()) {
+        if (diff.hasInserts()) {
             ValidatorResult result = validateFDs(plis, compressedRecords, batch, diff);
             validations += result.getValidations();
             pruned += result.getPruned();
             benchmark.finishSubtask("Validate FDs");
         }
 
-        if (!diff.getDeletedRecords().isEmpty()) {
-            ValidatorResult result = validateNonFDs(plis, compressedRecords);
+        if (diff.hasDeletes()) {
+            ValidatorResult result = validateNonFDs(plis, compressedRecords, diff);
             validations += result.getValidations();
             pruned += result.getPruned();
             benchmark.finishSubtask("Validate non-FDs");
@@ -175,9 +183,10 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         FDLogger.log(Level.FINE, "Started validating FDs");
         Benchmark benchmark = Benchmark.start("Validate FDs", Benchmark.DEFAULT_LEVEL + 1);
 
-        IncrementalSampler sampler = new IncrementalSampler(agreeSets, compressedRecords, plis, EFFICIENCY_THRESHOLD, valueComparator);
+        IncrementalMatcher matcher = new IncrementalMatcher(compressedRecords, valueComparator, deletePruner, version);
+        IncrementalSampler sampler = new IncrementalSampler(agreeSets, compressedRecords, plis, efficiencyThreshold, matcher);
         IncrementalInductor inductor = new IncrementalInductor(nonFds, fds, compressedRecords.getNumAttributes());
-        IncrementalValidator validator = new FDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, VALIDATE_PARALLEL, fds, nonFds, EFFICIENCY_THRESHOLD);
+        IncrementalValidator validator = new FDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, validateParallel, fds, nonFds, efficiencyThreshold, matcher);
 
         if (usesBloomPruning()) {
             validator.addValidationPruner(bloomPruning.analyzeBatch(batch));
@@ -189,7 +198,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         List<IntegerPair> comparisonSuggestions;
         int i = 1;
         do {
-            Benchmark innerBenchmark = Benchmark.start("Round " + i, Benchmark.DEFAULT_LEVEL + 2);
+            Benchmark innerBenchmark = Benchmark.start("Validate FDs Round " + i, Benchmark.DEFAULT_LEVEL + 2);
             FDLogger.log(Level.FINER, "Started round " + i);
             FDLogger.log(Level.FINER, "Validating positive cover");
             comparisonSuggestions = validator.validate();
@@ -211,9 +220,13 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         return validator.getValidatorResult();
     }
 
-    private ValidatorResult validateNonFDs(List<? extends PositionListIndex> plis, CompressedRecords compressedRecords) throws AlgorithmExecutionException {
+    private ValidatorResult validateNonFDs(List<? extends PositionListIndex> plis, CompressedRecords compressedRecords, CompressedDiff diff) throws AlgorithmExecutionException {
         FDLogger.log(Level.FINE, "Started validating non-FDs");
-        IncrementalValidator validator = new NonFDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, VALIDATE_PARALLEL, fds, nonFds);
+        IncrementalValidator validator = new NonFDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, validateParallel, fds, nonFds);
+        if (version.usesPruningStrategy(PruningStrategy.DELETES)) {
+            ValidationPruner pruner = deletePruner.analyzeDiff(diff);
+            validator.addValidationPruner(pruner);
+        }
         validator.validate();
         FDLogger.log(Level.FINE, "Finished validating non-FDs");
         return validator.getValidatorResult();

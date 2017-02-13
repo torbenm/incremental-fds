@@ -182,7 +182,7 @@ public class BloomPruningStrategy {
         }
 
         @Override
-        public boolean cannotBeViolated(LatticeElementLhsPair fd) {
+        public boolean doesNotNeedValidation(LatticeElementLhsPair fd) {
             OpenBitSet canBeViolated = fd.getLhs().clone();
             int depth = Math.min(nonViolations.getDepth(), (int) fd.getLhs().cardinality());
             for (int level = depth; level >= 0; level--) {

@@ -40,9 +40,10 @@ public class Benchmark {
         return start(description, DEFAULT_LEVEL);
     }
 
-    private static void finish(Benchmark benchmark, long duration) {
+    private static BenchmarkEvent finish(Benchmark benchmark, long duration) {
         BenchmarkEvent event = new BenchmarkEvent(duration, benchmark.getDescription(), benchmark.getLevel());
         notifyListeners(event);
+        return event;
     }
 
     private static void notifyListeners(BenchmarkEvent event) {
@@ -51,24 +52,25 @@ public class Benchmark {
         }
     }
 
-    private static void finishSubtask(Benchmark benchmark, long duration, String subtaskDescription) {
+    private static BenchmarkEvent finishSubtask(Benchmark benchmark, long duration, String subtaskDescription) {
         BenchmarkEvent event = new BenchmarkEvent(duration, benchmark.getDescription() + ": " + subtaskDescription, benchmark.getLevel() + 1);
         notifyListeners(event);
+        return event;
     }
 
     public static void addEventListener(BenchmarkEventListener eventListener) {
         eventListeners.add(eventListener);
     }
 
-    public void finishSubtask(String description) {
+    public BenchmarkEvent finishSubtask(String description) {
         long endLapTime = System.nanoTime();
         long duration = endLapTime - this.startLapTime;
         this.startLapTime = endLapTime;
-        finishSubtask(this, duration, description);
+        return finishSubtask(this, duration, description);
     }
 
-    public void finish() {
-        finish(this, System.nanoTime() - this.startTime);
+    public BenchmarkEvent finish() {
+        return finish(this, System.nanoTime() - this.startTime);
     }
 
     private int getLevel() {

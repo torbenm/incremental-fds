@@ -48,7 +48,7 @@ public class ExistingValuesPruningStrategy {
         }
 
         @Override
-        public boolean cannotBeViolated(LatticeElementLhsPair fd) {
+        public boolean doesNotNeedValidation(LatticeElementLhsPair fd) {
             for (int level = existingValues.getDepth(); level >= (int) fd.getLhs().cardinality(); level--) {
                 for (OpenBitSet existingValuesMask : existingValues.getLevel(level)) {
                     if (BitSetUtils.isContained(fd.getLhs(), existingValuesMask)) {

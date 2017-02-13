@@ -2,6 +2,7 @@ package org.mp.naumann.algorithms.fd.incremental;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.Lattice;
 import org.mp.naumann.algorithms.fd.structures.LatticeElement;
 
@@ -13,12 +14,19 @@ public class FDValidator extends IncrementalValidator {
     private final Lattice fds;
     private final Lattice nonFds;
     private float efficiencyThreshold;
+    private final IncrementalMatcher matcher;
 
-    FDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds, float efficiencyThreshold) {
+    FDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds, float efficiencyThreshold, IncrementalMatcher matcher) {
         super(numRecords, compressedRecords, plis, parallel);
         this.fds = fds;
         this.nonFds = nonFds;
         this.efficiencyThreshold = efficiencyThreshold;
+        this.matcher = matcher;
+    }
+
+    @Override
+    protected void end(List<IntegerPair> comparisonSuggestions) {
+        comparisonSuggestions.forEach(pair -> matcher.match(new OpenBitSet(numAttributes), pair.a(), pair.b()));
     }
 
     @Override

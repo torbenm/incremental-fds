@@ -10,6 +10,7 @@ import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
+import org.mp.naumann.algorithms.fd.incremental.pruning.DeletePruner;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
@@ -53,6 +54,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 
     private final ViolationCollection violationCollection;
+    private DeletePruner pruner;
 
     public HyFD(){
         this.configuration = IncrementalFDConfiguration.LATEST;
@@ -141,12 +143,13 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		// TODO: implement parallel sampling
 
 		float efficiencyThreshold = 0.01f;
-		Sampler sampler = new Sampler(configuration, negCover, posCover, compressedRecords, plis, efficiencyThreshold,
-				this.valueComparator, this.memoryGuardian, violationCollection);
+		Matcher matcher = new Matcher(compressedRecords, valueComparator, violationCollection, configuration);
+		Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, efficiencyThreshold,
+				this.memoryGuardian, matcher);
 		Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
 		boolean validateParallel = true;
 		Validator validator = new Validator(negCover, posCover, numRecords, compressedRecords, plis,
-				efficiencyThreshold, validateParallel, this.memoryGuardian, violationCollection);
+				efficiencyThreshold, validateParallel, this.memoryGuardian, violationCollection, matcher);
 
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
@@ -178,6 +181,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		
 		this.posCover = posCover;
 		this.negCover = negCover;
+		this.pruner = matcher.getPruner();
 	}
 
 	public FDTree getPosCover() {
@@ -231,5 +235,9 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 	public List<String> getColumns() {
 		return attributeNames;
+	}
+
+	public DeletePruner getPruner() {
+		return pruner;
 	}
 }

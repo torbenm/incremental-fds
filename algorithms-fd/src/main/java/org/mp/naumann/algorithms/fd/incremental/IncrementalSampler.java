@@ -9,7 +9,6 @@ import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -29,26 +28,26 @@ class IncrementalSampler {
     private CompressedRecords compressedRecords;
     private List<? extends PositionListIndex> plis;
     private float efficiencyThreshold;
-    private ValueComparator valueComparator;
     private List<AttributeRepresentant> attributeRepresentants = null;
+    private final IncrementalMatcher matcher;
 
-    IncrementalSampler(FDSet agreeSets, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator) {
+    IncrementalSampler(FDSet agreeSets, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, IncrementalMatcher matcher) {
         this.agreeSets = agreeSets;
         this.compressedRecords = compressedRecords;
         this.plis = plis;
         this.efficiencyThreshold = efficiencyThreshold;
-        this.valueComparator = valueComparator;
+        this.matcher = matcher;
     }
 
     FDList enrichNegativeCover(List<IntegerPair> comparisonSuggestions) {
         Benchmark benchmark = Benchmark.start("Sampling", Benchmark.DEFAULT_LEVEL + 3);
-        int numAttributes = this.compressedRecords.get(0).length;
+        int numAttributes = this.compressedRecords.getNumAttributes();
 
         FDLogger.log(Level.FINEST, "Investigating comparison suggestions ... ");
         FDList newNonFds = new FDList(numAttributes, this.agreeSets.getMaxDepth());
         OpenBitSet equalAttrs = new OpenBitSet(this.compressedRecords.getNumAttributes());
         for (IntegerPair comparisonSuggestion : comparisonSuggestions) {
-            this.match(equalAttrs, comparisonSuggestion.a(), comparisonSuggestion.b());
+            this.matcher.match(equalAttrs, comparisonSuggestion.a(), comparisonSuggestion.b());
 
             if (!this.agreeSets.contains(equalAttrs)) {
                 OpenBitSet equalAttrsCopy = equalAttrs.clone();
@@ -65,7 +64,7 @@ class IncrementalSampler {
             float efficiencyFactor = (int) Math.ceil(1 / this.efficiencyThreshold);
             ClusterComparator comparator = new ClusterComparator(this.compressedRecords, this.compressedRecords.getNumAttributes() - 1, 1);
             for (PositionListIndex pli : this.plis) {
-                Benchmark pliBenchmark = Benchmark.start("PLI " + pli.getAttribute(), Benchmark.DEFAULT_LEVEL + 4);
+                Benchmark pliBenchmark = Benchmark.start("Sampling PLI " + pli.getAttribute(), Benchmark.DEFAULT_LEVEL + 4);
                 Iterator<IntArrayList> it = pli.getClustersToCheck(true);
                 final List<IntArrayList> clusters;
                 if (SORT_PARALLEL) {
@@ -218,7 +217,7 @@ class IncrementalSampler {
                     int recordId = cluster.getInt(recordIndex);
                     int partnerRecordId = cluster.getInt(recordIndex + this.windowDistance);
 
-                    this.sampler.match(equalAttrs, compressedRecords.get(recordId), compressedRecords.get(partnerRecordId));
+                    this.sampler.matcher.match(equalAttrs, recordId, partnerRecordId);
 
                     if (!this.negCover.contains(equalAttrs)) {
                         OpenBitSet equalAttrsCopy = equalAttrs.clone();
@@ -232,19 +231,6 @@ class IncrementalSampler {
             this.numNewNonFds.add(numNewNonFds);
             this.numComparisons.add(numComparisons);
             return numComparisons != 0;
-        }
-    }
-
-    private void match(OpenBitSet equalAttrs, int t1, int t2) {
-        this.match(equalAttrs, this.compressedRecords.get(t1), this.compressedRecords.get(t2));
-    }
-
-    private void match(OpenBitSet equalAttrs, int[] t1, int[] t2) {
-        equalAttrs.clear(0, t1.length);
-        for (int i = 0; i < t1.length; i++) {
-            if (this.valueComparator.isEqual(t1[i], t2[i])) {
-                equalAttrs.fastSet(i);
-            }
         }
     }
 }
