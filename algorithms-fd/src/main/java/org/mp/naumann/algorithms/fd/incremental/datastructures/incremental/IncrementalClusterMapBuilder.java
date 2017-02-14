@@ -49,10 +49,7 @@ class IncrementalClusterMapBuilder {
         int attributeId = 0;
         for (String value : record) {
             Map<Integer, IntArrayList> clusterMap = clusterMaps.get(attributeId);
-            Integer dictValue = dictionary.getOrAdd(value);
-            if (dictValue == null) {
-                continue;
-            }
+            int dictValue = dictionary.getOrAdd(value);
             if (clusterMap.containsKey(dictValue)) {
                 clusterMap.get(dictValue).add(recId);
             } else {

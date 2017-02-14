@@ -15,10 +15,6 @@ public class MapCompressedRecords implements CompressedRecords {
         this.numAttributes = numAttributes;
     }
 
-    public MapCompressedRecords(int numAttributes) {
-        this(new HashMap<>(), numAttributes);
-    }
-
     public MapCompressedRecords(int initialSize, int numAttributes) {
         this(new HashMap<>(initialSize), numAttributes);
     }

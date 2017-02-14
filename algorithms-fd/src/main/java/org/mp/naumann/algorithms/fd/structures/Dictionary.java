@@ -23,12 +23,7 @@ public class Dictionary<T> {
         if (value == null) {
             return NULL;
         }
-        Integer dictValue = dictionary.get(value);
-        if (dictValue == null) {
-            dictValue = nextValue++;
-            dictionary.put(value, dictValue);
-        }
-        return dictValue;
+        return dictionary.computeIfAbsent(value, k -> nextValue++);
     }
 
 }

@@ -8,8 +8,8 @@ import java.util.List;
 
 class IncrementalInductor {
 
-    private Lattice negCover;
-    private Lattice posCover;
+    private final Lattice negCover;
+    private final Lattice posCover;
     private final int numAttributes;
 
     IncrementalInductor(Lattice negCover, Lattice posCover, int numAttributes) {

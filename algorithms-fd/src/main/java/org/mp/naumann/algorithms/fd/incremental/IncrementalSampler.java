@@ -25,10 +25,10 @@ import java.util.stream.StreamSupport;
 class IncrementalSampler {
 
     private static final boolean SORT_PARALLEL = true;
-    private FDSet agreeSets;
-    private CompressedRecords compressedRecords;
-    private List<? extends PositionListIndex> plis;
-    private float efficiencyThreshold;
+    private final FDSet agreeSets;
+    private final CompressedRecords compressedRecords;
+    private final List<? extends PositionListIndex> plis;
+    private final float efficiencyThreshold;
     private List<AttributeRepresentant> attributeRepresentants = null;
     private final IncrementalMatcher matcher;
     private Collection<Integer> newRecords;
@@ -69,7 +69,6 @@ class IncrementalSampler {
         benchmark.finishSubtask("Processed comparison suggestions");
         if (this.attributeRepresentants == null) { // if this is the first call of this method
             FDLogger.log(Level.FINEST, "Running initial windows ...");
-            long time = System.currentTimeMillis();
             this.attributeRepresentants = new ArrayList<>(numAttributes);
             float efficiencyFactor = (int) Math.ceil(1 / this.efficiencyThreshold);
             ClusterComparator comparator = new ClusterComparator(this.compressedRecords, this.compressedRecords.getNumAttributes() - 1, 1);
@@ -128,7 +127,7 @@ class IncrementalSampler {
 
     private class ClusterComparator implements Comparator<Integer> {
 
-        private CompressedRecords sortKeys;
+        private final CompressedRecords sortKeys;
         private int activeKey1;
         private int activeKey2;
 
@@ -165,12 +164,12 @@ class IncrementalSampler {
     private class AttributeRepresentant implements Comparable<AttributeRepresentant> {
 
         private int windowDistance;
-        private IntArrayList numNewNonFds = new IntArrayList();
-        private IntArrayList numComparisons = new IntArrayList();
+        private final IntArrayList numNewNonFds = new IntArrayList();
+        private final IntArrayList numComparisons = new IntArrayList();
         private float efficiencyFactor;
-        private List<IntArrayList> clusters;
-        private FDSet negCover;
-        private IncrementalSampler sampler;
+        private final List<IntArrayList> clusters;
+        private final FDSet negCover;
+        private final IncrementalSampler sampler;
 
         float getEfficiencyFactor() {
             return this.efficiencyFactor;

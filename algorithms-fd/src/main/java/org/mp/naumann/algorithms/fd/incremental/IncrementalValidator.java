@@ -27,10 +27,10 @@ public abstract class IncrementalValidator {
 
     private final ValidatorResult validatorResult = new ValidatorResult();
     private final List<ValidationPruner> validationPruners = new ArrayList<>();
-    protected int numRecords;
-    protected List<? extends PositionListIndex> plis;
-    protected CompressedRecords compressedRecords;
-    int numAttributes;
+    private final int numRecords;
+    private final List<? extends PositionListIndex> plis;
+    private final CompressedRecords compressedRecords;
+    final int numAttributes;
     private int level = 0;
     private ExecutorService executor;
 
@@ -217,10 +217,10 @@ public abstract class IncrementalValidator {
     }
 
     private class ValidationResult {
-        public List<IntegerPair> comparisonSuggestions = new ArrayList<>();
+        public final List<IntegerPair> comparisonSuggestions = new ArrayList<>();
         int validations = 0;
         int intersections = 0;
-        List<OpenBitSetFD> collectedFDs = new ArrayList<>();
+        final List<OpenBitSetFD> collectedFDs = new ArrayList<>();
 
         public void add(ValidationResult other) {
             this.validations += other.validations;

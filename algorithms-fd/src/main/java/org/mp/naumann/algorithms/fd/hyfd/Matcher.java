@@ -9,7 +9,7 @@ import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 import java.util.HashSet;
 
-public class Matcher {
+class Matcher {
 
     private final int[][] compressedRecords;
     private final ValueComparator valueComparator;

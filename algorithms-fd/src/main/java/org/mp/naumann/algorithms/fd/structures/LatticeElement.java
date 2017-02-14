@@ -6,7 +6,7 @@ import java.util.List;
 
 public class LatticeElement {
 
-    protected final int numAttributes;
+    final int numAttributes;
     private LatticeElement[] children;
     private final OpenBitSet rhsFds;
     private final OpenBitSet markedRhs;
