@@ -184,7 +184,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         Benchmark benchmark = Benchmark.start("Validate FDs", Benchmark.DEFAULT_LEVEL + 1);
 
         IncrementalMatcher matcher = new IncrementalMatcher(compressedRecords, valueComparator, deletePruner, version);
-        IncrementalSampler sampler = new IncrementalSampler(agreeSets, compressedRecords, plis, efficiencyThreshold, matcher);
+        IncrementalSampler sampler = new IncrementalSampler(agreeSets, compressedRecords, plis, efficiencyThreshold, matcher, version);
         IncrementalInductor inductor = new IncrementalInductor(nonFds, fds, compressedRecords.getNumAttributes());
         IncrementalValidator validator = new FDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, validateParallel, fds, nonFds, efficiencyThreshold, matcher);
 

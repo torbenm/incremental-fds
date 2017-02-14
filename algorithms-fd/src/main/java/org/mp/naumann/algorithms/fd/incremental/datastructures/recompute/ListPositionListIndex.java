@@ -19,6 +19,7 @@ package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 
 import java.util.Collection;
@@ -45,8 +46,8 @@ class ListPositionListIndex extends PositionListIndex {
         return clusters.get(index);
     }
 
-    public ListPositionListIndex(int attribute, List<IntArrayList> clusters) {
-        super(attribute);
+    public ListPositionListIndex(int attribute, List<IntArrayList> clusters, IncrementalFDConfiguration version) {
+        super(attribute, version);
         this.clusters = clusters;
     }
 }

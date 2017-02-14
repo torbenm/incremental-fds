@@ -7,7 +7,6 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
-import org.mp.naumann.algorithms.fd.structures.LatticeElementLhsPair;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
 import java.util.Collection;
@@ -117,12 +116,10 @@ public class DeletePruner {
         }
 
         @Override
-        public boolean doesNotNeedValidation(LatticeElementLhsPair fd) {
-            OpenBitSet lhs = fd.getLhs();
+        public boolean doesNotNeedValidation(OpenBitSet lhs, OpenBitSet rhs) {
             for (int level = violations.getDepth(); level >= lhs.cardinality(); level--) {
                 ObjectOpenHashSet<OpenBitSet> violationLevel = violations.getLevel(level);
                 for (OpenBitSet violation : violationLevel) {
-                    OpenBitSet rhs = fd.getElement().getRhsFds();
                     if (OpenBitSet.intersectionCount(rhs, violation) == 0 && BitSetUtils.isContained(lhs, violation)) {
                         return true;
                     }

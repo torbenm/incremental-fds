@@ -35,6 +35,26 @@ public class IncrementalFDConfiguration {
     private boolean removalMap = true;
     private boolean pruneGeneralizations = true;
     private boolean storeEqual = true;
+    private boolean improvedSampling = true;
+
+    public boolean usesImprovedSampling() {
+        return improvedSampling;
+    }
+
+    public IncrementalFDConfiguration enableImprovedSampling() {
+        improvedSampling = true;
+        return this;
+    }
+
+    public IncrementalFDConfiguration disableImprovedSampling() {
+        improvedSampling = false;
+        return this;
+    }
+
+    public IncrementalFDConfiguration setImprovedSampling(boolean improvedSampling) {
+        this.improvedSampling = improvedSampling;
+        return this;
+    }
 
     private int violationCollectionSize = 5;
     private ViolationCollections violationCollectionType = ViolationCollections.MULTIPLE_VIOLATING_VALUES;

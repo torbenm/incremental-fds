@@ -20,6 +20,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
 
 import java.util.ArrayList;
@@ -32,11 +33,13 @@ class RecomputePLIBuilder {
     private final ClusterMapBuilder clusterMapBuilder;
     private final boolean isNullEqualNull;
     private final List<Integer> pliOrder;
+    private final IncrementalFDConfiguration version;
 
-    RecomputePLIBuilder(ClusterMapBuilder clusterMapBuilder, boolean isNullEqualNull, List<Integer> pliOrder) {
+    RecomputePLIBuilder(ClusterMapBuilder clusterMapBuilder, boolean isNullEqualNull, List<Integer> pliOrder, IncrementalFDConfiguration version) {
         this.clusterMapBuilder = clusterMapBuilder;
         this.isNullEqualNull = isNullEqualNull;
         this.pliOrder = pliOrder;
+        this.version = version;
     }
 
     /**
@@ -60,7 +63,7 @@ class RecomputePLIBuilder {
                 if (cluster.size() > 1)
                     clusters.add(cluster);
 
-            clustersPerAttribute.add(new ListPositionListIndex(columnId, clusters));
+            clustersPerAttribute.add(new ListPositionListIndex(columnId, clusters, version));
         }
         return clustersPerAttribute;
     }

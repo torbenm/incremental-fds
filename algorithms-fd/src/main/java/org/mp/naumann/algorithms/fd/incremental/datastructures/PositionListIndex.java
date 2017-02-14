@@ -25,6 +25,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.structures.ClusterIdentifier;
 import org.mp.naumann.algorithms.fd.structures.ClusterIdentifierWithRecord;
 import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
@@ -55,14 +56,16 @@ public abstract class PositionListIndex implements IPositionListIndex {
     private List<IntArrayList> clustersWithNewRecords = null;
     private Collection<Integer> newRecords = null;
     private Map<Integer, Set<Integer>> otherClustersWithNewRecords;
+    private final IncrementalFDConfiguration version;
 
     @Override
     public int getAttribute() {
         return this.attribute;
     }
 
-    protected PositionListIndex(int attribute) {
+    protected PositionListIndex(int attribute, IncrementalFDConfiguration version) {
         this.attribute = attribute;
+        this.version = version;
     }
 
     /**
@@ -190,7 +193,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
     }
 
     private boolean useInnerClusterPruning() {
-        return newRecords != null;
+        return version.usesInnerClusterPruning();
     }
 
     public void setNewRecords(Collection<Integer> newRecords) {
@@ -208,7 +211,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
     public Iterator<IntArrayList> getClustersToCheck(boolean topDown) {
         final Collection<IntArrayList> toCheck;
         if (topDown) {
-            toCheck = clustersWithNewRecords == null ? getClusters() : clustersWithNewRecords;
+            toCheck = version.usesClusterPruning() ? getClusters() : clustersWithNewRecords;
         } else {
             toCheck = getClusters();
         }
@@ -308,5 +311,9 @@ public abstract class PositionListIndex implements IPositionListIndex {
         }
 
         return setClusters;
+    }
+
+    public Collection<Integer> getNewRecords() {
+        return newRecords;
     }
 }

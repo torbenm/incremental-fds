@@ -3,7 +3,6 @@ package org.mp.naumann.algorithms.fd.incremental.pruning;
 import org.apache.lucene.util.OpenBitSet;
 import org.junit.Test;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
-import org.mp.naumann.algorithms.fd.structures.LatticeElementLhsPair;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,13 +27,13 @@ public class DeletePrunerTest {
         toCheck.fastSet(0);
         toCheck.fastSet(1);
         ValidationPruner pruner = deletePruner.analyzeDiff(new CompressedDiff(new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>()));
-        assertTrue(pruner.doesNotNeedValidation(new LatticeElementLhsPair(toCheck, null)));
+        assertTrue(pruner.doesNotNeedValidation(toCheck, new OpenBitSet(numAttributes)));
         Map<Integer, int[]> deletes = new HashMap<>();
         deletes.put(1, null);
         pruner = deletePruner.analyzeDiff(new CompressedDiff(new HashMap<>(), deletes, new HashMap<>(), new HashMap<>()));
-        assertTrue(pruner.doesNotNeedValidation(new LatticeElementLhsPair(toCheck, null)));
+        assertTrue(pruner.doesNotNeedValidation(toCheck, new OpenBitSet(numAttributes)));
         deletes.put(2, null);
         pruner = deletePruner.analyzeDiff(new CompressedDiff(new HashMap<>(), deletes, new HashMap<>(), new HashMap<>()));
-        assertFalse(pruner.doesNotNeedValidation(new LatticeElementLhsPair(toCheck, null)));
+        assertFalse(pruner.doesNotNeedValidation(toCheck, new OpenBitSet(numAttributes)));
     }
 }

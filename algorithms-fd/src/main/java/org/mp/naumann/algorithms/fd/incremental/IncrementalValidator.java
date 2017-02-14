@@ -13,6 +13,7 @@ import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -102,20 +103,23 @@ public abstract class IncrementalValidator {
 
     protected abstract Lattice getInverseLattice();
 
-    private List<LatticeElementLhsPair> pruneLevel(Collection<LatticeElementLhsPair> lvl) {
-        List<LatticeElementLhsPair> currentLevel = new ArrayList<>();
-        for (LatticeElementLhsPair fd : lvl) {
+    private Collection<LatticeElementLhsPair> pruneLevel(Collection<LatticeElementLhsPair> lvl) {
+        if (validationPruners.isEmpty()) {
+            return lvl;
+        }
+        Iterator<LatticeElementLhsPair> it = lvl.iterator();
+        while (it.hasNext()) {
+            LatticeElementLhsPair fd = it.next();
             if (pruneElement(fd)) {
                 validatorResult.pruned += fd.getElement().getRhsFds().cardinality();
-            } else {
-                currentLevel.add(fd);
+                it.remove();
             }
         }
-        return currentLevel;
+        return lvl;
     }
 
     private boolean pruneElement(LatticeElementLhsPair fd) {
-        return validationPruners.stream().anyMatch(ps -> ps.doesNotNeedValidation(fd));
+        return validationPruners.stream().anyMatch(ps -> ps.doesNotNeedValidation(fd.getLhs(), fd.getElement().getRhsFds()));
     }
 
     private List<IntegerPair> validateLattice(Lattice lattice, Lattice inverseLattice) throws AlgorithmExecutionException {

@@ -1,10 +1,9 @@
 package org.mp.naumann.algorithms.fd.incremental.pruning.simple;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.incremental.pruning.CardinalitySet;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
+import org.mp.naumann.algorithms.fd.incremental.pruning.CardinalitySet;
 import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
-import org.mp.naumann.algorithms.fd.structures.LatticeElementLhsPair;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
 import java.util.List;
@@ -48,10 +47,10 @@ public class ExistingValuesPruningStrategy {
         }
 
         @Override
-        public boolean doesNotNeedValidation(LatticeElementLhsPair fd) {
-            for (int level = existingValues.getDepth(); level >= (int) fd.getLhs().cardinality(); level--) {
+        public boolean doesNotNeedValidation(OpenBitSet lhs, OpenBitSet rhs) {
+            for (int level = existingValues.getDepth(); level >= lhs.cardinality(); level--) {
                 for (OpenBitSet existingValuesMask : existingValues.getLevel(level)) {
-                    if (BitSetUtils.isContained(fd.getLhs(), existingValuesMask)) {
+                    if (BitSetUtils.isContained(lhs, existingValuesMask)) {
                         return false;
                     }
                 }

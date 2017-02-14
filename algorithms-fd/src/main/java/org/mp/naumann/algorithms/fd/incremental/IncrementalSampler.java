@@ -11,6 +11,7 @@ import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -30,13 +31,15 @@ class IncrementalSampler {
     private float efficiencyThreshold;
     private List<AttributeRepresentant> attributeRepresentants = null;
     private final IncrementalMatcher matcher;
+    private final IncrementalFDConfiguration version;
 
-    IncrementalSampler(FDSet agreeSets, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, IncrementalMatcher matcher) {
+    IncrementalSampler(FDSet agreeSets, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, IncrementalMatcher matcher, IncrementalFDConfiguration version) {
         this.agreeSets = agreeSets;
         this.compressedRecords = compressedRecords;
         this.plis = plis;
         this.efficiencyThreshold = efficiencyThreshold;
         this.matcher = matcher;
+        this.version = version;
     }
 
     FDList enrichNegativeCover(List<IntegerPair> comparisonSuggestions) {
@@ -78,6 +81,9 @@ class IncrementalSampler {
                 pliBenchmark.finishSubtask("Sorting");
                 comparator.incrementActiveKey();
                 AttributeRepresentant attributeRepresentant = new AttributeRepresentant(clusters, efficiencyFactor, this.agreeSets, this);
+                if (version.usesImprovedSampling()) {
+                    attributeRepresentant.setNewRecords(pli.getNewRecords());
+                }
                 attributeRepresentant.runNext(newNonFds, this.compressedRecords);
                 if (attributeRepresentant.getEfficiency() != 0) {
                     this.attributeRepresentants.add(attributeRepresentant);
@@ -161,6 +167,7 @@ class IncrementalSampler {
         private List<IntArrayList> clusters;
         private FDSet negCover;
         private IncrementalSampler sampler;
+        private Collection<Integer> newRecords;
 
         float getEfficiencyFactor() {
             return this.efficiencyFactor;
@@ -217,6 +224,9 @@ class IncrementalSampler {
                     int recordId = cluster.getInt(recordIndex);
                     int partnerRecordId = cluster.getInt(recordIndex + this.windowDistance);
 
+                    if (isOldRecord(recordId) && isOldRecord(partnerRecordId)) {
+                        continue;
+                    }
                     this.sampler.matcher.match(equalAttrs, recordId, partnerRecordId);
 
                     if (!this.negCover.contains(equalAttrs)) {
@@ -231,6 +241,14 @@ class IncrementalSampler {
             this.numNewNonFds.add(numNewNonFds);
             this.numComparisons.add(numComparisons);
             return numComparisons != 0;
+        }
+
+        private boolean isOldRecord(int recordId) {
+            return newRecords != null && !newRecords.contains(recordId);
+        }
+
+        public void setNewRecords(Collection<Integer> newRecords) {
+            this.newRecords = newRecords;
         }
     }
 }
