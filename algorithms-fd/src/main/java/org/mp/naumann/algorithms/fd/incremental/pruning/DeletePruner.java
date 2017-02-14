@@ -116,12 +116,19 @@ public class DeletePruner {
         }
 
         @Override
-        public boolean doesNotNeedValidation(OpenBitSet lhs, OpenBitSet rhs) {
+        public boolean doesNotNeedValidation(OpenBitSet lhs, OpenBitSet originalRhs) {
+            OpenBitSet rhs = originalRhs.clone();
             for (int level = violations.getDepth(); level >= lhs.cardinality(); level--) {
                 ObjectOpenHashSet<OpenBitSet> violationLevel = violations.getLevel(level);
                 for (OpenBitSet violation : violationLevel) {
-                    if (OpenBitSet.intersectionCount(rhs, violation) == 0 && BitSetUtils.isContained(lhs, violation)) {
-                        return true;
+                    if (BitSetUtils.isContained(lhs, violation)) {
+                        // records agree in lhs
+                        // remove bits from rhs where records disagree
+                        rhs.and(violation);
+                        if (rhs.isEmpty()) {
+                            // there was disagreement for every rhs bit -> fd still invalid
+                            return true;
+                        }
                     }
                 }
             }
