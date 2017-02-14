@@ -1,7 +1,5 @@
 package org.mp.naumann.testcases;
 
-import ResourceConnection.ResourceConnector;
-import org.apache.commons.io.FilenameUtils;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedEvent;
@@ -18,13 +16,16 @@ import org.mp.naumann.database.jdbc.JdbcDataConnector;
 import org.mp.naumann.database.utils.ConnectionManager;
 import org.mp.naumann.processor.BatchProcessor;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
+import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
-import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.BatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
+import org.mp.naumann.processor.handler.database.PassThroughDatabaseBatchHandler;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -32,98 +33,85 @@ import java.util.List;
 
 abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
-    final String dataset;
     private final IncrementalFDConfiguration config;
-    private int stopAfter;
     private final IncrementalFDResultListener resultListener = new IncrementalFDResultListener();
     private final List<SpeedEvent> batchEvents = new ArrayList<>();
-    private final List<SpeedEvent> initialEvents = new ArrayList<>();
 
-    private int status = 0;
+    final int stopAfter;
+    final String schema, tableName, sourceTableName;
+    private final boolean hyfdOnly;
+    private int fdCount;
+    private long baselineSize;
 
-    BaseTestCase(String dataset, IncrementalFDConfiguration config, int stopAfter) {
-        this.dataset = dataset;
-        this.stopAfter = stopAfter;
+    BaseTestCase(String schema, String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly) {
+        this.schema = schema;
+        this.sourceTableName = tableName;
+        this.tableName = tableName + "_tmp";
         this.config = config;
+        this.stopAfter = stopAfter;
+        this.hyfdOnly = hyfdOnly;
         SpeedBenchmark.addEventListener(this);
     }
 
     @Override
     public void execute() throws ConnectionException, IOException {
-        setup();
+        try (Connection conn = ConnectionManager.getPostgresConnection(); DataConnector dc = new JdbcDataConnector(conn)) {
 
-        String schema = "";
+            // create temporary table that we can modify as batches come in
+            Statement stmt = conn.createStatement();
+            stmt.execute("CREATE TEMPORARY TABLE " + (schema.isEmpty() ? "" : schema + ".") + tableName + " AS SELECT * FROM " + sourceTableName);
 
-        //Initial
-        /*status = 1;
-        try (DataConnector dc = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceConnector.BASELINE, ","))) {
-            DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
-            StreamableBatchSource batchSource = getBatchSource(schema, dataset, stopAfter);
-            BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
-
-            Table table = dc.getTable("", FilenameUtils.removeExtension(dataset));
+            DatabaseBatchHandler databaseBatchHandler = new PassThroughDatabaseBatchHandler(dc);
+            StreamableBatchSource batchSource = getBatchSource();
+            BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler, hyfdOnly);
+            Table table = dc.getTable(schema, tableName);
+            baselineSize = table.getRowCount();
             HyFDInitialAlgorithm initialAlgorithm = new HyFDInitialAlgorithm(config, table);
-            batchProcessor.addBatchHandler(getInitialBatchHandler(table, initialAlgorithm));
+
+            if (hyfdOnly) {
+                batchProcessor.addBatchHandler(new HyFDBatchHandler(table, initialAlgorithm, getLimit()));
+            } else {
+                FDIntermediateDatastructure ds;
+                initialAlgorithm.execute();
+                ds = initialAlgorithm.getIntermediateDataStructure();
+
+                IncrementalFD incrementalAlgorithm = new IncrementalFD(sourceTableName, config);
+                incrementalAlgorithm.initialize(ds);
+                incrementalAlgorithm.addResultListener(resultListener);
+
+                batchProcessor.addBatchHandler(incrementalAlgorithm);
+            }
+
             SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
             batchSource.startStreaming();
-            SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Initial algorithm for all batches");
-        }*/
+            SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Algorithm for all batches");
 
-        //Incremental
-        status = 2;
-        FDIntermediateDatastructure ds;
-        try (DataConnector dc = new JdbcDataConnector(getCsvConnection())) {
-            Table table = dc.getTable(schema, dataset);
-            HyFDInitialAlgorithm initialAlgorithm = new HyFDInitialAlgorithm(config, table);
-            initialAlgorithm.execute();
-            ds = initialAlgorithm.getIntermediateDataStructure();
+            fdCount = (hyfdOnly ? initialAlgorithm.getFDs().size() : resultListener.getFDs().size());
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-
-        /*StreamableBatchSource batchSource = getBatchSource(schema, dataset, stopAfter);
-        DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
-        BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
-
-        IncrementalFD incrementalAlgorithm = new IncrementalFD(dataset, config);
-        incrementalAlgorithm.initialize(ds);
-        incrementalAlgorithm.addResultListener(resultListener);
-
-        batchProcessor.addBatchHandler(incrementalAlgorithm);
-        SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
-        batchSource.startStreaming();
-        SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Incremental algorithm for all batches");*/
-
-        teardown();
-    }
-
-    @Override
-    public String sheetName() {
-        return "Initial over all + Incremental One Batch";
     }
 
     @Override
     public Object[] sheetValues() {
         return new Object[]{
                 new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
-                dataset,
+                sourceTableName,
                 config.getVersionName(),
+                baselineSize,
                 getBatchSize(),
                 batchEvents.size(),
-                getAverageTime(initialEvents),
-                getMedianTime(initialEvents),
                 getAverageTime(batchEvents),
                 getMedianTime(batchEvents),
-                resultListener.getValidationCount(),
-                resultListener.getPrunedCount(),
-                resultListener.getFDs().size()
+                (hyfdOnly ? 0 : resultListener.getValidationCount()),
+                (hyfdOnly ? 0 : resultListener.getPrunedCount()),
+                fdCount
         };
     }
 
     @Override
     public void receiveEvent(SpeedEvent info) {
-        if(status == 1 && info.getLevel() == BenchmarkLevel.BATCH)
-            initialEvents.add(info);
-        else if(status == 2 && info.getLevel() == BenchmarkLevel.BATCH)
-            batchEvents.add(info);
+        if (info.getLevel() == BenchmarkLevel.BATCH) batchEvents.add(info);
     }
 
     private long getAverageTime(List<SpeedEvent> events){
@@ -144,16 +132,33 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
                 .orElse(-1);
     }
 
-    void setup() { }
-
-    void teardown() { }
+    int getLimit() { return 0; }
 
     abstract protected String getBatchSize();
 
-    abstract protected StreamableBatchSource getBatchSource(String schema, String tableName, int stopAfter);
+    abstract protected StreamableBatchSource getBatchSource();
 
-    abstract protected Connection getCsvConnection() throws ConnectionException;
+    private static class HyFDBatchHandler implements BatchHandler {
 
-    abstract protected BatchHandler getInitialBatchHandler(Table table, HyFDInitialAlgorithm algorithm);
+        private final HyFDInitialAlgorithm initialAlgorithm;
+        private final Table table;
+        private final boolean singleFile;
+
+        HyFDBatchHandler(Table table, HyFDInitialAlgorithm initialAlgorithm, int limit) {
+            this.table = table;
+            this.initialAlgorithm = initialAlgorithm;
+            singleFile = (limit > 0);
+            if (singleFile) table.setLimit(limit);
+        }
+
+        @Override
+        public void handleBatch(Batch batch) {
+            if (singleFile) {
+                int size = batch.getInsertStatements().size();
+                table.setLimit(table.getLimit() + size);
+            }
+            initialAlgorithm.execute();
+        }
+    }
 
 }

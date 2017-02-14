@@ -8,8 +8,6 @@ public interface TestCase {
 
     void execute() throws ConnectionException, IOException;
 
-    String sheetName();
-
     Object[] sheetValues();
 
 }

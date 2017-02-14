@@ -18,7 +18,8 @@ interface StatementQueryBuilder<T extends Statement> {
     }
 
     default String getCompleteTableName(T statement) {
-        return formatName(statement.getSchema()) + "." + formatName(statement.getTableName());
+        String schema = (statement.getSchema().isEmpty() ? "" : formatName(statement.getSchema()) + ".");
+        return schema + formatName(statement.getTableName());
     }
 
     default String generateSingle(T statement) throws QueryBuilderException {

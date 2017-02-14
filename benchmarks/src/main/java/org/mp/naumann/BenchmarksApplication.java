@@ -1,9 +1,8 @@
 package org.mp.naumann;
 
-
+import ResourceConnection.ResourceConnector;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
@@ -12,31 +11,45 @@ import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.reporter.FileReporter;
 import org.mp.naumann.reporter.GoogleSheetsReporter;
 import org.mp.naumann.reporter.Reporter;
-import org.mp.naumann.testcases.InitialAndIncrementalOneBatch;
+import org.mp.naumann.testcases.FixedSizeTestCase;
+import org.mp.naumann.testcases.SingleFileTestCase;
 import org.mp.naumann.testcases.TestCase;
-import org.mp.naumann.testcases.VariableSizeBatches;
+import org.mp.naumann.testcases.VariableSizeTestCase;
 
 import java.io.IOException;
 import java.util.logging.Level;
 
 public class BenchmarksApplication {
 
-    @Parameter(names = "--name", required = true)
-    private String name;
+    // general parameters
+    @Parameter(names = "--name")
+    private String name = "";
     @Parameter(names = "--help", help = true)
     private boolean help = false;
     @Parameter(names = "--spreadsheet")
     private String spreadsheet = "1ATQM5p6usBFImtxrn1yti-cjAtlnuli8kM4-ZpgrwfY";
-    @Parameter(names = "--batchSize")
-    private int batchSize = 100;
-    @Parameter(names = "--splitLine")
-    private int splitLine = 15000;
     @Parameter(names = "--dataSet")
-    private String dataSet = "benchmark.adultfull.csv";
+    private String dataSet = "";
+    @Parameter(names = "--stopAfter")
+    private int stopAfter = 1000;
+    @Parameter(names = "--google")
+    private boolean writeToGoogleSheets = false;
+    @Parameter(names = "--sheetName")
+    private String sheetName = "benchmark (new)";
 
-    @Parameter(names = "--mode")
+    // parameters for the specific modes
+    @Parameter(names = "--mode", description = "either variable, fixed, or singleFile")
     private String mode = "variable";
+    @Parameter(names = "--batchSize", description = "only relevant for fixed or singleFile mode")
+    private int batchSize = 100;
+    @Parameter(names = "--splitLine", description = "only relevant for singleFile mode")
+    private int splitLine = 15000;
+    @Parameter(names = "--batchDirectory", description = "only relevant for variable mode")
+    private String batchDirectory = "";
 
+    // parameters for algorithm configuration
+    @Parameter(names = "--hyfdOnly")
+    private boolean hyfdOnly = false;
     @Parameter(names = "--sampling", arity = 1)
     private Boolean useSampling;
     @Parameter(names = "--clusterPruning", arity = 1)
@@ -47,7 +60,6 @@ public class BenchmarksApplication {
     private Boolean useEnhancedClusterPruning;
     @Parameter(names = "--recomputeDataStructures", arity = 1)
     private Boolean recomputeDataStructures;
-
 
     public static void main(String[] args) throws IOException {
         BenchmarksApplication app = new BenchmarksApplication();
@@ -77,35 +89,55 @@ public class BenchmarksApplication {
         }
     }
 
-    public void run() throws IOException {
-        int stopAfter = batchSize < 10 ? 100 : -1;
+    private String getFullBatchDirectory() {
+        switch (batchDirectory) {
+            case "inserts":
+                return ResourceConnector.INSERTS;
+            case "deletes":
+                return ResourceConnector.DELETES;
+            case "updates":
+                return ResourceConnector.UPDATES;
+            case "batches":
+                return ResourceConnector.BATCHES;
+            default:
+                return batchDirectory;
+        }
+    }
 
+    private void run() throws IOException {
         FDLogger.setLevel(Level.FINEST);
         setUp();
+
+        if (name.isEmpty())
+            name = (hyfdOnly ? "hyfd" : "incremental") + ", " + mode + (mode.equals("variable") ? " (" + batchDirectory + ")" : "");
 
         IncrementalFDConfiguration config = IncrementalFDConfiguration.getVersion(name);
         adjustConfiguration(config);
 
         try {
-            TestCase t = null;
+            TestCase t;
 
             switch (mode) {
                 case "variable":
-                    t = new VariableSizeBatches(dataSet, config, stopAfter);
+                    t = new VariableSizeTestCase(dataSet, config, stopAfter, hyfdOnly, getFullBatchDirectory());
                     break;
                 case "fixed":
-                    t = null;
+                    t = new FixedSizeTestCase(dataSet, config, stopAfter, hyfdOnly, batchSize);
                     break;
                 case "singleFile":
-                    t = new InitialAndIncrementalOneBatch(splitLine, batchSize, dataSet, config, stopAfter);
+                    t = new SingleFileTestCase(dataSet, config, stopAfter, hyfdOnly, splitLine, batchSize);
                     break;
+                default:
+                    throw new IllegalArgumentException(String.format("Invalid mode parameter: %s", mode));
             }
 
             t.execute();
-            //Reporter reporter = new GoogleSheetsReporter(spreadsheet, t.sheetName());
-            Reporter reporter = new FileReporter("report.txt");
 
-            //reporter.writeNewLine(t.sheetValues());
+            Reporter reporter = (writeToGoogleSheets
+                    ? new GoogleSheetsReporter(spreadsheet, sheetName)
+                    : new FileReporter("report.txt")
+            );
+            reporter.writeNewLine(t.sheetValues());
 
         } catch (ConnectionException e) {
             e.printStackTrace();
@@ -123,8 +155,7 @@ public class BenchmarksApplication {
     public static void setUp() {
         SpeedBenchmark.enable();
         SpeedBenchmark.addEventListener(e -> {
-            if (e.getLevel() == BenchmarkLevel.ALGORITHM
-                    || e.getLevel() == BenchmarkLevel.BATCH)
+            if (e.getLevel() == BenchmarkLevel.ALGORITHM || e.getLevel() == BenchmarkLevel.BATCH)
                 System.out.println(e);
         });
         SpeedBenchmark.begin(BenchmarkLevel.BENCHMARK);
@@ -134,6 +165,5 @@ public class BenchmarksApplication {
         SpeedBenchmark.end(BenchmarkLevel.BENCHMARK, "Finished complete benchmark");
         SpeedBenchmark.disable();
     }
-
 
 }

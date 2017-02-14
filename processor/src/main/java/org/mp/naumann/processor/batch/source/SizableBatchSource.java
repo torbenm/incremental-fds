@@ -21,9 +21,10 @@ public abstract class SizableBatchSource extends CsvFileBatchSource implements S
     	this.batchSize = batchSize;
     }
 
-    public SizableBatchSource(String schema, String tableName, int batchSize, int stopAfter) {
+    public SizableBatchSource(String schema, String tableName, int batchSize, int stopAfter, int skipFirst) {
         this(schema, tableName, batchSize);
         this.stopAfter = stopAfter;
+        this.currentStatementPosition = skipFirst;
     }
 
     public int getBatchSize() {
