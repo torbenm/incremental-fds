@@ -39,7 +39,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     }
 
     public RecomputeDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns, List<Integer> pliOrder) {
-        this.pliBuilder = new RecomputePLIBuilder(pliBuilder.getClusterMapBuilder(), pliBuilder.isNullEqualNull(), pliOrder, version);
+        this.pliBuilder = new RecomputePLIBuilder(pliBuilder.getClusterMapBuilder(), pliBuilder.isNullEqualNull(), pliOrder);
         this.version = version;
         this.columns = columns;
         recordIds = IntStream.range(0, pliBuilder.getNumLastRecords()).boxed().collect(Collectors.toSet());
@@ -137,7 +137,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     private void updateDataStructures(Set<Integer> inserted, Set<Integer> deleted) {
         updateDataStructures();
 
-        if (version.usesImprovedSampling() || version.usesInnerClusterPruning()) {
+        if (version.usesInnerClusterPruning()) {
             plis.forEach(pli -> pli.setNewRecords(inserted));
         }
 

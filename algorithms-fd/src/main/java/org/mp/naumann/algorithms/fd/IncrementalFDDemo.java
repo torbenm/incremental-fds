@@ -71,7 +71,7 @@ public class IncrementalFDDemo {
 
 
         SpeedBenchmark.enable();
-        Benchmark.setMaxLevel(5);
+        Benchmark.setMaxLevel(3);
         Benchmark.addEventListener(FDLogger::info);
 //        SpeedBenchmark.addEventListener(System.out::println);
 

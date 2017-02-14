@@ -49,7 +49,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
 
     public IncrementalDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns, List<Integer> pliOrder) {
         this.pliOrder = pliOrder;
-        this.pliBuilder = new IncrementalPLIBuilder(pliOrder, version);
+        this.pliBuilder = new IncrementalPLIBuilder(pliOrder);
         this.version = version;
         this.columns = columns;
         this.dictionary = new Dictionary<>(pliBuilder.isNullEqualNull());
@@ -184,7 +184,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
                 plis.forEach(pli -> pli.setOtherClustersWithNewRecords(otherClustersWithNewRecords));
             }
         }
-        if (version.usesImprovedSampling() || version.usesInnerClusterPruning()) {
+        if (version.usesInnerClusterPruning()) {
             plis.forEach(pli -> pli.setNewRecords(inserted));
         }
     }

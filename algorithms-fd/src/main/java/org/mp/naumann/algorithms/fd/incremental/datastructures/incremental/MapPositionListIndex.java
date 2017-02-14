@@ -19,7 +19,6 @@ package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
@@ -49,8 +48,8 @@ class MapPositionListIndex extends PositionListIndex {
         return clusters.get(index);
     }
 
-    MapPositionListIndex(int attribute, Map<Integer, IntArrayList> clusters, IncrementalFDConfiguration version) {
-        super(attribute, version);
+    MapPositionListIndex(int attribute, Map<Integer, IntArrayList> clusters) {
+        super(attribute);
         this.clusters = clusters;
     }
 

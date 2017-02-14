@@ -140,7 +140,7 @@ public class IncrementalFDConfiguration {
     }
 
     public IncrementalFDConfiguration disableClusterPruning() {
-        return setClusterPruning(true);
+        return setClusterPruning(false);
     }
 
     public IncrementalFDConfiguration setClusterPruning(boolean clusterPruning) {

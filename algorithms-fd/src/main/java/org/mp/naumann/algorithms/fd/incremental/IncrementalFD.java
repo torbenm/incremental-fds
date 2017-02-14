@@ -47,7 +47,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
     private final List<ResultListener<IncrementalFDResult>> resultListeners = new ArrayList<>();
     private final String tableName;
-    private boolean validateParallel = false;
+    private boolean validateParallel = true;
     private float efficiencyThreshold = 0.01f;
     private IncrementalFDConfiguration version = IncrementalFDConfiguration.LATEST;
     private List<String> columns;
@@ -184,7 +184,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         Benchmark benchmark = Benchmark.start("Validate FDs", Benchmark.DEFAULT_LEVEL + 1);
 
         IncrementalMatcher matcher = new IncrementalMatcher(compressedRecords, valueComparator, deletePruner, version);
-        IncrementalSampler sampler = new IncrementalSampler(agreeSets, compressedRecords, plis, efficiencyThreshold, matcher, version);
+        IncrementalSampler sampler = new IncrementalSampler(agreeSets, compressedRecords, plis, efficiencyThreshold, matcher);
         IncrementalInductor inductor = new IncrementalInductor(nonFds, fds, compressedRecords.getNumAttributes());
         IncrementalValidator validator = new FDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, validateParallel, fds, nonFds, efficiencyThreshold, matcher);
 
@@ -193,6 +193,9 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         }
         if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.SIMPLE)) {
             validator.addValidationPruner(simplePruning.analyzeDiff(diff));
+        }
+        if (version.usesImprovedSampling()) {
+            sampler.setNewRecords(diff.getInsertedRecords().keySet());
         }
 
         List<IntegerPair> comparisonSuggestions;

@@ -20,7 +20,6 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 
 import java.util.ArrayList;
@@ -31,11 +30,9 @@ import java.util.Map;
 class IncrementalPLIBuilder {
     private final List<Integer> pliOrder;
     private List<MapPositionListIndex> plis;
-    private final IncrementalFDConfiguration version;
 
-    IncrementalPLIBuilder(List<Integer> pliOrder, IncrementalFDConfiguration version) {
+    IncrementalPLIBuilder(List<Integer> pliOrder) {
         this.pliOrder = pliOrder;
-        this.version = version;
     }
 
     private static IntArrayList concat(IntArrayList into, IntArrayList from) {
@@ -55,7 +52,7 @@ class IncrementalPLIBuilder {
         if (old == null) {
             old = new ArrayList<>(pliOrder.size());
             for (int i = 0; i < pliOrder.size(); i++) {
-                old.add(new MapPositionListIndex(i, new HashMap<>(), version));
+                old.add(new MapPositionListIndex(i, new HashMap<>()));
             }
         }
         plis = new ArrayList<>();
@@ -65,7 +62,7 @@ class IncrementalPLIBuilder {
             Map<Integer, IntArrayList> newClusters = clusterMaps.get(columnId);
             newClusters.forEach((k, v) -> clusters.merge(k, v, IncrementalPLIBuilder::concat));
 
-            plis.add(new MapPositionListIndex(columnId, clusters, version));
+            plis.add(new MapPositionListIndex(columnId, clusters));
         }
         return plis;
     }
