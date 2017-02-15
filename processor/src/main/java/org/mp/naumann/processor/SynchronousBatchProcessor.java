@@ -13,8 +13,13 @@ import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 public class SynchronousBatchProcessor extends BatchProcessor {
 
     private int batchCounter = 0;
+
     public SynchronousBatchProcessor(BatchSource batchSource, DatabaseBatchHandler databaseBatchHandler) {
         super(batchSource, databaseBatchHandler);
+    }
+
+    public SynchronousBatchProcessor(BatchSource batchSource, DatabaseBatchHandler databaseBatchHandler, boolean insertToDatabaseFirst) {
+        super(batchSource, databaseBatchHandler, insertToDatabaseFirst);
     }
 
     protected List<BatchHandler> initializeBatchHandlerCollection() {

@@ -23,6 +23,7 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
     private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withFirstRecordAsHeader();
     public static final String ACTION_COLUMN_NAME = "::action";
     private static final String RECORD_COLUMN_NAME = "::record";
+    private static final String defaultAction = "insert";
 
     final List<Statement> statementList = new ArrayList<>();
     final String schema;
@@ -54,7 +55,7 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
         for (CSVRecord csvRecord : csvParser) {
             Map<String, String> values = csvRecord.toMap();
 
-            String action = csvRecord.get(ACTION_COLUMN_NAME);
+            String action = (csvRecord.isSet(ACTION_COLUMN_NAME) ? csvRecord.get(ACTION_COLUMN_NAME) : defaultAction);
 
             values.remove(ACTION_COLUMN_NAME);
             values.remove(RECORD_COLUMN_NAME);
@@ -73,8 +74,9 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
                 Map<String, String> oldValues = new HashMap<>();
                 Map<String, String> newValues = new HashMap<>();
                 values.forEach((key, value) -> {
-                    oldValues.put(key, value.split("\\|")[0]);
-                    newValues.put(key, value.split("\\|")[1]);
+                    String[] splitValues = value.split("\\|", -1);
+                    oldValues.put(key, splitValues[0]);
+                    newValues.put(key, splitValues[1]);
                 });
                 return new DefaultUpdateStatement(newValues, oldValues, schema, tableName);
             default:

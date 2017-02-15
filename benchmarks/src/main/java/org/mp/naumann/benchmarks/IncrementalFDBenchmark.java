@@ -39,7 +39,7 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
         reset();
         this.currentTestCase = testCase;
 
-        batchSource = new FixedSizeBatchSource(incrementalFilePath, "", "", batchSize, stopAfter);
+        batchSource = new FixedSizeBatchSource(incrementalFilePath, "", "", batchSize, stopAfter, 0);
         DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
 
         DataConnector dc = new JdbcDataConnector(csvConnection);

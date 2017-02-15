@@ -11,10 +11,8 @@ import java.util.List;
 
 public class HyFDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDependency>, FDIntermediateDatastructure> {
 
-	
 	private HyFD hyfd;
 	private List<FunctionalDependency> fds = new ArrayList<>();
-
 
 	public HyFDInitialAlgorithm(IncrementalFDConfiguration configuration, Table table) {
 		hyfd = new HyFD(configuration, table, fds::add);
@@ -34,6 +32,10 @@ public class HyFDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDep
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return fds;
+	}
+
+	public List<FunctionalDependency> getFDs() {
 		return fds;
 	}
 
