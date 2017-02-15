@@ -2,7 +2,7 @@ package org.mp.naumann.algorithms.fd.incremental.violations.tree;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.junit.Test;
-import org.mp.naumann.algorithms.fd.incremental.pruning.ViolatingPair;
+import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.ViolatingPair;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.algorithms.fd.utils.PrintUtils;

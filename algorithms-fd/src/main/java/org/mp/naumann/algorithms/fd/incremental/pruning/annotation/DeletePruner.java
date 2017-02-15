@@ -7,26 +7,33 @@ import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
 import org.mp.naumann.algorithms.fd.incremental.pruning.CardinalitySet;
 import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
-import org.mp.naumann.algorithms.fd.incremental.pruning.ViolatingPair;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 public class DeletePruner {
 
+    public interface ViolationSet extends Iterable<ViolatingPair> {
+
+        void add(ViolatingPair violatingPair);
+
+        boolean isEmpty();
+    }
+
     public interface CollectionCreator {
-        Collection<ViolatingPair> createCollection();
+        ViolationSet createCollection();
     }
 
     public interface ValidationPrunerCreator {
         ValidationPruner createValidationPruner(CardinalitySet remaningValues);
     }
 
-    private final Map<OpenBitSet, Collection<ViolatingPair>> violations = new HashMap<>();
+    private final Map<OpenBitSet, ViolationSet> violations = new HashMap<>();
     private final Multimap<Integer, OpenBitSet> index = HashMultimap.create();
     private final int numAttributes;
     private final CollectionCreator collectionCreator;
@@ -39,7 +46,7 @@ public class DeletePruner {
     }
 
     public void addAgreeSet(OpenBitSet agreeSet, int rec1, int rec2) {
-        Collection<ViolatingPair> set = violations.computeIfAbsent(agreeSet, k -> collectionCreator.createCollection());
+        ViolationSet set = violations.computeIfAbsent(agreeSet, k -> collectionCreator.createCollection());
         set.add(new ViolatingPair(rec1, rec2));
         index.put(rec1, agreeSet);
         index.put(rec2, agreeSet);
@@ -53,16 +60,22 @@ public class DeletePruner {
             agreeSets.addAll(removed);
         }
         for (OpenBitSet agreeSet : agreeSets) {
-            Collection<ViolatingPair> set = violations.get(agreeSet);
+            ViolationSet set = violations.get(agreeSet);
             if (set != null) {
-                set.removeIf(pair -> pair.intersects(deleted));
+                Iterator<ViolatingPair> it = set.iterator();
+                while (it.hasNext()) {
+                    ViolatingPair pair = it.next();
+                    if (pair.intersects(deleted)) {
+                        it.remove();
+                    }
+                }
                 if (set.isEmpty()) {
                     violations.remove(agreeSet);
                 }
             }
         }
         CardinalitySet remainingViolations = new CardinalitySet(numAttributes);
-        for (Entry<OpenBitSet, Collection<ViolatingPair>> violation : violations.entrySet()) {
+        for (Entry<OpenBitSet, ViolationSet> violation : violations.entrySet()) {
             if (!violation.getValue().isEmpty()) {
                 remainingViolations.add(violation.getKey());
             }
