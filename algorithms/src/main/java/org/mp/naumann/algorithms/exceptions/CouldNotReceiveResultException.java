@@ -3,8 +3,7 @@ package org.mp.naumann.algorithms.exceptions;
 public class CouldNotReceiveResultException extends AlgorithmException {
     private static final long serialVersionUID = -566311523608485853L;
 
-	public CouldNotReceiveResultException() {
-    }
+	public CouldNotReceiveResultException() {}
 
     public CouldNotReceiveResultException(String message) {
         super(message);

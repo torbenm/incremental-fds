@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.source.BatchSource;
 import org.mp.naumann.processor.batch.source.BatchSourceListener;
+import org.mp.naumann.processor.exceptions.BatchHandlingException;
 import org.mp.naumann.processor.handler.BatchHandler;
 import org.mp.naumann.processor.handler.DataAwareBatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
@@ -45,7 +46,7 @@ public abstract class BatchProcessor implements BatchSourceListener {
         return batchHandlerCollection;
     }
 
-    public void batchArrived(Batch batch){
+    public void batchArrived(Batch batch) {
         if (insertToDatabaseFirst) databaseBatchHandler.handleBatch(batch);
         distributeBatch(batch);
         if (!insertToDatabaseFirst) databaseBatchHandler.handleBatch(batch);

@@ -18,7 +18,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 public class MedianInitialAlgorithmTest {
-/*
+
     private static DataConnector dataConnector;
     private static MedianInitialAlgorithm algorithm;
 
@@ -47,6 +47,6 @@ public class MedianInitialAlgorithmTest {
     @AfterClass
     public static void tearDownOnce() throws ConnectionException {
         dataConnector.close();
-    } */
+    }
 
 }

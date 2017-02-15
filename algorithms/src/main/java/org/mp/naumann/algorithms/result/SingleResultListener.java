@@ -1,7 +1,7 @@
 package org.mp.naumann.algorithms.result;
 
 
-public class DefaultResultListener<T> implements ResultListener<T> {
+public class SingleResultListener<T> implements ResultListener<T> {
 
 	private T result;
 

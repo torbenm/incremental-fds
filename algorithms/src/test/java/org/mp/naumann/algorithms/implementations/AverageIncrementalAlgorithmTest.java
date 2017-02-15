@@ -4,13 +4,14 @@ import com.google.common.collect.Maps;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
-import org.mp.naumann.algorithms.result.DefaultResultListener;
+import org.mp.naumann.algorithms.result.SingleResultListener;
 import org.mp.naumann.database.statement.DefaultDeleteStatement;
 import org.mp.naumann.database.statement.DefaultInsertStatement;
 import org.mp.naumann.database.statement.DefaultUpdateStatement;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.ListBatch;
+import org.mp.naumann.processor.exceptions.BatchHandlingException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,8 +30,8 @@ public class AverageIncrementalAlgorithmTest {
 	private static final String TABLE = "table";
 
 	@Test
-	public void testInsert() {
-		DefaultResultListener<Double> rl = new DefaultResultListener<>();
+	public void testInsert() throws BatchHandlingException {
+		SingleResultListener<Double> rl = new SingleResultListener<>();
 		AverageIncrementalAlgorithm alg = new AverageIncrementalAlgorithm(COLUMN);
 		alg.addResultListener(rl);
 		List<Statement> statements = toInsertStatements(Arrays.asList("1", "2"));
@@ -44,8 +45,8 @@ public class AverageIncrementalAlgorithmTest {
 	}
 
 	@Test
-	public void testDelete() {
-		DefaultResultListener<Double> rl = new DefaultResultListener<>();
+	public void testDelete() throws BatchHandlingException {
+		SingleResultListener<Double> rl = new SingleResultListener<>();
 		AverageIncrementalAlgorithm alg = new AverageIncrementalAlgorithm(COLUMN);
 		AverageDatastructure ds = new AverageDatastructure();
 		ds.increaseSum(8);
@@ -63,8 +64,8 @@ public class AverageIncrementalAlgorithmTest {
 	}
 
 	@Test
-	public void testUpdate() {
-		DefaultResultListener<Double> rl = new DefaultResultListener<>();
+	public void testUpdate() throws BatchHandlingException {
+		SingleResultListener<Double> rl = new SingleResultListener<>();
 		AverageIncrementalAlgorithm alg = new AverageIncrementalAlgorithm(COLUMN);
 		AverageDatastructure ds = new AverageDatastructure();
 		ds.increaseSum(8);
@@ -82,8 +83,8 @@ public class AverageIncrementalAlgorithmTest {
 	}
 
 	@Test
-	public void testMixed() {
-		DefaultResultListener<Double> rl = new DefaultResultListener<>();
+	public void testMixed() throws BatchHandlingException {
+		SingleResultListener<Double> rl = new SingleResultListener<>();
 		AverageIncrementalAlgorithm alg = new AverageIncrementalAlgorithm(COLUMN);
 		AverageDatastructure ds = new AverageDatastructure();
 		ds.increaseSum(8);
