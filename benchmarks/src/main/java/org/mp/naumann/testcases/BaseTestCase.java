@@ -69,24 +69,21 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
             BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler, hyfdOnly);
             Table table = dc.getTable(schema, tableName);
             baselineSize = table.getRowCount();
+
+            // execute HyFD in any case; we need the data structure for the incremental algorithm, and can use it
+            // as warmup if we run in hyfdOnly mode
             HyFDInitialAlgorithm initialAlgorithm = new HyFDInitialAlgorithm(config, table);
+            initialAlgorithm.execute();
 
             if (hyfdOnly) {
                 batchProcessor.addBatchHandler(new HyFDBatchHandler(table, getLimit(), config));
             } else {
-                FDIntermediateDatastructure ds;
-                initialAlgorithm.execute();
-                ds = initialAlgorithm.getIntermediateDataStructure();
-
+                FDIntermediateDatastructure ds = initialAlgorithm.getIntermediateDataStructure();
                 IncrementalFD incrementalAlgorithm = new IncrementalFD(sourceTableName, config);
                 incrementalAlgorithm.initialize(ds);
                 incrementalAlgorithm.addResultListener(resultListener);
-
                 batchProcessor.addBatchHandler(incrementalAlgorithm);
             }
-
-            FDLogger.log(Level.FINE, "Warming up with initial algorithm ...");
-            initialAlgorithm.execute();
 
             SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
             batchSource.startStreaming();
