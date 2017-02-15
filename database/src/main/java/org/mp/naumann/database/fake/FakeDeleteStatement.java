@@ -1,9 +1,8 @@
 package org.mp.naumann.database.fake;
 
-import java.util.Map;
-
 import org.mp.naumann.database.statement.DeleteStatement;
-import org.mp.naumann.database.statement.Statement;
+
+import java.util.Map;
 
 public class FakeDeleteStatement implements DeleteStatement {
 
@@ -18,11 +17,13 @@ public class FakeDeleteStatement implements DeleteStatement {
     }
 
     @Override
-    public Map<String, String> getValueMap() {
-        return null;
+    public boolean isEmpty() {
+        return false;
     }
 
     @Override
-    public boolean isOfEqualLayout(Statement statement) { return false; }
+    public Map<String, String> getValueMap() {
+        return null;
+    }
 
 }

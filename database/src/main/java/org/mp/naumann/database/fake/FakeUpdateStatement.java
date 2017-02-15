@@ -1,9 +1,8 @@
 package org.mp.naumann.database.fake;
 
-import java.util.Map;
-
-import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.UpdateStatement;
+
+import java.util.Map;
 
 public class FakeUpdateStatement implements UpdateStatement {
 
@@ -23,7 +22,9 @@ public class FakeUpdateStatement implements UpdateStatement {
 	}
 
 	@Override
-	public boolean isOfEqualLayout(Statement statement) { return false; }
+	public boolean isEmpty() {
+		return false;
+	}
 
 	@Override
 	public Map<String, String> getValueMap() {

@@ -46,10 +46,6 @@ public class SqlQueryBuilder {
             return value;
     }
 
-    static String toKeyEqualsValueMap(Statement stmt, String separator){
-        return toKeyEqualsValueMap(stmt.getValueMap(), stmt, separator);
-    }
-
     static String toKeyEqualsValueMap(Map<String, String> valueMap, Statement stmt, String separator){
         return valueMap
                 .entrySet()

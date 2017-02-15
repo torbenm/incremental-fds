@@ -4,9 +4,8 @@ import java.sql.JDBCType;
 import java.util.HashMap;
 import java.util.Map;
 
-class StatementBase implements Statement {
+abstract class StatementBase implements Statement {
 
-	private final Map<String, String> map;
 	private final Map<String, JDBCType> jdbcTypes;
 	private final String schema;
 	private final String tableName;
@@ -15,7 +14,6 @@ class StatementBase implements Statement {
 		/*
 		 * Copy to HashMap for same order of keys in all statements.
 		 */
-		this.map = new HashMap<>(map);
 		this.schema = schema;
 		this.tableName = tableName;
 
@@ -40,11 +38,5 @@ class StatementBase implements Statement {
 	}
 
 	@Override
-	public Map<String, String> getValueMap() { return map; }
-
-	@Override
 	public JDBCType getJDBCType(String columnName) { return jdbcTypes.get(columnName); }
-
-	@Override
-	public boolean isOfEqualLayout(Statement statement) { return false; }
 }
