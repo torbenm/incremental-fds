@@ -11,8 +11,10 @@ import org.mp.naumann.algorithms.fd.incremental.pruning.ViolatingPair;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 public class DeletePruner {
 
@@ -44,17 +46,20 @@ public class DeletePruner {
     }
 
     public ValidationPruner analyzeDiff(CompressedDiff diff) {
-        for (int delete : diff.getDeletedRecords().keySet()) {
-            for (OpenBitSet agreeSet : index.get(delete)) {
-                Collection<ViolatingPair> set = violations.get(agreeSet);
-                if (set != null) {
-                    set.removeIf(pair -> pair.intersects(delete));
-                    if (set.isEmpty()) {
-                        violations.remove(agreeSet);
-                    }
+        Set<OpenBitSet> agreeSets = new HashSet<>(violations.size());
+        Set<Integer> deleted = diff.getDeletedRecords().keySet();
+        for (int delete : deleted) {
+            Collection<OpenBitSet> removed = index.removeAll(delete);
+            agreeSets.addAll(removed);
+        }
+        for (OpenBitSet agreeSet : agreeSets) {
+            Collection<ViolatingPair> set = violations.get(agreeSet);
+            if (set != null) {
+                set.removeIf(pair -> pair.intersects(deleted));
+                if (set.isEmpty()) {
+                    violations.remove(agreeSet);
                 }
             }
-            index.removeAll(delete);
         }
         CardinalitySet remainingViolations = new CardinalitySet(numAttributes);
         for (Entry<OpenBitSet, Collection<ViolatingPair>> violation : violations.entrySet()) {

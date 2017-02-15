@@ -1,5 +1,7 @@
 package org.mp.naumann.algorithms.fd.incremental.pruning;
 
+import java.util.Collection;
+
 public class ViolatingPair {
 
     private final int firstRecord;
@@ -21,6 +23,10 @@ public class ViolatingPair {
     public boolean intersects(int value){
         return firstRecord == value
         || secondRecord == value;
+    }
+
+    public boolean intersects(Collection<Integer> collection){
+        return collection.contains(firstRecord) || collection.contains(secondRecord);
     }
 
     @Override
