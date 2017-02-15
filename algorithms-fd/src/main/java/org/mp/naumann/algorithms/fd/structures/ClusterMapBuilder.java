@@ -19,16 +19,14 @@ package org.mp.naumann.algorithms.fd.structures;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 
+import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Row;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -83,8 +81,7 @@ public class ClusterMapBuilder {
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
             if (clusterMap.containsKey(value)) {
                 clusterMap.get(value).add(recId);
-            }
-            else {
+            } else {
                 IntArrayList newCluster = new IntArrayList();
                 newCluster.add(recId);
                 clusterMap.put(value, newCluster);
@@ -108,9 +105,8 @@ public class ClusterMapBuilder {
     }
 
 
-
-    private void addRecordToHashMap(long hashcode, int recId){
-        if(!hashedRecords.containsKey(hashcode))
+    private void addRecordToHashMap(long hashcode, int recId) {
+        if (!hashedRecords.containsKey(hashcode))
             hashedRecords.put(hashcode, new IntArrayList());
         hashedRecords.get(hashcode).add(recId);
     }
@@ -128,29 +124,21 @@ public class ClusterMapBuilder {
     }
 
 
-	public Collection<Integer> removeRecord(Iterable<String> record) {
-		int attributeId = 0;
-		List<IntArrayList> clusters = new ArrayList<>();
-		for (String value : record) {
-			HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
-			IntArrayList cluster = clusterMap.get(value);
-			if (cluster == null || cluster.isEmpty()) {
-				return Collections.emptyList();
-			}
-			clusters.add(cluster);
-			attributeId++;
-		}
-		clusters.sort(Comparator.comparingInt(Collection::size));
-		Set<Integer> matching = null;
-		for (IntArrayList cluster : clusters) {
-			if (matching == null) {
-				matching = new HashSet<>(cluster);
-			} else {
-				matching.retainAll(cluster);
-			}
-		}
-		Set<Integer> toRemove = matching;
-		clusters.forEach(c -> c.removeAll(toRemove));
-		return matching;
-	}
+    public Collection<Integer> removeRecord(Iterable<String> record) {
+        int attributeId = 0;
+        List<Collection<Integer>> clusters = new ArrayList<>();
+        for (String value : record) {
+            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
+            IntArrayList cluster = clusterMap.get(value);
+            if (cluster == null || cluster.isEmpty()) {
+                return Collections.emptyList();
+            }
+            clusters.add(cluster);
+            attributeId++;
+        }
+        Set<Integer> matching = CollectionUtils.intersection(clusters);
+        clusters.forEach(c -> c.removeAll(matching));
+        return matching;
+    }
+
 }

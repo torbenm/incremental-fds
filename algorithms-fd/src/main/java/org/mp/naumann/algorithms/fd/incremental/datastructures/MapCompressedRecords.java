@@ -15,10 +15,6 @@ public class MapCompressedRecords implements CompressedRecords {
         this.numAttributes = numAttributes;
     }
 
-    public MapCompressedRecords(int numAttributes) {
-        this(new HashMap<>(), numAttributes);
-    }
-
     public MapCompressedRecords(int initialSize, int numAttributes) {
         this(new HashMap<>(initialSize), numAttributes);
     }
@@ -28,7 +24,6 @@ public class MapCompressedRecords implements CompressedRecords {
         return compressedRecords.get(index);
     }
 
-    @Override
     public int size() {
         return compressedRecords.size();
     }
@@ -40,5 +35,9 @@ public class MapCompressedRecords implements CompressedRecords {
 
     public void put(Integer id, int[] record) {
         compressedRecords.put(id, record);
+    }
+
+    public void remove(int recordId) {
+        compressedRecords.remove(recordId);
     }
 }

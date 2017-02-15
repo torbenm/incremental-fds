@@ -45,11 +45,6 @@ class ListPositionListIndex extends PositionListIndex {
         return clusters.get(index);
     }
 
-    @Override
-    public void setCluster(int index, IntArrayList value) {
-        this.clusters.set(index, value);
-    }
-
     public ListPositionListIndex(int attribute, List<IntArrayList> clusters) {
         super(attribute);
         this.clusters = clusters;

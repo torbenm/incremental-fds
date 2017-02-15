@@ -5,7 +5,7 @@ import org.mp.naumann.algorithms.InitialAlgorithm;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.HyFDInitialAlgorithm;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
+import org.mp.naumann.algorithms.fd.incremental.deprecated.IncrementalFD;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;

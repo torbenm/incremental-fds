@@ -1,9 +1,9 @@
-package org.mp.naumann.algorithms.fd.incremental.validator;
+package org.mp.naumann.algorithms.fd.incremental.deprecated.validator;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.algorithms.fd.incremental.MemoryGuardian;
+import org.mp.naumann.algorithms.fd.incremental.deprecated.MemoryGuardian;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
@@ -15,15 +15,16 @@ import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
 
 import java.util.List;
 
+@Deprecated
 public class GeneralizingValidator extends Validator<Boolean> {
 
     private final ViolationCollection violationCollection;
 
     public GeneralizingValidator(IncrementalFDConfiguration configuration, FDSet negCover,
-                                 FDTree posCover, CompressedRecords compressedRecords,
+                                 FDTree posCover, int numRecords, CompressedRecords compressedRecords,
                                  List<? extends PositionListIndex> plis, float efficiencyThreshold,
                                  boolean parallel, MemoryGuardian memoryGuardian, ViolationCollection violationCollection) {
-        super(configuration, posCover, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian, negCover);
+        super(configuration, posCover, numRecords, compressedRecords, plis, efficiencyThreshold, parallel, memoryGuardian, negCover);
         findValid = true;
         this.violationCollection = violationCollection;
     }
@@ -65,7 +66,7 @@ public class GeneralizingValidator extends Validator<Boolean> {
             removeGeneralizations(validationResult.invalidFDs);
 
         // Generate new FDs from the invalid FDs and add them to the next level as well
-        // In contrast to the "Normal" Validator, as we go bottom up, we create the next level out of the valid FDs
+        // In contrast to the "Normal" IncrementalValidator, as we go bottom up, we create the next level out of the valid FDs
         int candidates = generateNextLevel(validationResult.validFDs);
 
         this.level--;

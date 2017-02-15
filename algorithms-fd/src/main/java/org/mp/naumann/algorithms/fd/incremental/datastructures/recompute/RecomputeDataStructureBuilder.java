@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
+import org.mp.naumann.algorithms.benchmark.better.Benchmark;
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
@@ -45,24 +46,32 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         updateDataStructures();
     }
 
+    @Override
     public CompressedDiff update(Batch batch) {
+        Benchmark benchmark = Benchmark.start("Recompute data structures", Benchmark.DEFAULT_LEVEL + 1);
         Set<Integer> inserted = addRecords(batch.getInsertStatements());
         Set<Integer> insertedUpdate = addUpdateRecords(batch.getUpdateStatements());
         inserted.addAll(insertedUpdate);
         recordIds.addAll(inserted);
+        benchmark.finishSubtask("Apply inserts");
 
         Set<Integer> deleted = removeRecords(batch.getDeleteStatements());
         Set<Integer> deletedUpdate = removeUpdateRecords(batch.getUpdateStatements());
         deleted.addAll(deletedUpdate);
         recordIds.removeAll(deleted);
+        benchmark.finishSubtask("Apply deletes");
         Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
-        deleted.parallelStream().forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));
+        deleted.forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));
+
+        benchmark.startSubtask();
         updateDataStructures(inserted, deleted);
+        benchmark.finishSubtask("Update data structures");
 
         Map<Integer, int[]> insertedDiff = new HashMap<>(inserted.size());
-        inserted.parallelStream().forEach(i -> insertedDiff.put(i, getCompressedRecord(i)));
-        CompressedDiff diff = new CompressedDiff(insertedDiff, deletedDiff, new HashMap<>(0), new HashMap<>(0));
-        return diff;
+        inserted.forEach(i -> insertedDiff.put(i, getCompressedRecord(i)));
+
+        benchmark.finish();
+        return new CompressedDiff(insertedDiff, deletedDiff, new HashMap<>(0), new HashMap<>(0));
     }
 
     private int[] getCompressedRecord(int record) {
@@ -80,13 +89,13 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     }
 
     private Set<Integer> addUpdateRecords(List<UpdateStatement> updates) {
-        Set<Integer> inserted = new HashSet<>();
+        Set<Integer> updated = new HashSet<>();
         for (Statement update : updates) {
             Map<String, String> valueMap = update.getValueMap();
             int id = addRecord(valueMap);
-            inserted.add(id);
+            updated.add(id);
         }
-        return inserted;
+        return updated;
     }
 
     private Set<Integer> removeRecords(List<DeleteStatement> deletes) {
@@ -170,8 +179,13 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         return plis;
     }
 
-    public CompressedRecords getCompressedRecord() {
+    public CompressedRecords getCompressedRecords() {
         return compressedRecords;
+    }
+
+    @Override
+    public int getNumRecords() {
+        return recordIds.size();
     }
 
 }
