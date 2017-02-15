@@ -13,10 +13,16 @@ public abstract class BatchProcessor implements BatchSourceListener {
 
     private final Collection<BatchHandler> batchHandlerCollection;
     private final DatabaseBatchHandler databaseBatchHandler;
+    private final boolean insertToDatabaseFirst;
 
-    public BatchProcessor(BatchSource batchSource, DatabaseBatchHandler databaseBatchHandler){
+    BatchProcessor(BatchSource batchSource, DatabaseBatchHandler databaseBatchHandler){
+        this(batchSource, databaseBatchHandler, false);
+    }
+
+    BatchProcessor(BatchSource batchSource, DatabaseBatchHandler databaseBatchHandler, boolean insertToDatabaseFirst){
         this.databaseBatchHandler = databaseBatchHandler;
         this.batchHandlerCollection = initializeBatchHandlerCollection();
+        this.insertToDatabaseFirst = insertToDatabaseFirst;
         batchSource.addBatchSourceListener(this);
     }
 
@@ -40,8 +46,9 @@ public abstract class BatchProcessor implements BatchSourceListener {
     }
 
     public void batchArrived(Batch batch){
+        if (insertToDatabaseFirst) databaseBatchHandler.handleBatch(batch);
         distributeBatch(batch);
-        databaseBatchHandler.handleBatch(batch);
+        if (!insertToDatabaseFirst) databaseBatchHandler.handleBatch(batch);
     }
 
     protected abstract void distributeBatch(Batch batch);

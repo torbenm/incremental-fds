@@ -1,6 +1,7 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.benchmark.better.Benchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
@@ -103,10 +104,7 @@ public abstract class IncrementalValidator {
 
     protected abstract Lattice getInverseLattice();
 
-    private Collection<LatticeElementLhsPair> pruneLevel(Collection<LatticeElementLhsPair> lvl) {
-        if (validationPruners.isEmpty()) {
-            return lvl;
-        }
+    private void pruneLevel(Collection<LatticeElementLhsPair> lvl) {
         Iterator<LatticeElementLhsPair> it = lvl.iterator();
         while (it.hasNext()) {
             LatticeElementLhsPair fd = it.next();
@@ -115,7 +113,6 @@ public abstract class IncrementalValidator {
                 it.remove();
             }
         }
-        return lvl;
     }
 
     private boolean pruneElement(LatticeElementLhsPair fd) {
@@ -127,16 +124,23 @@ public abstract class IncrementalValidator {
         int previousNumInvalidFds = 0;
         while (level <= lattice.getDepth()) {
             FDLogger.log(Level.FINER, "Started validating level " + level);
+            Benchmark benchmark = Benchmark.start("Validate level "+ level);
             Collection<LatticeElementLhsPair> currentLevel = lattice.getLevel(level);
             if (!isTopDown()) {
                 currentLevel.forEach(pair -> pair.getLhs().flip(0, numAttributes));
             }
-            ValidationResult result = validate(pruneLevel(currentLevel));
+            benchmark.finishSubtask("Retrieval");
+            if (!validationPruners.isEmpty()) {
+                pruneLevel(currentLevel);
+                benchmark.finishSubtask("Pruning");
+            }
+            ValidationResult result = validate(currentLevel);
             validatorResult.validations += result.validations;
             if (isTopDown()) {
                 comparisonSuggestions.addAll(result.comparisonSuggestions);
             }
             int candidates = 0;
+            benchmark.finishSubtask("Validation");
             for (OpenBitSetFD fd : result.collectedFDs) {
                 OpenBitSet lhs = fd.getLhs();
                 if (!isTopDown()) {
@@ -154,6 +158,7 @@ public abstract class IncrementalValidator {
                     }
                 }
             }
+            benchmark.finishSubtask("Induction");
             int numInvalidFds = result.collectedFDs.size();
             int numValidFds = result.validations - numInvalidFds;
             FDLogger.log(Level.FINER, result.intersections + " intersections; " + result.validations + " validations; " + numInvalidFds + " invalid; " + candidates + " new candidates; --> " + numValidFds + " FDs");
@@ -165,6 +170,7 @@ public abstract class IncrementalValidator {
                 return comparisonSuggestions;
             }
             previousNumInvalidFds = numInvalidFds;
+            benchmark.finish();
         }
 
         end(comparisonSuggestions);

@@ -225,12 +225,16 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
     private ValidatorResult validateNonFDs(List<? extends PositionListIndex> plis, CompressedRecords compressedRecords, CompressedDiff diff) throws AlgorithmExecutionException {
         FDLogger.log(Level.FINE, "Started validating non-FDs");
+        Benchmark benchmark = Benchmark.start("Validating non-FDs", Benchmark.DEFAULT_LEVEL + 1);
         IncrementalValidator validator = new NonFDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, validateParallel, fds, nonFds);
         if (version.usesPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS)) {
             ValidationPruner pruner = deletePruner.analyzeDiff(diff);
             validator.addValidationPruner(pruner);
+            benchmark.finishSubtask("Pruning");
         }
         validator.validate();
+        benchmark.finishSubtask("Validation");
+        benchmark.finish();
         FDLogger.log(Level.FINE, "Finished validating non-FDs");
         return validator.getValidatorResult();
     }
