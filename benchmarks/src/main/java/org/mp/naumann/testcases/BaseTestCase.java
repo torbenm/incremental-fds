@@ -5,6 +5,8 @@ import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedEvent;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedEventListener;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
+import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.HyFDInitialAlgorithm;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
@@ -30,6 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 
 abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
@@ -82,11 +85,20 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
                 batchProcessor.addBatchHandler(incrementalAlgorithm);
             }
 
+            FDLogger.log(Level.FINE, "Warming up with initial algorithm ...");
+            initialAlgorithm.execute();
+
             SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
             batchSource.startStreaming();
             SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Algorithm for all batches");
 
-            fdCount = (hyfdOnly ? initialAlgorithm.getFDs().size() : resultListener.getFDs().size());
+            FDLogger.log(Level.INFO, String.format("Cumulative runtime (algorithm only): %sms", getTotalTime(batchEvents)));
+
+            List<FunctionalDependency> fds = (hyfdOnly ? initialAlgorithm.getFDs() : resultListener.getFDs());
+            fdCount = fds.size();
+            FDLogger.log(Level.INFO, String.format("Found %s FDs:", fdCount));
+            fds.forEach(fd -> FDLogger.log(Level.INFO, fd.toString()));
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -103,6 +115,7 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
                 batchEvents.size(),
                 getAverageTime(batchEvents),
                 getMedianTime(batchEvents),
+                getTotalTime(batchEvents),
                 (hyfdOnly ? 0 : resultListener.getValidationCount()),
                 (hyfdOnly ? 0 : resultListener.getPrunedCount()),
                 fdCount
@@ -130,6 +143,13 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
                 .skip(batchEvents.size() / 2)
                 .findFirst()
                 .orElse(-1);
+    }
+
+    private long getTotalTime(List<SpeedEvent> events){
+        return events
+                .stream()
+                .mapToLong(SpeedEvent::getDuration)
+                .sum();
     }
 
     int getLimit() { return 0; }

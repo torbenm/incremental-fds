@@ -105,7 +105,7 @@ public class BenchmarksApplication {
     }
 
     private void run() throws IOException {
-        FDLogger.setLevel(Level.FINEST);
+        FDLogger.setLevel(Level.INFO);
         setUp();
 
         if (name.isEmpty())
@@ -156,7 +156,7 @@ public class BenchmarksApplication {
         SpeedBenchmark.enable();
         SpeedBenchmark.addEventListener(e -> {
             if (e.getLevel() == BenchmarkLevel.ALGORITHM || e.getLevel() == BenchmarkLevel.BATCH)
-                System.out.println(e);
+                FDLogger.log(Level.INFO, e.toString());
         });
         SpeedBenchmark.begin(BenchmarkLevel.BENCHMARK);
     }
