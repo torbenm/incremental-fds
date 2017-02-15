@@ -3,6 +3,8 @@ package org.mp.naumann.algorithms.fd.incremental.pruning;
 import org.apache.lucene.util.OpenBitSet;
 import org.junit.Test;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
+import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.DeletePruner;
+import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.SimpleDeleteValidationPruner;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,7 +18,7 @@ public class DeletePrunerTest {
     @Test
     public void test() {
         int numAttributes = 4;
-        DeletePruner deletePruner = new DeletePruner(numAttributes, HashSet::new);
+        DeletePruner deletePruner = new DeletePruner(numAttributes, HashSet::new, SimpleDeleteValidationPruner::new);
         OpenBitSet agreeSet = new OpenBitSet(numAttributes);
         agreeSet.fastSet(0);
         agreeSet.fastSet(1);

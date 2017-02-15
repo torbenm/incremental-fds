@@ -10,7 +10,7 @@ import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.algorithms.fd.incremental.pruning.DeletePruner;
+import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.DeletePruner;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;

@@ -1,6 +1,6 @@
 package org.mp.naumann.algorithms.fd.incremental.violations;
 
-import org.mp.naumann.algorithms.fd.utils.PrintUtils;
+import org.mp.naumann.algorithms.fd.incremental.pruning.ViolatingPair;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -79,7 +79,7 @@ public class ViolatingPairCollection implements Collection<ViolatingPair> {
         List<ViolatingPair> forRemoval = new ArrayList<>(this.size());
         for(ViolatingPair pair : this){
             for(int recordId : records){
-                if(pair.intersected(recordId)){
+                if(pair.intersects(recordId)){
                     forRemoval.add(pair);
                     hasRemoved = true;
                     break;

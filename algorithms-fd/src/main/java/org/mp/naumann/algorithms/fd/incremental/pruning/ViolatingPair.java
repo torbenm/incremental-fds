@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.incremental.violations;
+package org.mp.naumann.algorithms.fd.incremental.pruning;
 
 public class ViolatingPair {
 
@@ -6,8 +6,8 @@ public class ViolatingPair {
     private final int secondRecord;
 
     public ViolatingPair(int firstRecord, int secondRecord) {
-        this.firstRecord = firstRecord;
-        this.secondRecord = secondRecord;
+        this.firstRecord = Math.min(firstRecord, secondRecord);
+        this.secondRecord = Math.max(firstRecord, secondRecord);
     }
 
     public int getFirstRecord() {
@@ -18,9 +18,14 @@ public class ViolatingPair {
         return secondRecord;
     }
 
-    public boolean intersected(int value){
+    public boolean intersects(int value){
         return firstRecord == value
         || secondRecord == value;
+    }
+
+    @Override
+    public String toString() {
+        return "(" + firstRecord + "," + secondRecord + ")";
     }
 
     @Override
@@ -41,3 +46,4 @@ public class ViolatingPair {
         return result;
     }
 }
+
