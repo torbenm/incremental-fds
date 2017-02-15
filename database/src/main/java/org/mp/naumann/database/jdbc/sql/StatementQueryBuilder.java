@@ -9,7 +9,7 @@ import org.mp.naumann.database.statement.Statement;
 interface StatementQueryBuilder<T extends Statement> {
 
     default void validateStatement(T statement) throws QueryBuilderException {
-        if (statement.getValueMap().isEmpty())
+        if (statement.isEmpty())
             throw new QueryBuilderException("Statement must not have an empty value list.");
     }
 

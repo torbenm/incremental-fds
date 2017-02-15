@@ -6,16 +6,19 @@ import java.util.Map;
 public class DefaultUpdateStatement extends StatementBase implements UpdateStatement {
 
     private final Map<String, String> oldValueMap;
+    private final Map<String, String> newValueMap;
 
     public DefaultUpdateStatement(Map<String, String> map, Map<String, String> oldValueMap,
                                   Map<String, JDBCType> jdbcTypes, String schema, String tableName) {
         super(map, jdbcTypes, schema, tableName);
+        this.newValueMap = map;
         this.oldValueMap = oldValueMap;
     }
 
     public DefaultUpdateStatement(Map<String, String> map, Map<String, String> oldValueMap, String schema,
                                   String tableName) {
         super(map, schema, tableName);
+        this.newValueMap = map;
         this.oldValueMap = oldValueMap;
     }
 
@@ -24,8 +27,13 @@ public class DefaultUpdateStatement extends StatementBase implements UpdateState
     }
 
     @Override
-    public boolean isOfEqualLayout(Statement statement) {
-        return false;
+    public Map<String, String> getValueMap() {
+        return newValueMap;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return newValueMap.isEmpty() || oldValueMap.isEmpty();
     }
 
 }
