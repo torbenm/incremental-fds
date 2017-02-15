@@ -124,7 +124,7 @@ public abstract class IncrementalValidator {
         int previousNumInvalidFds = 0;
         while (level <= lattice.getDepth()) {
             FDLogger.log(Level.FINER, "Started validating level " + level);
-            Benchmark benchmark = Benchmark.start("Validate level "+ level);
+            Benchmark benchmark = Benchmark.start("Validate level "+ level, Benchmark.DEFAULT_LEVEL + 3);
             Collection<LatticeElementLhsPair> currentLevel = lattice.getLevel(level);
             if (!isTopDown()) {
                 currentLevel.forEach(pair -> pair.getLhs().flip(0, numAttributes));
