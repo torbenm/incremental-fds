@@ -5,9 +5,12 @@ import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.DeletePruner;
 import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.SimpleDeleteValidationPruner;
+import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.WidthDependentDeleteValidationPruner;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.SingleValueCollection;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
+
+import java.util.HashSet;
 
 class Matcher {
 
