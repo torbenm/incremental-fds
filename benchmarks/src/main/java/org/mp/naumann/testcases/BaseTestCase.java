@@ -69,7 +69,7 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
             HyFDInitialAlgorithm initialAlgorithm = new HyFDInitialAlgorithm(config, table);
 
             if (hyfdOnly) {
-                batchProcessor.addBatchHandler(new HyFDBatchHandler(table, initialAlgorithm, getLimit()));
+                batchProcessor.addBatchHandler(new HyFDBatchHandler(table, getLimit(), config));
             } else {
                 FDIntermediateDatastructure ds;
                 initialAlgorithm.execute();
@@ -140,13 +140,13 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
     private static class HyFDBatchHandler implements BatchHandler {
 
-        private final HyFDInitialAlgorithm initialAlgorithm;
         private final Table table;
         private final boolean singleFile;
+        private final IncrementalFDConfiguration config;
 
-        HyFDBatchHandler(Table table, HyFDInitialAlgorithm initialAlgorithm, int limit) {
+        HyFDBatchHandler(Table table, int limit, IncrementalFDConfiguration config) {
             this.table = table;
-            this.initialAlgorithm = initialAlgorithm;
+            this.config = config;
             singleFile = (limit > 0);
             if (singleFile) table.setLimit(limit);
         }
@@ -157,7 +157,9 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
                 int size = batch.getInsertStatements().size();
                 table.setLimit(table.getLimit() + size);
             }
-            initialAlgorithm.execute();
+
+            HyFDInitialAlgorithm algorithm = new HyFDInitialAlgorithm(config, table);
+            algorithm.execute();
         }
     }
 
