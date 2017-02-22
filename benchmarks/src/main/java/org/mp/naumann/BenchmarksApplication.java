@@ -36,6 +36,8 @@ public class BenchmarksApplication {
     private boolean writeToGoogleSheets = false;
     @Parameter(names = "--sheetName")
     private String sheetName = "benchmark (new)";
+    @Parameter(names = "--logLevel")
+    private String logLevel = "info";
 
     // parameters for the specific modes
     @Parameter(names = "--mode", description = "either variable, fixed, or singleFile")
@@ -105,7 +107,7 @@ public class BenchmarksApplication {
     }
 
     private void run() throws IOException {
-        FDLogger.setLevel(Level.INFO);
+        setLogLevel();
         setUp();
 
         if (name.isEmpty())
@@ -149,6 +151,38 @@ public class BenchmarksApplication {
             SpeedBenchmark.disable();
         } finally {
             tearDown();
+        }
+    }
+
+    private void setLogLevel() {
+        switch (logLevel) {
+            case "fine":
+                FDLogger.setLevel(Level.FINE);
+                break;
+            case "finer":
+                FDLogger.setLevel(Level.FINER);
+                break;
+            case "finest":
+                FDLogger.setLevel(Level.FINEST);
+                break;
+            case "off":
+                FDLogger.setLevel(Level.OFF);
+                break;
+            case "all":
+                FDLogger.setLevel(Level.ALL);
+                break;
+            case "config":
+                FDLogger.setLevel(Level.CONFIG);
+                break;
+            case "warning":
+                FDLogger.setLevel(Level.WARNING);
+                break;
+            case "severe":
+                FDLogger.setLevel(Level.SEVERE);
+                break;
+            default:
+                FDLogger.setLevel(Level.INFO);
+                break;
         }
     }
 
