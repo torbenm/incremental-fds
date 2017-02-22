@@ -520,9 +520,6 @@ def checkForTrueDeleteAndCorrect(updateStatement, baselineDataTable):
 
     targetEntry = baselineDataTable[targetId]
 
-    if updateStatement["article_title"] == "Pathologic fracture":
-        print("break")
-
     hasNonEmptyFields = False
     for attribute in targetEntry:
         if attribute in ["id", "article_title"]:
@@ -552,9 +549,6 @@ def checkForTrueDeleteAndCorrect(updateStatement, baselineDataTable):
 def applyUpdateStatement(updateStatement, baselineDataTable, attributes):
     targetId = str(updateStatement["::record"])
 
-    if updateStatement["article_title"] == "Pathologic fracture":
-        print("break")
-
     if targetId in baselineDataTable:
         targetEntry = baselineDataTable[targetId]
 
@@ -580,6 +574,8 @@ def applyUpdateStatement(updateStatement, baselineDataTable, attributes):
 def applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, attributes):
     for updateStatement in updateStatements:
         statementType = updateStatement["::action"]
+        if updateStatement["article_title"] == "Haemophilia B":
+            print("break")
         if statementType == "insert":
             baselineDataTable = applyInsertStatement(updateStatement, baselineDataTable, attributes)
         elif statementType == "delete":
@@ -594,7 +590,7 @@ def applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, att
 
 
 def determineFinalUpdateStatementType(updateStatements, baselineData, attributes):
-    baselineDataTable = buildTableFromBaselineData(baselineData)
+    baselineDataTable = buildTableFromBaselineData(copy.deepcopy(baselineData))
     updateStatements = applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, attributes)
     return updateStatements
 
