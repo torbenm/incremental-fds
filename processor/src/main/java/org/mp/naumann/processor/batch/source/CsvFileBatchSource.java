@@ -22,7 +22,6 @@ abstract class CsvFileBatchSource extends AbstractBatchSource {
     private static final Charset CHARSET = Charset.defaultCharset();
     private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withFirstRecordAsHeader();
     private static final String ACTION_COLUMN_NAME = "::action";
-    private static final String RECORD_COLUMN_NAME = "::record";
     private static final String defaultAction = "insert";
 
     final List<Statement> statementList = new ArrayList<>();
@@ -54,11 +53,8 @@ abstract class CsvFileBatchSource extends AbstractBatchSource {
         initializeCsvParser(file);
         for (CSVRecord csvRecord : csvParser) {
             Map<String, String> values = csvRecord.toMap();
-
             String action = (csvRecord.isSet(ACTION_COLUMN_NAME) ? csvRecord.get(ACTION_COLUMN_NAME) : defaultAction);
-
             values.remove(ACTION_COLUMN_NAME);
-            values.remove(RECORD_COLUMN_NAME);
             Statement stmt = createStatement(action, values);
             addStatement(stmt);
         }
@@ -90,7 +86,7 @@ abstract class CsvFileBatchSource extends AbstractBatchSource {
                 .parallelStream()
                 .sorted(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .filter(s -> !(s.equals(ACTION_COLUMN_NAME) || s.equals(RECORD_COLUMN_NAME)))
+                .filter(s -> !(s.equals(ACTION_COLUMN_NAME)))
                 .collect(Collectors.toList());
     }
 }
