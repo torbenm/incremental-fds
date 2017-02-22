@@ -10,7 +10,6 @@
     <modules>
         <module>database</module>
         <module>processor</module>
-        <module>utils</module>
         <module>algorithms</module>
         <module>algorithms-fd</module>
         <module>demo</module>
