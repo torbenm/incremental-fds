@@ -17,7 +17,7 @@ class UpdateStatementQueryBuilder implements StatementQueryBuilder<UpdateStateme
     @Override
     public void validateStatement(UpdateStatement statement) throws QueryBuilderException {
         StatementQueryBuilder.super.validateStatement(statement);
-        if (!(statement.getValueMap().size() == statement.getOldValueMap().size()))
+        if (!(statement.getNewValueMap().size() == statement.getOldValueMap().size()))
             throw new QueryBuilderException("Value maps for UpdateStatement must have same size");
     }
 
@@ -29,7 +29,7 @@ class UpdateStatementQueryBuilder implements StatementQueryBuilder<UpdateStateme
 
     @Override
     public String buildKeyClause(UpdateStatement statement){
-        return " SET "+ SqlQueryBuilder.toKeyEqualsValueMap(statement.getValueMap(), statement, ", ", false);
+        return " SET "+ SqlQueryBuilder.toKeyEqualsValueMap(statement.getNewValueMap(), statement, ", ", false);
     }
 
     @Override

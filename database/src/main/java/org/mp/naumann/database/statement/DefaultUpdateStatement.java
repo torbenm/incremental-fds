@@ -27,7 +27,7 @@ public class DefaultUpdateStatement extends StatementBase implements UpdateState
     }
 
     @Override
-    public Map<String, String> getValueMap() {
+    public Map<String, String> getNewValueMap() {
         return newValueMap;
     }
 

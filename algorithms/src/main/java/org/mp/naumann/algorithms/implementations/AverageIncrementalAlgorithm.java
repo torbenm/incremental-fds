@@ -44,7 +44,7 @@ public class AverageIncrementalAlgorithm implements IncrementalAlgorithm<Double,
 			}
 		}
 		for (UpdateStatement update : updates) {
-			String newValue = update.getValueMap().get(column);
+			String newValue = update.getNewValueMap().get(column);
 			if (newValue != null && !newValue.isEmpty()) {
 				ds.increaseSum(Double.parseDouble(newValue));
 			}

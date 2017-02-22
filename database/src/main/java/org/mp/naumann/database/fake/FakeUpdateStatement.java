@@ -27,7 +27,7 @@ public class FakeUpdateStatement implements UpdateStatement {
 	}
 
 	@Override
-	public Map<String, String> getValueMap() {
+	public Map<String, String> getNewValueMap() {
 		return null;
 	}
 }

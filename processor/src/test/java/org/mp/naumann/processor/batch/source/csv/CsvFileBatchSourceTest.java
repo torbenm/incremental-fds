@@ -57,7 +57,7 @@ public class CsvFileBatchSourceTest extends AbstractBatchSourceTest {
         assertTrue(c instanceof InsertStatement);
         assertEquals(c.getSchema(), SCHEMA);
         assertEquals(c.getTableName(), TABLE);
-        assertEquals(c.getValueMap(), createValueMap());
+        assertEquals(((InsertStatement)c).getValueMap(), createValueMap());
     }
 
     @Test
@@ -68,7 +68,7 @@ public class CsvFileBatchSourceTest extends AbstractBatchSourceTest {
         assertTrue(c instanceof DeleteStatement);
         assertEquals(c.getSchema(), SCHEMA);
         assertEquals(c.getTableName(), TABLE);
-        assertEquals(c.getValueMap(), createValueMap());
+        assertEquals(((DeleteStatement)c).getValueMap(), createValueMap());
     }
 
     @Test
@@ -80,9 +80,10 @@ public class CsvFileBatchSourceTest extends AbstractBatchSourceTest {
         assertTrue(c instanceof UpdateStatement);
         assertEquals(c.getSchema(), SCHEMA);
         assertEquals(c.getTableName(), TABLE);
-        assertEquals(c.getValueMap(), expectedNewValues);
         UpdateStatement us = (UpdateStatement)c;
         assertEquals(us.getOldValueMap(), expectedOldValues);
+        assertEquals(us.getNewValueMap(), expectedNewValues);
+
     }
 
 
@@ -96,7 +97,7 @@ public class CsvFileBatchSourceTest extends AbstractBatchSourceTest {
         assertTrue(c instanceof InsertStatement);
         assertEquals(c.getSchema(), SCHEMA);
         assertEquals(c.getTableName(), TABLE);
-        assertEquals(c.getValueMap(), valueMap);
+        assertEquals(((InsertStatement)c).getValueMap(), valueMap);
     }
 
     @Test
@@ -109,7 +110,7 @@ public class CsvFileBatchSourceTest extends AbstractBatchSourceTest {
         assertTrue(c instanceof DeleteStatement);
         assertEquals(c.getSchema(), SCHEMA);
         assertEquals(c.getTableName(), TABLE);
-        assertEquals(c.getValueMap(), valueMap);
+        assertEquals(((DeleteStatement)c).getValueMap(), valueMap);
     }
 
     @Test
@@ -123,9 +124,10 @@ public class CsvFileBatchSourceTest extends AbstractBatchSourceTest {
         assertTrue(c instanceof UpdateStatement);
         assertEquals(c.getSchema(), SCHEMA);
         assertEquals(c.getTableName(), TABLE);
-        assertEquals(c.getValueMap(), expectedNewValues);
         UpdateStatement us = (UpdateStatement)c;
         assertEquals(us.getOldValueMap(), expectedOldValues);
+        assertEquals(us.getNewValueMap(), expectedNewValues);
+
     }
 
 

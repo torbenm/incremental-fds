@@ -102,7 +102,7 @@ public class BloomPruningStrategy {
         Set<Collection<ColumnValue>> inner = new HashSet<>();
         List<Map<String, String>> valueMaps = new ArrayList<>(inserts.size() + updates.size());
         valueMaps.addAll(inserts.stream().map(InsertStatement::getValueMap).collect(Collectors.toList()));
-        valueMaps.addAll(updates.stream().map(UpdateStatement::getValueMap).collect(Collectors.toList()));
+        valueMaps.addAll(updates.stream().map(UpdateStatement::getNewValueMap).collect(Collectors.toList()));
         for (Map<String, String> valueMap : valueMaps) {
             Collection<ColumnValue> vc = getValues(toArray(valueMap), combination);
             if (inner.contains(vc)) {
