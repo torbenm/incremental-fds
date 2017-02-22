@@ -20,8 +20,8 @@ import org.mp.naumann.processor.BatchProcessor;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
-import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.BatchHandler;
+import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.PassThroughDatabaseBatchHandler;
 
 import java.io.IOException;
@@ -33,6 +33,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
+
+import static org.mockito.Mockito.mock;
 
 abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
@@ -85,7 +87,7 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
                 IncrementalFD incrementalAlgorithm = new IncrementalFD(sourceTableName, config);
                 incrementalAlgorithm.initialize(ds);
                 incrementalAlgorithm.addResultListener(resultListener);
-                BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, new FakeDatabaseBatchHandler(), false);
+                BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, mock(DatabaseBatchHandler.class), false);
                 batchProcessor.addBatchHandler(incrementalAlgorithm);
             }
 
