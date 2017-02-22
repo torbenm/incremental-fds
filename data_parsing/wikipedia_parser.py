@@ -506,6 +506,8 @@ def applyDeleteStatement(updateStatement, baselineDataTable):
 
         for attribute in updateStatement:
             if attribute in targetEntry and updateStatement[attribute] != "" and attribute != "article_title":
+                # just to ensure data consistency
+                updateStatement[attribute] = targetEntry[attribute]
                 targetEntry[attribute] = ""
     else:
         updateStatement["toBeDeleted"] = True
@@ -529,6 +531,10 @@ def checkForTrueDeleteAndCorrect(updateStatement, baselineDataTable):
     else:
         print("Deleting " + baselineDataTable[targetId]["article_title"])
         del baselineDataTable[targetId]
+        # remove pipes from delete statement
+        for key in updateStatement:
+            updateStatement[key] = str(updateStatement[key]).replace("|", "")
+
 
     return baselineDataTable
 
@@ -542,7 +548,10 @@ def applyUpdateStatement(updateStatement, baselineDataTable, attributes):
         for attribute in updateStatement:
             if attribute in targetEntry and updateStatement[attribute] != "" and attribute != "article_title":
                 newValue = updateStatement[attribute].split("|")[1]
+                newOldValue = targetEntry[attribute]
                 targetEntry[attribute] = newValue
+                updateStatement[attribute] = newOldValue + "|" + newValue
+
     else:
         updateStatement["::action"] = "insert"
         for attribute, value in updateStatement.items():
@@ -613,6 +622,7 @@ def writeParsedDataToDisk(targetInfoboxType, baselineData, insertRecords, update
     createTargetDirectoriesIfNecessary()
 
     attributes = list(attributes)
+    attributes.remove("article_title")
     attributes.insert(0, "article_title")
 
     print("Writing baseline csv...")
