@@ -6,13 +6,11 @@ import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.AbstractStatementApplier;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
-import org.mp.naumann.database.statement.DeleteStatement;
-import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.database.statement.Statement;
-import org.mp.naumann.database.statement.UpdateStatement;
 import org.mp.naumann.processor.batch.Batch;
 
 import java.util.Collection;
@@ -49,17 +47,20 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     @Override
     public CompressedDiff update(Batch batch) {
         Benchmark benchmark = Benchmark.start("Recompute data structures", Benchmark.DEFAULT_LEVEL + 1);
-        Set<Integer> inserted = addRecords(batch.getInsertStatements());
-        Set<Integer> insertedUpdate = addUpdateRecords(batch.getUpdateStatements());
+        AbstractStatementApplier applier = new StatementApplier();
+        for (Statement statement : batch.getStatements()) {
+            statement.accept(applier);
+        }
+        Set<Integer> inserted = applier.getInserted();
+        Set<Integer> insertedUpdate = applier.getInsertedUpdate();
         inserted.addAll(insertedUpdate);
         recordIds.addAll(inserted);
-        benchmark.finishSubtask("Apply inserts");
 
-        Set<Integer> deleted = removeRecords(batch.getDeleteStatements());
-        Set<Integer> deletedUpdate = removeUpdateRecords(batch.getUpdateStatements());
+        Set<Integer> deleted = applier.getDeleted();
+        Set<Integer> deletedUpdate = applier.getDeletedUpdate();
         deleted.addAll(deletedUpdate);
         recordIds.removeAll(deleted);
-        benchmark.finishSubtask("Apply deletes");
+        benchmark.finishSubtask("Apply statements");
         Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
         deleted.forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));
 
@@ -76,56 +77,6 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
 
     private int[] getCompressedRecord(int record) {
         return version.usesPruningStrategy(PruningStrategy.ANNOTATION) || version.usesPruningStrategy(PruningStrategy.SIMPLE)? compressedRecords.get(record) : null;
-    }
-
-    private Set<Integer> removeUpdateRecords(List<UpdateStatement> updates) {
-        Set<Integer> ids = new HashSet<>();
-        for (UpdateStatement update : updates) {
-            Map<String, String> valueMap = update.getOldValueMap();
-            Collection<Integer> removed = removeRecord(valueMap);
-            ids.addAll(removed);
-        }
-        return ids;
-    }
-
-    private Set<Integer> addUpdateRecords(List<UpdateStatement> updates) {
-        Set<Integer> updated = new HashSet<>();
-        for (Statement update : updates) {
-            Map<String, String> valueMap = update.getValueMap();
-            int id = addRecord(valueMap);
-            updated.add(id);
-        }
-        return updated;
-    }
-
-    private Set<Integer> removeRecords(List<DeleteStatement> deletes) {
-        Set<Integer> ids = new HashSet<>();
-        for (Statement delete : deletes) {
-            Map<String, String> valueMap = delete.getValueMap();
-            Collection<Integer> removed = removeRecord(valueMap);
-            ids.addAll(removed);
-        }
-        return ids;
-    }
-
-    private Collection<Integer> removeRecord(Map<String, String> valueMap) {
-        List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
-        return pliBuilder.removeRecord(values);
-    }
-
-    private Set<Integer> addRecords(List<InsertStatement> inserts) {
-        Set<Integer> inserted = new HashSet<>();
-        for (Statement insert : inserts) {
-            Map<String, String> valueMap = insert.getValueMap();
-            int id = addRecord(valueMap);
-            inserted.add(id);
-        }
-        return inserted;
-    }
-
-    private int addRecord(Map<String, String> valueMap) {
-        List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
-        return pliBuilder.addRecord(values);
     }
 
     private void updateDataStructures() {
@@ -188,4 +139,18 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         return recordIds.size();
     }
 
+    private class StatementApplier extends AbstractStatementApplier {
+
+        @Override
+        protected int addRecord(Map<String, String> valueMap) {
+            List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
+            return pliBuilder.addRecord(values);
+        }
+
+        @Override
+        protected Collection<Integer> removeRecord(Map<String, String> valueMap) {
+            List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
+            return pliBuilder.removeRecord(values);
+        }
+    }
 }

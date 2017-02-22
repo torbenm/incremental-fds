@@ -24,8 +24,9 @@ import static org.mp.naumann.processor.batch.source.csv.CsvKeyWord.*;
 public abstract class CsvFileBatchSource extends AbstractBatchSource {
 
     private static final Charset CHARSET = Charset.defaultCharset();
-    private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withFirstRecordAsHeader();
+    private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withFirstRecordAsHeader().withNullString("");
     private static final CsvKeyWord defaultAction = CsvKeyWord.INSERT_STATEMENT;
+
     final List<Statement> statementList = new ArrayList<>();
     final String schema;
     final String tableName;
@@ -70,9 +71,12 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
                 ? values.get(ACTION_COLUMN.getKeyWord()) : defaultAction.getKeyWord());
 
         values.remove(ACTION_COLUMN.getKeyWord());
-        values.remove(RECORD_COLUMN.getKeyWord());
         Statement stmt = createStatement(action, values);
         return stmt;
+    }
+
+    private String sanitize(String value) {
+        return (value.isEmpty() ? null : value);
     }
 
     Statement createStatement(String type, Map<String, String> values) {
@@ -86,8 +90,8 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
                 Map<String, String> newValues = new HashMap<>();
                 values.forEach((key, value) -> {
                     String[] splitValues = value.split("\\|", -1);
-                    oldValues.put(key, splitValues[0]);
-                    newValues.put(key, splitValues[1]);
+                    oldValues.put(key, sanitize(splitValues[0]));
+                    newValues.put(key, sanitize(splitValues.length > 1 ? splitValues[1] : splitValues[0]));
                 });
                 return new DefaultUpdateStatement(newValues, oldValues, schema, tableName);
             default:
@@ -101,7 +105,7 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
                 .parallelStream()
                 .sorted(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .filter(s -> !(s.equals(ACTION_COLUMN.getKeyWord()) || s.equals(RECORD_COLUMN.getKeyWord())))
+                .filter(s -> !(s.equals(ACTION_COLUMN.getKeyWord())))
                 .collect(Collectors.toList());
     }
 }

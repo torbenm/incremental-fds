@@ -9,7 +9,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum CsvKeyWord {
     ACTION_COLUMN("::action"),
-    RECORD_COLUMN("::record"),
     INSERT_STATEMENT("insert"),
     DELETE_STATEMENT("delete"),
     UPDATE_STATEMENT("update");

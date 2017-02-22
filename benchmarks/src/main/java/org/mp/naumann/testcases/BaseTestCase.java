@@ -20,8 +20,8 @@ import org.mp.naumann.processor.BatchProcessor;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
+import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.BatchHandler;
-import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.PassThroughDatabaseBatchHandler;
 
 import java.io.IOException;
@@ -64,29 +64,30 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
             Statement stmt = conn.createStatement();
             stmt.execute("CREATE TEMPORARY TABLE " + (schema.isEmpty() ? "" : schema + ".") + tableName + " AS SELECT * FROM " + sourceTableName);
 
-            DatabaseBatchHandler databaseBatchHandler = new PassThroughDatabaseBatchHandler(dc);
             StreamableBatchSource batchSource = getBatchSource();
-            BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler, hyfdOnly);
             Table table = dc.getTable(schema, tableName);
             baselineSize = table.getRowCount();
+
+            // execute HyFD in any case; we need the data structure for the incremental algorithm, and can use it
+            // as warmup if we run in hyfdOnly mode
             HyFDInitialAlgorithm initialAlgorithm = new HyFDInitialAlgorithm(config, table);
+            initialAlgorithm.execute();
+            List<FunctionalDependency> fds = initialAlgorithm.getFDs();
+            FDLogger.log(Level.INFO, String.format("Initial FD count: %s", fds.size()));
+            FDLogger.log(Level.FINE, "Initial FDs:");
+            fds.forEach(fd -> FDLogger.log(Level.FINE, fd.toString()));
 
             if (hyfdOnly) {
+                BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, new PassThroughDatabaseBatchHandler(dc), true);
                 batchProcessor.addBatchHandler(new HyFDBatchHandler(table, getLimit(), config));
             } else {
-                FDIntermediateDatastructure ds;
-                initialAlgorithm.execute();
-                ds = initialAlgorithm.getIntermediateDataStructure();
-
+                FDIntermediateDatastructure ds = initialAlgorithm.getIntermediateDataStructure();
                 IncrementalFD incrementalAlgorithm = new IncrementalFD(sourceTableName, config);
                 incrementalAlgorithm.initialize(ds);
                 incrementalAlgorithm.addResultListener(resultListener);
-
+                BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, new FakeDatabaseBatchHandler(), false);
                 batchProcessor.addBatchHandler(incrementalAlgorithm);
             }
-
-            FDLogger.log(Level.FINE, "Warming up with initial algorithm ...");
-            initialAlgorithm.execute();
 
             SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
             batchSource.startStreaming();
@@ -94,7 +95,7 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
             FDLogger.log(Level.INFO, String.format("Cumulative runtime (algorithm only): %sms", getTotalTime(batchEvents)));
 
-            List<FunctionalDependency> fds = (hyfdOnly ? initialAlgorithm.getFDs() : resultListener.getFDs());
+            fds = (hyfdOnly ? initialAlgorithm.getFDs() : resultListener.getFDs());
             fdCount = fds.size();
             FDLogger.log(Level.INFO, String.format("Found %s FDs:", fdCount));
             fds.forEach(fd -> FDLogger.log(Level.INFO, fd.toString()));
@@ -180,6 +181,11 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
             HyFDInitialAlgorithm algorithm = new HyFDInitialAlgorithm(config, table);
             algorithm.execute();
+
+            List<FunctionalDependency> fds = algorithm.getFDs();
+            FDLogger.log(Level.INFO, String.format("New FD count: %s", fds.size()));
+            FDLogger.log(Level.FINE, "New FDs:");
+            fds.forEach(fd -> FDLogger.log(Level.FINE, fd.toString()));
         }
     }
 

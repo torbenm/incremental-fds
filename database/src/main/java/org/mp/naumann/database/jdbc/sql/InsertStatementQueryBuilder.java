@@ -27,7 +27,9 @@ class InsertStatementQueryBuilder implements StatementQueryBuilder<InsertStateme
                 statement
                     .getValueMap()
                     .keySet()
-                    .stream().collect(Collectors.joining(", "))
+                    .stream()
+                        .map(SqlQueryBuilder::formatKey)
+                        .collect(Collectors.joining(", "))
                 + ") VALUES ";
     }
 

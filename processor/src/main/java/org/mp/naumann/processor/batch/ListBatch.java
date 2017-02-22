@@ -1,14 +1,14 @@
 package org.mp.naumann.processor.batch;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.mp.naumann.database.statement.DeleteStatement;
-import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.InsertStatement;
+import org.mp.naumann.database.statement.Statement;
+import org.mp.naumann.database.statement.StatementVisitorAdapter;
 import org.mp.naumann.database.statement.UpdateStatement;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Implementation of a {@link Batch} which stores the statements in a List.
@@ -38,24 +38,23 @@ public class ListBatch implements Batch {
 
     @Override
     public List<InsertStatement> getInsertStatements() {
-        return filterStatements(InsertStatement.class);
+        InsertCollector collector = new InsertCollector();
+        statements.forEach(stmt -> stmt.accept(collector));
+        return collector.getStatements();
     }
 
     @Override
     public List<DeleteStatement> getDeleteStatements() {
-        return filterStatements(DeleteStatement.class);
+        DeleteCollector collector = new DeleteCollector();
+        statements.forEach(stmt -> stmt.accept(collector));
+        return collector.getStatements();
     }
 
     @Override
     public List<UpdateStatement> getUpdateStatements() {
-        return filterStatements(UpdateStatement.class);
-    }
-
-    private <T extends Statement> List<T> filterStatements(final Class<T> clazz){
-        return getStatements().parallelStream()
-                .filter(clazz::isInstance)
-                .map(n -> (T)n)
-                .collect(Collectors.toList());
+        UpdateCollector collector = new UpdateCollector();
+        statements.forEach(stmt -> stmt.accept(collector));
+        return collector.getStatements();
     }
 
     @Override
@@ -66,5 +65,38 @@ public class ListBatch implements Batch {
     @Override
     public List<Statement> getStatements() {
         return statements;
+    }
+
+    private static class UpdateCollector extends StatementCollector<UpdateStatement> {
+
+        @Override
+        public void visit(UpdateStatement update) {
+            statements.add(update);
+        }
+    }
+
+    private static class DeleteCollector extends StatementCollector<DeleteStatement> {
+
+        @Override
+        public void visit(DeleteStatement delete) {
+            statements.add(delete);
+        }
+    }
+
+    private static class InsertCollector extends StatementCollector<InsertStatement> {
+
+        @Override
+        public void visit(InsertStatement inserts) {
+            statements.add(inserts);
+        }
+    }
+
+    private static abstract class StatementCollector<T extends Statement> extends StatementVisitorAdapter {
+
+        List<T> statements = new ArrayList<>();
+
+        List<T> getStatements() {
+            return statements;
+        }
     }
 }
