@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 abstract class CsvFileBatchSource extends AbstractBatchSource {
 
     private static final Charset CHARSET = Charset.defaultCharset();
-    private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withFirstRecordAsHeader();
+    private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withFirstRecordAsHeader().withNullString("");
     private static final String ACTION_COLUMN_NAME = "::action";
     private static final String defaultAction = "insert";
 
@@ -60,6 +60,10 @@ abstract class CsvFileBatchSource extends AbstractBatchSource {
         }
     }
 
+    private String sanitize(String value) {
+        return (value.isEmpty() ? null : value);
+    }
+
     private Statement createStatement(String type, Map<String, String> values) {
         switch (type.toLowerCase()) {
             case "insert":
@@ -71,8 +75,8 @@ abstract class CsvFileBatchSource extends AbstractBatchSource {
                 Map<String, String> newValues = new HashMap<>();
                 values.forEach((key, value) -> {
                     String[] splitValues = value.split("\\|", -1);
-                    oldValues.put(key, splitValues[0]);
-                    newValues.put(key, (splitValues.length > 1 ? splitValues[1] : splitValues[0]));
+                    oldValues.put(key, sanitize(splitValues[0]));
+                    newValues.put(key, sanitize(splitValues.length > 1 ? splitValues[1] : splitValues[0]));
                 });
                 return new DefaultUpdateStatement(newValues, oldValues, schema, tableName);
             default:

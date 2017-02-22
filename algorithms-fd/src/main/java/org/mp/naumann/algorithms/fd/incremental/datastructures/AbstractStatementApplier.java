@@ -10,9 +10,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Created by Philipp on 15.02.2017.
- */
 public abstract class AbstractStatementApplier implements StatementVisitor {
     private final Set<Integer> inserted = new HashSet<>();
     private final Set<Integer> insertedUpdate = new HashSet<>();
