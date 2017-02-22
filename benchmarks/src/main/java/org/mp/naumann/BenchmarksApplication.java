@@ -155,34 +155,10 @@ public class BenchmarksApplication {
     }
 
     private void setLogLevel() {
-        switch (logLevel) {
-            case "fine":
-                FDLogger.setLevel(Level.FINE);
-                break;
-            case "finer":
-                FDLogger.setLevel(Level.FINER);
-                break;
-            case "finest":
-                FDLogger.setLevel(Level.FINEST);
-                break;
-            case "off":
-                FDLogger.setLevel(Level.OFF);
-                break;
-            case "all":
-                FDLogger.setLevel(Level.ALL);
-                break;
-            case "config":
-                FDLogger.setLevel(Level.CONFIG);
-                break;
-            case "warning":
-                FDLogger.setLevel(Level.WARNING);
-                break;
-            case "severe":
-                FDLogger.setLevel(Level.SEVERE);
-                break;
-            default:
-                FDLogger.setLevel(Level.INFO);
-                break;
+        try {
+            FDLogger.setLevel(Level.parse(logLevel.toUpperCase()));
+        } catch(IllegalArgumentException e){
+            FDLogger.setLevel(Level.INFO);
         }
     }
 
