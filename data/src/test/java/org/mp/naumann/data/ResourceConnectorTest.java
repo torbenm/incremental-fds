@@ -1,4 +1,4 @@
-package ResourceConnection;
+package org.mp.naumann.data;
 
 import org.junit.Test;
 

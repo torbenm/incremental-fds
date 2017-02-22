@@ -21,7 +21,7 @@ import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
 import java.util.List;
 
-import ResourceConnection.ResourceConnector;
+import org.mp.naumann.data.ResourceConnector;
 
 public interface IncrementalFDRunner {
 

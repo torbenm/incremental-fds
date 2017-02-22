@@ -9,7 +9,7 @@ import org.mp.naumann.database.utils.ConnectionManager;
 
 import java.sql.Connection;
 
-import ResourceConnection.ResourceConnector;
+import org.mp.naumann.data.ResourceConnector;
 
 import static org.junit.Assert.assertEquals;
 

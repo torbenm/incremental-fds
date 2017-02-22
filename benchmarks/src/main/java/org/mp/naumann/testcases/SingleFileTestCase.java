@@ -1,6 +1,6 @@
 package org.mp.naumann.testcases;
 
-import ResourceConnection.ResourceConnector;
+import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.processor.batch.source.csv.FixedSizeCsvBatchSource;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;

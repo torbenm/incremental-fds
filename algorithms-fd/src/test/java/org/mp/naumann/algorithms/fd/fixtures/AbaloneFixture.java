@@ -14,7 +14,7 @@ import org.mp.naumann.database.utils.ConnectionManager;
 import java.util.LinkedList;
 import java.util.List;
 
-import ResourceConnection.ResourceConnector;
+import org.mp.naumann.data.ResourceConnector;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;

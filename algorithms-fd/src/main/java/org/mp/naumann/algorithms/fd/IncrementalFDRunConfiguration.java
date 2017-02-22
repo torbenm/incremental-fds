@@ -1,7 +1,5 @@
 package org.mp.naumann.algorithms.fd;
 
-import ResourceConnection.ResourceConnector;
-
 public class IncrementalFDRunConfiguration {
 
 

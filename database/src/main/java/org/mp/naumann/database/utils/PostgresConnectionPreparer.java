@@ -12,7 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import ResourceConnection.ResourceConnector;
+import org.mp.naumann.data.ResourceConnector;
 
 public class PostgresConnectionPreparer implements DatabaseConnectionPreparer {
 

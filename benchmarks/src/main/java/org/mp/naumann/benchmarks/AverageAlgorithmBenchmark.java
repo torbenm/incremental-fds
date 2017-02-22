@@ -14,7 +14,7 @@ import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.batch.source.csv.FixedSizeCsvBatchSource;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
-import ResourceConnection.ResourceConnector;
+import org.mp.naumann.data.ResourceConnector;
 
 public class AverageAlgorithmBenchmark implements AlgorithmBenchmark {
 

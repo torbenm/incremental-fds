@@ -12,7 +12,7 @@ import org.mp.naumann.database.utils.ConnectionManager;
 import java.util.List;
 import java.util.logging.Level;
 
-import ResourceConnection.ResourceConnector;
+import org.mp.naumann.data.ResourceConnector;
 
 public class FDDemo {
 

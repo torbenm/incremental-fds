@@ -21,7 +21,8 @@ For regular database access (e.g. demos), a test database can be set up:
 Cleaned repositories:
 
 * processor
-* 
+* data
 
 Documentation still needed: 
 * `processor.batch.source.*`
+* `data`

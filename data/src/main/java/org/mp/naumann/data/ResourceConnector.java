@@ -1,4 +1,4 @@
-package ResourceConnection;
+package org.mp.naumann.data;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

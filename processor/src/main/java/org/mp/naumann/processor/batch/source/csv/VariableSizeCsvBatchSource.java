@@ -1,11 +1,10 @@
 package org.mp.naumann.processor.batch.source.csv;
 
-import ResourceConnection.ResourceConnector;
+import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.ListBatch;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
-import org.mp.naumann.processor.batch.source.csv.CsvFileBatchSource;
 
 import java.io.File;
 

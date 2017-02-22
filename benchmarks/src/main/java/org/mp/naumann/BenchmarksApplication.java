@@ -1,6 +1,6 @@
 package org.mp.naumann;
 
-import ResourceConnection.ResourceConnector;
+import org.mp.naumann.data.ResourceConnector;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
