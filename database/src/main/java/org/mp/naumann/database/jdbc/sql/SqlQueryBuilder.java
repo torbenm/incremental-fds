@@ -37,8 +37,8 @@ public class SqlQueryBuilder {
         return (key.startsWith(":") ? "\"" + key + "\"" : key);
     }
 
-    static String equalsSeparator(String value) {
-        return (value == null ? " IS " : " = ");
+    private static String equalsSeparator(String value, boolean isValueClause) {
+        return (((value == null) && isValueClause) ? " IS " : " = ");
     }
 
     static String formatValue(String value, JDBCType jdbcType) {
@@ -50,11 +50,11 @@ public class SqlQueryBuilder {
             return value;
     }
 
-    static String toKeyEqualsValueMap(Map<String, String> valueMap, Statement stmt, String separator){
+    static String toKeyEqualsValueMap(Map<String, String> valueMap, Statement stmt, String separator, boolean isValueClause){
         return valueMap
                 .entrySet()
                 .parallelStream()
-                .map(n -> formatKey(n.getKey()) + equalsSeparator(n.getValue()) + formatValue(n.getValue(), stmt.getJDBCType(n.getKey())))
+                .map(n -> formatKey(n.getKey()) + equalsSeparator(n.getValue(), isValueClause) + formatValue(n.getValue(), stmt.getJDBCType(n.getKey())))
                 .collect(Collectors.joining(separator));
     }
 }
