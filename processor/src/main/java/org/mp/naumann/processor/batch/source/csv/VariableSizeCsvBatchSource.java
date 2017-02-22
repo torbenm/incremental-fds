@@ -1,18 +1,20 @@
-package org.mp.naumann.processor.batch.source;
+package org.mp.naumann.processor.batch.source.csv;
 
 import ResourceConnection.ResourceConnector;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.ListBatch;
+import org.mp.naumann.processor.batch.source.StreamableBatchSource;
+import org.mp.naumann.processor.batch.source.csv.CsvFileBatchSource;
 
 import java.io.File;
 
-public class VariableSizeBatchSource extends CsvFileBatchSource implements StreamableBatchSource {
+public class VariableSizeCsvBatchSource extends CsvFileBatchSource implements StreamableBatchSource {
 
     private final String directory;
     private boolean streaming = false;
 
-    public VariableSizeBatchSource(String schema, String table, String directory) {
+    public VariableSizeCsvBatchSource(String schema, String table, String directory) {
         super(schema, table);
         this.directory = directory;
     }

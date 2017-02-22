@@ -1,9 +1,9 @@
 package org.mp.naumann.processor.testhelper;
 
-import static org.junit.Assert.assertEquals;
-
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.handler.BatchHandler;
+
+import static org.junit.Assert.assertEquals;
 
 public class OccurenceCountingBatchHandler implements BatchHandler {
     private static int num = 0;

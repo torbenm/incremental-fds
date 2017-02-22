@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd;
 
+import org.mockito.Mockito;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
@@ -14,9 +15,8 @@ import org.mp.naumann.database.jdbc.JdbcDataConnector;
 import org.mp.naumann.database.utils.ConnectionManager;
 import org.mp.naumann.processor.BatchProcessor;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
-import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
-import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
+import org.mp.naumann.processor.batch.source.csv.FixedSizeCsvBatchSource;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
 import java.util.List;
@@ -50,9 +50,9 @@ public interface IncrementalFDRunner {
 
             // create batch source & processor for inserts
             String batchFile = ResourceConnector.getResourcePath(ResourceConnector.FULL_BATCHES, runConfig.getBatchFileName());
-            StreamableBatchSource batchSource = new FixedSizeBatchSource(batchFile, runConfig.getSchema(),
+            StreamableBatchSource batchSource = new FixedSizeCsvBatchSource(batchFile, runConfig.getSchema(),
                     runConfig.getTableName(), runConfig.getBatchSize());
-            DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
+            DatabaseBatchHandler databaseBatchHandler = Mockito.mock(DatabaseBatchHandler.class);
             BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 
             // create incremental algorithm

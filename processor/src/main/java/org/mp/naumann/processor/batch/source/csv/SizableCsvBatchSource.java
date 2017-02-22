@@ -1,13 +1,11 @@
-package org.mp.naumann.processor.batch.source;
-
-import java.util.ArrayList;
-import java.util.List;
+package org.mp.naumann.processor.batch.source.csv;
 
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.ListBatch;
+import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 
-public abstract class SizableBatchSource extends CsvFileBatchSource implements StreamableBatchSource{
+public abstract class SizableCsvBatchSource extends CsvFileBatchSource implements StreamableBatchSource {
 
     private final int batchSize;
     private boolean streaming = false;
@@ -16,12 +14,12 @@ public abstract class SizableBatchSource extends CsvFileBatchSource implements S
     private int stopAfter = -1;
     private int currentBatch = 0;
 
-    public SizableBatchSource(String schema, String tableName, int batchSize) {
+    public SizableCsvBatchSource(String schema, String tableName, int batchSize) {
         super(schema, tableName);
     	this.batchSize = batchSize;
     }
 
-    public SizableBatchSource(String schema, String tableName, int batchSize, int stopAfter, int skipFirst) {
+    public SizableCsvBatchSource(String schema, String tableName, int batchSize, int stopAfter, int skipFirst) {
         this(schema, tableName, batchSize);
         this.stopAfter = stopAfter;
         this.currentStatementPosition = skipFirst;

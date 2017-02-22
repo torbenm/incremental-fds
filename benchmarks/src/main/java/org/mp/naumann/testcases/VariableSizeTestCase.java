@@ -1,9 +1,8 @@
 package org.mp.naumann.testcases;
 
-import ResourceConnection.ResourceConnector;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
-import org.mp.naumann.processor.batch.source.VariableSizeBatchSource;
+import org.mp.naumann.processor.batch.source.csv.VariableSizeCsvBatchSource;
 
 public class VariableSizeTestCase extends BaseTestCase {
 
@@ -19,7 +18,7 @@ public class VariableSizeTestCase extends BaseTestCase {
     }
 
     protected StreamableBatchSource getBatchSource() {
-        return new VariableSizeBatchSource(schema, tableName, directory + sourceTableName);
+        return new VariableSizeCsvBatchSource(schema, tableName, directory + sourceTableName);
     }
 
 }

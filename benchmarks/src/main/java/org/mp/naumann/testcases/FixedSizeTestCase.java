@@ -2,7 +2,7 @@ package org.mp.naumann.testcases;
 
 import ResourceConnection.ResourceConnector;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
+import org.mp.naumann.processor.batch.source.csv.FixedSizeCsvBatchSource;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 
 public class FixedSizeTestCase extends BaseTestCase {
@@ -19,7 +19,7 @@ public class FixedSizeTestCase extends BaseTestCase {
     }
 
     protected StreamableBatchSource getBatchSource() {
-        return new FixedSizeBatchSource(ResourceConnector.FULL_BATCHES + sourceTableName + ".csv", schema, tableName, batchSize, stopAfter, 0);
+        return new FixedSizeCsvBatchSource(ResourceConnector.FULL_BATCHES + sourceTableName + ".csv", schema, tableName, batchSize, stopAfter, 0);
     }
 
 }

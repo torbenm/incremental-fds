@@ -3,7 +3,6 @@ package org.mp.naumann.algorithms;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.result.ResultListener;
 import org.mp.naumann.processor.batch.Batch;
-import org.mp.naumann.processor.exceptions.BatchHandlingException;
 import org.mp.naumann.processor.handler.BatchHandler;
 
 import java.util.Collection;

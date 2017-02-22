@@ -1,5 +1,6 @@
 package org.mp.naumann.benchmarks;
 
+import org.mockito.Mockito;
 import org.mp.naumann.BenchmarksApplication;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.InitialAlgorithm;
@@ -9,9 +10,8 @@ import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.jdbc.JdbcDataConnector;
 import org.mp.naumann.database.utils.ConnectionManager;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
-import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
-import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
+import org.mp.naumann.processor.batch.source.csv.FixedSizeCsvBatchSource;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
 import ResourceConnection.ResourceConnector;
@@ -28,8 +28,8 @@ public class AverageAlgorithmBenchmark implements AlgorithmBenchmark {
                                     String column, String table) throws ConnectionException {
         this.currentTestCase = testCase;
         String file = BenchmarksApplication.class.getResource(incrementalFileName).getPath();
-        batchSource = new FixedSizeBatchSource(file, "", "", batchSize);
-        DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
+        batchSource = new FixedSizeCsvBatchSource(file, "", "", batchSize);
+        DatabaseBatchHandler databaseBatchHandler = Mockito.mock(DatabaseBatchHandler.class);
 
         JdbcDataConnector jdbcDataConnector = new JdbcDataConnector(ConnectionManager.getCsvConnection(ResourceConnector.BENCHMARK, ","));
         initialAlgorithm = new AverageInitialAlgorithm(column, table, jdbcDataConnector, "benchmark");

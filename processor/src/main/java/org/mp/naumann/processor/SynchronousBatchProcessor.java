@@ -10,6 +10,10 @@ import org.mp.naumann.processor.batch.source.BatchSource;
 import org.mp.naumann.processor.handler.BatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
+/**
+ * A synchronous implementation of the {@link BatchProcessor}.
+ * This means the batches are processed by the {@link BatchHandler} one after another.
+ */
 public class SynchronousBatchProcessor extends BatchProcessor {
 
     private int batchCounter = 0;
@@ -26,13 +30,16 @@ public class SynchronousBatchProcessor extends BatchProcessor {
         return new ArrayList<>();
     }
 
+    /**
+     * Processes the batch in a synchronous fashion
+     * @param batch The batch to process
+     */
     protected void distributeBatch(Batch batch) {
-
         SpeedBenchmark.begin(BenchmarkLevel.BATCH);
         for(BatchHandler batchHandler : getBatchHandlers()){
             batchHandler.handleBatch(batch);
         }
-        SpeedBenchmark.end(BenchmarkLevel.BATCH, "Processed Batch "+batchCounter++);
+        SpeedBenchmark.end(BenchmarkLevel.BATCH, "Processed Batch "+ batchCounter++);
     }
 
 }

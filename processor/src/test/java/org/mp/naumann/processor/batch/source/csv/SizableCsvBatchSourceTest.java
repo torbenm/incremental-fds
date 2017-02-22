@@ -1,25 +1,15 @@
-package org.mp.naumann.processor.batch.source;
+package org.mp.naumann.processor.batch.source.csv;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+public class SizableCsvBatchSourceTest {
 
-import org.junit.Before;
-import org.junit.Test;
-import org.mp.naumann.database.fake.FakeDeleteStatement;
-import org.mp.naumann.processor.batch.source.helper.ExceptionThrowingBatchSourceListener;
-import org.mp.naumann.processor.fake.FakeSizeableBatchSource;
-
-public class SizableBatchSourceTest {
-
-    private SizableBatchSource sbs;
+    /* private SizableCsvBatchSource sbs;
     private static int BATCH_SIZE = 5;
     private static String TABLE_NAME = "demotable";
     private static String SCHEMA = "";
 
     @Before
     public void init() {
-        sbs = new FakeSizeableBatchSource(SCHEMA, TABLE_NAME, BATCH_SIZE);
+        sbs = new FakeSizeableCsvBatchSource(SCHEMA, TABLE_NAME, BATCH_SIZE);
     }
 
     @Test
@@ -147,5 +137,5 @@ public class SizableBatchSourceTest {
     private void addStatement(){
         sbs.addStatement(new FakeDeleteStatement());
     }
-
+    */
 }

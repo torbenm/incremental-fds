@@ -1,5 +1,6 @@
 package org.mp.naumann;
 
+import org.mockito.Mockito;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.implementations.AverageDatastructure;
 import org.mp.naumann.algorithms.implementations.AverageIncrementalAlgorithm;
@@ -7,9 +8,8 @@ import org.mp.naumann.algorithms.result.PrintResultListener;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.processor.BatchProcessor;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
-import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
-import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
+import org.mp.naumann.processor.batch.source.csv.FixedSizeCsvBatchSource;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
 import ResourceConnection.ResourceConnector;
@@ -22,8 +22,8 @@ public class Demo {
 
 	public static void main(String[] args) throws ClassNotFoundException, ConnectionException {
 		String file = ResourceConnector.getResourcePath(ResourceConnector.FULL_BATCHES, "inserts.countries.csv");
-		StreamableBatchSource batchSource = new FixedSizeBatchSource(file, SCHEMA, TABLE, BATCH_SIZE);
-		DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
+		StreamableBatchSource batchSource = new FixedSizeCsvBatchSource(file, SCHEMA, TABLE, BATCH_SIZE);
+		DatabaseBatchHandler databaseBatchHandler = Mockito.mock(DatabaseBatchHandler.class);
 		BatchProcessor bp = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 
 		AverageDatastructure popDs = new AverageDatastructure();

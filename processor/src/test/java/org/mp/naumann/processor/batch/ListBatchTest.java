@@ -1,13 +1,13 @@
 package org.mp.naumann.processor.batch;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.Test;
 import org.mp.naumann.database.fake.FakeDeleteStatement;
 import org.mp.naumann.database.fake.FakeInsertStatement;
 import org.mp.naumann.database.fake.FakeUpdateStatement;
 import org.mp.naumann.database.statement.Statement;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ListBatchTest extends BatchTest {
 

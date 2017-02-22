@@ -1,4 +1,4 @@
-package org.mp.naumann.processor.batch.source;
+package org.mp.naumann.processor.batch.source.csv;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -7,6 +7,7 @@ import org.mp.naumann.database.statement.DefaultDeleteStatement;
 import org.mp.naumann.database.statement.DefaultInsertStatement;
 import org.mp.naumann.database.statement.DefaultUpdateStatement;
 import org.mp.naumann.database.statement.Statement;
+import org.mp.naumann.processor.batch.source.AbstractBatchSource;
 
 import java.io.File;
 import java.io.IOException;

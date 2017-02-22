@@ -11,7 +11,6 @@ import org.mp.naumann.database.statement.DefaultUpdateStatement;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.ListBatch;
-import org.mp.naumann.processor.exceptions.BatchHandlingException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +29,7 @@ public class AverageIncrementalAlgorithmTest {
 	private static final String TABLE = "table";
 
 	@Test
-	public void testInsert() throws BatchHandlingException {
+	public void testInsert()  {
 		SingleResultListener<Double> rl = new SingleResultListener<>();
 		AverageIncrementalAlgorithm alg = new AverageIncrementalAlgorithm(COLUMN);
 		alg.addResultListener(rl);
@@ -45,7 +44,7 @@ public class AverageIncrementalAlgorithmTest {
 	}
 
 	@Test
-	public void testDelete() throws BatchHandlingException {
+	public void testDelete()  {
 		SingleResultListener<Double> rl = new SingleResultListener<>();
 		AverageIncrementalAlgorithm alg = new AverageIncrementalAlgorithm(COLUMN);
 		AverageDatastructure ds = new AverageDatastructure();
@@ -64,7 +63,7 @@ public class AverageIncrementalAlgorithmTest {
 	}
 
 	@Test
-	public void testUpdate() throws BatchHandlingException {
+	public void testUpdate()  {
 		SingleResultListener<Double> rl = new SingleResultListener<>();
 		AverageIncrementalAlgorithm alg = new AverageIncrementalAlgorithm(COLUMN);
 		AverageDatastructure ds = new AverageDatastructure();
@@ -83,7 +82,7 @@ public class AverageIncrementalAlgorithmTest {
 	}
 
 	@Test
-	public void testMixed() throws BatchHandlingException {
+	public void testMixed()  {
 		SingleResultListener<Double> rl = new SingleResultListener<>();
 		AverageIncrementalAlgorithm alg = new AverageIncrementalAlgorithm(COLUMN);
 		AverageDatastructure ds = new AverageDatastructure();
