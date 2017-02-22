@@ -20,8 +20,8 @@ import org.mp.naumann.processor.BatchProcessor;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
+import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.BatchHandler;
-import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.PassThroughDatabaseBatchHandler;
 
 import java.io.IOException;
@@ -64,9 +64,7 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
             Statement stmt = conn.createStatement();
             stmt.execute("CREATE TEMPORARY TABLE " + (schema.isEmpty() ? "" : schema + ".") + tableName + " AS SELECT * FROM " + sourceTableName);
 
-            DatabaseBatchHandler databaseBatchHandler = new PassThroughDatabaseBatchHandler(dc);
             StreamableBatchSource batchSource = getBatchSource();
-            BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler, hyfdOnly);
             Table table = dc.getTable(schema, tableName);
             baselineSize = table.getRowCount();
 
@@ -80,12 +78,14 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
             fds.forEach(fd -> FDLogger.log(Level.FINE, fd.toString()));
 
             if (hyfdOnly) {
+                BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, new PassThroughDatabaseBatchHandler(dc), true);
                 batchProcessor.addBatchHandler(new HyFDBatchHandler(table, getLimit(), config));
             } else {
                 FDIntermediateDatastructure ds = initialAlgorithm.getIntermediateDataStructure();
                 IncrementalFD incrementalAlgorithm = new IncrementalFD(sourceTableName, config);
                 incrementalAlgorithm.initialize(ds);
                 incrementalAlgorithm.addResultListener(resultListener);
+                BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, new FakeDatabaseBatchHandler(), false);
                 batchProcessor.addBatchHandler(incrementalAlgorithm);
             }
 
