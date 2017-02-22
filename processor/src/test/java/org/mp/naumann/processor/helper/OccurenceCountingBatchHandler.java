@@ -1,4 +1,4 @@
-package org.mp.naumann.processor.testhelper;
+package org.mp.naumann.processor.helper;
 
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.handler.BatchHandler;

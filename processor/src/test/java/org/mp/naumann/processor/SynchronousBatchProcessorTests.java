@@ -2,7 +2,7 @@ package org.mp.naumann.processor;
 
 import org.junit.Test;
 import org.mp.naumann.processor.batch.Batch;
-import org.mp.naumann.processor.testhelper.OccurenceCountingBatchHandler;
+import org.mp.naumann.processor.helper.OccurenceCountingBatchHandler;
 
 import static org.mockito.Mockito.mock;
 

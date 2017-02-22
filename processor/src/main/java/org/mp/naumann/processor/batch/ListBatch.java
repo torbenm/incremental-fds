@@ -9,6 +9,10 @@ import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.database.statement.UpdateStatement;
 
+
+/**
+ * Implementation of a {@link Batch} which stores the statements in a List.
+ */
 public class ListBatch implements Batch {
 
     private final List<Statement> statements;

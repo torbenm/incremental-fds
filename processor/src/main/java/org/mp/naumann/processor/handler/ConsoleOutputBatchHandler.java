@@ -2,6 +2,9 @@ package org.mp.naumann.processor.handler;
 
 import org.mp.naumann.processor.batch.Batch;
 
+/**
+ * A BatchHandler that outputs information of the batch on the console.
+ */
 public class ConsoleOutputBatchHandler implements BatchHandler {
     @Override
     public void handleBatch(Batch batch) {

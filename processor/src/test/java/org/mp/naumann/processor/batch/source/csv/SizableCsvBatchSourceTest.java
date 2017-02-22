@@ -1,87 +1,103 @@
 package org.mp.naumann.processor.batch.source.csv;
 
-public class SizableCsvBatchSourceTest {
+import org.junit.Test;
+import org.mp.naumann.database.statement.Statement;
+import org.mp.naumann.processor.batch.source.AbstractBatchSourceTest;
+import org.mp.naumann.processor.batch.source.helper.ExceptionThrowingBatchSourceListener;
 
-    /* private SizableCsvBatchSource sbs;
-    private static int BATCH_SIZE = 5;
-    private static String TABLE_NAME = "demotable";
-    private static String SCHEMA = "";
+import static junit.framework.TestCase.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-    @Before
-    public void init() {
-        sbs = new FakeSizeableCsvBatchSource(SCHEMA, TABLE_NAME, BATCH_SIZE);
+public class SizableCsvBatchSourceTest extends AbstractBatchSourceTest {
+
+    private SizableCsvBatchSource sizableCsvBatchSource;
+    private final static int BATCH_SIZE = 5;
+    private final static String TABLE_NAME = "demotable";
+    private final static String SCHEMA = "";
+
+
+    public SizableCsvBatchSourceTest(){
+        this.sizableCsvBatchSource = new SizableCsvBatchSource(SCHEMA, TABLE_NAME, BATCH_SIZE) {
+            @Override
+            protected void start() {
+
+            }
+        };
+        this.abstractBatchSource = this.sizableCsvBatchSource;
     }
 
     @Test
     public void testGetBatchSize() {
-        assertEquals(BATCH_SIZE, sbs.getBatchSize());
+        assertEquals(BATCH_SIZE, sizableCsvBatchSource.getBatchSize());
     }
 
     @Test
     public void testStartAndStopStreaming() {
-        sbs.startStreaming();
-        assertTrue(sbs.isStreaming());
-        sbs.endStreaming();
-        assertFalse(sbs.isStreaming());
+        sizableCsvBatchSource.startStreaming();
+        assertTrue(sizableCsvBatchSource.isStreaming());
+        sizableCsvBatchSource.endStreaming();
+        assertFalse(sizableCsvBatchSource.isStreaming());
     }
 
     @Test
     public void testAddStatement() {
         addStatement();
-        assertTrue(sbs.hasSomethingToStream());
-        assertEquals(BATCH_SIZE == 1, sbs.hasEnoughToStream());
+        assertTrue(sizableCsvBatchSource.hasSomethingToStream());
+        assertEquals(BATCH_SIZE == 1, sizableCsvBatchSource.hasEnoughToStream());
     }
 
     @Test(expected= ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException.class)
     public void testWeakStreaming() {
-        sbs.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
-        sbs.startStreaming();
+        sizableCsvBatchSource.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
+        sizableCsvBatchSource.startStreaming();
         try {
             for (int i = 0; i < BATCH_SIZE - 1; i++) {
                 addStatement();
-                sbs.weakStream();
+                sizableCsvBatchSource.weakStream();
             }
         } catch (ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException e) {
             throw new AssertionError();
         }
         addStatement();
-        sbs.weakStream();
+        sizableCsvBatchSource.weakStream();
     }
 
     @Test(expected= ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException.class)
     public void testForceStream(){
-        sbs.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
-        sbs.startStreaming();
+        sizableCsvBatchSource.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
+        sizableCsvBatchSource.startStreaming();
         //GENERATE ONE LESS THAN NECESSARY TO TEST
         for (int i = 0; i < BATCH_SIZE - 1; i++) {
             addStatement();
         }
-        assertFalse(sbs.hasEnoughToStream());
-        sbs.forceStream();
+        assertFalse(sizableCsvBatchSource.hasEnoughToStream());
+        sizableCsvBatchSource.forceStream();
     }
 
     @Test(expected= ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException.class)
     public void testFinishFilling(){
-        sbs.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
-        sbs.startStreaming();
+        sizableCsvBatchSource.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
+        sizableCsvBatchSource.startStreaming();
         //GENERATE ONE LESS THAN NECESSARY TO TEST
         for (int i = 0; i < BATCH_SIZE - 1; i++) {
             addStatement();
         }
-        assertFalse(sbs.hasEnoughToStream());
-        sbs.finishFilling();
+        assertFalse(sizableCsvBatchSource.hasEnoughToStream());
+        sizableCsvBatchSource.finishFilling();
     }
 
     @Test
     public void testEndStreaming(){
-        sbs.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
-        sbs.startStreaming();
+        sizableCsvBatchSource.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
+        sizableCsvBatchSource.startStreaming();
         boolean received = false;
         for (int i = 0; i < BATCH_SIZE - 1; i++) {
             addStatement();
         }
         try {
-            sbs.endStreaming();
+            sizableCsvBatchSource.endStreaming();
         }catch(ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException e){
             received = true;
         }
@@ -91,8 +107,8 @@ public class SizableCsvBatchSourceTest {
 
     @Test
     public void testStartAndEndStreaming(){
-        sbs.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
-        sbs.startStreaming();
+        sizableCsvBatchSource.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
+        sizableCsvBatchSource.startStreaming();
         boolean received = false;
         int batches = 0;
         for (int i = 0; i < BATCH_SIZE*10 - 1; i++) {
@@ -103,7 +119,7 @@ public class SizableCsvBatchSourceTest {
             }
         }
         try {
-            sbs.endStreaming();
+            sizableCsvBatchSource.endStreaming();
         }catch(ExceptionThrowingBatchSourceListener.ExceptionThrowingBatchSourceListenerException e){
             received = true;
         }
@@ -113,7 +129,7 @@ public class SizableCsvBatchSourceTest {
 
     @Test
     public void testNoStreamingWhenStreamingIsOff() {
-        sbs.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
+        sizableCsvBatchSource.addBatchSourceListener(new ExceptionThrowingBatchSourceListener());
         try {
             for (int i = 0; i < BATCH_SIZE * 10; i++) {
                 addStatement();
@@ -128,14 +144,15 @@ public class SizableCsvBatchSourceTest {
         for (int i = 0; i < BATCH_SIZE - 1; i++) {
             addStatement();
         }
-        assertFalse(sbs.hasEnoughToStream());
+        assertFalse(sizableCsvBatchSource.hasEnoughToStream());
         addStatement();
-        assertTrue(sbs.hasEnoughToStream());
+        assertTrue(sizableCsvBatchSource.hasEnoughToStream());
     }
-
+    
     
     private void addStatement(){
-        sbs.addStatement(new FakeDeleteStatement());
+
+        sizableCsvBatchSource.addStatement(mock(Statement.class));
     }
-    */
+
 }

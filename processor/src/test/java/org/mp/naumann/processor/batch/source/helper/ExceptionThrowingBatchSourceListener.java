@@ -10,6 +10,6 @@ public class ExceptionThrowingBatchSourceListener implements BatchSourceListener
     }
 
     public static class ExceptionThrowingBatchSourceListenerException extends RuntimeException{
-
-		private static final long serialVersionUID = 996719513663936109L;}
+		private static final long serialVersionUID = 996719513663936109L;
+    }
 }

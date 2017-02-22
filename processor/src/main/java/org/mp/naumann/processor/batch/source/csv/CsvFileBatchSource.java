@@ -13,19 +13,19 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.mp.naumann.processor.batch.source.csv.CsvKeyWord.*;
+
 public abstract class CsvFileBatchSource extends AbstractBatchSource {
 
     private static final Charset CHARSET = Charset.defaultCharset();
     private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withFirstRecordAsHeader();
-    public static final String ACTION_COLUMN_NAME = "::action";
-    private static final String RECORD_COLUMN_NAME = "::record";
-    private static final String defaultAction = "insert";
-
+    private static final CsvKeyWord defaultAction = CsvKeyWord.INSERT_STATEMENT;
     final List<Statement> statementList = new ArrayList<>();
     final String schema;
     final String tableName;
@@ -38,7 +38,7 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
         this.tableName = tableName;
     }
 
-    private void initializeCsvParser(File file) {
+    private CSVParser initializeCsvParser(File file) {
         if ((csvParser == null) || (!file.getAbsolutePath().equals(filename))) {
             try {
                 csvParser = CSVParser.parse(file, CHARSET, FORMAT);
@@ -47,31 +47,41 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
                 //
             }
         }
+        return csvParser;
     }
 
     abstract void addStatement(Statement stmt);
 
     void parseFile(File file) {
-        initializeCsvParser(file);
-        for (CSVRecord csvRecord : csvParser) {
-            Map<String, String> values = csvRecord.toMap();
-
-            String action = (csvRecord.isSet(ACTION_COLUMN_NAME) ? csvRecord.get(ACTION_COLUMN_NAME) : defaultAction);
-
-            values.remove(ACTION_COLUMN_NAME);
-            values.remove(RECORD_COLUMN_NAME);
-            Statement stmt = createStatement(action, values);
-            addStatement(stmt);
-        }
+        parseRecords(initializeCsvParser(file));
     }
 
-    private Statement createStatement(String type, Map<String, String> values) {
-        switch (type.toLowerCase()) {
-            case "insert":
+    void parseRecords(CSVParser csvParser){
+        for(CSVRecord record : csvParser){
+            addStatement(parseRecord(record));
+        }
+    }
+    Statement parseRecord(CSVRecord csvRecord){
+        return parseRecord(csvRecord.toMap());
+    }
+
+    Statement parseRecord(Map<String, String> values){
+        String action = (values.containsKey(ACTION_COLUMN.getKeyWord())
+                ? values.get(ACTION_COLUMN.getKeyWord()) : defaultAction.getKeyWord());
+
+        values.remove(ACTION_COLUMN.getKeyWord());
+        values.remove(RECORD_COLUMN.getKeyWord());
+        Statement stmt = createStatement(action, values);
+        return stmt;
+    }
+
+    Statement createStatement(String type, Map<String, String> values) {
+        switch (CsvKeyWord.valueOfKeyWord(type)) {
+            case INSERT_STATEMENT:
                 return new DefaultInsertStatement(values, schema, tableName);
-            case "delete":
+            case DELETE_STATEMENT:
                 return new DefaultDeleteStatement(values, schema, tableName);
-            case "update":
+            case UPDATE_STATEMENT:
                 Map<String, String> oldValues = new HashMap<>();
                 Map<String, String> newValues = new HashMap<>();
                 values.forEach((key, value) -> {
@@ -91,7 +101,7 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
                 .parallelStream()
                 .sorted(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .filter(s -> !(s.equals(ACTION_COLUMN_NAME) || s.equals(RECORD_COLUMN_NAME)))
+                .filter(s -> !(s.equals(ACTION_COLUMN.getKeyWord()) || s.equals(RECORD_COLUMN.getKeyWord())))
                 .collect(Collectors.toList());
     }
 }
