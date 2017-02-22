@@ -74,6 +74,10 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
             // as warmup if we run in hyfdOnly mode
             HyFDInitialAlgorithm initialAlgorithm = new HyFDInitialAlgorithm(config, table);
             initialAlgorithm.execute();
+            List<FunctionalDependency> fds = initialAlgorithm.getFDs();
+            FDLogger.log(Level.INFO, String.format("Initial FD count: %s", fds.size()));
+            FDLogger.log(Level.FINE, "Initial FDs:");
+            fds.forEach(fd -> FDLogger.log(Level.FINE, fd.toString()));
 
             if (hyfdOnly) {
                 batchProcessor.addBatchHandler(new HyFDBatchHandler(table, getLimit(), config));
@@ -91,7 +95,7 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
             FDLogger.log(Level.INFO, String.format("Cumulative runtime (algorithm only): %sms", getTotalTime(batchEvents)));
 
-            List<FunctionalDependency> fds = (hyfdOnly ? initialAlgorithm.getFDs() : resultListener.getFDs());
+            fds = (hyfdOnly ? initialAlgorithm.getFDs() : resultListener.getFDs());
             fdCount = fds.size();
             FDLogger.log(Level.INFO, String.format("Found %s FDs:", fdCount));
             fds.forEach(fd -> FDLogger.log(Level.INFO, fd.toString()));
@@ -177,6 +181,11 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
             HyFDInitialAlgorithm algorithm = new HyFDInitialAlgorithm(config, table);
             algorithm.execute();
+
+            List<FunctionalDependency> fds = algorithm.getFDs();
+            FDLogger.log(Level.INFO, String.format("New FD count: %s", fds.size()));
+            FDLogger.log(Level.FINE, "New FDs:");
+            fds.forEach(fd -> FDLogger.log(Level.FINE, fd.toString()));
         }
     }
 
