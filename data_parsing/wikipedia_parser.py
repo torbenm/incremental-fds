@@ -520,6 +520,9 @@ def checkForTrueDeleteAndCorrect(updateStatement, baselineDataTable):
 
     targetEntry = baselineDataTable[targetId]
 
+    if updateStatement["article_title"] == "Pathologic fracture":
+        print("break")
+
     hasNonEmptyFields = False
     for attribute in targetEntry:
         if attribute in ["id", "article_title"]:
@@ -528,6 +531,13 @@ def checkForTrueDeleteAndCorrect(updateStatement, baselineDataTable):
             hasNonEmptyFields = True
     if hasNonEmptyFields:
         updateStatement["::action"] = "update"
+        # add pipes if it's an update statement
+        for attribute in updateStatement:
+            if attribute in ["article_title", "::record", "::action"]:
+                continue
+            elif updateStatement[attribute] != "":
+                updateStatement[attribute] += "|"
+
     else:
         print("Deleting " + baselineDataTable[targetId]["article_title"])
         del baselineDataTable[targetId]
@@ -542,6 +552,9 @@ def checkForTrueDeleteAndCorrect(updateStatement, baselineDataTable):
 def applyUpdateStatement(updateStatement, baselineDataTable, attributes):
     targetId = str(updateStatement["::record"])
 
+    if updateStatement["article_title"] == "Pathologic fracture":
+        print("break")
+
     if targetId in baselineDataTable:
         targetEntry = baselineDataTable[targetId]
 
@@ -550,7 +563,8 @@ def applyUpdateStatement(updateStatement, baselineDataTable, attributes):
                 newValue = updateStatement[attribute].split("|")[1]
                 newOldValue = targetEntry[attribute]
                 targetEntry[attribute] = newValue
-                updateStatement[attribute] = newOldValue + "|" + newValue
+                if newValue != "" or newOldValue != "":
+                    updateStatement[attribute] = newOldValue + "|" + newValue
 
     else:
         updateStatement["::action"] = "insert"
@@ -622,7 +636,8 @@ def writeParsedDataToDisk(targetInfoboxType, baselineData, insertRecords, update
     createTargetDirectoriesIfNecessary()
 
     attributes = list(attributes)
-    attributes.remove("article_title")
+    if ("article_title") in attributes:
+        attributes.remove("article_title")
     attributes.insert(0, "article_title")
 
     print("Writing baseline csv...")
@@ -710,7 +725,8 @@ def readInfoboxConfig():
     infoboxConfig = {}
     directory = "infobox_configs/"
     for file in os.listdir(directory):
-        infoboxConfig.update(readInfoboxConfigFromFile(directory + file))
+        if os.path.isfile(directory + file):
+            infoboxConfig.update(readInfoboxConfigFromFile(directory + file))
     return infoboxConfig
 
 if __name__ == "__main__":
