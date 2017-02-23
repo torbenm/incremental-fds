@@ -32,8 +32,8 @@ public abstract class AbstractStatementApplier implements StatementVisitor {
 
     @Override
     public void visit(InsertStatement insert) {
-        int inserted = addRecord(insert.getValueMap());
-        insertedUpdate.add(inserted);
+        int insertedRecord = addRecord(insert.getValueMap());
+        inserted.add(insertedRecord);
     }
 
     public Set<Integer> getInserted() {
