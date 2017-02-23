@@ -36,7 +36,6 @@ public class JdbcTableInput implements TableInput {
 			}
 			return new GenericRow(values, getColumns());
 		} catch (SQLException e) {
-		    Level.
 			throw new RuntimeException(e);
 		}
 	}
