@@ -56,6 +56,8 @@ public class HyFD implements FunctionalDependencyAlgorithm {
     private final ViolationCollection violationCollection;
     private DeletePruner pruner;
 
+	public int lastValidationCount = 0;
+
     public HyFD(){
         this.configuration = IncrementalFDConfiguration.LATEST;
         violationCollection = configuration.createViolationCollection();
@@ -150,6 +152,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		boolean validateParallel = true;
 		Validator validator = new Validator(negCover, posCover, numRecords, compressedRecords, plis,
 				efficiencyThreshold, validateParallel, this.memoryGuardian, violationCollection, matcher);
+		lastValidationCount = validator.lastValidationCount;
 
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 

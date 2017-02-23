@@ -35,6 +35,7 @@ public class Validator {
     private final Matcher matcher;
 
 	private int level = 0;
+	int lastValidationCount = 0;
 
 	public Validator(FDSet negCover, FDTree posCover, int numRecords, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian, ViolationCollection violationCollection, Matcher matcher) {
 		this.negCover = negCover;
@@ -206,6 +207,7 @@ public class Validator {
 			FDLogger.log(Level.FINER, "(V)");
 			
 			ValidationResult validationResult = (this.executor == null) ? this.validateSequential(currentLevel) : this.validateParallel(currentLevel);
+			lastValidationCount = validationResult.validations;
 			comparisonSuggestions.addAll(validationResult.comparisonSuggestions);
 			
 			// If the next level exceeds the predefined maximum lhs size, then we can stop here

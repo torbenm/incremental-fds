@@ -10,6 +10,7 @@ import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.HyFDInitialAlgorithm;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDResult;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
@@ -43,7 +44,6 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
     final int stopAfter;
     final String schema, tableName, sourceTableName;
     private final boolean hyfdOnly;
-    private int fdCount;
     private long baselineSize;
 
     BaseTestCase(String schema, String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly) {
@@ -79,7 +79,7 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
             if (hyfdOnly) {
                 BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, new PassThroughDatabaseBatchHandler(dc), true);
-                batchProcessor.addBatchHandler(new HyFDBatchHandler(table, getLimit(), config));
+                batchProcessor.addBatchHandler(new HyFDBatchHandler(table, getLimit(), config, resultListener));
             } else {
                 FDIntermediateDatastructure ds = initialAlgorithm.getIntermediateDataStructure();
                 IncrementalFD incrementalAlgorithm = new IncrementalFD(sourceTableName, config);
@@ -94,11 +94,8 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
             SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Algorithm for all batches");
 
             FDLogger.log(Level.INFO, String.format("Cumulative runtime (algorithm only): %sms", getTotalTime(batchEvents)));
-
-            fds = (hyfdOnly ? initialAlgorithm.getFDs() : resultListener.getFDs());
-            fdCount = fds.size();
-            FDLogger.log(Level.INFO, String.format("Found %s FDs:", fdCount));
-            fds.forEach(fd -> FDLogger.log(Level.INFO, fd.toString()));
+            FDLogger.log(Level.INFO, String.format("Found %s FDs:", resultListener.getFDs().size()));
+            resultListener.getFDs().forEach(fd -> FDLogger.log(Level.INFO, fd.toString()));
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -117,9 +114,9 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
                 getAverageTime(batchEvents),
                 getMedianTime(batchEvents),
                 getTotalTime(batchEvents),
-                (hyfdOnly ? 0 : resultListener.getValidationCount()),
-                (hyfdOnly ? 0 : resultListener.getPrunedCount()),
-                fdCount
+                resultListener.getValidationCount(),
+                resultListener.getPrunedCount(),
+                resultListener.getFDs().size()
         };
     }
 
@@ -164,10 +161,12 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
         private final Table table;
         private final boolean singleFile;
         private final IncrementalFDConfiguration config;
+        private final IncrementalFDResultListener resultListener;
 
-        HyFDBatchHandler(Table table, int limit, IncrementalFDConfiguration config) {
+        HyFDBatchHandler(Table table, int limit, IncrementalFDConfiguration config, IncrementalFDResultListener resultListener) {
             this.table = table;
             this.config = config;
+            this.resultListener = resultListener;
             singleFile = (limit > 0);
             if (singleFile) table.setLimit(limit);
         }
@@ -182,10 +181,8 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
             HyFDInitialAlgorithm algorithm = new HyFDInitialAlgorithm(config, table);
             algorithm.execute();
 
-            List<FunctionalDependency> fds = algorithm.getFDs();
-            FDLogger.log(Level.INFO, String.format("New FD count: %s", fds.size()));
-            FDLogger.log(Level.FINE, "New FDs:");
-            fds.forEach(fd -> FDLogger.log(Level.FINE, fd.toString()));
+            IncrementalFDResult result = new IncrementalFDResult(algorithm.getFDs(), algorithm.getValidationCount(), 0);
+            resultListener.receiveResult(result);
         }
     }
 

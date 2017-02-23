@@ -39,4 +39,6 @@ public class HyFDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDep
 		return fds;
 	}
 
+	public int getValidationCount() { return hyfd.lastValidationCount; }
+
 }
