@@ -2,7 +2,7 @@ package org.mp.naumann.algorithms.fd.incremental;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
-import org.mp.naumann.algorithms.fd.incremental.pruning.DeletePruner;
+import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.DeletePruner;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 class IncrementalMatcher {
@@ -21,7 +21,7 @@ class IncrementalMatcher {
 
     void match(OpenBitSet equalAttrs,  int recId1, int recId2) {
         match(equalAttrs, compressedRecords.get(recId1), this.compressedRecords.get(recId2));
-        if (configuration.usesPruningStrategy(PruningStrategy.DELETES)) {
+        if (configuration.usesPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS)) {
             pruner.addAgreeSet(equalAttrs.clone(), recId1, recId2);
         }
     }

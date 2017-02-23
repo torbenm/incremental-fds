@@ -33,6 +33,15 @@ public class IncrementalFDDemo {
             ","
     );
 
+    private static final IncrementalFDRunConfiguration countries = new IncrementalFDRunConfiguration(
+            "deletes.countries.csv",
+            "",
+            "countries",
+            1800,
+            ResourceConnector.BASELINE,
+            ","
+    );
+
     private static final IncrementalFDRunConfiguration adultInsert = new IncrementalFDRunConfiguration(
             "inserts.adult.csv",
             "",
@@ -64,7 +73,7 @@ public class IncrementalFDDemo {
         FDLogger.setLevel(Level.FINE);
 
         IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom")
-                .addPruningStrategy(PruningStrategy.DELETES)
+                .addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.DELETE_ANNOTATIONS)
 //                .addPruningStrategy(PruningStrategy.BLOOM_ADVANCED)
         ;
         IncrementalFDRunConfiguration runConfig = adultInsert;
@@ -73,7 +82,7 @@ public class IncrementalFDDemo {
         SpeedBenchmark.enable();
         Benchmark.enableAll();
         Benchmark.addEventListener(FDLogger::info);
-//        SpeedBenchmark.addEventListener(System.out::println);
+        SpeedBenchmark.addEventListener(System.out::println);
 
         IncrementalFDRunner runner = new IncrementalFDRunner() {
             @Override

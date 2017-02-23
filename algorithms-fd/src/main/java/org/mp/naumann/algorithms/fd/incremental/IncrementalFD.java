@@ -18,7 +18,7 @@ import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuil
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.incremental.IncrementalDataStructureBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.RecomputeDataStructureBuilder;
-import org.mp.naumann.algorithms.fd.incremental.pruning.DeletePruner;
+import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.DeletePruner;
 import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.AllCombinationsBloomGenerator;
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.BloomPruningStrategy;
@@ -227,7 +227,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         FDLogger.log(Level.FINE, "Started validating non-FDs");
         Benchmark benchmark = Benchmark.start("Validating non-FDs", Benchmark.DEFAULT_LEVEL + 1);
         IncrementalValidator validator = new NonFDValidator(dataStructureBuilder.getNumRecords(), compressedRecords, plis, validateParallel, fds, nonFds);
-        if (version.usesPruningStrategy(PruningStrategy.DELETES)) {
+        if (version.usesPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS)) {
             ValidationPruner pruner = deletePruner.analyzeDiff(diff);
             validator.addValidationPruner(pruner);
             benchmark.finishSubtask("Pruning");
