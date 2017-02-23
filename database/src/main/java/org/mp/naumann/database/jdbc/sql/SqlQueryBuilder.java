@@ -37,6 +37,10 @@ public class SqlQueryBuilder {
         return (key.startsWith(":") ? "\"" + key + "\"" : key);
     }
 
+    private static String formatKeyForValue(String key) {
+        return (key.isEmpty() ? "COALESCE(" + key + ", '')" : key);
+    }
+
     private static String equalsSeparator(String value, boolean isValueClause) {
         return (((value == null) && isValueClause) ? " IS " : " = ");
     }
@@ -54,7 +58,7 @@ public class SqlQueryBuilder {
         return valueMap
                 .entrySet()
                 .parallelStream()
-                .map(n -> formatKey(n.getKey()) + equalsSeparator(n.getValue(), isValueClause) + formatValue(n.getValue(), stmt.getJDBCType(n.getKey())))
+                .map(n -> formatKeyForValue(formatKey(n.getKey())) + equalsSeparator(n.getValue(), isValueClause) + formatValue(n.getValue(), stmt.getJDBCType(n.getKey())))
                 .collect(Collectors.joining(separator));
     }
 }
