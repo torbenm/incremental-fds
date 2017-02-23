@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
-import org.mp.naumann.algorithms.benchmark.better.Benchmark;
+import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
@@ -18,8 +18,8 @@ import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuil
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.incremental.IncrementalDataStructureBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.RecomputeDataStructureBuilder;
-import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.DeletePruner;
 import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
+import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.DeletePruner;
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.AllCombinationsBloomGenerator;
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.BloomPruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.CurrentFDBloomGenerator;

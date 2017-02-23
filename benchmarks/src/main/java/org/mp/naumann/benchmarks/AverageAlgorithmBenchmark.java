@@ -6,6 +6,7 @@ import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.InitialAlgorithm;
 import org.mp.naumann.algorithms.implementations.AverageIncrementalAlgorithm;
 import org.mp.naumann.algorithms.implementations.AverageInitialAlgorithm;
+import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.jdbc.JdbcDataConnector;
 import org.mp.naumann.database.utils.ConnectionManager;
@@ -13,8 +14,6 @@ import org.mp.naumann.processor.SynchronousBatchProcessor;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.batch.source.csv.FixedSizeCsvBatchSource;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
-
-import org.mp.naumann.data.ResourceConnector;
 
 public class AverageAlgorithmBenchmark implements AlgorithmBenchmark {
 

@@ -1,10 +1,5 @@
 package org.mp.naumann.algorithms.implementations;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.TreeSet;
-
 import org.mp.naumann.algorithms.InitialAlgorithm;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.InputReadException;
@@ -12,6 +7,15 @@ import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Row;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.TreeSet;
+
+/**
+ * An implementation of an {@link InitialAlgorithm} that calculates the median over a
+ * given column of a table.
+ */
 public class MedianInitialAlgorithm implements InitialAlgorithm<String, TreeSet<String>> {
 
 	private String column;

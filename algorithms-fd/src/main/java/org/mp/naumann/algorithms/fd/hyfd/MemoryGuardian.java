@@ -1,10 +1,11 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
+import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
+import org.mp.naumann.algorithms.fd.structures.FDTree;
+
 import java.lang.management.ManagementFactory;
 import java.util.logging.Level;
-import org.mp.naumann.algorithms.fd.structures.FDSet;
-import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.structures.FDTree;
 
 class MemoryGuardian {
 

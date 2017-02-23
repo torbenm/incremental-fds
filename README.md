@@ -22,6 +22,7 @@ Cleaned repositories:
 
 * processor
 * data
+* algorithms
 
 Documentation still needed: 
 * `processor.batch.source.*`

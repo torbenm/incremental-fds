@@ -7,6 +7,10 @@ import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Row;
 
+/**
+ * An implementation of an {@link InitialAlgorithm} that calculates the average over
+ * a given column in a table.
+ */
 public class AverageInitialAlgorithm implements InitialAlgorithm<Double, AverageDatastructure> {
 
 	private final String column;

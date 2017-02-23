@@ -1,9 +1,9 @@
 package org.mp.naumann.processor.batch.source;
 
+import org.mp.naumann.processor.batch.Batch;
+
 import java.util.HashSet;
 import java.util.Set;
-
-import org.mp.naumann.processor.batch.Batch;
 
 public abstract class AbstractBatchSource implements BatchSource {
 

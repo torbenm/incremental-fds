@@ -1,7 +1,5 @@
 package org.mp.naumann.processor;
 
-import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.source.BatchSource;
 import org.mp.naumann.processor.handler.BatchHandler;
@@ -35,12 +33,8 @@ public class SynchronousBatchProcessor extends BatchProcessor {
      * @param batch The batch to process
      */
     protected void distributeBatch(Batch batch) {
-        SpeedBenchmark.begin(BenchmarkLevel.BATCH);
         for(BatchHandler batchHandler : getBatchHandlers()){
             batchHandler.handleBatch(batch);
         }
-        SpeedBenchmark.end(BenchmarkLevel.BATCH, "Processed Batch "+ batchCounter++);
-        SpeedBenchmark.end(BenchmarkLevel.BATCH, "Processed Batch " + batchCounter++);
     }
-
 }

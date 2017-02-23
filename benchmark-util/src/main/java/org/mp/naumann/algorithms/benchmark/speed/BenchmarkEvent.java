@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.benchmark.better;
+package org.mp.naumann.algorithms.benchmark.speed;
 
 public class BenchmarkEvent {
 

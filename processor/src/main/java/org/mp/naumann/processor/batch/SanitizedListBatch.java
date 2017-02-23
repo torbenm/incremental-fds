@@ -37,7 +37,7 @@ public class SanitizedListBatch extends ListBatch {
                 }
             } else if (statement instanceof UpdateStatement) {
                 // create a new bucket, and if there was a bucket for the old values, merge it into the new one
-                Map<String, String> valueMap = ((UpdateStatement) statement).getValueMap();
+                Map<String, String> valueMap = ((UpdateStatement) statement).getNewValueMap();
                 Map<String, String> oldValueMap = ((UpdateStatement) statement).getOldValueMap();
                 clusters.put(valueMap, new ArrayList<>());
                 clusters.get(valueMap).add(statement);

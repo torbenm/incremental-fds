@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
+import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.data.ColumnCombination;
@@ -13,8 +14,6 @@ import org.mp.naumann.database.utils.ConnectionManager;
 
 import java.util.LinkedList;
 import java.util.List;
-
-import org.mp.naumann.data.ResourceConnector;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;

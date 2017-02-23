@@ -1,13 +1,12 @@
 package org.mp.naumann.algorithms.fd;
 
 import org.mockito.Mockito;
-import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDResult;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.algorithms.result.ResultListener;
+import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.Table;
@@ -20,8 +19,6 @@ import org.mp.naumann.processor.batch.source.csv.FixedSizeCsvBatchSource;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
 import java.util.List;
-
-import org.mp.naumann.data.ResourceConnector;
 
 public interface IncrementalFDRunner {
 
@@ -56,7 +53,6 @@ public interface IncrementalFDRunner {
             BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
 
             // create incremental algorithm
-            SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
             IncrementalFD algorithm = new IncrementalFD(runConfig.getTableName(),
                     algoConfig);
             algorithm.setEfficiencyThreshold(0.2f);
@@ -69,7 +65,6 @@ public interface IncrementalFDRunner {
             batchProcessor.addBatchHandler(algorithm);
             batchSource.startStreaming();
             afterIncremental(listener);
-            SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Finished processing 1 batch");
         }
     }
 

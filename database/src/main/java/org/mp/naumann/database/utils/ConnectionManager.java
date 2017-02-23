@@ -1,5 +1,6 @@
 package org.mp.naumann.database.utils;
 
+import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.jdbc.ConnectionInfo;
 
@@ -9,8 +10,6 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Properties;
-
-import org.mp.naumann.data.ResourceConnector;
 
 public class ConnectionManager {
 

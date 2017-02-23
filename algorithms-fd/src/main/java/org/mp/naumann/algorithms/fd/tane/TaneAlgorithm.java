@@ -9,12 +9,12 @@ import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
+import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
-import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.database.data.Row;
 
 import java.util.List;

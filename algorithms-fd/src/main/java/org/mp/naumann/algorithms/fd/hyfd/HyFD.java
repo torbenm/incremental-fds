@@ -2,8 +2,6 @@ package org.mp.naumann.algorithms.fd.hyfd;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
-import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
@@ -100,7 +98,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 	private void executeHyFD() throws AlgorithmExecutionException {
 		// Initialize
-        SpeedBenchmark.begin(BenchmarkLevel.OPERATION);
+
 		FDLogger.log(Level.FINER, "Initializing ...");
 		TableInput tableInput = this.getInput();
 		this.initialize(tableInput);
@@ -125,7 +123,6 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 						.receiveResult(new FunctionalDependency(new ColumnCombination(), columnIdentifiers.get(attr)));
 			return;
 		}
-        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialized Datastructures.");
 
 		int[][] compressedRecords = RecordCompressor.fetchCompressedRecords(plis, numRecords);
 		// Initialize the negative cover
@@ -135,7 +132,6 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		// Initialize the positive cover
 		FDTree posCover = new FDTree(this.numAttributes, maxLhsSize);
 		posCover.addMostGeneralDependencies();
-        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Calculated Negative and Positive Cover");
 		//////////////////////////
 		// Build the components //
 		//////////////////////////
@@ -156,8 +152,6 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
-        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialised Sampler, Inductor and Validator");
-        SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
         int i = 1;
 		do {
 			FDLogger.log(Level.FINE, "Started round " + i);
@@ -167,7 +161,6 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 			inductor.updatePositiveCover(newNonFds);
 			FDLogger.log(Level.FINE, "Validating positive cover");
 			comparisonSuggestions = validator.validatePositiveCover();
-            SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round "+i++);
 		} while (comparisonSuggestions != null);
 
         //violationCollection.print();
@@ -179,7 +172,6 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		// false);
 		int numFDs = posCover.addFunctionalDependenciesInto(this.resultReceiver, this.buildColumnIdentifiers(), plis);
 		
-        SpeedBenchmark.end(BenchmarkLevel.OPERATION, "Translated FD-tree into result format");
 		FDLogger.log(Level.FINER, "... done! (" + numFDs + " FDs)");
 		
 		this.posCover = posCover;

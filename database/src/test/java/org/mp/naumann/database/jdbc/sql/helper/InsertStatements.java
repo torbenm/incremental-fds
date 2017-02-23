@@ -1,12 +1,12 @@
 package org.mp.naumann.database.jdbc.sql.helper;
 
+import org.mp.naumann.database.statement.DefaultInsertStatement;
+import org.mp.naumann.database.statement.InsertStatement;
+
 import java.sql.JDBCType;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import org.mp.naumann.database.statement.DefaultInsertStatement;
-import org.mp.naumann.database.statement.InsertStatement;
 
 public class InsertStatements {
 

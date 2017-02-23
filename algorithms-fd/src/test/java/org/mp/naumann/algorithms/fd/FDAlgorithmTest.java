@@ -1,21 +1,25 @@
 package org.mp.naumann.algorithms.fd;
 
-import java.io.FileNotFoundException;
-import java.io.UnsupportedEncodingException;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mp.naumann.algorithms.exceptions.AlgorithmConfigurationException;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.exceptions.CouldNotReceiveResultException;
+import org.mp.naumann.algorithms.fd.fixtures.AbaloneFixture;
 import org.mp.naumann.algorithms.fd.fixtures.AlgorithmFixture;
 import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture;
 import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture1;
 import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture10;
+import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture11;
 import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture12;
+import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture13;
+import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture14;
 import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture15;
+import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture16;
 import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture17;
+import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture2;
+import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture3;
 import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture4;
 import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture5;
 import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture6;
@@ -23,16 +27,11 @@ import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture7;
 import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture8;
 import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture9;
 import org.mp.naumann.algorithms.fd.fixtures.BridgesFixture;
-
-import org.mp.naumann.algorithms.fd.fixtures.AbaloneFixture;
-import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture11;
-import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture13;
-import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture14;
-import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture16;
-import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture2;
-import org.mp.naumann.algorithms.fd.fixtures.AlgorithmTestFixture3;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.InputReadException;
+
+import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
 
 public abstract class FDAlgorithmTest {
 

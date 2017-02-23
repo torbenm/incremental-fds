@@ -18,8 +18,6 @@ package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
-import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 
 import java.util.ArrayList;
@@ -47,7 +45,6 @@ class IncrementalPLIBuilder {
      * @return clustersPerAttribute,
      */
     List<? extends PositionListIndex> fetchPositionListIndexes(List<Map<Integer, IntArrayList>> clusterMaps) {
-        SpeedBenchmark.begin(BenchmarkLevel.OPERATION);
         List<MapPositionListIndex> old = plis;
         if (old == null) {
             old = new ArrayList<>(pliOrder.size());

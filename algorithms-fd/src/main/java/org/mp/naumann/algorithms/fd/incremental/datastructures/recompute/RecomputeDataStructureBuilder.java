@@ -1,6 +1,6 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
-import org.mp.naumann.algorithms.benchmark.better.Benchmark;
+import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;

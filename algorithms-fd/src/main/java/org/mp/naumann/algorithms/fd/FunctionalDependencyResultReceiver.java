@@ -16,8 +16,6 @@
 
 package org.mp.naumann.algorithms.fd;
 
-import org.mp.naumann.algorithms.fd.FunctionalDependency;
-
 /**
  * Receives the results of a {@link FunctionalDependencyAlgorithm}.
  */

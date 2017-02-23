@@ -2,8 +2,8 @@ package org.mp.naumann.algorithms.fd.fdep;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
-import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
+import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 import java.util.List;
 

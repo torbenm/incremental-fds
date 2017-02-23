@@ -3,10 +3,11 @@ package org.mp.naumann.database.jdbc;
 import com.opentable.db.postgres.embedded.DatabasePreparer;
 import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
 import com.opentable.db.postgres.junit.PreparedDbRule;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mp.naumann.database.ConnectionException;
 import org.junit.ClassRule;
+import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.utils.PostgresConnectionPreparer;
 

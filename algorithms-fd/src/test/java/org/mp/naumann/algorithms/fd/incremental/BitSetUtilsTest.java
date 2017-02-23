@@ -1,11 +1,11 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import org.apache.lucene.util.OpenBitSet;
 import org.junit.Test;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class BitSetUtilsTest {
 	

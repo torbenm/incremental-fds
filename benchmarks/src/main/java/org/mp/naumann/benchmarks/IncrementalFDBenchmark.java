@@ -3,11 +3,9 @@ package org.mp.naumann.benchmarks;
 import org.mockito.Mockito;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.InitialAlgorithm;
-import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.HyFDInitialAlgorithm;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.algorithms.fd.incremental.deprecated.IncrementalFD;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
@@ -107,9 +105,7 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
     public void runIncremental() {
         incrementalAlgorithm.initialize(initialAlgorithm.getIntermediateDataStructure());
         incrementalAlgorithm.addResultListener(resultListener);
-        SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
         getBatchSource().startStreaming();
-        SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Finished incremental algorithm for test case "+getCurrentTestCase());
 
     }
 }

@@ -13,13 +13,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.mp.naumann.processor.batch.source.csv.CsvKeyWord.*;
+import static org.mp.naumann.processor.batch.source.csv.CsvKeyWord.ACTION_COLUMN;
 
 public abstract class CsvFileBatchSource extends AbstractBatchSource {
 

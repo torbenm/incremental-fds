@@ -1,12 +1,11 @@
 package org.mp.naumann;
 
-import org.mp.naumann.data.ResourceConnector;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
+
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
+import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.reporter.FileReporter;
 import org.mp.naumann.reporter.GoogleSheetsReporter;
@@ -108,7 +107,6 @@ public class BenchmarksApplication {
 
     private void run() throws IOException {
         setLogLevel();
-        setUp();
 
         if (name.isEmpty())
             name = (hyfdOnly ? "hyfd" : "incremental") + ", " + mode + (mode.equals("variable") ? " (" + batchDirectory + ")" : "");
@@ -143,14 +141,10 @@ public class BenchmarksApplication {
 
         } catch (ConnectionException e) {
             e.printStackTrace();
-            SpeedBenchmark.end(BenchmarkLevel.BENCHMARK, "Benchmark crashed");
-            SpeedBenchmark.disable();
+
         } catch (IOException e) {
             e.printStackTrace();
-            SpeedBenchmark.end(BenchmarkLevel.BENCHMARK, "Writing to GoogleSheets crashed");
-            SpeedBenchmark.disable();
-        } finally {
-            tearDown();
+
         }
     }
 
@@ -161,19 +155,4 @@ public class BenchmarksApplication {
             FDLogger.setLevel(Level.INFO);
         }
     }
-
-    public static void setUp() {
-        SpeedBenchmark.enable();
-        SpeedBenchmark.addEventListener(e -> {
-            if (e.getLevel() == BenchmarkLevel.ALGORITHM || e.getLevel() == BenchmarkLevel.BATCH)
-                FDLogger.log(Level.INFO, e.toString());
-        });
-        SpeedBenchmark.begin(BenchmarkLevel.BENCHMARK);
-    }
-
-    public static void tearDown() {
-        SpeedBenchmark.end(BenchmarkLevel.BENCHMARK, "Finished complete benchmark");
-        SpeedBenchmark.disable();
-    }
-
 }

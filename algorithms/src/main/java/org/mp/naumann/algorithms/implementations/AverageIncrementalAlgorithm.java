@@ -11,6 +11,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * An implementation of an {@link IncrementalAlgorithm} that calculates the average over
+ * a given column in a table.
+ */
 public class AverageIncrementalAlgorithm implements IncrementalAlgorithm<Double, AverageDatastructure> {
 
 	private final List<ResultListener<Double>> resultListeners = new ArrayList<>();

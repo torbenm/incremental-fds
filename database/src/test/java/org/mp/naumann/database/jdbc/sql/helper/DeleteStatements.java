@@ -1,10 +1,10 @@
 package org.mp.naumann.database.jdbc.sql.helper;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.mp.naumann.database.statement.DefaultDeleteStatement;
 import org.mp.naumann.database.statement.DeleteStatement;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class DeleteStatements {
 

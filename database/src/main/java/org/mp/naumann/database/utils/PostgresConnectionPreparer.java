@@ -5,14 +5,13 @@ import com.opentable.db.postgres.embedded.DatabaseConnectionPreparer;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.mp.naumann.data.ResourceConnector;
 
 import java.io.File;
 import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
-import org.mp.naumann.data.ResourceConnector;
 
 public class PostgresConnectionPreparer implements DatabaseConnectionPreparer {
 

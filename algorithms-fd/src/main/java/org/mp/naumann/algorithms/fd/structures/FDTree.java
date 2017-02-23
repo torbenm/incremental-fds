@@ -4,9 +4,9 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
+import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.database.data.ColumnIdentifier;
-import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
 
 import java.util.ArrayList;
 import java.util.List;

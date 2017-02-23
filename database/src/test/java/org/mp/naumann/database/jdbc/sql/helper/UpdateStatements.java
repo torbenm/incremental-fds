@@ -1,10 +1,10 @@
 package org.mp.naumann.database.jdbc.sql.helper;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.mp.naumann.database.statement.DefaultUpdateStatement;
 import org.mp.naumann.database.statement.UpdateStatement;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class UpdateStatements {
 

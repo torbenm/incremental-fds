@@ -1,6 +1,5 @@
 package org.mp.naumann.algorithms.fd.structures;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 

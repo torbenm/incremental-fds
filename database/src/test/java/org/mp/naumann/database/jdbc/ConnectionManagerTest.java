@@ -3,13 +3,12 @@ package org.mp.naumann.database.jdbc;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.utils.ConnectionManager;
 
 import java.sql.Connection;
-
-import org.mp.naumann.data.ResourceConnector;
 
 import static org.junit.Assert.assertEquals;
 

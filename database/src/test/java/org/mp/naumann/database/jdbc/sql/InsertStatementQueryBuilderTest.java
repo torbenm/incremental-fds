@@ -7,7 +7,17 @@ import java.util.Arrays;
 import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
-import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.*;
+import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createInsertQuoteInValue;
+import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createInsertSpacesInNames;
+import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsert1;
+import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsert2;
+import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsert3;
+import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsert4Columns;
+import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsert4Columns2;
+import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsertEmpty;
+import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsertOtherOrder;
+import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsertWithDifferentTypes;
+import static org.mp.naumann.database.jdbc.sql.helper.InsertStatements.createPeopleInsertWrongTable;
 
 public class InsertStatementQueryBuilderTest {
 

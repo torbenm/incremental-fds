@@ -3,7 +3,7 @@ package org.mp.naumann.algorithms.fd.incremental;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.benchmark.better.Benchmark;
+import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;

@@ -1,9 +1,9 @@
 package org.mp.naumann.testcases;
 
+import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
+import org.mp.naumann.algorithms.benchmark.speed.BenchmarkEvent;
+import org.mp.naumann.algorithms.benchmark.speed.BenchmarkEventListener;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedEvent;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedEventListener;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
@@ -37,11 +37,11 @@ import java.util.logging.Level;
 
 import static org.mockito.Mockito.mock;
 
-abstract class BaseTestCase implements TestCase, SpeedEventListener {
+abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
 
     private final IncrementalFDConfiguration config;
     private final IncrementalFDResultListener resultListener = new IncrementalFDResultListener();
-    private final List<SpeedEvent> batchEvents = new ArrayList<>();
+    private final List<BenchmarkEvent> batchEvents = new ArrayList<>();
 
     final int stopAfter;
     final String schema, tableName, sourceTableName;
@@ -55,7 +55,7 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
         this.config = config;
         this.stopAfter = stopAfter;
         this.hyfdOnly = hyfdOnly;
-        SpeedBenchmark.addEventListener(this);
+        Benchmark.addEventListener(this);
     }
 
     @Override
@@ -91,9 +91,9 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
                 batchProcessor.addBatchHandler(incrementalAlgorithm);
             }
 
-            SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
+            Benchmark b = Benchmark.start("Algorithm for all batches", BenchmarkLevel.ALGORITHM.ordinal());
             batchSource.startStreaming();
-            SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Algorithm for all batches");
+            b.finish();
 
             FDLogger.log(Level.INFO, String.format("Cumulative runtime (algorithm only): %sms", getTotalTime(batchEvents)));
             FDLogger.log(Level.INFO, String.format("Found %s FDs:", resultListener.getFDs().size()));
@@ -123,32 +123,32 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
     }
 
     @Override
-    public void receiveEvent(SpeedEvent info) {
-        if (info.getLevel() == BenchmarkLevel.BATCH) batchEvents.add(info);
+    public void notify(BenchmarkEvent info) {
+        if (info.getLevel() == BenchmarkLevel.BATCH.ordinal()) batchEvents.add(info);
     }
 
-    private long getAverageTime(List<SpeedEvent> events){
+    private long getAverageTime(List<BenchmarkEvent> events){
         return (long)events
                 .stream()
-                .mapToLong(SpeedEvent::getDuration)
+                .mapToLong(BenchmarkEvent::getDuration)
                 .average()
                 .orElse(-1);
     }
 
-    private long getMedianTime(List<SpeedEvent> events){
+    private long getMedianTime(List<BenchmarkEvent> events){
         return events
                 .stream()
-                .mapToLong(SpeedEvent::getDuration)
+                .mapToLong(BenchmarkEvent::getDuration)
                 .sorted()
                 .skip(batchEvents.size() / 2)
                 .findFirst()
                 .orElse(-1);
     }
 
-    private long getTotalTime(List<SpeedEvent> events){
+    private long getTotalTime(List<BenchmarkEvent> events){
         return events
                 .stream()
-                .mapToLong(SpeedEvent::getDuration)
+                .mapToLong(BenchmarkEvent::getDuration)
                 .sum();
     }
 

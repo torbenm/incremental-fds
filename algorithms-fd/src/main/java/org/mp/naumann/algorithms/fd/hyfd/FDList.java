@@ -1,9 +1,9 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
+import org.apache.lucene.util.OpenBitSet;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.lucene.util.OpenBitSet;
 
 public class FDList {
 

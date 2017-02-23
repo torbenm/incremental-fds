@@ -1,7 +1,9 @@
 package org.mp.naumann.algorithms.implementations;
+
 import com.opentable.db.postgres.embedded.DatabasePreparer;
 import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
 import com.opentable.db.postgres.junit.PreparedDbRule;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -11,11 +13,11 @@ import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.jdbc.JdbcDataConnector;
 import org.mp.naumann.database.utils.PostgresConnectionPreparer;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+
+import static org.junit.Assert.assertEquals;
 
 public class MedianInitialAlgorithmTest {
 

@@ -1,12 +1,12 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
+import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
+import org.mp.naumann.algorithms.fd.structures.FDTree;
+
 import java.util.List;
 import java.util.logging.Level;
-import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
-import org.mp.naumann.algorithms.fd.structures.FDSet;
-import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.structures.FDTree;
 
 class Inductor {
 

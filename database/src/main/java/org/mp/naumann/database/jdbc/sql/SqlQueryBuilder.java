@@ -1,6 +1,10 @@
 package org.mp.naumann.database.jdbc.sql;
 
-import org.mp.naumann.database.statement.*;
+import org.mp.naumann.database.statement.DeleteStatement;
+import org.mp.naumann.database.statement.InsertStatement;
+import org.mp.naumann.database.statement.Statement;
+import org.mp.naumann.database.statement.StatementGroup;
+import org.mp.naumann.database.statement.UpdateStatement;
 
 import java.sql.JDBCType;
 import java.util.Map;
