@@ -1,6 +1,6 @@
 package org.mp.naumann.algorithms.fd.incremental.violations;
 
-import org.mp.naumann.algorithms.fd.incremental.pruning.ViolatingPair;
+import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.ViolatingPair;
 
 import java.util.ArrayList;
 import java.util.Collection;

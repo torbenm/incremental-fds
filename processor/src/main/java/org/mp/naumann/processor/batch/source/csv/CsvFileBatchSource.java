@@ -24,7 +24,7 @@ import static org.mp.naumann.processor.batch.source.csv.CsvKeyWord.*;
 public abstract class CsvFileBatchSource extends AbstractBatchSource {
 
     private static final Charset CHARSET = Charset.defaultCharset();
-    private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withFirstRecordAsHeader().withNullString("");
+    private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withFirstRecordAsHeader();
     private static final CsvKeyWord defaultAction = CsvKeyWord.INSERT_STATEMENT;
 
     final List<Statement> statementList = new ArrayList<>();
@@ -75,11 +75,7 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
         return stmt;
     }
 
-    private String sanitize(String value) {
-        return (value.isEmpty() ? null : value);
-    }
-
-    Statement createStatement(String type, Map<String, String> values) {
+   Statement createStatement(String type, Map<String, String> values) {
         switch (CsvKeyWord.valueOfKeyWord(type)) {
             case INSERT_STATEMENT:
                 return new DefaultInsertStatement(values, schema, tableName);
@@ -90,8 +86,8 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
                 Map<String, String> newValues = new HashMap<>();
                 values.forEach((key, value) -> {
                     String[] splitValues = value.split("\\|", -1);
-                    oldValues.put(key, sanitize(splitValues[0]));
-                    newValues.put(key, sanitize(splitValues.length > 1 ? splitValues[1] : splitValues[0]));
+                    oldValues.put(key, splitValues[0]);
+                    newValues.put(key, splitValues.length > 1 ? splitValues[1] : splitValues[0]);
                 });
                 return new DefaultUpdateStatement(newValues, oldValues, schema, tableName);
             default:

@@ -4,13 +4,10 @@ import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.DeletePruner;
+import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.MaxSizeViolationSet;
 import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.SimpleDeleteValidationPruner;
-import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.WidthDependentDeleteValidationPruner;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
-import org.mp.naumann.algorithms.fd.structures.SingleValueCollection;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
-
-import java.util.HashSet;
 
 class Matcher {
 
@@ -25,7 +22,7 @@ class Matcher {
         this.valueComparator = valueComparator;
         this.violationCollection = violationCollection;
         this.configuration = configuration;
-        this.pruner = new DeletePruner(compressedRecords[0].length, SingleValueCollection::new, SimpleDeleteValidationPruner::new);
+        this.pruner = new DeletePruner(compressedRecords[0].length, () -> new MaxSizeViolationSet(1), SimpleDeleteValidationPruner::new);
     }
 
     public void match(OpenBitSet equalAttrs, int recId1, int recId2) {
