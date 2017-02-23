@@ -505,7 +505,7 @@ def applyDeleteStatement(updateStatement, baselineDataTable):
         targetEntry = baselineDataTable[targetId]
 
         for attribute in updateStatement:
-            if attribute in targetEntry and updateStatement[attribute] != "" and attribute != "article_title":
+            if attribute in targetEntry and attribute != "article_title":
                 # just to ensure data consistency
                 updateStatement[attribute] = targetEntry[attribute]
                 targetEntry[attribute] = ""
@@ -553,12 +553,16 @@ def applyUpdateStatement(updateStatement, baselineDataTable, attributes):
         targetEntry = baselineDataTable[targetId]
 
         for attribute in updateStatement:
-            if attribute in targetEntry and updateStatement[attribute] != "" and attribute != "article_title":
-                newValue = updateStatement[attribute].split("|")[1]
-                newOldValue = targetEntry[attribute]
-                targetEntry[attribute] = newValue
-                if newValue != "" or newOldValue != "":
-                    updateStatement[attribute] = newOldValue + "|" + newValue
+            if attribute in targetEntry and attribute != "article_title":
+                if updateStatement[attribute] != "":
+                    newValue = updateStatement[attribute].split("|")[1]
+                    newOldValue = targetEntry[attribute]
+                    targetEntry[attribute] = newValue
+                    if newValue != "" or newOldValue != "":
+                        updateStatement[attribute] = newOldValue + "|" + newValue
+                else:
+                    updateStatement[attribute] = targetEntry[attribute]
+
 
     else:
         updateStatement["::action"] = "insert"
@@ -632,9 +636,11 @@ def writeParsedDataToDisk(targetInfoboxType, baselineData, insertRecords, update
     createTargetDirectoriesIfNecessary()
 
     attributes = list(attributes)
-    if ("article_title") in attributes:
+    attributes.sort()
+    if "article_title" in attributes:
         attributes.remove("article_title")
     attributes.insert(0, "article_title")
+    print(attributes)
 
     print("Writing baseline csv...")
     writeBaselineData(attributes, baselineData, targetInfoboxType)
