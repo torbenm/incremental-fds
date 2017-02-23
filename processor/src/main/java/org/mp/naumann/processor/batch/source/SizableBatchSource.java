@@ -1,12 +1,8 @@
 package org.mp.naumann.processor.batch.source;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.ListBatch;
-import org.mp.naumann.processor.batch.SanitizedListBatch;
 
 public abstract class SizableBatchSource extends CsvFileBatchSource implements StreamableBatchSource{
 
@@ -96,7 +92,7 @@ public abstract class SizableBatchSource extends CsvFileBatchSource implements S
     }
     private synchronized void stream(int size){
         if(stopAfter < 0 || currentBatch < stopAfter) {
-            Batch batchToSend = new SanitizedListBatch(
+            Batch batchToSend = new ListBatch(
                     statementList.subList(currentStatementPosition, currentStatementPosition + size),
                     this.schema,
                     this.tableName
