@@ -1,7 +1,6 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.benchmark.better.Benchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
@@ -10,14 +9,7 @@ import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -157,7 +149,7 @@ class IncrementalSampler {
         }
 
         private int increment(int number) {
-            return (number == this.sortKeys.get(0).length - 1) ? 0 : number + 1;
+            return (number == this.sortKeys.getNumAttributes() - 1) ? 0 : number + 1;
         }
     }
 
