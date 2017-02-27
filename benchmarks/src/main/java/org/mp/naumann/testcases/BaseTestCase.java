@@ -43,16 +43,17 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
     final int stopAfter;
     final String schema, tableName, sourceTableName;
-    private final boolean hyfdOnly;
+    private final boolean hyfdOnly, hyfdCreateIndex;
     private long baselineSize;
 
-    BaseTestCase(String schema, String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly) {
+    BaseTestCase(String schema, String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly, boolean hyfdCreateIndex) {
         this.schema = schema;
         this.sourceTableName = tableName;
         this.tableName = (hyfdOnly ? tableName + "_tmp" : tableName);
         this.config = config;
         this.stopAfter = stopAfter;
         this.hyfdOnly = hyfdOnly;
+        this.hyfdCreateIndex = hyfdCreateIndex;
         SpeedBenchmark.addEventListener(this);
     }
 
@@ -77,19 +78,14 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
                 // create temporary table that we can modify as batches come in
                 String fullTableName = (schema.isEmpty() ? "" : schema + ".") + tableName;
                 Statement stmt = conn.createStatement();
-                stmt.execute("CREATE TABLE " + fullTableName + " AS SELECT * FROM " + sourceTableName);
+                stmt.execute("CREATE TEMPORARY TABLE " + fullTableName + " AS SELECT * FROM " + sourceTableName);
 
                 dc.clearTableNames(schema);
                 table = dc.getTable(schema, tableName);
 
-                // create index on the temporary table
-                try {
+                if (hyfdCreateIndex) {
+                    // create index on the temporary table
                     stmt.execute(String.format("CREATE INDEX %s_master_idx ON %s (%s)", tableName, fullTableName, String.join(", ", table.getColumnNames())));
-                } catch (Exception e) {
-                    // can't create index for all columns together, so at least create one for every column
-                    for (String columnName: table.getColumnNames()) {
-                        stmt.execute(String.format("CREATE INDEX %s_idx ON %s (%s)", columnName, fullTableName, columnName));
-                    }
                 }
 
                 BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, new PassThroughDatabaseBatchHandler(dc), true);

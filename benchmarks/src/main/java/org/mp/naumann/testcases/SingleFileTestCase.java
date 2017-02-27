@@ -10,8 +10,8 @@ public class SingleFileTestCase extends BaseTestCase {
     private final int splitLine;
     private final int batchSize;
 
-    public SingleFileTestCase(String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly, int splitLine, int batchSize) {
-        super("", tableName, config, stopAfter, hyfdOnly);
+    public SingleFileTestCase(String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly, boolean hyfdCreateIndex, int splitLine, int batchSize) {
+        super("", tableName, config, stopAfter, hyfdOnly, hyfdCreateIndex);
         this.splitLine = splitLine;
         this.batchSize = batchSize;
     }

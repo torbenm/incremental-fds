@@ -52,6 +52,8 @@ public class BenchmarksApplication {
     // parameters for algorithm configuration
     @Parameter(names = "--hyfdOnly")
     private boolean hyfdOnly = false;
+    @Parameter(names = "--hyfdCreateIndex", description = "create an index on the db table, only relevant for hyfd mode", arity = 1)
+    private boolean hyfdCreateIndex = true;
     @Parameter(names = "--sampling", arity = 1)
     private Boolean useSampling;
     @Parameter(names = "--clusterPruning", arity = 1)
@@ -121,13 +123,13 @@ public class BenchmarksApplication {
 
             switch (mode) {
                 case "variable":
-                    t = new VariableSizeTestCase(dataSet, config, stopAfter, hyfdOnly, getFullBatchDirectory());
+                    t = new VariableSizeTestCase(dataSet, config, stopAfter, hyfdOnly, hyfdCreateIndex, getFullBatchDirectory());
                     break;
                 case "fixed":
-                    t = new FixedSizeTestCase(dataSet, config, stopAfter, hyfdOnly, batchSize);
+                    t = new FixedSizeTestCase(dataSet, config, stopAfter, hyfdOnly, hyfdCreateIndex, batchSize);
                     break;
                 case "singleFile":
-                    t = new SingleFileTestCase(dataSet, config, stopAfter, hyfdOnly, splitLine, batchSize);
+                    t = new SingleFileTestCase(dataSet, config, stopAfter, hyfdOnly, hyfdCreateIndex, splitLine, batchSize);
                     break;
                 default:
                     throw new IllegalArgumentException(String.format("Invalid mode parameter: %s", mode));
