@@ -19,6 +19,7 @@ package org.mp.naumann.algorithms.fd.structures;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 
+import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Row;
@@ -29,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 
 public class ClusterMapBuilder {
 
@@ -123,6 +125,9 @@ public class ClusterMapBuilder {
         return records;
     }
 
+    private void logNotFoundWarning(Iterable<String> record) {
+        FDLogger.log(Level.WARNING, String.format("Trying to remove %s, but there is no such record.", record.toString()));
+    }
 
     public Collection<Integer> removeRecord(Iterable<String> record) {
         int attributeId = 0;
@@ -131,6 +136,7 @@ public class ClusterMapBuilder {
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
             IntArrayList cluster = clusterMap.get(value);
             if (cluster == null || cluster.isEmpty()) {
+                logNotFoundWarning(record);
                 return Collections.emptyList();
             }
             clusters.add(cluster);
@@ -138,6 +144,7 @@ public class ClusterMapBuilder {
         }
         Set<Integer> matching = CollectionUtils.intersection(clusters);
         clusters.forEach(c -> c.removeAll(matching));
+        if (matching.isEmpty()) logNotFoundWarning(record);
         return matching;
     }
 
