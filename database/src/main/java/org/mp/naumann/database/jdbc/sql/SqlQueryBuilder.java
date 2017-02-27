@@ -41,7 +41,7 @@ public class SqlQueryBuilder {
     }
 
     private static String formatKeyForValue(String key, String value) {
-        return (value.isEmpty() ? "COALESCE(" + key + ", '')" : key);
+        return (((value != null) && value.isEmpty()) ? "COALESCE(" + key + ", '')" : key);
     }
 
     private static String equalsSeparator(String value, boolean isValueClause) {
