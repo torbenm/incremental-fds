@@ -6,18 +6,16 @@ import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.Table;
 
 public class FakeDataConnector implements DataConnector {
-    @Override
+
     public List<String> getTableNames(String schema) {
         return null;
     }
 
-    @Override
     public Table getTable(String schema, String tableName) {
         return new FakeTable();
     }
 
-    @Override
-    public void close() {
+    public void clearTableNames(String schema) { }
 
-    }
+    public void close() { }
 }
