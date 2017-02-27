@@ -5,7 +5,6 @@ import org.mp.naumann.database.statement.*;
 import java.sql.JDBCType;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class SqlQueryBuilder {
 
@@ -19,26 +18,30 @@ public class SqlQueryBuilder {
         }
 
         if (stmt instanceof UpdateStatement) {
-            return UpdateStatementQueryBuilder.get().generateSingle((UpdateStatement) stmt);
+            UpdateStatement update = (UpdateStatement) stmt;
+            InsertStatement insert = new DefaultInsertStatement(update.getValueMap(), update.getSchema(), update.getTableName());
+            DeleteStatement delete = new DefaultDeleteStatement(update.getOldValueMap(), update.getSchema(), update.getTableName());
+            return generateSql(delete) + "\n" + generateSql(insert);
         }
 
         throw new QueryBuilderException("Statement has unknown type.");
     }
 
     public static String generateSql(StatementGroup statements) throws QueryBuilderException {
-        return Stream.of(
-                InsertStatementQueryBuilder.get().generateMulti(statements.getInsertStatements()),
-                DeleteStatementQueryBuilder.get().generateMulti(statements.getDeleteStatements()),
-                UpdateStatementQueryBuilder.get().generateMulti(statements.getUpdateStatements())
-        ).collect(Collectors.joining("\n"));
+        StringBuilder sb = new StringBuilder();
+        for (Statement stmt: statements.getStatements()) {
+            sb.append(generateSql(stmt));
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 
     static String formatKey(String key) {
         return (key.startsWith(":") ? "\"" + key + "\"" : key);
     }
 
-    private static String formatKeyForValue(String key) {
-        return (key.isEmpty() ? "COALESCE(" + key + ", '')" : key);
+    private static String formatKeyForValue(String key, String value) {
+        return (value.isEmpty() ? "COALESCE(" + key + ", '')" : key);
     }
 
     private static String equalsSeparator(String value, boolean isValueClause) {
@@ -58,7 +61,7 @@ public class SqlQueryBuilder {
         return valueMap
                 .entrySet()
                 .parallelStream()
-                .map(n -> formatKeyForValue(formatKey(n.getKey())) + equalsSeparator(n.getValue(), isValueClause) + formatValue(n.getValue(), stmt.getJDBCType(n.getKey())))
+                .map(n -> formatKeyForValue(formatKey(n.getKey()), n.getValue()) + equalsSeparator(n.getValue(), isValueClause) + formatValue(n.getValue(), stmt.getJDBCType(n.getKey())))
                 .collect(Collectors.joining(separator));
     }
 }
