@@ -55,6 +55,11 @@ def applyInsertStatement(baselineData, updateStatement):
 def applyDeleteStatement(baselineData, updateStatement):
     key = updateStatement["article_title"]
     if key in baselineData:
+        # check for mismatches
+        targetEntry = baselineData[updateStatement["article_title"]]
+        for key, value in updateStatement.items():
+            if key in targetEntry and value != targetEntry[key]:
+                print("delete::mismatch")
         del baselineData[updateStatement["article_title"]]
     else:
         print("ERROR: already deleted: " + key)
@@ -62,15 +67,14 @@ def applyDeleteStatement(baselineData, updateStatement):
 
 def applyUpdateStatement(baselineData, updateStatement):
     for key, value in updateStatement.items():
-        if key == "::action" or key == "article_title":
+        # check for mismatches
+        targetEntry = baselineData[updateStatement["article_title"]]
+        if key in ("article_title", "::action", "::record"):
             continue
         if value != "":
-            targetKey = updateStatement["article_title"]
-            if targetKey not in baselineData:
-                print("ERROR: DELETE BEFORE UPDATE for " + targetKey)
-                continue
-            else:
-                baselineData[targetKey][key] = value.split("|")[1]
+            if value != targetEntry[key]:
+                print("update::mismatch")
+            targetEntry[key] = value.split("|")[1]
 
 
 def applyUpdateStatementsToBaselineData(baselineData, updateStatements, mode):

@@ -305,8 +305,7 @@ def addValuesToUpdateStatement(updateStatement, attributes, newValues, oldValues
             oldValue = oldValues[attribute].replace("|", "").replace("\n", "")
         if attribute in newValues:
             newValue = newValues[attribute].replace("|", "").replace("\n", "")
-        if oldValue != "" or newValue != "":
-            compundValue = oldValue + "|" + newValue
+        compundValue = oldValue + "|" + newValue
         updateStatement[attribute] = compundValue
 
 
@@ -327,10 +326,6 @@ def generateBaselineRecord(data, attributes, currentId, articleTitle):
 
     for entry in data:
         addValuesToBaselineRecord(entry, attributes, baselineRecord)
-
-    # for attribute in baselineRecord:
-    #     if baselineRecord[attribute] == None:
-    #         baselineRecord[attribute] = ""
 
     return baselineRecord
 
@@ -391,10 +386,8 @@ def generateUpdateStatementFromData(dataByTitle, updateId, article, updateStatem
     for update in dataByTitle[article]["updates"][updateId]:
         newValues, oldValues = findNewAndOldValues(update, newValues, oldValues, attributes)
 
-    if len(newValues) == 0:
-        updateStatement["::action"] = "delete"
-    else:
-        updateStatement["::action"] = "update"
+    # FUCK this shit, delete statements will be generated later on
+    updateStatement["::action"] = "update"
 
     addValuesToUpdateStatement(updateStatement, attributes, newValues, oldValues)
 
@@ -551,17 +544,33 @@ def applyUpdateStatement(updateStatement, baselineDataTable, attributes):
 
     if targetId in baselineDataTable:
         targetEntry = baselineDataTable[targetId]
-
         for attribute in updateStatement:
-            if attribute in targetEntry and attribute != "article_title":
-                if updateStatement[attribute] != "":
-                    newValue = updateStatement[attribute].split("|")[1]
-                    newOldValue = targetEntry[attribute]
-                    targetEntry[attribute] = newValue
-                    if newValue != "" or newOldValue != "":
-                        updateStatement[attribute] = newOldValue + "|" + newValue
-                else:
-                    updateStatement[attribute] = targetEntry[attribute]
+            if attribute in ("article_title", "::record", "::action"):
+                continue
+            oldTableValue = targetEntry[attribute]
+            oldValue = updateStatement[attribute].split("|")[0]
+            newValue = updateStatement[attribute].split("|")[1]
+            if oldValue != "" or newValue != "":
+                targetEntry[attribute] = newValue
+                updateStatement[attribute] = oldTableValue + "|" + newValue
+            else:
+                updateStatement[attribute] = oldTableValue + "|" + oldTableValue
+
+        hasNonEmptyFields = False
+        for attribute in targetEntry:
+            if attribute in ["id", "article_title"]:
+                continue
+            if targetEntry[attribute] != "":
+                hasNonEmptyFields = True
+        if not hasNonEmptyFields:
+            #it's a delete!
+            updateStatement["::action"] = "delete"
+            del baselineDataTable[targetId]
+            # remove pipes and newValues (since newValues should equal "" anyway)
+            for attribute in updateStatement:
+                if attribute in ("article_title", "::action", "::record"):
+                    continue
+                updateStatement[attribute] = updateStatement[attribute].split("|")[0]
 
 
     else:
@@ -578,14 +587,12 @@ def applyUpdateStatement(updateStatement, baselineDataTable, attributes):
 def applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, attributes):
     for updateStatement in updateStatements:
         statementType = updateStatement["::action"]
-        if updateStatement["article_title"] == "Haemophilia B":
-            print("break")
         if statementType == "insert":
             baselineDataTable = applyInsertStatement(updateStatement, baselineDataTable, attributes)
-        elif statementType == "delete":
-            baselineDataTable = applyDeleteStatement(updateStatement, baselineDataTable)
-            if "toBeDeleted" not in updateStatement:
-                baselineDataTable = checkForTrueDeleteAndCorrect(updateStatement, baselineDataTable)
+        # elif statementType == "delete":
+        #     baselineDataTable = applyDeleteStatement(updateStatement, baselineDataTable)
+        #     if "toBeDeleted" not in updateStatement:
+        #         baselineDataTable = checkForTrueDeleteAndCorrect(updateStatement, baselineDataTable)
         elif statementType == "update":
             baselineDataTable = applyUpdateStatement(updateStatement, baselineDataTable, attributes)
 
