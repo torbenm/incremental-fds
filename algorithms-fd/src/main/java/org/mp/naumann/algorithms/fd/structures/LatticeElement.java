@@ -230,4 +230,8 @@ public class LatticeElement {
             currentLhsAttr = nextLhsAttr;
         }
     }
+
+    public OpenBitSet getMarkedRhs() {
+        return markedRhs;
+    }
 }

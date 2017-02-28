@@ -11,6 +11,8 @@ import org.mp.naumann.algorithms.fd.HyFDInitialAlgorithm;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDResult;
+import org.mp.naumann.algorithms.fd.structures.Lattice;
+import org.mp.naumann.algorithms.fd.structures.LatticeBuilder;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
@@ -93,6 +95,13 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
             } else {
                 FDIntermediateDatastructure ds = initialAlgorithm.getIntermediateDataStructure();
                 IncrementalFD incrementalAlgorithm = new IncrementalFD(sourceTableName, config);
+
+                LatticeBuilder builder = LatticeBuilder.build(ds.getPosCover());
+                Lattice fdLattice = builder.getFds();
+                fdLattice.print();
+                //Lattice nonFdLattice = builder.getNonFds();
+                //nonFdLattice.print();
+
                 incrementalAlgorithm.initialize(ds);
                 incrementalAlgorithm.addResultListener(resultListener);
                 BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, new FakeDatabaseBatchHandler(), false);
