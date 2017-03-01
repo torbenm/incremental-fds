@@ -56,7 +56,7 @@ public class FDValidator extends IncrementalValidator {
         for (int extensionAttribute = 0; extensionAttribute < numAttributes; extensionAttribute++) {
             if (rhs == extensionAttribute // AB -> B is trivial
                     || lhs.fastGet(extensionAttribute) // AA -> B is trivial
-                    || fds.containsFdOrGeneralization(lhs, extensionAttribute) // if A -> B, then AB -> C cannot be minimal
+//                    || fds.containsFdOrGeneralization(lhs, extensionAttribute) // if A -> B, then AB -> C cannot be minimal
                     ) {
                 continue;
             }
