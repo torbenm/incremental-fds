@@ -25,7 +25,7 @@ def parseInfoboxUpdatesToCsv(infoboxConfig):
         insertStatements = transformBaselineInsertsIntoUpdates(baselineInserts, attributes)
 
         updateStatements = mergeInsertAndUpdateStatements(insertStatements, updateStatements)
-        determineFinalUpdateStatementType(updateStatements, baselineRecords, attributes)
+        updateStatements = determineFinalUpdateStatementType(updateStatements, baselineRecords, attributes)
 
         DataWriter.writeParsedDataToDisk(targetInfoboxType, baselineRecords, insertStatements, updateStatements, attributes)
 
@@ -73,7 +73,7 @@ def insertInsertStatementIntoUpdateStatements(combinedUpdateStatements, insert, 
 
 def determineFinalUpdateStatementType(updateStatements, baselineData, attributes):
     baselineDataTable = Table(baselineData)
-    applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, attributes)
+    return applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, attributes)
 
 def applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, attributes):
     for updateStatement in updateStatements:
@@ -82,7 +82,7 @@ def applyUpdateStatementsToBaselineData(updateStatements, baselineDataTable, att
         elif updateStatement.action == "update":
             baselineDataTable.updateRecord(updateStatement)
 
-    updateStatements = [x for x in updateStatements if x.removable]
+    updateStatements = [x for x in updateStatements if not x.removable]
     return updateStatements
 
 

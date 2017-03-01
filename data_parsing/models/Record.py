@@ -11,6 +11,12 @@ class Record:
         for attribute in attributes:
             self.valueMap[attribute] = ""
 
+    def addValuesFromValueMap(self, valueMap):
+        for attribute, value in valueMap.items():
+            if value is None:
+                value = ""
+            self.valueMap[attribute] = value
+
 
     def addValuesFromJsonData(self, data):
         for entry in data:
