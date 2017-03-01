@@ -1,5 +1,8 @@
 from collections import OrderedDict
 
+import Utils
+
+
 class Record:
 
     def __init__(self, attributes):
@@ -14,12 +17,9 @@ class Record:
             self.__addValues(entry)
 
     def __addValues(self, update):
-        key = self.__normalizeAttribute(update["key"])
+        key = Utils.normalizeAttribute(update["key"])
         if "newvalue" in update and key in self.valueMap:
             self.valueMap[key] = update["newvalue"].replace("|", "").replace("\n", "").replace("\"", "\"\"")
-
-    def __normalizeAttribute(self, attribute):
-        return attribute.lower().replace(" ", "_")
 
     def toString(self):
         stringParts = []

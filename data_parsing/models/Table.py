@@ -23,14 +23,17 @@ class Table:
                     self.data[updateStatement.record].valueMap[attribute] = newValue
             if not self.data[updateStatement.record].hasNonEmptyValues():
                 updateStatement.action = "delete"
-                self.deleteRecord(updateStatement.record)
+                self.deleteRecord(updateStatement)
         else:
             updateStatement.action = "insert"
             self.insertRecord(updateStatement)
 
 
-    def deleteRecord(self, id):
-        del self.data[id]
+    def deleteRecord(self, updateStatement):
+        if updateStatement.record in self.data:
+            del self.data[updateStatement.record]
+        else:
+            updateStatement.removable = True
 
     def insertRecord(self, insertStatement):
         record = Record(insertStatement.valueMap.keys())

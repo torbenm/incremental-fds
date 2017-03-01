@@ -1,4 +1,6 @@
 from collections import OrderedDict
+import Utils
+
 
 class Statement:
 
@@ -38,21 +40,16 @@ class Statement:
         self.action = "update"
 
     def isIrrelevant(self):
+        # idea: if the old and the new values are identical, the statement does nothing
         if self.action == "update":
-            for attribute in self.valueMap:
-                if attribute == "article_title":
-                    continue
-                if self.oldValueMap[attribute] is not None or self.valueMap[attribute] is not None:
-                    return False
-            return True
+            if len([x for x in self.valueMap.keys() if self.valueMap[x] != self.oldValueMap[x]]) == 0:
+                return True
         return False
 
     def __addValues(self, update):
-        key = self.__normalizeAttribute(update["key"])
+        key = Utils.normalizeAttribute(update["key"])
         if "newvalue" in update and key in self.valueMap:
             self.valueMap[key] = update["newvalue"].replace("\"", "\"\"")
         if "oldvalue" in update and key in self.oldValueMap:
             self.oldValueMap[key] = update["oldvalue"].replace("\"", "\"\"")
 
-    def __normalizeAttribute(self, attribute):
-        return attribute.lower().replace(" ", "_")

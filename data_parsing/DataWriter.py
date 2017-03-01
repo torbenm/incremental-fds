@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 
 
 def writeParsedDataToDisk(targetInfoboxType, baselineRecords, insertStatements, updateStatements, attributes):
@@ -12,10 +13,10 @@ def writeParsedDataToDisk(targetInfoboxType, baselineRecords, insertStatements, 
     writeBaselineData(attributes, baselineRecords, targetInfoboxType)
 
     print("Writing inserts-only csv...")
-    writeInsertOnlyRecords(attributes, insertStatements, targetInfoboxType)
+    writeInsertOnlyRecords(deepcopy(attributes), insertStatements, targetInfoboxType)
 
     print("Writing updates csv...")
-    writeUpdateStatements(attributes, targetInfoboxType, updateStatements)
+    writeUpdateStatements(deepcopy(attributes), targetInfoboxType, updateStatements)
 
 
 def createTargetDirectoriesIfNecessary():
