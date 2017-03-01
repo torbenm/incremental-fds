@@ -17,22 +17,26 @@ public class CompressedDiff {
 		this.newUpdatedRecords = newUpdatedRecords;
 	}
 
-	
+	boolean hasInserts() {
+		return !(insertedRecords.isEmpty() && newUpdatedRecords.isEmpty());
+	}
+
+	boolean hasDeletes() {
+		return !(deletedRecords.isEmpty() && oldUpdatedRecords.isEmpty());
+	}
+
 	public Map<Integer, int[]> getInsertedRecords() {
 		return insertedRecords;
 	}
 
-	
 	public Map<Integer, int[]> getDeletedRecords() {
 		return deletedRecords;
 	}
 
-	
 	public Map<Integer, int[]> getOldUpdatedRecords() {
 		return oldUpdatedRecords;
 	}
 
-	
 	public Map<Integer, int[]> getNewUpdatedRecords() {
 		return newUpdatedRecords;
 	}

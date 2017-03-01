@@ -1,10 +1,10 @@
 package org.mp.naumann.algorithms.fd.incremental.pruning.bloom;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.structures.FDTree;
-import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
-import org.mp.naumann.algorithms.fd.utils.FDTreeUtils;
+import org.mp.naumann.algorithms.fd.structures.Lattice;
+import org.mp.naumann.algorithms.fd.structures.LatticeElementLhsPair;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,25 +12,25 @@ import java.util.Set;
 public class CurrentFDBloomGenerator implements BloomGenerator {
 
     private static final int MAX_LEVEL = Integer.MAX_VALUE;
-    private final FDTree posCover;
+    private final Lattice fds;
     private final int maxLevel;
 
-    public CurrentFDBloomGenerator(FDTree posCover, int maxLevel) {
-        this.posCover = posCover;
+    public CurrentFDBloomGenerator(Lattice fds, int maxLevel) {
+        this.fds = fds;
         this.maxLevel = maxLevel;
     }
 
-    public CurrentFDBloomGenerator(FDTree posCover) {
-        this(posCover, MAX_LEVEL);
+    public CurrentFDBloomGenerator(Lattice fds) {
+        this(fds, MAX_LEVEL);
     }
 
     @Override
     public Set<OpenBitSet> generateCombinations(List<String> columns) {
         Set<OpenBitSet> bloomFds = new HashSet<>();
-        int maxLevel = Math.min(posCover.getDepth(), this.maxLevel);
+        int maxLevel = Math.min(fds.getDepth(), this.maxLevel);
         for (int level = 0; level <= maxLevel; level++) {
-            List<FDTreeElementLhsPair> currentLevel = FDTreeUtils.getFdLevel(posCover, level);
-            for (FDTreeElementLhsPair fd : currentLevel) {
+            Collection<LatticeElementLhsPair> currentLevel = fds.getLevel(level);
+            for (LatticeElementLhsPair fd : currentLevel) {
                 bloomFds.add(fd.getLhs());
             }
         }

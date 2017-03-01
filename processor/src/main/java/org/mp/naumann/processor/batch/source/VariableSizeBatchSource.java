@@ -4,6 +4,7 @@ import ResourceConnection.ResourceConnector;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.ListBatch;
+import org.mp.naumann.processor.batch.SanitizedListBatch;
 
 import java.io.File;
 
@@ -28,7 +29,7 @@ public class VariableSizeBatchSource extends CsvFileBatchSource implements Strea
         if (file.exists()) {
             statementList.clear();
             parseFile(file);
-            Batch batchToSend = new ListBatch(statementList, schema, tableName);
+            Batch batchToSend = new SanitizedListBatch(statementList, schema, tableName);
             notifyListener(batchToSend);
         }
         return file.exists();

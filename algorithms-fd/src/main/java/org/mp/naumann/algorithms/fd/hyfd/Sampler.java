@@ -4,12 +4,9 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,26 +24,19 @@ class Sampler {
 	private int[][] compressedRecords;
 	private List<PositionListIndex> plis;
 	private float efficiencyThreshold;
-	private ValueComparator valueComparator;
 	private List<AttributeRepresentant> attributeRepresentants = null;
 	private MemoryGuardian memoryGuardian;
-    private final IncrementalFDConfiguration configuration;
-    private final ViolationCollection violationCollection;
+    private final Matcher matcher;
 
-	public Sampler(IncrementalFDConfiguration configuration, FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian, ViolationCollection violationCollection) {
+	public Sampler(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, MemoryGuardian memoryGuardian, Matcher matcher) {
 		this.negCover = negCover;
 		this.posCover = posCover;
 		this.compressedRecords = compressedRecords;
 		this.plis = plis;
 		this.efficiencyThreshold = efficiencyThreshold;
-		this.valueComparator = valueComparator;
 		this.memoryGuardian = memoryGuardian;
-        this.configuration = configuration;
-        this.violationCollection = violationCollection;
-    }
-    public Sampler(FDSet negCover, FDTree posCover, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian, ViolationCollection violationCollection) {
-        this(IncrementalFDConfiguration.LATEST, negCover, posCover, compressedRecords, plis, efficiencyThreshold, valueComparator, memoryGuardian, violationCollection);
-    }
+        this.matcher = matcher;
+	}
 
 	public FDList enrichNegativeCover(List<IntegerPair> comparisonSuggestions) {
 		int numAttributes = this.compressedRecords[0].length;
@@ -56,7 +46,7 @@ class Sampler {
 		OpenBitSet equalAttrs = new OpenBitSet(this.posCover.getNumAttributes());
 		for (IntegerPair comparisonSuggestion : comparisonSuggestions) {
 
-			this.match(equalAttrs,comparisonSuggestion.a(), comparisonSuggestion.b());
+			this.matcher.match(equalAttrs,comparisonSuggestion.a(), comparisonSuggestion.b());
 
 			if (!this.negCover.contains(equalAttrs)) {
 				OpenBitSet equalAttrsCopy = equalAttrs.clone();
@@ -218,7 +208,8 @@ class Sampler {
 					int recordId = cluster.getInt(recordIndex);
 					int partnerRecordId = cluster.getInt(recordIndex + this.windowDistance);
 					
-					this.sampler.match(equalAttrs, compressedRecords[recordId], compressedRecords[partnerRecordId], recordId, partnerRecordId);
+					this.sampler.matcher.match(equalAttrs, recordId, partnerRecordId);
+
 					if (!this.negCover.contains(equalAttrs)) {
 						OpenBitSet equalAttrsCopy = equalAttrs.clone();
 						this.negCover.add(equalAttrsCopy);
@@ -238,40 +229,6 @@ class Sampler {
 			return numComparisons != 0;
 		}
 	}
-
-    public ViolationCollection getViolationCollection() {
-	    return violationCollection;
-    }
-
-    private void match(OpenBitSet equalAttrs, int t1, int t2) {
-		    this.match(equalAttrs, this.compressedRecords[t1], this.compressedRecords[t2], t1, t2);
-	}
-
-    private void match(OpenBitSet equalAttrs,  int[] t1, int[] t2, int recId1, int recId2) {
-       if(configuration.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION))
-           this.matchAnnotationPruning(equalAttrs, t1, t2, recId1, recId2);
-        else
-            this.matchNoPruning(equalAttrs, t1, t2);
-    }
-	
-	private void matchNoPruning(OpenBitSet equalAttrs,  int[] t1, int[] t2) {
-        equalAttrs.clear(0, t1.length);
-		for (int i = 0; i < t1.length; i++) {
-            if (this.valueComparator.isEqual(t1[i], t2[i])) {
-                equalAttrs.set(i);
-            }
-        }
-	}
-    private void matchAnnotationPruning(OpenBitSet equalAttrs, int[] t1, int[] t2, int recId1, int recId2) {
-        List<Integer> invalidatingValues = new ArrayList<>();
-        List<Integer> invalidatingValues2 = new ArrayList<>();
-        equalAttrs.clear(0, t1.length);
-        for (int i = 0; i < t1.length; i++) {
-            if (this.valueComparator.isEqual(t1[i], t2[i]))
-                equalAttrs.set(i);
-        }
-        violationCollection.add(equalAttrs, recId1, recId2);
-    }
 
 
 

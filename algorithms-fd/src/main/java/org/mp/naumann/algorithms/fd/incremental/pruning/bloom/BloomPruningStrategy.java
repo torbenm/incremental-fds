@@ -7,12 +7,10 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.incremental.CardinalitySet;
+import org.mp.naumann.algorithms.fd.incremental.pruning.CardinalitySet;
 import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
-import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 import org.mp.naumann.database.statement.InsertStatement;
-import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.UpdateStatement;
 import org.mp.naumann.processor.batch.Batch;
 
@@ -103,8 +101,8 @@ public class BloomPruningStrategy {
         boolean isUniqueCombination = true;
         Set<Collection<ColumnValue>> inner = new HashSet<>();
         List<Map<String, String>> valueMaps = new ArrayList<>(inserts.size() + updates.size());
-        valueMaps.addAll(inserts.stream().map(Statement::getValueMap).collect(Collectors.toList()));
-        valueMaps.addAll(updates.stream().map(Statement::getValueMap).collect(Collectors.toList()));
+        valueMaps.addAll(inserts.stream().map(InsertStatement::getValueMap).collect(Collectors.toList()));
+        valueMaps.addAll(updates.stream().map(UpdateStatement::getValueMap).collect(Collectors.toList()));
         for (Map<String, String> valueMap : valueMaps) {
             Collection<ColumnValue> vc = getValues(toArray(valueMap), combination);
             if (inner.contains(vc)) {
@@ -182,12 +180,12 @@ public class BloomPruningStrategy {
         }
 
         @Override
-        public boolean cannotBeViolated(FDTreeElementLhsPair fd) {
-            OpenBitSet canBeViolated = fd.getLhs().clone();
-            int depth = Math.min(nonViolations.getDepth(), (int) fd.getLhs().cardinality());
+        public boolean doesNotNeedValidation(OpenBitSet lhs, OpenBitSet rhs) {
+            OpenBitSet canBeViolated = lhs.clone();
+            int depth = Math.min(nonViolations.getDepth(), (int) lhs.cardinality());
             for (int level = depth; level >= 0; level--) {
                 for (OpenBitSet nonViolation : nonViolations.getLevel(level)) {
-                    if (BitSetUtils.isContained(nonViolation, fd.getLhs())) {
+                    if (BitSetUtils.isContained(nonViolation, lhs)) {
                         canBeViolated.andNot(nonViolation);
                         if (canBeViolated.isEmpty()) {
                             return true;

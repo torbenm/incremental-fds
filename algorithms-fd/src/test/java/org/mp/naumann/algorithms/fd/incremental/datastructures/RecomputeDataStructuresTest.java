@@ -61,8 +61,7 @@ public class RecomputeDataStructuresTest {
         assertEquals(2, plis.get(1).size());
         assertEquals(1, plis.get(2).size());
         assertEquals(0, plis.get(3).size());
-        CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecord();
-        assertEquals(4, compressedRecords.size());
+        CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecords();
         // first column is the same for every record
         assertNotEquals(PliUtils.UNIQUE_VALUE, compressedRecords.get(0)[0]);
         assertEquals(compressedRecords.get(0)[0], compressedRecords.get(1)[0]);

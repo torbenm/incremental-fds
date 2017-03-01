@@ -5,9 +5,11 @@ import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 public class ArrayCompressedRecords implements CompressedRecords {
 
     private final int[][] compressedRecords;
+    private final int numAttributes;
 
-    public ArrayCompressedRecords(int[][] compressedRecords) {
+    public ArrayCompressedRecords(int[][] compressedRecords, int numAttributes) {
         this.compressedRecords = compressedRecords;
+        this.numAttributes = numAttributes;
     }
 
     @Override
@@ -16,12 +18,7 @@ public class ArrayCompressedRecords implements CompressedRecords {
     }
 
     @Override
-    public int size() {
-        return compressedRecords.length;
-    }
-
-    @Override
     public int getNumAttributes() {
-        return compressedRecords[0].length;
+        return numAttributes;
     }
 }

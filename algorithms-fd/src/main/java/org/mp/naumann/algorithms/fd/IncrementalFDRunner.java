@@ -26,16 +26,18 @@ import ResourceConnection.ResourceConnector;
 public interface IncrementalFDRunner {
 
     void afterInitial(List<FunctionalDependency> dependencyList);
+
     void afterIncremental(IncrementalFDResultListener listener);
-    default ResultListener<IncrementalFDResult> getResultListener(){
+
+    default ResultListener<IncrementalFDResult> getResultListener() {
         return null;
     }
 
     default void run(IncrementalFDRunConfiguration runConfig, IncrementalFDConfiguration algoConfig) throws ConnectionException {
         try (DataConnector dc
                      = new JdbcDataConnector(
-                             ConnectionManager.getCsvConnection(
-                                     runConfig.getResourceType(), runConfig.getSeparator())
+                ConnectionManager.getCsvConnection(
+                        runConfig.getResourceType(), runConfig.getSeparator())
         )) {
 
             // execute initial algorithm
@@ -57,6 +59,7 @@ public interface IncrementalFDRunner {
             SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
             IncrementalFD algorithm = new IncrementalFD(runConfig.getTableName(),
                     algoConfig);
+            algorithm.setEfficiencyThreshold(0.2f);
             IncrementalFDResultListener listener = new IncrementalFDResultListener();
             algorithm.addResultListener(listener);
             algorithm.addResultListener(getResultListener());
@@ -69,7 +72,6 @@ public interface IncrementalFDRunner {
             SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Finished processing 1 batch");
         }
     }
-
 
 
 }

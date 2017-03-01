@@ -1,9 +1,9 @@
 package org.mp.naumann.algorithms.fd.incremental.pruning;
 
-import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
+import org.apache.lucene.util.OpenBitSet;
 
 public interface ValidationPruner {
 
-    boolean cannotBeViolated(FDTreeElementLhsPair fd);
+    boolean doesNotNeedValidation(OpenBitSet lhs, OpenBitSet rhs);
 
 }

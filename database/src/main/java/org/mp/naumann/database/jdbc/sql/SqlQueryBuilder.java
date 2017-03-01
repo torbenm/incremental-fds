@@ -33,8 +33,16 @@ public class SqlQueryBuilder {
         ).collect(Collectors.joining("\n"));
     }
 
-    static String equalsSeparator(String value) {
-        return (value == null ? " IS " : " = ");
+    static String formatKey(String key) {
+        return (key.startsWith(":") ? "\"" + key + "\"" : key);
+    }
+
+    private static String formatKeyForValue(String key) {
+        return (key.isEmpty() ? "COALESCE(" + key + ", '')" : key);
+    }
+
+    private static String equalsSeparator(String value, boolean isValueClause) {
+        return (((value == null) && isValueClause) ? " IS " : " = ");
     }
 
     static String formatValue(String value, JDBCType jdbcType) {
@@ -46,15 +54,11 @@ public class SqlQueryBuilder {
             return value;
     }
 
-    static String toKeyEqualsValueMap(Statement stmt, String separator){
-        return toKeyEqualsValueMap(stmt.getValueMap(), stmt, separator);
-    }
-
-    static String toKeyEqualsValueMap(Map<String, String> valueMap, Statement stmt, String separator){
+    static String toKeyEqualsValueMap(Map<String, String> valueMap, Statement stmt, String separator, boolean isValueClause){
         return valueMap
                 .entrySet()
                 .parallelStream()
-                .map(n -> n.getKey() + equalsSeparator(n.getValue()) + formatValue(n.getValue(), stmt.getJDBCType(n.getKey())))
+                .map(n -> formatKeyForValue(formatKey(n.getKey())) + equalsSeparator(n.getValue(), isValueClause) + formatValue(n.getValue(), stmt.getJDBCType(n.getKey())))
                 .collect(Collectors.joining(separator));
     }
 }

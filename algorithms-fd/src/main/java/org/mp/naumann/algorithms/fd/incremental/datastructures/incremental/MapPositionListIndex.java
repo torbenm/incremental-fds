@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-package org.mp.naumann.algorithms.fd.incremental.datastructures;
+package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * Position list indices (or stripped partitions) are an index structure that
@@ -30,13 +34,13 @@ import java.util.Map;
  * (3, 5)). Clusters of size 1 are discarded. A position list index should be
  * created using the {@link PLIBuilder}.
  */
-public class MapPositionListIndex extends PositionListIndex {
+class MapPositionListIndex extends PositionListIndex {
 
     private final Map<Integer, IntArrayList> clusters;
 
     @Override
     public Collection<IntArrayList> getClusters() {
-        return this.clusters.values();
+        return this.clusters.entrySet().stream().filter(e -> !e.getKey().equals(PliUtils.UNIQUE_VALUE)).map(Entry::getValue).collect(Collectors.toList());
     }
 
     @Override
@@ -44,17 +48,12 @@ public class MapPositionListIndex extends PositionListIndex {
         return clusters.get(index);
     }
 
-    @Override
-    public void setCluster(int index, IntArrayList value) {
-        clusters.put(index, value);
-    }
-
-    public MapPositionListIndex(int attribute, Map<Integer, IntArrayList> clusters) {
+    MapPositionListIndex(int attribute, Map<Integer, IntArrayList> clusters) {
         super(attribute);
         this.clusters = clusters;
     }
 
-    public Map<Integer,IntArrayList> getRawClusters() {
+    Map<Integer, IntArrayList> getRawClusters() {
         return clusters;
     }
 }

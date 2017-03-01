@@ -31,7 +31,8 @@ public class JdbcTableInput implements TableInput {
 			ResultSetMetaData metaData = rs.getMetaData();
 			int count = metaData.getColumnCount();
 			for (int i = 1; i <= count; i++) {
-				values.put(metaData.getColumnName(i), rs.getString(i));
+				String value = rs.getString(i);
+				values.put(metaData.getColumnName(i), (rs.wasNull() ? "" : value));
 			}
 			return new GenericRow(values, getColumns());
 		} catch (SQLException e) {

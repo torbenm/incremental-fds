@@ -149,6 +149,12 @@ public class FDTree extends FDTreeElement {
 		this.addFunctionalDependenciesInto(functionalDependencies, new OpenBitSet(), columnIdentifiers, plis);
 		return functionalDependencies;
 	}
+
+	List<OpenBitSetFD> getFunctionalDependencies() {
+		List<OpenBitSetFD> functionalDependencies = new ArrayList<>();
+		this.addFunctionalDependenciesInto(functionalDependencies, new OpenBitSet());
+		return functionalDependencies;
+	}
 	
 	public int addFunctionalDependenciesInto(FunctionalDependencyResultReceiver resultReceiver, ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<? extends IPositionListIndex> plis) {
 		return this.addFunctionalDependenciesInto(resultReceiver, new OpenBitSet(), columnIdentifiers, plis);

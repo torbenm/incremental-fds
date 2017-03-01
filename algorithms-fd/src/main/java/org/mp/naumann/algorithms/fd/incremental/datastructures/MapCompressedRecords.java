@@ -8,17 +8,15 @@ import java.util.Map;
 public class MapCompressedRecords implements CompressedRecords {
 
     private final Map<Integer, int[]> compressedRecords;
+    private final int numAttributes;
 
-    private MapCompressedRecords(Map<Integer, int[]> compressedRecords) {
+    private MapCompressedRecords(Map<Integer, int[]> compressedRecords, int numAttributes) {
         this.compressedRecords = compressedRecords;
+        this.numAttributes = numAttributes;
     }
 
-    public MapCompressedRecords() {
-        this(new HashMap<>());
-    }
-
-    public MapCompressedRecords(int initialSize) {
-        this(new HashMap<>(initialSize));
+    public MapCompressedRecords(int initialSize, int numAttributes) {
+        this(new HashMap<>(initialSize), numAttributes);
     }
 
     @Override
@@ -26,17 +24,20 @@ public class MapCompressedRecords implements CompressedRecords {
         return compressedRecords.get(index);
     }
 
-    @Override
     public int size() {
         return compressedRecords.size();
     }
 
     @Override
     public int getNumAttributes() {
-        return compressedRecords.values().iterator().next().length;
+        return numAttributes;
     }
 
     public void put(Integer id, int[] record) {
         compressedRecords.put(id, record);
+    }
+
+    public void remove(int recordId) {
+        compressedRecords.remove(recordId);
     }
 }

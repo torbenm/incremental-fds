@@ -3,15 +3,15 @@ package org.mp.naumann.algorithms.fd.incremental;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.benchmark.better.Benchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
-import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -24,60 +24,77 @@ import java.util.stream.StreamSupport;
 
 class IncrementalSampler {
 
-    private FDSet negCover;
-    private FDTree posCover;
-    private CompressedRecords compressedRecords;
-    private List<? extends PositionListIndex> plis;
-    private float efficiencyThreshold;
-    private ValueComparator valueComparator;
+    private static final boolean SORT_PARALLEL = true;
+    private final FDSet agreeSets;
+    private final CompressedRecords compressedRecords;
+    private final List<? extends PositionListIndex> plis;
+    private final float efficiencyThreshold;
     private List<AttributeRepresentant> attributeRepresentants = null;
-    private MemoryGuardian memoryGuardian;
+    private final IncrementalMatcher matcher;
+    private Collection<Integer> newRecords;
 
-    public IncrementalSampler(FDSet negCover, FDTree posCover, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, ValueComparator valueComparator, MemoryGuardian memoryGuardian) {
-        this.negCover = negCover;
-        this.posCover = posCover;
+    IncrementalSampler(FDSet agreeSets, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, IncrementalMatcher matcher) {
+        this.agreeSets = agreeSets;
         this.compressedRecords = compressedRecords;
         this.plis = plis;
         this.efficiencyThreshold = efficiencyThreshold;
-        this.valueComparator = valueComparator;
-        this.memoryGuardian = memoryGuardian;
+        this.matcher = matcher;
     }
 
-    public FDList enrichNegativeCover(List<IntegerPair> comparisonSuggestions) {
-        int numAttributes = this.compressedRecords.get(0).length;
+    void setNewRecords(Collection<Integer> newRecords) {
+        this.newRecords = newRecords;
+    }
+
+    private boolean isOldRecord(int recordId) {
+        return newRecords != null && !newRecords.contains(recordId);
+    }
+
+    FDList enrichNegativeCover(List<IntegerPair> comparisonSuggestions) {
+        Benchmark benchmark = Benchmark.start("Sampling", Benchmark.DEFAULT_LEVEL + 3);
+        int numAttributes = this.compressedRecords.getNumAttributes();
 
         FDLogger.log(Level.FINEST, "Investigating comparison suggestions ... ");
-        FDList newNonFds = new FDList(numAttributes, this.negCover.getMaxDepth());
-        OpenBitSet equalAttrs = new OpenBitSet(this.posCover.getNumAttributes());
+        FDList newNonFds = new FDList(numAttributes, this.agreeSets.getMaxDepth());
+        OpenBitSet equalAttrs = new OpenBitSet(this.compressedRecords.getNumAttributes());
         for (IntegerPair comparisonSuggestion : comparisonSuggestions) {
-            this.match(equalAttrs, comparisonSuggestion.a(), comparisonSuggestion.b());
+            this.matcher.match(equalAttrs, comparisonSuggestion.a(), comparisonSuggestion.b());
 
-            if (!this.negCover.contains(equalAttrs)) {
+            if (!this.agreeSets.contains(equalAttrs)) {
                 OpenBitSet equalAttrsCopy = equalAttrs.clone();
-                this.negCover.add(equalAttrsCopy);
+                this.agreeSets.add(equalAttrsCopy);
                 newNonFds.add(equalAttrsCopy);
-
-                this.memoryGuardian.memoryChanged(1);
-                this.memoryGuardian.match(this.negCover, this.posCover, newNonFds);
             }
         }
 
+        benchmark.finishSubtask("Processed comparison suggestions");
         if (this.attributeRepresentants == null) { // if this is the first call of this method
             FDLogger.log(Level.FINEST, "Running initial windows ...");
-            long time = System.currentTimeMillis();
             this.attributeRepresentants = new ArrayList<>(numAttributes);
             float efficiencyFactor = (int) Math.ceil(1 / this.efficiencyThreshold);
             ClusterComparator comparator = new ClusterComparator(this.compressedRecords, this.compressedRecords.getNumAttributes() - 1, 1);
             for (PositionListIndex pli : this.plis) {
+                Benchmark pliBenchmark = Benchmark.start("Sampling PLI " + pli.getAttribute(), Benchmark.DEFAULT_LEVEL + 4);
                 Iterator<IntArrayList> it = pli.getClustersToCheck(true);
-                List<IntArrayList> clusters = StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.CONCURRENT), true).map(c -> sort(comparator, c)).collect(Collectors.toList());
+                final List<IntArrayList> clusters;
+                if (SORT_PARALLEL) {
+                    clusters = StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.CONCURRENT), true).map(c -> sort(comparator, c)).collect(Collectors.toList());
+                } else {
+                    clusters = new ArrayList<>();
+                    while (it.hasNext()) {
+                        clusters.add(sort(comparator, it.next()));
+                    }
+                }
+                pliBenchmark.finishSubtask("Sorting");
                 comparator.incrementActiveKey();
-                AttributeRepresentant attributeRepresentant = new AttributeRepresentant(clusters, efficiencyFactor, this.negCover, this.posCover, this, this.memoryGuardian);
+                AttributeRepresentant attributeRepresentant = new AttributeRepresentant(clusters, efficiencyFactor, this.agreeSets, this);
                 attributeRepresentant.runNext(newNonFds, this.compressedRecords);
-                if (attributeRepresentant.getEfficiency() != 0)
+                if (attributeRepresentant.getEfficiency() != 0) {
                     this.attributeRepresentants.add(attributeRepresentant);
+                }
+                pliBenchmark.finishSubtask("Run");
+                pliBenchmark.finish();
             }
-            FDLogger.log(Level.FINEST, "(" + (System.currentTimeMillis() - time) + "ms)");
+            benchmark.finishSubtask("Initial windows");
         } else {
             // Lower the efficiency factor for this round
             for (AttributeRepresentant attributeRepresentant : this.attributeRepresentants) {
@@ -89,12 +106,16 @@ class IncrementalSampler {
         PriorityQueue<AttributeRepresentant> queue = new PriorityQueue<>(this.attributeRepresentants);
         while (!queue.isEmpty()) {
             AttributeRepresentant attributeRepresentant = queue.remove();
-            if (!attributeRepresentant.runNext(newNonFds, this.compressedRecords))
+            if (!attributeRepresentant.runNext(newNonFds, this.compressedRecords)) {
                 continue;
+            }
 
-            if (attributeRepresentant.getEfficiency() != 0)
+            if (attributeRepresentant.getEfficiency() != 0) {
                 queue.add(attributeRepresentant);
+            }
         }
+        benchmark.finishSubtask("Next windows");
+        benchmark.finish();
 
         return newNonFds;
     }
@@ -106,18 +127,18 @@ class IncrementalSampler {
 
     private class ClusterComparator implements Comparator<Integer> {
 
-        private CompressedRecords sortKeys;
+        private final CompressedRecords sortKeys;
         private int activeKey1;
         private int activeKey2;
 
-        public ClusterComparator(CompressedRecords sortKeys, int activeKey1, int activeKey2) {
+        ClusterComparator(CompressedRecords sortKeys, int activeKey1, int activeKey2) {
             super();
             this.sortKeys = sortKeys;
             this.activeKey1 = activeKey1;
             this.activeKey2 = activeKey2;
         }
 
-        public void incrementActiveKey() {
+        void incrementActiveKey() {
             this.activeKey1 = this.increment(this.activeKey1);
             this.activeKey2 = this.increment(this.activeKey2);
         }
@@ -143,24 +164,22 @@ class IncrementalSampler {
     private class AttributeRepresentant implements Comparable<AttributeRepresentant> {
 
         private int windowDistance;
-        private IntArrayList numNewNonFds = new IntArrayList();
-        private IntArrayList numComparisons = new IntArrayList();
+        private final IntArrayList numNewNonFds = new IntArrayList();
+        private final IntArrayList numComparisons = new IntArrayList();
         private float efficiencyFactor;
-        private List<IntArrayList> clusters;
-        private FDSet negCover;
-        private FDTree posCover;
-        private IncrementalSampler sampler;
-        private MemoryGuardian memoryGuardian;
+        private final List<IntArrayList> clusters;
+        private final FDSet negCover;
+        private final IncrementalSampler sampler;
 
-        public float getEfficiencyFactor() {
+        float getEfficiencyFactor() {
             return this.efficiencyFactor;
         }
 
-        public void setEfficiencyFactor(float efficiencyFactor) {
+        void setEfficiencyFactor(float efficiencyFactor) {
             this.efficiencyFactor = efficiencyFactor;
         }
 
-        public int getEfficiency() { // TODO: If we keep calculating the efficiency with all comparisons and all results in the log, then we can also aggregate all comparisons and results in two variables without maintaining the entire log
+        int getEfficiency() { // TODO: If we keep calculating the efficiency with all comparisons and all results in the log, then we can also aggregate all comparisons and results in two variables without maintaining the entire log
             int sumNonFds = 0;
             int sumComparisons = 0;
             int index = this.numNewNonFds.size() - 1;
@@ -169,18 +188,17 @@ class IncrementalSampler {
                 sumComparisons += this.numComparisons.getInt(index);
                 index--;
             }
-            if (sumComparisons == 0)
+            if (sumComparisons == 0) {
                 return 0;
+            }
             return (int) (sumNonFds * (this.efficiencyFactor / sumComparisons));
         }
 
-        public AttributeRepresentant(List<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, FDTree posCover, IncrementalSampler sampler, MemoryGuardian memoryGuardian) {
+        AttributeRepresentant(List<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, IncrementalSampler sampler) {
             this.clusters = clusters;
             this.efficiencyFactor = efficiencyFactor;
             this.negCover = negCover;
-            this.posCover = posCover;
             this.sampler = sampler;
-            this.memoryGuardian = memoryGuardian;
         }
 
         @Override
@@ -189,11 +207,10 @@ class IncrementalSampler {
             return (int) Math.signum(o.getEfficiency() - this.getEfficiency());
         }
 
-        public boolean runNext(FDList newNonFds, CompressedRecords compressedRecords) {
+        boolean runNext(FDList newNonFds, CompressedRecords compressedRecords) {
             this.windowDistance++;
-            int numNewNonFds = 0;
             int numComparisons = 0;
-            OpenBitSet equalAttrs = new OpenBitSet(this.posCover.getNumAttributes());
+            OpenBitSet equalAttrs = new OpenBitSet(compressedRecords.getNumAttributes());
 
             int previousNegCoverSize = newNonFds.size();
             Iterator<IntArrayList> clusterIterator = this.clusters.iterator();
@@ -209,34 +226,23 @@ class IncrementalSampler {
                     int recordId = cluster.getInt(recordIndex);
                     int partnerRecordId = cluster.getInt(recordIndex + this.windowDistance);
 
-                    this.sampler.match(equalAttrs, compressedRecords.get(recordId), compressedRecords.get(partnerRecordId));
+                    if (isOldRecord(recordId) && isOldRecord(partnerRecordId)) {
+                        continue;
+                    }
+                    this.sampler.matcher.match(equalAttrs, recordId, partnerRecordId);
 
                     if (!this.negCover.contains(equalAttrs)) {
                         OpenBitSet equalAttrsCopy = equalAttrs.clone();
                         this.negCover.add(equalAttrsCopy);
                         newNonFds.add(equalAttrsCopy);
-
-                        this.memoryGuardian.memoryChanged(1);
-                        this.memoryGuardian.match(this.negCover, this.posCover, newNonFds);
                     }
                     numComparisons++;
                 }
             }
-            numNewNonFds = newNonFds.size() - previousNegCoverSize;
+            int numNewNonFds = newNonFds.size() - previousNegCoverSize;
             this.numNewNonFds.add(numNewNonFds);
             this.numComparisons.add(numComparisons);
             return numComparisons != 0;
         }
-    }
-
-    private void match(OpenBitSet equalAttrs, int t1, int t2) {
-        this.match(equalAttrs, this.compressedRecords.get(t1), this.compressedRecords.get(t2));
-    }
-
-    private void match(OpenBitSet equalAttrs, int[] t1, int[] t2) {
-        equalAttrs.clear(0, t1.length);
-        for (int i = 0; i < t1.length; i++)
-            if (this.valueComparator.isEqual(t1[i], t2[i]))
-                equalAttrs.set(i);
     }
 }
