@@ -1,16 +1,13 @@
 package org.mp.naumann.database.utils;
 
+import ResourceConnection.ResourceConnector;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.jdbc.ConnectionInfo;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.net.URL;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Properties;
-
-import ResourceConnection.ResourceConnector;
 
 public class ConnectionManager {
 
@@ -28,12 +25,12 @@ public class ConnectionManager {
     private static ConnectionInfo getPostgresConnectionInfo() throws ConnectionException {
         ConnectionInfo ci = new ConnectionInfo();
         Properties properties = new Properties();
-        URL settingsURL = ConnectionInfo.class.getClassLoader().getResource("properties.xml");
-        if (settingsURL == null) settingsURL = ConnectionInfo.class.getClassLoader().getResource("properties.default.xml");
-        if (settingsURL != null) {
-            File settings = new File(settingsURL.getFile());
+
+        InputStream input = ConnectionInfo.class.getClassLoader().getResourceAsStream("properties.xml");
+        if (input == null) input = ConnectionInfo.class.getClassLoader().getResourceAsStream("properties.default.xml");
+        if (input != null) {
             try {
-                try (FileInputStream input = new FileInputStream(settings)) {
+                try {
                     properties.loadFromXML(input);
                     String server = properties.getProperty("server");
                     int port = Integer.parseInt(properties.getProperty("port"));
@@ -42,6 +39,8 @@ public class ConnectionManager {
                     ci.pass = properties.getProperty("pass");
                     ci.connectionString = "jdbc:postgresql://" + server + ":" + Integer.toString(port) + "/" + database;
                     return ci;
+                } finally {
+                    input.close();
                 }
             } catch (Exception e) {
                 throw new ConnectionException(e);
