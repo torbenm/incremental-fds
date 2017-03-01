@@ -12,9 +12,7 @@ import java.util.Set;
 
 public abstract class AbstractStatementApplier implements StatementVisitor {
     private final Set<Integer> inserted = new HashSet<>();
-    private final Set<Integer> insertedUpdate = new HashSet<>();
     private final Set<Integer> deleted = new HashSet<>();
-    private final Set<Integer> deletedUpdate = new HashSet<>();
 
     @Override
     public void visit(DeleteStatement delete) {
@@ -25,9 +23,9 @@ public abstract class AbstractStatementApplier implements StatementVisitor {
     @Override
     public void visit(UpdateStatement update) {
         Collection<Integer> removed = removeRecord(update.getOldValueMap());
-        deletedUpdate.addAll(removed);
-        int inserted = addRecord(update.getValueMap());
-        insertedUpdate.add(inserted);
+        deleted.addAll(removed);
+        int insertedRecord = addRecord(update.getValueMap());
+        inserted.add(insertedRecord);
     }
 
     @Override
@@ -40,16 +38,8 @@ public abstract class AbstractStatementApplier implements StatementVisitor {
         return inserted;
     }
 
-    public Set<Integer> getInsertedUpdate() {
-        return insertedUpdate;
-    }
-
     public Set<Integer> getDeleted() {
         return deleted;
-    }
-
-    public Set<Integer> getDeletedUpdate() {
-        return deletedUpdate;
     }
 
     protected abstract int addRecord(Map<String, String> valueMap);

@@ -83,6 +83,13 @@ public class LatticeElement {
         return true;
     }
 
+    private boolean hasChildren() {
+        for (LatticeElement child : this.children)
+            if (child != null)
+                return true;
+        return false;
+    }
+
     private boolean hasNoMarked() {
         return markedRhs.isEmpty();
     }
@@ -137,6 +144,8 @@ public class LatticeElement {
                     }
                 }
             }
+            if (!hasChildren())
+                children = null;
         }
 
         // Check if another child requires the rhsFds and if not, remove it from this node
@@ -162,6 +171,9 @@ public class LatticeElement {
             if (this.children[currentLhsAttr].hasNoMarked()) {
                 this.children[currentLhsAttr] = null;
             }
+
+            if (!hasChildren())
+                children = null;
         }
 
         // Check if another child requires the rhsFds and if not, remove it from this node
@@ -217,5 +229,9 @@ public class LatticeElement {
 
             currentLhsAttr = nextLhsAttr;
         }
+    }
+
+    public OpenBitSet getMarkedRhs() {
+        return markedRhs;
     }
 }

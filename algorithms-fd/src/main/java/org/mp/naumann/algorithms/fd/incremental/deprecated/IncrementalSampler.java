@@ -46,7 +46,7 @@ class IncrementalSampler {
     }
 
     public FDList enrichNegativeCover(List<IntegerPair> comparisonSuggestions) {
-        int numAttributes = this.compressedRecords.get(0).length;
+        int numAttributes = this.compressedRecords.getNumAttributes();
 
         FDLogger.log(Level.FINEST, "Investigating comparison suggestions ... ");
         FDList newNonFds = new FDList(numAttributes, this.negCover.getMaxDepth());
@@ -138,7 +138,7 @@ class IncrementalSampler {
         }
 
         private int increment(int number) {
-            return (number == this.sortKeys.get(0).length - 1) ? 0 : number + 1;
+            return (number == this.sortKeys.getNumAttributes() - 1) ? 0 : number + 1;
         }
     }
 

@@ -6,6 +6,7 @@ public interface DataConnector extends AutoCloseable {
 
     List<String> getTableNames(String schema);
     Table getTable(String schema, String tableName);
+    void clearTableNames(String schema);
 
     void close() throws ConnectionException;
 

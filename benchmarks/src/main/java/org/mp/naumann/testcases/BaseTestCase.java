@@ -11,6 +11,8 @@ import org.mp.naumann.algorithms.fd.HyFDInitialAlgorithm;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDResult;
+import org.mp.naumann.algorithms.fd.structures.Lattice;
+import org.mp.naumann.algorithms.fd.structures.LatticeBuilder;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
@@ -43,16 +45,17 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
     final int stopAfter;
     final String schema, tableName, sourceTableName;
-    private final boolean hyfdOnly;
+    private final boolean hyfdOnly, hyfdCreateIndex;
     private long baselineSize;
 
-    BaseTestCase(String schema, String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly) {
+    BaseTestCase(String schema, String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly, boolean hyfdCreateIndex) {
         this.schema = schema;
         this.sourceTableName = tableName;
-        this.tableName = tableName + "_tmp";
+        this.tableName = (hyfdOnly ? tableName + "_tmp" : tableName);
         this.config = config;
         this.stopAfter = stopAfter;
         this.hyfdOnly = hyfdOnly;
+        this.hyfdCreateIndex = hyfdCreateIndex;
         SpeedBenchmark.addEventListener(this);
     }
 
@@ -60,12 +63,8 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
     public void execute() throws ConnectionException, IOException {
         try (Connection conn = ConnectionManager.getPostgresConnection(); DataConnector dc = new JdbcDataConnector(conn)) {
 
-            // create temporary table that we can modify as batches come in
-            Statement stmt = conn.createStatement();
-            stmt.execute("CREATE TEMPORARY TABLE " + (schema.isEmpty() ? "" : schema + ".") + tableName + " AS SELECT * FROM " + sourceTableName);
-
             StreamableBatchSource batchSource = getBatchSource();
-            Table table = dc.getTable(schema, tableName);
+            Table table = dc.getTable(schema, sourceTableName);
             baselineSize = table.getRowCount();
 
             // execute HyFD in any case; we need the data structure for the incremental algorithm, and can use it
@@ -78,11 +77,31 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
             fds.forEach(fd -> FDLogger.log(Level.FINE, fd.toString()));
 
             if (hyfdOnly) {
+                // create temporary table that we can modify as batches come in
+                String fullTableName = (schema.isEmpty() ? "" : schema + ".") + tableName;
+                Statement stmt = conn.createStatement();
+                stmt.execute("CREATE TEMPORARY TABLE " + fullTableName + " AS SELECT * FROM " + sourceTableName);
+
+                dc.clearTableNames(schema);
+                table = dc.getTable(schema, tableName);
+
+                if (hyfdCreateIndex) {
+                    // create index on the temporary table
+                    stmt.execute(String.format("CREATE INDEX %s_master_idx ON %s (%s)", tableName, fullTableName, String.join(", ", table.getColumnNames())));
+                }
+
                 BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, new PassThroughDatabaseBatchHandler(dc), true);
                 batchProcessor.addBatchHandler(new HyFDBatchHandler(table, getLimit(), config, resultListener));
             } else {
                 FDIntermediateDatastructure ds = initialAlgorithm.getIntermediateDataStructure();
                 IncrementalFD incrementalAlgorithm = new IncrementalFD(sourceTableName, config);
+
+                LatticeBuilder builder = LatticeBuilder.build(ds.getPosCover());
+                Lattice fdLattice = builder.getFds();
+                fdLattice.print();
+                //Lattice nonFdLattice = builder.getNonFds();
+                //nonFdLattice.print();
+
                 incrementalAlgorithm.initialize(ds);
                 incrementalAlgorithm.addResultListener(resultListener);
                 BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, new FakeDatabaseBatchHandler(), false);

@@ -9,8 +9,8 @@ public class FixedSizeTestCase extends BaseTestCase {
 
     private final int batchSize;
 
-    public FixedSizeTestCase(String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly, int batchSize) {
-        super("", tableName, config, stopAfter, hyfdOnly);
+    public FixedSizeTestCase(String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly, boolean hyfdCreateIndex, int batchSize) {
+        super("", tableName, config, stopAfter, hyfdOnly, hyfdCreateIndex);
         this.batchSize = batchSize;
     }
 
