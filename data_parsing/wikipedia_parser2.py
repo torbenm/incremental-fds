@@ -8,6 +8,8 @@ from models.Table import Table
 def parseInfoboxUpdatesToCsv(infoboxConfig):
     for targetInfoboxType, attributesInput in infoboxConfig.items():
         attributes = sorted(list(set(attributesInput)))
+        for i in range(0, len(attributes)):
+            attributes[i] = attributes[i].lower().replace(" ", "_")
         if "article_title" in attributes:
             attributes.remove("article_title")
         attributes.insert(0, "article_title")

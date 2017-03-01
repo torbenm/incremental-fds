@@ -17,15 +17,17 @@ class Statement:
         stringParts.append("\"" + self.action + "\"")
         for attribute in self.valueMap:
             oldValue = self.oldValueMap[attribute]
-            if oldValue is None:
-                oldValue = ""
             newValue = self.valueMap[attribute]
-            if newValue is None:
-                newValue = ""
 
             if self.action == "update" and attribute != "article_title":
+                if oldValue is None:
+                    oldValue = ""
+                if newValue is None:
+                    newValue = oldValue
                 stringParts.append("\"" + oldValue + "|" + newValue + "\"")
             else:
+                if newValue is None:
+                    newValue = ""
                 stringParts.append("\"" + newValue + "\"")
         return ",".join(stringParts)
 
@@ -34,6 +36,16 @@ class Statement:
         for entry in data:
             self.__addValues(entry)
         self.action = "update"
+
+    def isIrrelevant(self):
+        if self.action == "update":
+            for attribute in self.valueMap:
+                if attribute == "article_title":
+                    continue
+                if self.oldValueMap[attribute] is not None or self.valueMap[attribute] is not None:
+                    return False
+            return True
+        return False
 
     def __addValues(self, update):
         key = self.__normalizeAttribute(update["key"])

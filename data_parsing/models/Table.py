@@ -14,18 +14,23 @@ class Table:
         return self.data[id]
 
     def updateRecord(self, updateStatement):
-        for attribute, value in updateStatement.valueMap.items():
-            # this should theoretically just copy the record's old value to the old values of the update statement
-            updateStatement.oldValueMap[attribute] = self.data[updateStatement.record].valueMap[attribute]
-            newValue = updateStatement.valueMap[attribute]
-            if newValue is not None:
-                self.data[updateStatement.record].valueMap[attribute] = newValue
-        if not self.data[updateStatement.record].hasNonEmptyValues():
-            updateStatement.action = "delete"
+        if updateStatement.record in self.data:
+            for attribute, value in updateStatement.valueMap.items():
+                # this should theoretically just copy the record's old value to the old values of the update statement
+                updateStatement.oldValueMap[attribute] = self.data[updateStatement.record].valueMap[attribute]
+                newValue = updateStatement.valueMap[attribute]
+                if newValue is not None:
+                    self.data[updateStatement.record].valueMap[attribute] = newValue
+            if not self.data[updateStatement.record].hasNonEmptyValues():
+                updateStatement.action = "delete"
+                self.deleteRecord(updateStatement.record)
+        else:
+            updateStatement.action = "insert"
+            self.insertRecord(updateStatement)
 
 
     def deleteRecord(self, id):
-        pass
+        del self.data[id]
 
     def insertRecord(self, insertStatement):
         record = Record(insertStatement.valueMap.keys())

@@ -25,7 +25,9 @@ def convert(targetInfoboxType, attributes):
             baselineRecords.append(generateBaselineRecord(baselineData, attributes, currentId, articleTitle))
 
             for entry in updateData.values():
-                updateStatements.append(generateUpdateStatement(entry, attributes, currentId, articleTitle))
+                updateStatement = generateUpdateStatement(entry, attributes, currentId, articleTitle)
+                if not updateStatement.isIrrelevant():
+                    updateStatements.append(updateStatement)
 
             currentId += 1
 
