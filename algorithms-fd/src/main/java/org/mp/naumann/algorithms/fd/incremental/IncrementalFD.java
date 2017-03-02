@@ -139,6 +139,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
     @Override
     public IncrementalFDResult execute(Batch batch) throws AlgorithmExecutionException {
+        FDLogger.log(Level.INFO, "----");
         FDLogger.log(Level.INFO, "Started IncrementalFD for new Batch");
         Benchmark benchmark = Benchmark.start("IncrementalFD for new Batch");
 
@@ -146,8 +147,6 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         CompressedDiff diff = dataStructureBuilder.update(batch);
         List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecords();
-        benchmark.finishSubtask("Update data structures");
-        FDLogger.log(Level.FINER, "Finished updating data structures");
 
         int validations = 0;
         int pruned = 0;
@@ -156,19 +155,16 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             ValidatorResult result = validateFDs(plis, compressedRecords, batch, diff);
             validations += result.getValidations();
             pruned += result.getPruned();
-            benchmark.finishSubtask("Validate FDs");
         }
 
         if (diff.hasDeletes()) {
             ValidatorResult result = validateNonFDs(plis, compressedRecords, diff);
             validations += result.getValidations();
             pruned += result.getPruned();
-            benchmark.finishSubtask("Validate non-FDs");
         }
 
         List<OpenBitSetFD> fds = this.fds.getFunctionalDependencies();
         List<FunctionalDependency> result = getFunctionalDependencies(fds);
-        FDLogger.log(Level.INFO, "Finished IncrementalFD for new Batch");
         benchmark.finish();
 
         return new IncrementalFDResult(result, validations, pruned);
