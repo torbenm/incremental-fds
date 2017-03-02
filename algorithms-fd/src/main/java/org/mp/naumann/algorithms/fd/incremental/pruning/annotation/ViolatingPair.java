@@ -1,13 +1,20 @@
-package org.mp.naumann.algorithms.fd.incremental.violations;
+package org.mp.naumann.algorithms.fd.incremental.pruning.annotation;
+
+import java.util.Collection;
 
 public class ViolatingPair {
 
     private final int firstRecord;
     private final int secondRecord;
 
-    public ViolatingPair(int firstRecord, int secondRecord) {
-        this.firstRecord = firstRecord;
-        this.secondRecord = secondRecord;
+    public ViolatingPair(int a, int b) {
+        if (a < b) {
+            this.firstRecord = a;
+            this.secondRecord = b;
+        } else {
+            this.firstRecord = b;
+            this.secondRecord = a;
+        }
     }
 
     public int getFirstRecord() {
@@ -18,9 +25,17 @@ public class ViolatingPair {
         return secondRecord;
     }
 
-    public boolean intersected(int value){
-        return firstRecord == value
-        || secondRecord == value;
+    public boolean intersects(int value) {
+        return firstRecord == value || secondRecord == value;
+    }
+
+    public boolean intersects(Collection<Integer> collection) {
+        return collection.contains(firstRecord) || collection.contains(secondRecord);
+    }
+
+    @Override
+    public String toString() {
+        return "(" + firstRecord + "," + secondRecord + ")";
     }
 
     @Override
@@ -41,3 +56,4 @@ public class ViolatingPair {
         return result;
     }
 }
+

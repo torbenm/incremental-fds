@@ -233,7 +233,7 @@ public class IncrementalFDConfiguration {
     }
 
     public enum PruningStrategy {
-        SIMPLE, BLOOM, BLOOM_ADVANCED, ANNOTATION, DELETES
+        SIMPLE, BLOOM, BLOOM_ADVANCED, ANNOTATION, DELETE_ANNOTATIONS
     }
 
     public enum ViolationCollections {

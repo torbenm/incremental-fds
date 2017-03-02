@@ -1,6 +1,6 @@
 package org.mp.naumann.algorithms.fd;
 
-import org.mp.naumann.algorithms.fd.incremental.pruning.DeletePruner;
+import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.DeletePruner;
 import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
