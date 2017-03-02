@@ -152,13 +152,13 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		boolean validateParallel = true;
 		Validator validator = new Validator(negCover, posCover, numRecords, compressedRecords, plis,
 				efficiencyThreshold, validateParallel, this.memoryGuardian, violationCollection, matcher);
-		lastValidationCount = validator.lastValidationCount;
 
 		List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
         SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Initialised Sampler, Inductor and Validator");
         SpeedBenchmark.begin(BenchmarkLevel.METHOD_HIGH_LEVEL);
         int i = 1;
+		lastValidationCount = 0;
 		do {
 			FDLogger.log(Level.FINE, "Started round " + i);
 			FDLogger.log(Level.FINE, "Enriching negative cover");
@@ -167,6 +167,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 			inductor.updatePositiveCover(newNonFds);
 			FDLogger.log(Level.FINE, "Validating positive cover");
 			comparisonSuggestions = validator.validatePositiveCover();
+			lastValidationCount += validator.lastValidationCount;
             SpeedBenchmark.lap(BenchmarkLevel.METHOD_HIGH_LEVEL, "Round "+i++);
 		} while (comparisonSuggestions != null);
 

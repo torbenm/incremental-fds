@@ -184,6 +184,7 @@ public class Validator {
 	}
 	
 	public List<IntegerPair> validatePositiveCover() throws AlgorithmExecutionException {
+		lastValidationCount = 0;
 		int numAttributes = this.plis.size();
 		
 		FDLogger.log(Level.FINER, "Validating FDs using plis ...");
@@ -207,7 +208,7 @@ public class Validator {
 			FDLogger.log(Level.FINER, "(V)");
 			
 			ValidationResult validationResult = (this.executor == null) ? this.validateSequential(currentLevel) : this.validateParallel(currentLevel);
-			lastValidationCount = validationResult.validations;
+			lastValidationCount += validationResult.validations;
 			comparisonSuggestions.addAll(validationResult.comparisonSuggestions);
 			
 			// If the next level exceeds the predefined maximum lhs size, then we can stop here
