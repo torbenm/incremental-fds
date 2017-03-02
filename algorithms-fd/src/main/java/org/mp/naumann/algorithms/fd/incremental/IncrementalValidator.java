@@ -124,9 +124,10 @@ public abstract class IncrementalValidator {
         int previousNumInvalidFds = 0;
         while (level <= lattice.getDepth()) {
             FDLogger.log(Level.FINER, "Started validating level " + level);
-            Benchmark benchmark = Benchmark.start("Validate level "+ level);
+            Benchmark benchmark = Benchmark.start("Validate level "+ level, Benchmark.DEFAULT_LEVEL + 3);
             Collection<LatticeElementLhsPair> currentLevel = lattice.getLevel(level);
             if (!isTopDown()) {
+                // lattice is neg cover and contains flipped lhs'
                 currentLevel.forEach(pair -> pair.getLhs().flip(0, numAttributes));
             }
             benchmark.finishSubtask("Retrieval");
@@ -137,6 +138,7 @@ public abstract class IncrementalValidator {
             ValidationResult result = validate(currentLevel);
             validatorResult.validations += result.validations;
             if (isTopDown()) {
+                // retain violating pairs in insert case for sampling
                 comparisonSuggestions.addAll(result.comparisonSuggestions);
             }
             int candidates = 0;
@@ -144,11 +146,15 @@ public abstract class IncrementalValidator {
             for (OpenBitSetFD fd : result.collectedFDs) {
                 OpenBitSet lhs = fd.getLhs();
                 if (!isTopDown()) {
+                    // flip lhs back if lattice is negCover
                     lhs.flip(0, numAttributes);
                 }
+                // fd changed its state, thus add it to inverse lattice
                 OpenBitSet flipped = flip(lhs);
                 int rhs = fd.getRhs();
                 inverseLattice.addFunctionalDependency(flipped, rhs);
+                // there might be generalizations in the inverse lattice
+                // (specializations here because everything is flipped)
                 inverseLattice.removeSpecializations(flipped, rhs);
                 List<OpenBitSet> specializations = generateSpecializations(lhs, rhs);
                 for (OpenBitSet specialization : specializations) {

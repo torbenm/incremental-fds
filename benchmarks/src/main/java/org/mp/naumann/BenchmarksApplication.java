@@ -1,12 +1,14 @@
 package org.mp.naumann;
 
-import ResourceConnection.ResourceConnector;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+
+import org.mp.naumann.algorithms.benchmark.better.Benchmark;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.reporter.FileReporter;
 import org.mp.naumann.reporter.GoogleSheetsReporter;
@@ -18,6 +20,8 @@ import org.mp.naumann.testcases.VariableSizeTestCase;
 
 import java.io.IOException;
 import java.util.logging.Level;
+
+import ResourceConnection.ResourceConnector;
 
 public class BenchmarksApplication {
 
@@ -91,6 +95,7 @@ public class BenchmarksApplication {
         if (recomputeDataStructures != null) {
             config.setRecomputeDataStructures(recomputeDataStructures);
         }
+        config.addPruningStrategy(PruningStrategy.DELETES);
     }
 
     private String getFullBatchDirectory() {
@@ -171,6 +176,8 @@ public class BenchmarksApplication {
                 FDLogger.log(Level.INFO, e.toString());
         });
         SpeedBenchmark.begin(BenchmarkLevel.BENCHMARK);
+        Benchmark.setMaxLevel(1);
+        Benchmark.addEventListener(FDLogger::info);
     }
 
     public static void tearDown() {

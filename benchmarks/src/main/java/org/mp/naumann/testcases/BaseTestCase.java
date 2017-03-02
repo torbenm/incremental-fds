@@ -11,7 +11,6 @@ import org.mp.naumann.algorithms.fd.HyFDInitialAlgorithm;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDResult;
-import org.mp.naumann.algorithms.fd.structures.Lattice;
 import org.mp.naumann.algorithms.fd.structures.LatticeBuilder;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.database.ConnectionException;
@@ -37,6 +36,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 
+import ResourceConnection.ResourceConnector;
+
 abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
     private final IncrementalFDConfiguration config;
@@ -61,7 +62,8 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
     @Override
     public void execute() throws ConnectionException, IOException {
-        try (Connection conn = ConnectionManager.getPostgresConnection(); DataConnector dc = new JdbcDataConnector(conn)) {
+        try (Connection conn = ConnectionManager.getCsvConnection(ResourceConnector.BASELINE, ","); DataConnector dc = new JdbcDataConnector(conn)) {
+        //try (Connection conn = ConnectionManager.getPostgresConnection(); DataConnector dc = new JdbcDataConnector(conn)) {
 
             StreamableBatchSource batchSource = getBatchSource();
             Table table = dc.getTable(schema, sourceTableName);
@@ -97,8 +99,8 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
                 IncrementalFD incrementalAlgorithm = new IncrementalFD(sourceTableName, config);
 
                 LatticeBuilder builder = LatticeBuilder.build(ds.getPosCover());
-                Lattice fdLattice = builder.getFds();
-                fdLattice.print();
+//                Lattice fdLattice = builder.getFds();
+//                fdLattice.print();
                 //Lattice nonFdLattice = builder.getNonFds();
                 //nonFdLattice.print();
 

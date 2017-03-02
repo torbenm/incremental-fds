@@ -67,7 +67,7 @@ public class IncrementalFDDemo {
                 .addPruningStrategy(PruningStrategy.DELETES)
 //                .addPruningStrategy(PruningStrategy.BLOOM_ADVANCED)
         ;
-        IncrementalFDRunConfiguration runConfig = adultInsert;
+        IncrementalFDRunConfiguration runConfig = philippSample;
 
 
         SpeedBenchmark.enable();

@@ -27,6 +27,7 @@ public class LatticeElement {
 
     void addFd(int rhsAttribute) {
         this.rhsFds.fastSet(rhsAttribute);
+        this.mark(rhsAttribute);
     }
 
     public void removeFd(int rhsAttribute) {
