@@ -171,9 +171,6 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         FDLogger.log(Level.INFO, "Finished IncrementalFD for new Batch");
         benchmark.finish();
 
-//        this.fds.print();
-        //this.nonFds.print();
-
         return new IncrementalFDResult(result, validations, pruned);
     }
 
