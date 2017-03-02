@@ -22,7 +22,7 @@ class Matcher {
         this.valueComparator = valueComparator;
         this.violationCollection = violationCollection;
         this.configuration = configuration;
-        this.pruner = new DeletePruner(compressedRecords[0].length, () -> new MaxSizeViolationSet(100), SimpleDeleteValidationPruner::new);
+        this.pruner = new DeletePruner(compressedRecords[0].length, () -> new MaxSizeViolationSet(1000), SimpleDeleteValidationPruner::new);
     }
 
     public void match(OpenBitSet equalAttrs, int recId1, int recId2) {
