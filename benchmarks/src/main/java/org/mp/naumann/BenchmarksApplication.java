@@ -8,6 +8,7 @@ import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.reporter.FileReporter;
 import org.mp.naumann.reporter.GoogleSheetsReporter;
@@ -72,6 +73,16 @@ public class BenchmarksApplication {
     private Boolean useEnhancedClusterPruning;
     @Parameter(names = "--recomputeDataStructures", arity = 1)
     private Boolean recomputeDataStructures;
+    @Parameter(names = "--simpleBloom", arity = 1)
+    private Boolean simpleBloomPruning;
+    @Parameter(names = "--advancedBloom", arity = 1)
+    private Boolean advancedBloomPruning;
+    @Parameter(names = "--simplePruning", arity = 1)
+    private Boolean simplePruning;
+    @Parameter(names = "--deletePruning", arity = 1)
+    private Boolean deletePruning;
+    @Parameter(names = "--betterSampling", arity = 1)
+    private Boolean betterSampling;
 
     public static void main(String[] args) throws IOException {
         BenchmarksApplication app = new BenchmarksApplication();
@@ -99,7 +110,21 @@ public class BenchmarksApplication {
         if (recomputeDataStructures != null) {
             config.setRecomputeDataStructures(recomputeDataStructures);
         }
-//        config.addPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS);
+        if (simplePruning != null) {
+            config.addPruningStrategy(PruningStrategy.SIMPLE);
+        }
+        if (simpleBloomPruning != null) {
+            config.addPruningStrategy(PruningStrategy.BLOOM);
+        }
+        if (advancedBloomPruning != null) {
+            config.addPruningStrategy(PruningStrategy.BLOOM_ADVANCED);
+        }
+        if (betterSampling != null) {
+            config.setImprovedSampling(betterSampling);
+        }
+        if (deletePruning != null) {
+            config.addPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS);
+        }
     }
 
     private String getFullBatchDirectory() {
@@ -181,7 +206,7 @@ public class BenchmarksApplication {
                 FDLogger.log(Level.INFO, e.toString());
         });
         SpeedBenchmark.begin(BenchmarkLevel.BENCHMARK);
-        Benchmark.setMaxLevel(1);
+        Benchmark.setMaxLevel(4);
         Benchmark.addEventListener(FDLogger::info);
     }
 

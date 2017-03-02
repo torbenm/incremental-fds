@@ -142,7 +142,7 @@ public abstract class IncrementalValidator {
                 comparisonSuggestions.addAll(result.comparisonSuggestions);
             }
             int candidates = 0;
-            benchmark.finishSubtask("Validation");
+            benchmark.finishSubtask("Validation of " + currentLevel.size() + " fds");
             for (OpenBitSetFD fd : result.collectedFDs) {
                 OpenBitSet lhs = fd.getLhs();
                 if (!isTopDown()) {
@@ -164,7 +164,7 @@ public abstract class IncrementalValidator {
                     }
                 }
             }
-            benchmark.finishSubtask("Induction");
+            benchmark.finishSubtask("Inducted " + candidates + " candidates from " + result.collectedFDs.size() + " fds");
             int numInvalidFds = result.collectedFDs.size();
             int numValidFds = result.validations - numInvalidFds;
             FDLogger.log(Level.FINER, result.intersections + " intersections; " + result.validations + " validations; " + numInvalidFds + " invalid; " + candidates + " new candidates; --> " + numValidFds + " FDs");

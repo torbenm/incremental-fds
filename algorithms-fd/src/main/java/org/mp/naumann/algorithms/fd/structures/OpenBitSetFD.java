@@ -24,6 +24,10 @@ public class OpenBitSetFD {
         return BitSetUtils.toString(lhs) + "->" + rhs;
     }
 
+    public String toString(int lhsSize) {
+        return BitSetUtils.toString(lhs, lhsSize) + "->" + rhs;
+    }
+
     @Override
     public boolean equals(Object o) {
 
