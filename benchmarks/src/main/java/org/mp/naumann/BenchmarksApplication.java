@@ -8,7 +8,6 @@ import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.reporter.FileReporter;
 import org.mp.naumann.reporter.GoogleSheetsReporter;
@@ -95,7 +94,7 @@ public class BenchmarksApplication {
         if (recomputeDataStructures != null) {
             config.setRecomputeDataStructures(recomputeDataStructures);
         }
-        config.addPruningStrategy(PruningStrategy.DELETES);
+//        config.addPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS);
     }
 
     private String getFullBatchDirectory() {
