@@ -1,7 +1,6 @@
 package org.mp.naumann.testcases;
 
 import ResourceConnection.ResourceConnector;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 
@@ -10,8 +9,8 @@ public class SingleFileTestCase extends BaseTestCase {
     private final int splitLine;
     private final int batchSize;
 
-    public SingleFileTestCase(String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly, boolean hyfdCreateIndex, int splitLine, int batchSize) {
-        super("", tableName, config, stopAfter, hyfdOnly, hyfdCreateIndex);
+    public SingleFileTestCase(TestCaseParameters parameters, int splitLine, int batchSize) {
+        super(parameters);
         this.splitLine = splitLine;
         this.batchSize = batchSize;
     }

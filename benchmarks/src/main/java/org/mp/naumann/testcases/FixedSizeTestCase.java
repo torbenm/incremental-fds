@@ -1,7 +1,6 @@
 package org.mp.naumann.testcases;
 
 import ResourceConnection.ResourceConnector;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 
@@ -9,8 +8,8 @@ public class FixedSizeTestCase extends BaseTestCase {
 
     private final int batchSize;
 
-    public FixedSizeTestCase(String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly, boolean hyfdCreateIndex, int batchSize) {
-        super("", tableName, config, stopAfter, hyfdOnly, hyfdCreateIndex);
+    public FixedSizeTestCase(TestCaseParameters parameters, int batchSize) {
+        super(parameters);
         this.batchSize = batchSize;
     }
 

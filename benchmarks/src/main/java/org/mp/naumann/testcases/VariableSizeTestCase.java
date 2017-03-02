@@ -1,6 +1,5 @@
 package org.mp.naumann.testcases;
 
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.batch.source.VariableSizeBatchSource;
 
@@ -8,8 +7,8 @@ public class VariableSizeTestCase extends BaseTestCase {
 
     private final String directory;
 
-    public VariableSizeTestCase(String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly, boolean hyfdCreateIndex, String directory) {
-        super("", tableName, config, stopAfter, hyfdOnly, hyfdCreateIndex);
+    public VariableSizeTestCase(TestCaseParameters parameters, String directory) {
+        super(parameters);
         this.directory = directory;
     }
 

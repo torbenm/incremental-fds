@@ -12,10 +12,7 @@ import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.reporter.FileReporter;
 import org.mp.naumann.reporter.GoogleSheetsReporter;
 import org.mp.naumann.reporter.Reporter;
-import org.mp.naumann.testcases.FixedSizeTestCase;
-import org.mp.naumann.testcases.SingleFileTestCase;
-import org.mp.naumann.testcases.TestCase;
-import org.mp.naumann.testcases.VariableSizeTestCase;
+import org.mp.naumann.testcases.*;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -41,6 +38,14 @@ public class BenchmarksApplication {
     private String sheetName = "benchmark (new)";
     @Parameter(names = "--logLevel")
     private String logLevel = "info";
+
+    // optional postgres parameters
+    @Parameter(names = "--pgdb")
+    private String pgdb = null;
+    @Parameter(names = "--pguser")
+    private String pguser = null;
+    @Parameter(names = "--pgpass")
+    private String pgpass = null;
 
     // parameters for the specific modes
     @Parameter(names = "--mode", description = "either variable, fixed, or singleFile")
@@ -124,16 +129,17 @@ public class BenchmarksApplication {
 
         try {
             TestCase t;
+            TestCaseParameters parameters = new TestCaseParameters("", dataSet, config, stopAfter, hyfdOnly, hyfdCreateIndex, pgdb, pguser, pgpass);
 
             switch (mode) {
                 case "variable":
-                    t = new VariableSizeTestCase(dataSet, config, stopAfter, hyfdOnly, hyfdCreateIndex, getFullBatchDirectory());
+                    t = new VariableSizeTestCase(parameters, getFullBatchDirectory());
                     break;
                 case "fixed":
-                    t = new FixedSizeTestCase(dataSet, config, stopAfter, hyfdOnly, hyfdCreateIndex, batchSize);
+                    t = new FixedSizeTestCase(parameters, batchSize);
                     break;
                 case "singleFile":
-                    t = new SingleFileTestCase(dataSet, config, stopAfter, hyfdOnly, hyfdCreateIndex, splitLine, batchSize);
+                    t = new SingleFileTestCase(parameters, splitLine, batchSize);
                     break;
                 default:
                     throw new IllegalArgumentException(String.format("Invalid mode parameter: %s", mode));

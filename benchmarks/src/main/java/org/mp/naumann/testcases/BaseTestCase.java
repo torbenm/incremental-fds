@@ -43,23 +43,27 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
     final int stopAfter;
     final String schema, tableName, sourceTableName;
+    private final String pgdb, pgpass, pguser;
     private final boolean hyfdOnly, hyfdCreateIndex;
     private long baselineSize;
 
-    BaseTestCase(String schema, String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly, boolean hyfdCreateIndex) {
-        this.schema = schema;
-        this.sourceTableName = tableName;
-        this.tableName = (hyfdOnly ? tableName + "_tmp" : tableName);
-        this.config = config;
-        this.stopAfter = stopAfter;
-        this.hyfdOnly = hyfdOnly;
-        this.hyfdCreateIndex = hyfdCreateIndex;
+    BaseTestCase(TestCaseParameters parameters) {
+        this.schema = parameters.schema;
+        this.sourceTableName = parameters.tableName;
+        this.tableName = parameters.tableName + (parameters.hyfdOnly ? "_tmp" : "");
+        this.config = parameters.config;
+        this.stopAfter = parameters.stopAfter;
+        this.hyfdOnly = parameters.hyfdOnly;
+        this.hyfdCreateIndex = parameters.hyfdCreateIndex;
+        this.pgdb = parameters.pgdb;
+        this.pguser = parameters.pguser;
+        this.pgpass = parameters.pgpass;
         SpeedBenchmark.addEventListener(this);
     }
 
     @Override
     public void execute() throws ConnectionException, IOException {
-        try (Connection conn = ConnectionManager.getPostgresConnection(); DataConnector dc = new JdbcDataConnector(conn)) {
+        try (Connection conn = ConnectionManager.getPostgresConnection(pgdb, pguser, pgpass); DataConnector dc = new JdbcDataConnector(conn)) {
 
             StreamableBatchSource batchSource = getBatchSource();
             Table table = dc.getTable(schema, sourceTableName);
