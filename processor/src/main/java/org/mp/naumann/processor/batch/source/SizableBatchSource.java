@@ -1,8 +1,5 @@
 package org.mp.naumann.processor.batch.source;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.ListBatch;
@@ -21,9 +18,10 @@ public abstract class SizableBatchSource extends CsvFileBatchSource implements S
     	this.batchSize = batchSize;
     }
 
-    public SizableBatchSource(String schema, String tableName, int batchSize, int stopAfter) {
+    public SizableBatchSource(String schema, String tableName, int batchSize, int stopAfter, int skipFirst) {
         this(schema, tableName, batchSize);
         this.stopAfter = stopAfter;
+        this.currentStatementPosition = skipFirst;
     }
 
     public int getBatchSize() {

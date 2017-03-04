@@ -1,33 +1,29 @@
 package org.mp.naumann.algorithms.fd.structures;
 
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class Dictionary<T> {
 
-    private static final int NULL = 0;
+    private final int NULL;
     private final Map<T, Integer> dictionary = new HashMap<>();
     private int nextValue = 1;
-    private final boolean isNullEqualNull;
 
     public Dictionary() {
         this(false);
     }
 
     public Dictionary(boolean isNullEqualNull) {
-        this.isNullEqualNull = isNullEqualNull;
+        NULL = isNullEqualNull? 0 : PliUtils.UNIQUE_VALUE;
     }
 
-    public Integer getOrAdd(T value) {
+    public int getOrAdd(T value) {
         if (value == null) {
-            return isNullEqualNull? NULL : null;
+            return NULL;
         }
-        Integer dictValue = dictionary.get(value);
-        if (dictValue == null) {
-            dictValue = nextValue++;
-            dictionary.put(value, dictValue);
-        }
-        return dictValue;
+        return dictionary.computeIfAbsent(value, k -> nextValue++);
     }
 
 }

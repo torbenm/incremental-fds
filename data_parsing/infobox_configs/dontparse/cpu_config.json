@@ -1,0 +1,18 @@
+{
+ "infobox cpu": [
+    "name",
+"image",
+"image_size",
+"caption",
+"slowest",
+"fastest",
+"slow-unit",
+"fast-unit",
+"fsb-slowest",
+"fsb-fastest",
+"fsb-slow-unit",
+"fsb-fast-unit",
+"size-from",
+"size-to"
+ ]
+}

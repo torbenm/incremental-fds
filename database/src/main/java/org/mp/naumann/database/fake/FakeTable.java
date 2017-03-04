@@ -1,13 +1,13 @@
 package org.mp.naumann.database.fake;
 
-import java.util.List;
-
 import org.mp.naumann.database.InputReadException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Column;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.database.statement.StatementGroup;
+
+import java.util.List;
 
 public class FakeTable implements Table {
 
@@ -39,5 +39,15 @@ public class FakeTable implements Table {
 	@Override
 	public TableInput open() throws InputReadException {
 		return null;
+	}
+
+	@Override
+	public void setLimit(int limit) {
+
+	}
+
+	@Override
+	public int getLimit() {
+		return 0;
 	}
 }

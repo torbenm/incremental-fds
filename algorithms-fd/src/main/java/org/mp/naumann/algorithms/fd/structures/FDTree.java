@@ -101,6 +101,12 @@ public class FDTree extends FDTreeElement {
 		return foundLhs;
 	}
 
+	public int removeFdAndGeneralizations(OpenBitSet lhs, int rhs){
+        OpenBitSet currentLhs = new OpenBitSet();
+        int nextLhsAttr = lhs.nextSetBit(0);
+        return this.removeFdFromGeneralizations(lhs, rhs, nextLhsAttr, currentLhs);
+    }
+
 	public FDTreeElement findTreeElement(OpenBitSet lhs){
         FDTreeElement current = this;
         for(int lhsAttr = lhs.nextSetBit(0); lhsAttr >= 0; lhsAttr = lhs.nextSetBit(lhsAttr+1)){
@@ -141,6 +147,12 @@ public class FDTree extends FDTreeElement {
 	public List<FunctionalDependency> getFunctionalDependencies(ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<? extends IPositionListIndex> plis) {
 		List<FunctionalDependency> functionalDependencies = new ArrayList<>();
 		this.addFunctionalDependenciesInto(functionalDependencies, new OpenBitSet(), columnIdentifiers, plis);
+		return functionalDependencies;
+	}
+
+	List<OpenBitSetFD> getFunctionalDependencies() {
+		List<OpenBitSetFD> functionalDependencies = new ArrayList<>();
+		this.addFunctionalDependenciesInto(functionalDependencies, new OpenBitSet());
 		return functionalDependencies;
 	}
 	

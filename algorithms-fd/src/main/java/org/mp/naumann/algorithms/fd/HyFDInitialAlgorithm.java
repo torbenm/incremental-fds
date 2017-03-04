@@ -11,10 +11,8 @@ import java.util.List;
 
 public class HyFDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDependency>, FDIntermediateDatastructure> {
 
-	
 	private HyFD hyfd;
 	private List<FunctionalDependency> fds = new ArrayList<>();
-
 
 	public HyFDInitialAlgorithm(IncrementalFDConfiguration configuration, Table table) {
 		hyfd = new HyFD(configuration, table, fds::add);
@@ -22,7 +20,7 @@ public class HyFDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDep
 	
 	@Override
 	public FDIntermediateDatastructure getIntermediateDataStructure() {
-		return new FDIntermediateDatastructure(hyfd.getNegCover(), hyfd.getPosCover(), hyfd.getPLIBuilder(), hyfd.getValueComparator(), hyfd.getViolationCollection());
+		return new FDIntermediateDatastructure(hyfd.getNegCover(), hyfd.getPosCover(), hyfd.getPLIBuilder(), hyfd.getValueComparator(), hyfd.getViolationCollection(), hyfd.getColumns(), hyfd.getPruner());
 	}
 
 	@Override
@@ -36,5 +34,11 @@ public class HyFDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDep
 		}
 		return fds;
 	}
+
+	public List<FunctionalDependency> getFDs() {
+		return fds;
+	}
+
+	public int getValidationCount() { return hyfd.lastValidationCount; }
 
 }

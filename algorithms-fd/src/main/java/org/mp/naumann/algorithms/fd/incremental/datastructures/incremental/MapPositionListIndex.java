@@ -20,9 +20,12 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * Position list indices (or stripped partitions) are an index structure that
@@ -37,7 +40,7 @@ class MapPositionListIndex extends PositionListIndex {
 
     @Override
     public Collection<IntArrayList> getClusters() {
-        return this.clusters.values();
+        return this.clusters.entrySet().stream().filter(e -> !e.getKey().equals(PliUtils.UNIQUE_VALUE)).map(Entry::getValue).collect(Collectors.toList());
     }
 
     @Override
@@ -45,17 +48,12 @@ class MapPositionListIndex extends PositionListIndex {
         return clusters.get(index);
     }
 
-    @Override
-    public void setCluster(int index, IntArrayList value) {
-        clusters.put(index, value);
-    }
-
     MapPositionListIndex(int attribute, Map<Integer, IntArrayList> clusters) {
         super(attribute);
         this.clusters = clusters;
     }
 
-    Map<Integer,IntArrayList> getRawClusters() {
+    Map<Integer, IntArrayList> getRawClusters() {
         return clusters;
     }
 }

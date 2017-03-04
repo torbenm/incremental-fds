@@ -28,7 +28,6 @@ import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -59,11 +58,6 @@ public class PositionListIndex implements IPositionListIndex {
     @Override
     public IntArrayList getCluster(int index) {
         return this.clusters.get(index);
-    }
-
-    @Override
-    public void setCluster(int index, IntArrayList value) {
-        this.clusters.set(index, value);
     }
 
     public int getNumNonUniqueValues() {

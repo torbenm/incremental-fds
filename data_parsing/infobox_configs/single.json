@@ -1,0 +1,29 @@
+{
+	"infobox single" : [
+    "Name",
+    "Cover",
+    "Border",
+    "Alt",
+    "Caption",
+    "Artist",
+    "Album",
+    "A-side",
+    "B-side",
+    "Released",
+    "Format",
+    "Recorded",
+    "Studio",
+    "Venue",
+    "Genre",
+    "Length",
+    "Label",
+    "Writer",
+    "Producer",
+    "ISWC",
+    "Chronology",
+    "Last single",
+    "This single",
+    "Next single",
+    "Misc"
+  ]
+}

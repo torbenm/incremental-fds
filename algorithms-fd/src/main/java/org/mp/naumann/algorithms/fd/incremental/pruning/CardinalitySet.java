@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.incremental;
+package org.mp.naumann.algorithms.fd.incremental.pruning;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 

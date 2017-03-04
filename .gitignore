@@ -19,6 +19,8 @@ csv_test/
 database/src/main/resources/properties.xml
 out/
 *.log
-data_parsing/*
-!data_parsing/wikipedia_parser.py
-!data_parsing/infobox_configs
+data_parsing/data/
+data_parsing/__pycache__/
+data_parsing/files_by_infobox_type/
+data_parsing/models/__pycache__/
+recordings/

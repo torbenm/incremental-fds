@@ -9,5 +9,4 @@ public interface IPositionListIndex {
 
     Collection<IntArrayList> getClusters();
     IntArrayList getCluster(int index);
-    void setCluster(int index, IntArrayList value);
 }

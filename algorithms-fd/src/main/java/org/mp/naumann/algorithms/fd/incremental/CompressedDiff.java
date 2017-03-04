@@ -1,66 +1,44 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.Map;
 
 public class CompressedDiff {
 
-	private final int[][] insertedRecords;
-	private final int[][] deletedRecords;
-	private final int[][] oldUpdatedRecords;
-	private final int[][] newUpdatedRecords;
+	private final Map<Integer, int[]> insertedRecords;
+	private final Map<Integer, int[]> deletedRecords;
+	private final Map<Integer, int[]> oldUpdatedRecords;
+	private final Map<Integer, int[]> newUpdatedRecords;
 
-	private CompressedDiff(int[][] insertedRecords, int[][] deletedRecords, int[][] oldUpdatedRecords,
-						   int[][] newUpdatedRecords) {
+	public CompressedDiff(Map<Integer, int[]> insertedRecords, Map<Integer, int[]> deletedRecords, Map<Integer, int[]> oldUpdatedRecords,
+						   Map<Integer, int[]> newUpdatedRecords) {
 		this.insertedRecords = insertedRecords;
 		this.deletedRecords = deletedRecords;
 		this.oldUpdatedRecords = oldUpdatedRecords;
 		this.newUpdatedRecords = newUpdatedRecords;
 	}
 
-	
-	public int[][] getInsertedRecords() {
+	boolean hasInserts() {
+		return !(insertedRecords.isEmpty() && newUpdatedRecords.isEmpty());
+	}
+
+	boolean hasDeletes() {
+		return !(deletedRecords.isEmpty() && oldUpdatedRecords.isEmpty());
+	}
+
+	public Map<Integer, int[]> getInsertedRecords() {
 		return insertedRecords;
 	}
 
-	
-	public int[][] getDeletedRecords() {
+	public Map<Integer, int[]> getDeletedRecords() {
 		return deletedRecords;
 	}
 
-	
-	public int[][] getOldUpdatedRecords() {
+	public Map<Integer, int[]> getOldUpdatedRecords() {
 		return oldUpdatedRecords;
 	}
 
-	
-	public int[][] getNewUpdatedRecords() {
+	public Map<Integer, int[]> getNewUpdatedRecords() {
 		return newUpdatedRecords;
 	}
-
-    public static CompressedDiff buildDiff(Collection<Integer> inserted, Collection<Integer> deleted, IncrementalFDConfiguration version, CompressedRecords compressedRecords) {
-        int[][] insertedRecords = diffToArray(inserted, compressedRecords, version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.SIMPLE), false);
-		int[][] deletedRecords = diffToArray(deleted, compressedRecords, version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION), true);
-		int[][] oldUpdatedRecords = new int[0][];
-		int[][] newUpdatedRecords = new int[0][];
-		return new CompressedDiff(insertedRecords, deletedRecords, oldUpdatedRecords, newUpdatedRecords);
-	}
-
-    private static int[][] diffToArray(Collection<Integer> diff, CompressedRecords compressedRecords, boolean fillWithData, boolean remove){
-        int[][] array = new int[diff.size()][];
-        if (fillWithData) {
-            int i = 0;
-            for (int id : diff) {
-                // If we will invalidate the records just after getting them,
-                // we must make sure to clone them because arrays are passed by-reference.
-                array[i] = compressedRecords.get(id, remove);
-                if(remove) {
-                    compressedRecords.invalidate(id);
-                }
-                i++;
-            }
-        }
-        return array;
-    }
 
 }
