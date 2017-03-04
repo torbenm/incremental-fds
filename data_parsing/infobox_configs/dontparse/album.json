@@ -1,0 +1,29 @@
+{
+  "infobox album" : [
+    "Italic title",
+    "Name",
+    "Type",
+    "Longtype",
+    "Artist",
+    "Cover",
+    "Border",
+    "Alt",
+    "Caption",
+    "Released",
+    "Recorded",
+    "Venue",
+    "Studio",
+    "Genre",
+    "Length",
+    "Language",
+    "Label",
+    "Director",
+    "Producer",
+    "Compiler",
+    "Chronology",
+    "Last album",
+    "This album",
+    "Next album",
+    "Misc"
+  ]
+}
