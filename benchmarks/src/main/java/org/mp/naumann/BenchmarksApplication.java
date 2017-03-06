@@ -207,7 +207,7 @@ public class BenchmarksApplication {
         });
         SpeedBenchmark.begin(BenchmarkLevel.BENCHMARK);
         Benchmark.setMaxLevel(4);
-        Benchmark.addEventListener(FDLogger::info);
+        Benchmark.addEventListener(FDLogger::fine);
     }
 
     public static void tearDown() {

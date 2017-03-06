@@ -122,7 +122,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             List<HashMap<String, IntArrayList>> clusterMaps = pliBuilder.getClusterMaps();
             bloomPruning = new BloomPruningStrategy(orderedColumns);
             if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {
-                bloomPruning.addGenerator(new AllCombinationsBloomGenerator(2));
+                bloomPruning.addGenerator(new AllCombinationsBloomGenerator(3));
             }
             if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM_ADVANCED)) {
                 bloomPruning.addGenerator(new CurrentFDBloomGenerator(fds));
