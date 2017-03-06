@@ -39,7 +39,7 @@ abstract class CsvFileBatchSource extends AbstractBatchSource {
         if ((csvParser == null) || (!file.getAbsolutePath().equals(filename))) {
             try {
                 try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                    String[] header = Arrays.stream(reader.readLine().split(",")).map(String::toLowerCase).toArray(String[]::new);
+                    String[] header = Arrays.stream(reader.readLine().split(",")).map(s -> s.replace("\"", "").toLowerCase()).toArray(String[]::new);
                     csvParser = CSVParser.parse(file,CHARSET,FORMAT.withHeader(header));
                 }
                 filename = file.getAbsolutePath();
