@@ -12,24 +12,27 @@ def convert(targetInfoboxType, attributes):
 
     with open("files_by_infobox_type/" + targetInfoboxType, 'r', encoding='utf-8') as infile:
         for line in infile:
-            data = json.loads(line)
+            try:
+                data = json.loads(line.replace("\n", "").replace("\r", ""), strict = False)
 
-            updatesById, attributes = groupUpdatesById(data, attributes)
+                updatesById, attributes = groupUpdatesById(data, attributes)
 
-            orderedUpdateIds = sorted(updatesById.keys())
-            baselineData = updatesById.pop(orderedUpdateIds[0])
-            updateData = updatesById
+                orderedUpdateIds = sorted(updatesById.keys())
+                baselineData = updatesById.pop(orderedUpdateIds[0])
+                updateData = updatesById
 
-            articleTitle = data["article_title"]
-            print(articleTitle)
-            baselineRecords.append(generateBaselineRecord(baselineData, attributes, currentId, articleTitle))
+                articleTitle = data["article_title"]
+                print(articleTitle)
+                baselineRecords.append(generateBaselineRecord(baselineData, attributes, currentId, articleTitle))
 
-            for entry in updateData.values():
-                updateStatement = generateUpdateStatement(entry, attributes, currentId, articleTitle)
-                if not updateStatement.isIrrelevant():
-                    updateStatements.append(updateStatement)
+                for entry in updateData.values():
+                    updateStatement = generateUpdateStatement(entry, attributes, currentId, articleTitle)
+                    if not updateStatement.isIrrelevant():
+                        updateStatements.append(updateStatement)
 
-            currentId += 1
+                currentId += 1
+            except:
+                continue
 
     return baselineRecords, updateStatements
 
