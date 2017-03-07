@@ -32,7 +32,7 @@ public class BenchmarksApplication {
     @Parameter(names = "--dataSet")
     private String dataSet = "";
     @Parameter(names = "--stopAfter")
-    private int stopAfter = 1000;
+    private int stopAfter = Integer.MAX_VALUE;
     @Parameter(names = "--google")
     private boolean writeToGoogleSheets = false;
     @Parameter(names = "--sheetName")
@@ -207,7 +207,7 @@ public class BenchmarksApplication {
         });
         SpeedBenchmark.begin(BenchmarkLevel.BENCHMARK);
         Benchmark.setMaxLevel(4);
-        Benchmark.addEventListener(FDLogger::info);
+        Benchmark.addEventListener(FDLogger::fine);
     }
 
     public static void tearDown() {

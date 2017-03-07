@@ -8,19 +8,18 @@ import org.mp.naumann.database.statement.DefaultInsertStatement;
 import org.mp.naumann.database.statement.DefaultUpdateStatement;
 import org.mp.naumann.database.statement.Statement;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 abstract class CsvFileBatchSource extends AbstractBatchSource {
 
     private static final Charset CHARSET = Charset.defaultCharset();
-    private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withFirstRecordAsHeader();
+    private static final CSVFormat FORMAT = CSVFormat.DEFAULT.withSkipHeaderRecord();
     private static final String ACTION_COLUMN_NAME = "::action";
     private static final String defaultAction = "insert";
 
@@ -39,7 +38,10 @@ abstract class CsvFileBatchSource extends AbstractBatchSource {
     private void initializeCsvParser(File file) {
         if ((csvParser == null) || (!file.getAbsolutePath().equals(filename))) {
             try {
-                csvParser = CSVParser.parse(file, CHARSET, FORMAT);
+                try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                    String[] header = Arrays.stream(reader.readLine().split(",")).map(s -> s.replace("\"", "").toLowerCase()).toArray(String[]::new);
+                    csvParser = CSVParser.parse(file,CHARSET,FORMAT.withHeader(header));
+                }
                 filename = file.getAbsolutePath();
             } catch (IOException e) {
                 //
