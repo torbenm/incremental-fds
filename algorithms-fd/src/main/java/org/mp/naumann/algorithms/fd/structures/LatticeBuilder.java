@@ -64,9 +64,6 @@ public class LatticeBuilder {
                 for (OpenBitSet invalidFd : invalidFds) {
                     nonFds.removeFunctionalDependency(invalidFd, rhs);
                     for (int lhsAttr = lhs.nextSetBit(0); lhsAttr >= 0; lhsAttr = lhs.nextSetBit(lhsAttr + 1)) {
-                        if (invalidFd.fastGet(lhsAttr)) {
-                            continue;
-                        }
                         OpenBitSet generalizedLhs = invalidFd.clone();
                         generalizedLhs.fastSet(lhsAttr);
                         if (!nonFds.containsFdOrGeneralization(generalizedLhs, rhs)) {
