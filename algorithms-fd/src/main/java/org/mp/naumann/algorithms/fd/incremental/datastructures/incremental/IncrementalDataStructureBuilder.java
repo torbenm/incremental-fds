@@ -78,7 +78,9 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         }
         Set<Integer> inserted = applier.getInserted();
         Set<Integer> deleted = applier.getDeleted();
+        Set<Integer> inserted_tmp = new HashSet<>(inserted);
         inserted.removeAll(deleted);
+        deleted.removeAll(inserted_tmp);
 
         Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
         deleted.forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));

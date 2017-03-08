@@ -73,13 +73,13 @@ public class BenchmarksApplication {
     private Boolean useEnhancedClusterPruning;
     @Parameter(names = "--recomputeDataStructures", arity = 1)
     private Boolean recomputeDataStructures;
-    @Parameter(names = "--simpleBloom", arity = 1)
+    @Parameter(names = "--simpleBloom")
     private Boolean simpleBloomPruning;
-    @Parameter(names = "--advancedBloom", arity = 1)
+    @Parameter(names = "--advancedBloom")
     private Boolean advancedBloomPruning;
-    @Parameter(names = "--simplePruning", arity = 1)
+    @Parameter(names = "--simplePruning")
     private Boolean simplePruning;
-    @Parameter(names = "--deletePruning", arity = 1)
+    @Parameter(names = "--deletePruning")
     private Boolean deletePruning;
     @Parameter(names = "--betterSampling", arity = 1)
     private Boolean betterSampling;
