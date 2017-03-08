@@ -53,7 +53,7 @@ public class Lattice extends LatticeElement {
 
     public Collection<LatticeElementLhsPair> getLevel(int level) {
         List<LatticeElementLhsPair> result = new ArrayList<>();
-        OpenBitSet currentLhs = new OpenBitSet();
+        OpenBitSet currentLhs = new OpenBitSet(numAttributes);
         int currentLevel = 0;
         this.getLevel(level, currentLevel, currentLhs, result);
         return result;
@@ -65,7 +65,7 @@ public class Lattice extends LatticeElement {
 
     public List<OpenBitSetFD> getFunctionalDependencies() {
         List<OpenBitSetFD> functionalDependencies = new ArrayList<>();
-        this.addFunctionalDependenciesInto(functionalDependencies, new OpenBitSet());
+        this.addFunctionalDependenciesInto(functionalDependencies, new OpenBitSet(numAttributes));
         return functionalDependencies;
     }
 
@@ -76,7 +76,7 @@ public class Lattice extends LatticeElement {
 
     public List<OpenBitSet> getFdAndGeneralizations(OpenBitSet lhs, int rhs) {
         List<OpenBitSet> foundLhs = new ArrayList<>();
-        OpenBitSet currentLhs = new OpenBitSet();
+        OpenBitSet currentLhs = new OpenBitSet(numAttributes);
         int nextLhsAttr = lhs.nextSetBit(0);
         this.getFdAndGeneralizations(lhs, rhs, nextLhsAttr, currentLhs, foundLhs);
         return foundLhs;
