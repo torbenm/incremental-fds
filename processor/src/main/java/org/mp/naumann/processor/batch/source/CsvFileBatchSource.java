@@ -3,6 +3,7 @@ package org.mp.naumann.processor.batch.source;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.StringUtils;
 import org.mp.naumann.database.statement.DefaultDeleteStatement;
 import org.mp.naumann.database.statement.DefaultInsertStatement;
 import org.mp.naumann.database.statement.DefaultUpdateStatement;
@@ -62,12 +63,18 @@ abstract class CsvFileBatchSource extends AbstractBatchSource {
         }
     }
 
+    private Map<String, String> sanitizeValues(Map<String, String> values) {
+        for (Map.Entry<String, String> entry: values.entrySet())
+            values.replace(entry.getKey(), entry.getValue(), StringUtils.left(entry.getValue(), 1000));
+        return values;
+    }
+
     private Statement createStatement(String type, Map<String, String> values) {
         switch (type.toLowerCase()) {
             case "insert":
-                return new DefaultInsertStatement(values, schema, tableName);
+                return new DefaultInsertStatement(sanitizeValues(values), schema, tableName);
             case "delete":
-                return new DefaultDeleteStatement(values, schema, tableName);
+                return new DefaultDeleteStatement(sanitizeValues(values), schema, tableName);
             case "update":
                 Map<String, String> oldValues = new HashMap<>();
                 Map<String, String> newValues = new HashMap<>();
@@ -76,7 +83,7 @@ abstract class CsvFileBatchSource extends AbstractBatchSource {
                     oldValues.put(key, splitValues[0]);
                     newValues.put(key, splitValues.length > 1 ? splitValues[1] : splitValues[0]);
                 });
-                return new DefaultUpdateStatement(newValues, oldValues, schema, tableName);
+                return new DefaultUpdateStatement(sanitizeValues(newValues), sanitizeValues(oldValues), schema, tableName);
             default:
                 throw new RuntimeException(String.format("Illegal statement type: %s", type));
         }
