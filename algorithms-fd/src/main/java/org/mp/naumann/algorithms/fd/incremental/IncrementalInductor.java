@@ -44,8 +44,6 @@ class IncrementalInductor {
     }
 
     private void specializePositiveCover(OpenBitSet lhs, int rhs) {
-        int numAttributes = this.posCover.getChildren().length;
-        int newFDs = 0;
         List<OpenBitSet> specLhss;
         if (!(specLhss = this.posCover.getFdAndGeneralizations(lhs, rhs)).isEmpty()) { // TODO: May be "while" instead of "if"?
             for (OpenBitSet specLhs : specLhss) {
@@ -63,7 +61,6 @@ class IncrementalInductor {
 
                         if (!this.posCover.containsFdOrGeneralization(specLhs, rhs)) {
                             this.posCover.addFunctionalDependency(specLhs, rhs);
-                            newFDs++;
                         }
                         specLhs.fastClear(attr);
                     }
