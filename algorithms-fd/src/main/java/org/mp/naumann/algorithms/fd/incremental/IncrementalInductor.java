@@ -32,7 +32,7 @@ class IncrementalInductor {
                 // All 0s cannot be on the right-hand side anymore if 01010101 is the LHS.
                 // Thus flipping gives us the full rhs
                 OpenBitSet fullRhs = lhs.clone();
-                fullRhs.flip(0, fullRhs.size());
+                fullRhs.flip(0, numAttributes);
 
                 // Now we go through all "not-rhs's" and specialize the pos. cover with them.
                 for (int rhs = fullRhs.nextSetBit(0); rhs >= 0; rhs = fullRhs.nextSetBit(rhs + 1)) {
@@ -44,16 +44,15 @@ class IncrementalInductor {
     }
 
     private void specializePositiveCover(OpenBitSet lhs, int rhs) {
-        List<OpenBitSet> specLhss;
-        if (!(specLhss = this.posCover.getFdAndGeneralizations(lhs, rhs)).isEmpty()) { // TODO: May be "while" instead of "if"?
+        List<OpenBitSet> specLhss = this.posCover.getFdAndGeneralizations(lhs, rhs);
+        if (!specLhss.isEmpty()) { // TODO: May be "while" instead of "if"?
+            OpenBitSet flipped = flip(lhs);
+            if (!negCover.containsFdOrGeneralization(flipped, rhs)) {
+                negCover.addFunctionalDependency(flipped, rhs);
+                negCover.removeSpecializations(flipped, rhs);
+            }
             for (OpenBitSet specLhs : specLhss) {
                 this.posCover.removeFunctionalDependency(specLhs, rhs);
-
-                OpenBitSet flipped = flip(specLhs);
-                if (!negCover.containsFdOrGeneralization(flipped, rhs)) {
-                    negCover.addFunctionalDependency(flipped, rhs);
-                    negCover.removeSpecializations(flipped, rhs);
-                }
 
                 for (int attr = numAttributes - 1; attr >= 0; attr--) { // TODO: Is iterating backwards a good or bad idea?
                     if (!lhs.get(attr) && (attr != rhs)) {
