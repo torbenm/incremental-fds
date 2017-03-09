@@ -14,8 +14,6 @@ class Table:
         return self.data[id]
 
     def updateRecord(self, updateStatement):
-        if updateStatement.valueMap["article_title"] == "UltraSPARC T3":
-            print("break")
         if updateStatement.record in self.data:
             for attribute, value in updateStatement.valueMap.items():
                 oldValue = self.data[updateStatement.record].valueMap[attribute]

@@ -33,6 +33,7 @@ def convert(targetInfoboxType, attributes):
 
                 currentId += 1
             except:
+                currentId += 1
                 continue
 
     return baselineRecords, updateStatements
