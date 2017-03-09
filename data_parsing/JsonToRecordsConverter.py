@@ -1,5 +1,6 @@
 import json
 
+import Utils
 from models.Record import Record
 from models.Statement import Statement
 
@@ -51,7 +52,7 @@ def groupUpdatesById(updates, attributes):
 def generateBaselineRecord(data, attributes, currentId, articleTitle):
     baselineRecord = Record(attributes)
     baselineRecord.id = currentId
-    baselineRecord.valueMap["article_title"] = articleTitle
+    baselineRecord.valueMap["article_title"] = Utils.cleanseValue(articleTitle)
     baselineRecord.addValuesFromJsonData(data)
 
     return baselineRecord
@@ -59,8 +60,8 @@ def generateBaselineRecord(data, attributes, currentId, articleTitle):
 def generateUpdateStatement(data, attributes, currentId, articleTitle):
     updateStatement = Statement(attributes)
     updateStatement.record = currentId
-    updateStatement.valueMap["article_title"] = articleTitle
-    updateStatement.oldValueMap["article_title"] = articleTitle
+    updateStatement.valueMap["article_title"] = Utils.cleanseValue(articleTitle)
+    updateStatement.oldValueMap["article_title"] = Utils.cleanseValue(articleTitle)
     updateStatement.addValuesFromJsonData(data)
 
     return updateStatement

@@ -25,7 +25,7 @@ class Record:
     def __addValues(self, update):
         key = Utils.normalizeAttribute(update["key"])
         if "newvalue" in update and key in self.valueMap:
-            self.valueMap[key] = update["newvalue"].replace("|", "").replace("\n", "").replace("\"", "\"\"")
+            self.valueMap[key] = Utils.cleanseValue(update["newvalue"])
 
     def toString(self):
         stringParts = []

@@ -49,7 +49,7 @@ class Statement:
     def __addValues(self, update):
         key = Utils.normalizeAttribute(update["key"])
         if "newvalue" in update and key in self.valueMap:
-            self.valueMap[key] = update["newvalue"].replace("\"", "\"\"")
+            self.valueMap[key] = Utils.cleanseValue(update["newvalue"])
         if "oldvalue" in update and key in self.oldValueMap:
-            self.oldValueMap[key] = update["oldvalue"].replace("\"", "\"\"")
+            self.oldValueMap[key] = Utils.cleanseValue(update["oldvaluer"])
 

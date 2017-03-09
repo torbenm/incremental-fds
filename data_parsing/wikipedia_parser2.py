@@ -70,6 +70,7 @@ def insertInsertStatementIntoUpdateStatements(combinedUpdateStatements, insert, 
             return currentUpdateIndex
         else:
             combinedUpdateStatements.append(updateStatements[currentUpdateIndex])
+    return lastUpdateIndex
 
 def determineFinalUpdateStatementType(updateStatements, baselineData, attributes):
     baselineDataTable = Table(baselineData)
