@@ -88,8 +88,9 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
                 table = dc.getTable(schema, tableName);
 
                 if (hyfdCreateIndex) {
-                    // create index on the temporary table
-                    stmt.execute(String.format("CREATE INDEX %s_master_idx ON %s (%s)", tableName, fullTableName, String.join(", ", table.getColumnNames())));
+                    // create index on every column of the temporary table
+                    for (String column: table.getColumnNames())
+                        stmt.execute(String.format("CREATE INDEX %s_%s_idx ON %s (%s)", tableName, column, fullTableName, column));
                 }
 
                 BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, new PassThroughDatabaseBatchHandler(dc), true);
