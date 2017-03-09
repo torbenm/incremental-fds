@@ -20,6 +20,8 @@ import java.util.logging.Level;
 
 import ResourceConnection.ResourceConnector;
 
+import static java.lang.Double.NaN;
+
 public class BenchmarksApplication {
 
     // general parameters
@@ -57,6 +59,8 @@ public class BenchmarksApplication {
     private int splitLine = 15000;
     @Parameter(names = "--batchDirectory", description = "only relevant for variable mode")
     private String batchDirectory = "";
+    @Parameter(names = "--batchSizeRatio", description = "only relevant for fixed or singleFile mode")
+    private double batchSizeRatio = NaN;
 
     // parameters for algorithm configuration
     @Parameter(names = "--hyfdOnly")
@@ -161,7 +165,10 @@ public class BenchmarksApplication {
                     t = new VariableSizeTestCase(parameters, getFullBatchDirectory());
                     break;
                 case "fixed":
-                    t = new FixedSizeTestCase(parameters, batchSize);
+                    if (batchSizeRatio == NaN)
+                        t = new FixedSizeTestCase(parameters, batchSize);
+                    else
+                        t = new FixedSizeTestCase(parameters, batchSizeRatio);
                     break;
                 case "singleFile":
                     t = new SingleFileTestCase(parameters, splitLine, batchSize);

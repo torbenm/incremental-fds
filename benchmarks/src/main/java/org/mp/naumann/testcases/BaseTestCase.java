@@ -65,9 +65,9 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
     public void execute() throws ConnectionException, IOException {
         try (Connection conn = ConnectionManager.getPostgresConnection(pgdb, pguser, pgpass); DataConnector dc = new JdbcDataConnector(conn)) {
 
-            StreamableBatchSource batchSource = getBatchSource();
             Table table = dc.getTable(schema, sourceTableName);
-            baselineSize = table.getRowCount();
+            setBaselineSize(table.getRowCount());
+            StreamableBatchSource batchSource = getBatchSource();
 
             // execute HyFD in any case; we need the data structure for the incremental algorithm, and can use it
             // as warmup if we run in hyfdOnly mode
@@ -170,6 +170,10 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
     abstract protected String getBatchSize();
 
     abstract protected StreamableBatchSource getBatchSource();
+
+    protected void setBaselineSize(long baselineSize) {
+        this.baselineSize = baselineSize;
+    }
 
     private static class HyFDBatchHandler implements BatchHandler {
 
