@@ -9,12 +9,13 @@ import org.mp.naumann.algorithms.fd.structures.LatticeElement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FDValidator extends IncrementalValidator {
+public class FDValidator extends IncrementalValidator<List<IntegerPair>> {
 
     private final Lattice fds;
     private final Lattice nonFds;
     private float efficiencyThreshold;
     private final IncrementalMatcher matcher;
+    private List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
     FDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds, float efficiencyThreshold, IncrementalMatcher matcher) {
         super(numRecords, compressedRecords, plis, parallel);
@@ -25,7 +26,7 @@ public class FDValidator extends IncrementalValidator {
     }
 
     @Override
-    protected void end(List<IntegerPair> comparisonSuggestions) {
+    protected void end() {
         comparisonSuggestions.forEach(pair -> matcher.match(new OpenBitSet(numAttributes), pair.a(), pair.b()));
     }
 
@@ -45,7 +46,19 @@ public class FDValidator extends IncrementalValidator {
     }
 
     @Override
-    protected boolean interrupt(int previousNumInvalidFds, int numInvalidFds, int numValidFds) {
+    protected void receiveResult(ValidationResult result) {
+        this.comparisonSuggestions.addAll(result.comparisonSuggestions);
+    }
+
+    @Override
+    protected List<IntegerPair> interrupt() {
+        List<IntegerPair> result = comparisonSuggestions;
+        comparisonSuggestions = new ArrayList<>();
+        return result;
+    }
+
+    @Override
+    protected boolean shouldInterrupt(int previousNumInvalidFds, int numInvalidFds, int numValidFds) {
         //TODO improve for incremental case
         return (numInvalidFds > numValidFds * this.efficiencyThreshold) && (previousNumInvalidFds < numInvalidFds);
     }

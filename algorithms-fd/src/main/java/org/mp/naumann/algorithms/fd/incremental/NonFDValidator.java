@@ -7,11 +7,13 @@ import org.mp.naumann.algorithms.fd.structures.LatticeElement;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
-public class NonFDValidator extends IncrementalValidator {
+public class NonFDValidator extends IncrementalValidator<List<OpenBitSetFD>> {
 
     private final Lattice fds;
     private final Lattice nonFds;
+    private List<OpenBitSetFD> lastValid;
 
     NonFDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds) {
         super(numRecords, compressedRecords, plis, parallel);
@@ -35,8 +37,18 @@ public class NonFDValidator extends IncrementalValidator {
     }
 
     @Override
-    protected boolean interrupt(int previousNumInvalidFds, int numInvalidFds, int numValidFds) {
-        return false;
+    protected void receiveResult(ValidationResult result) {
+        lastValid = result.collectedFDs;
+    }
+
+    @Override
+    protected List<OpenBitSetFD> interrupt() {
+        return lastValid;
+    }
+
+    @Override
+    protected boolean shouldInterrupt(int previousNumInvalidFds, int numInvalidFds, int numValidFds) {
+        return true;
     }
 
     @Override
