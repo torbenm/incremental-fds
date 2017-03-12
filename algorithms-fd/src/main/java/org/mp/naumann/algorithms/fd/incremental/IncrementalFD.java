@@ -29,7 +29,6 @@ import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.AllCombinationsBlo
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.BloomPruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.CurrentFDBloomGenerator;
 import org.mp.naumann.algorithms.fd.incremental.pruning.simple.ExistingValuesPruningStrategy;
-import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.Lattice;
@@ -53,11 +52,11 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     private DataStructureBuilder dataStructureBuilder;
     private Lattice fds;
     private Lattice nonFds;
-    private FDSet agreeSets;
     private ValueComparator valueComparator;
     private ExistingValuesPruningStrategy simplePruning;
     private BloomPruningStrategy bloomPruning;
     private DeletePruner deletePruner;
+    private int batchCount = 1;
 
     public IncrementalFD(String tableName, IncrementalFDConfiguration version) {
         this(tableName);
@@ -92,7 +91,6 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     public void initialize(FDIntermediateDatastructure intermediateDatastructure) {
         FDLogger.log(Level.INFO, "Initializing IncrementalFD");
         this.columns = intermediateDatastructure.getColumns();
-        this.agreeSets = intermediateDatastructure.getNegCover();
         this.valueComparator = intermediateDatastructure.getValueComparator();
 
         PLIBuilder pliBuilder = intermediateDatastructure.getPliBuilder();
@@ -149,6 +147,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
     @Override
     public IncrementalFDResult execute(Batch batch) throws AlgorithmExecutionException {
+        batchCount++;
         FDLogger.log(Level.INFO, "----");
         FDLogger.log(Level.INFO, "Started IncrementalFD for new Batch");
         Benchmark benchmark = Benchmark.start("IncrementalFD for new Batch");
@@ -188,7 +187,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
         IncrementalMatcher matcher = new IncrementalMatcher(compressedRecords, valueComparator,
             deletePruner, version);
-        IncrementalSampler sampler = new IncrementalSampler(agreeSets, compressedRecords, plis,
+        IncrementalSampler sampler = new IncrementalSampler(compressedRecords, plis,
             efficiencyThreshold, matcher);
         FDInductor inductor = new FDInductor(fds, nonFds,
             compressedRecords.getNumAttributes());

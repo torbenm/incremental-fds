@@ -25,8 +25,9 @@ class IncrementalSampler {
     private final IncrementalMatcher matcher;
     private Collection<Integer> newRecords;
 
-    IncrementalSampler(FDSet agreeSets, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, IncrementalMatcher matcher) {
-        this.agreeSets = agreeSets;
+    IncrementalSampler(CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, IncrementalMatcher matcher) {
+        int numAttributes = compressedRecords.getNumAttributes();
+        this.agreeSets = new FDSet(numAttributes, -1);
         this.compressedRecords = compressedRecords;
         this.plis = plis;
         this.efficiencyThreshold = efficiencyThreshold;
