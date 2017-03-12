@@ -2,6 +2,7 @@ package org.mp.naumann.algorithms.fd.incremental;
 
 import java.util.List;
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.benchmark.better.Benchmark;
 import org.mp.naumann.algorithms.fd.structures.Lattice;
 
 class IncrementalInductor {
@@ -16,17 +17,19 @@ class IncrementalInductor {
         this.numAttributes = numAttributes;
     }
 
-    void deduceDependencies(OpenBitSet lhs, int rhs) {
+    int deduceDependencies(OpenBitSet lhs, int rhs) {
+        Benchmark benchmark = Benchmark.start("Deduction", Benchmark.DEFAULT_LEVEL + 5);
+        int newFDs = 0;
         List<OpenBitSet> specLhss = this.lattice.getFdAndGeneralizations(lhs, rhs);
+        benchmark.finishSubtask("Found " + specLhss.size() + " covered");
         if (!specLhss.isEmpty()) { // TODO: May be "while" instead of "if"?
+            OpenBitSet flipped = flip(lhs);
+            if (!inverseLattice.containsFdOrGeneralization(flipped, rhs)) {
+                inverseLattice.addFunctionalDependency(flipped, rhs);
+                inverseLattice.removeSpecializations(flipped, rhs);
+            }
             for (OpenBitSet specLhs : specLhss) {
                 this.lattice.removeFunctionalDependency(specLhs, rhs);
-
-                OpenBitSet flipped = flip(specLhs);
-                if (!inverseLattice.containsFdOrGeneralization(flipped, rhs)) {
-                    inverseLattice.addFunctionalDependency(flipped, rhs);
-                    inverseLattice.removeSpecializations(flipped, rhs);
-                }
 
                 for (int attr = numAttributes - 1; attr >= 0; attr--) { // TODO: Is iterating backwards a good or bad idea?
                     if (!lhs.get(attr) && (attr != rhs)) {
@@ -34,12 +37,16 @@ class IncrementalInductor {
 
                         if (!this.lattice.containsFdOrGeneralization(specLhs, rhs)) {
                             this.lattice.addFunctionalDependency(specLhs, rhs);
+                            newFDs++;
                         }
                         specLhs.fastClear(attr);
                     }
                 }
             }
+            benchmark.finishSubtask("Deduced " + newFDs + " new FDs");
         }
+        benchmark.finish();
+        return newFDs;
     }
 
     private OpenBitSet flip(OpenBitSet lhs) {

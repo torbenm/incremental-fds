@@ -32,14 +32,17 @@ public abstract class IncrementalValidator<T> {
     private final List<? extends PositionListIndex> plis;
     private final CompressedRecords compressedRecords;
     final int numAttributes;
+    private final float efficiencyThreshold;
     private int level = 0;
     private ExecutorService executor;
 
-    IncrementalValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel) {
+    IncrementalValidator(int numRecords, CompressedRecords compressedRecords,
+        List<? extends PositionListIndex> plis, boolean parallel, float efficiencyThreshold) {
         this.numRecords = numRecords;
         this.plis = plis;
         this.compressedRecords = compressedRecords;
         this.numAttributes = plis.size();
+        this.efficiencyThreshold = efficiencyThreshold;
 
         if (parallel) {
             int numThreads = Runtime.getRuntime().availableProcessors();
@@ -129,7 +132,7 @@ public abstract class IncrementalValidator<T> {
                 // lattice is neg cover and contains flipped lhs'
                 currentLevel.forEach(pair -> pair.getLhs().flip(0, numAttributes));
             }
-            benchmark.finishSubtask("Retrieval");
+            benchmark.finishSubtask("Retrieval of " + currentLevel.size() + " candidates");
             if (!validationPruners.isEmpty()) {
                 pruneLevel(currentLevel);
                 benchmark.finishSubtask("Pruning");
@@ -197,7 +200,10 @@ public abstract class IncrementalValidator<T> {
 
     }
 
-    protected abstract boolean shouldInterrupt(int previousNumInvalidFds, int numInvalidFds, int numValidFds);
+    private boolean shouldInterrupt(int previousNumInvalidFds, int numInvalidFds, int numValidFds) {
+        //TODO improve for incremental case
+        return (numInvalidFds > numValidFds * this.efficiencyThreshold) && (previousNumInvalidFds < numInvalidFds);
+    }
 
     protected abstract List<OpenBitSet> generateSpecializations(OpenBitSet lhs, int rhs);
 
@@ -259,14 +265,11 @@ public abstract class IncrementalValidator<T> {
             OpenBitSet lhs = this.elementLhsPair.getLhs();
             OpenBitSet rhs = element.getRhsFds();
 
-            List<OpenBitSetFD> collectedFDs = new ArrayList<>();
-            ValidationCallback valid = (_lhs, rhsAttr) -> handleValidRhs(element, lhs, rhsAttr, collectedFDs);
-            ValidationCallback invalid = (_lhs, rhsAttr) -> handleInvalidRhs(element, lhs, rhsAttr, collectedFDs);
+            ValidationCallback valid = (_lhs, rhsAttr, collectedFDs) -> handleValidRhs(element, lhs, rhsAttr, collectedFDs);
+            ValidationCallback invalid = (_lhs, rhsAttr, collectedFDs) -> handleInvalidRhs(element, lhs, rhsAttr, collectedFDs);
             ActualValidator validator = new ActualValidator(plis, compressedRecords, numRecords, valid, invalid, !isTopDown());
 
-            ValidationResult result = validator.validate(lhs, rhs);
-            result.collectedFDs.addAll(collectedFDs);
-            return result;
+            return validator.validate(lhs, rhs);
         }
 
         private void handleValidRhs(LatticeElement element, OpenBitSet lhs, int rhsAttr, List<OpenBitSetFD> collectedFDs) {

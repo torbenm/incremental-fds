@@ -2,7 +2,12 @@ package org.mp.naumann.algorithms.fd.incremental;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.benchmark.better.Benchmark;
@@ -36,15 +41,7 @@ import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 import org.mp.naumann.processor.batch.Batch;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
-
-public class IncrementalFD implements
-    IncrementalAlgorithm<IncrementalFDResult, FDIntermediateDatastructure> {
+public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, FDIntermediateDatastructure> {
 
     private final List<ResultListener<IncrementalFDResult>> resultListeners = new ArrayList<>();
     private final String tableName;
@@ -193,7 +190,7 @@ public class IncrementalFD implements
             deletePruner, version);
         IncrementalSampler sampler = new IncrementalSampler(agreeSets, compressedRecords, plis,
             efficiencyThreshold, matcher);
-        AgreeSetInductor inductor = new AgreeSetInductor(fds, nonFds,
+        FDInductor inductor = new FDInductor(fds, nonFds,
             compressedRecords.getNumAttributes());
         FDValidator validator = new FDValidator(dataStructureBuilder.getNumRecords(),
             compressedRecords, plis, validateParallel, fds, nonFds, efficiencyThreshold, matcher);
@@ -222,8 +219,8 @@ public class IncrementalFD implements
                 FDList agreeSets = sampler.enrichNegativeCover(comparisonSuggestions);
                 innerBenchmark.finishSubtask("Sampling");
                 FDLogger.log(Level.FINER, "Updating positive cover");
-                inductor.updatePositiveCover(agreeSets);
-                innerBenchmark.finishSubtask("Inducing");
+                int newFds = inductor.updatePositiveCover(agreeSets);
+                innerBenchmark.finishSubtask("Inducted " + newFds + " new FDs");
             }
             innerBenchmark.finish();
             FDLogger.log(Level.FINER, "Finished round " + i++);
@@ -239,10 +236,10 @@ public class IncrementalFD implements
         throws AlgorithmExecutionException {
         FDLogger.log(Level.FINE, "Started validating non-FDs");
         Benchmark benchmark = Benchmark.start("Validating non-FDs", Benchmark.DEFAULT_LEVEL + 1);
-        DepthFirstFDFinder fdFinder = new DepthFirstFDFinder(fds, nonFds, plis,
+        NonFDInductor fdFinder = new NonFDInductor(fds, nonFds, plis,
             compressedRecords, dataStructureBuilder.getNumRecords());
         NonFDValidator validator = new NonFDValidator(dataStructureBuilder.getNumRecords(),
-            compressedRecords, plis, validateParallel, fds, nonFds);
+            compressedRecords, plis, validateParallel, fds, nonFds, efficiencyThreshold);
         if (version.usesPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS)) {
             ValidationPruner pruner = deletePruner.analyzeDiff(diff);
             validator.addValidationPruner(pruner);
@@ -252,7 +249,7 @@ public class IncrementalFD implements
         do {
             validFDs = validator.validate();
             if (validFDs != null) {
-//                fdFinder.findFDs(validFDs);
+                fdFinder.findFDs(validFDs);
             }
         } while (validFDs != null);
         benchmark.finishSubtask("Validation");

@@ -4,8 +4,9 @@ import java.util.List;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalValidator.ValidationResult;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
-public class ActualValidator {
+class ActualValidator {
 
     private final List<? extends PositionListIndex> plis;
     private final int numRecords;
@@ -14,7 +15,7 @@ public class ActualValidator {
     private final CompressedRecords compressedRecords;
     private final boolean validateAll;
 
-    public ActualValidator(List<? extends PositionListIndex> plis,
+    ActualValidator(List<? extends PositionListIndex> plis,
         CompressedRecords compressedRecords, int numRecords,
         ValidationCallback validCallback, ValidationCallback invalidCallback, boolean validateAll) {
         this.plis = plis;
@@ -26,7 +27,7 @@ public class ActualValidator {
     }
 
     public interface ValidationCallback {
-        void callback(OpenBitSet lhs, int rhs);
+        void callback(OpenBitSet lhs, int rhs, List<OpenBitSetFD> collectedFDs);
     }
 
     ValidationResult validate(OpenBitSet lhs, int rhs) {
@@ -47,9 +48,9 @@ public class ActualValidator {
             // Check if rhs is unique
             for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
                 if (!plis.get(rhsAttr).isConstant(numRecords)) {
-                    invalidCallback.callback(lhs, rhsAttr);
+                    invalidCallback.callback(lhs, rhsAttr, result.collectedFDs);
                 } else {
-                    validCallback.callback(lhs, rhsAttr);
+                    validCallback.callback(lhs, rhsAttr, result.collectedFDs);
                 }
                 result.intersections++;
             }
@@ -58,9 +59,9 @@ public class ActualValidator {
             int lhsAttribute = lhs.nextSetBit(0);
             for (int rhsAttr = rhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhs.nextSetBit(rhsAttr + 1)) {
                 if (!plis.get(lhsAttribute).refines(compressedRecords, rhsAttr, !validateAll)) {
-                    invalidCallback.callback(lhs, rhsAttr);
+                    invalidCallback.callback(lhs, rhsAttr, result.collectedFDs);
                 } else {
-                    validCallback.callback(lhs, rhsAttr);
+                    validCallback.callback(lhs, rhsAttr, result.collectedFDs);
                 }
                 result.intersections++;
             }
@@ -76,11 +77,11 @@ public class ActualValidator {
             invalidRhs.andNot(validRhs);
 
             for (int rhsAttr = validRhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = validRhs.nextSetBit(rhsAttr + 1)) {
-                validCallback.callback(lhs, rhsAttr);
+                validCallback.callback(lhs, rhsAttr, result.collectedFDs);
             }
 
             for (int rhsAttr = invalidRhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = invalidRhs.nextSetBit(rhsAttr + 1)) {
-                invalidCallback.callback(lhs, rhsAttr);
+                invalidCallback.callback(lhs, rhsAttr, result.collectedFDs);
             }
 
             result.intersections++;

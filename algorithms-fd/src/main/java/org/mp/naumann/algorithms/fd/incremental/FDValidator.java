@@ -13,15 +13,13 @@ public class FDValidator extends IncrementalValidator<List<IntegerPair>> {
 
     private final Lattice fds;
     private final Lattice nonFds;
-    private float efficiencyThreshold;
     private final IncrementalMatcher matcher;
     private List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
     FDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds, float efficiencyThreshold, IncrementalMatcher matcher) {
-        super(numRecords, compressedRecords, plis, parallel);
+        super(numRecords, compressedRecords, plis, parallel, efficiencyThreshold);
         this.fds = fds;
         this.nonFds = nonFds;
-        this.efficiencyThreshold = efficiencyThreshold;
         this.matcher = matcher;
     }
 
@@ -55,12 +53,6 @@ public class FDValidator extends IncrementalValidator<List<IntegerPair>> {
         List<IntegerPair> result = comparisonSuggestions;
         comparisonSuggestions = new ArrayList<>();
         return result;
-    }
-
-    @Override
-    protected boolean shouldInterrupt(int previousNumInvalidFds, int numInvalidFds, int numValidFds) {
-        //TODO improve for incremental case
-        return (numInvalidFds > numValidFds * this.efficiencyThreshold) && (previousNumInvalidFds < numInvalidFds);
     }
 
     @Override

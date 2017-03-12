@@ -1,5 +1,14 @@
 package org.mp.naumann.testcases;
 
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Level;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedEvent;
@@ -24,16 +33,6 @@ import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.BatchHandler;
 import org.mp.naumann.processor.handler.database.PassThroughDatabaseBatchHandler;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.logging.Level;
 
 abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
@@ -63,11 +62,12 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
     @Override
     public void execute() throws ConnectionException, IOException {
+//        try(Connection conn = ConnectionManager.getCsvConnection(ResourceConnector.BASELINE, ","); DataConnector dc = new JdbcDataConnector(conn)) {
         try (Connection conn = ConnectionManager.getPostgresConnection(pgdb, pguser, pgpass); DataConnector dc = new JdbcDataConnector(conn)) {
 
-            StreamableBatchSource batchSource = getBatchSource();
             Table table = dc.getTable(schema, sourceTableName);
-            baselineSize = table.getRowCount();
+            setBaselineSize(table.getRowCount());
+            StreamableBatchSource batchSource = getBatchSource();
 
             // execute HyFD in any case; we need the data structure for the incremental algorithm, and can use it
             // as warmup if we run in hyfdOnly mode
@@ -88,8 +88,9 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
                 table = dc.getTable(schema, tableName);
 
                 if (hyfdCreateIndex) {
-                    // create index on the temporary table
-                    stmt.execute(String.format("CREATE INDEX %s_master_idx ON %s (%s)", tableName, fullTableName, String.join(", ", table.getColumnNames())));
+                    // create index on every column of the temporary table
+                    for (String column: table.getColumnNames())
+                        stmt.execute(String.format("CREATE INDEX %s_%s_idx ON %s (%s)", tableName, column, fullTableName, column));
                 }
 
                 BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, new PassThroughDatabaseBatchHandler(dc), true);
@@ -171,12 +172,17 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
     abstract protected StreamableBatchSource getBatchSource();
 
+    protected void setBaselineSize(long baselineSize) {
+        this.baselineSize = baselineSize;
+    }
+
     private static class HyFDBatchHandler implements BatchHandler {
 
         private final Table table;
         private final boolean singleFile;
         private final IncrementalFDConfiguration config;
         private final IncrementalFDResultListener resultListener;
+        private int batchCount = 1;
 
         HyFDBatchHandler(Table table, int limit, IncrementalFDConfiguration config, IncrementalFDResultListener resultListener) {
             this.table = table;
@@ -188,6 +194,7 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
         @Override
         public void handleBatch(Batch batch) {
+            batchCount++;
             if (singleFile) {
                 int size = batch.getInsertStatements().size();
                 table.setLimit(table.getLimit() + size);

@@ -59,7 +59,7 @@ public interface IncrementalFDRunner {
             SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
             IncrementalFD algorithm = new IncrementalFD(runConfig.getTableName(),
                     algoConfig);
-            algorithm.setEfficiencyThreshold(0.2f);
+//            algorithm.setEfficiencyThreshold(0.2f);
             IncrementalFDResultListener listener = new IncrementalFDResultListener();
             algorithm.addResultListener(listener);
             algorithm.addResultListener(getResultListener());

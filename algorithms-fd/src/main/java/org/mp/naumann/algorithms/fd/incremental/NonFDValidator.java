@@ -15,8 +15,8 @@ public class NonFDValidator extends IncrementalValidator<List<OpenBitSetFD>> {
     private final Lattice nonFds;
     private List<OpenBitSetFD> lastValid;
 
-    NonFDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds) {
-        super(numRecords, compressedRecords, plis, parallel);
+    NonFDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds, float efficiencyThreshold) {
+        super(numRecords, compressedRecords, plis, parallel, efficiencyThreshold);
         this.fds = fds;
         this.nonFds = nonFds;
     }
@@ -44,11 +44,6 @@ public class NonFDValidator extends IncrementalValidator<List<OpenBitSetFD>> {
     @Override
     protected List<OpenBitSetFD> interrupt() {
         return lastValid;
-    }
-
-    @Override
-    protected boolean shouldInterrupt(int previousNumInvalidFds, int numInvalidFds, int numValidFds) {
-        return true;
     }
 
     @Override

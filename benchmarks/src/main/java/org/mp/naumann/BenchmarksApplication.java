@@ -1,8 +1,12 @@
 package org.mp.naumann;
 
+import static java.lang.Double.NaN;
+
+import ResourceConnection.ResourceConnector;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-
+import java.io.IOException;
+import java.util.logging.Level;
 import org.mp.naumann.algorithms.benchmark.better.Benchmark;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
@@ -13,12 +17,11 @@ import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.reporter.FileReporter;
 import org.mp.naumann.reporter.GoogleSheetsReporter;
 import org.mp.naumann.reporter.Reporter;
-import org.mp.naumann.testcases.*;
-
-import java.io.IOException;
-import java.util.logging.Level;
-
-import ResourceConnection.ResourceConnector;
+import org.mp.naumann.testcases.FixedSizeTestCase;
+import org.mp.naumann.testcases.SingleFileTestCase;
+import org.mp.naumann.testcases.TestCase;
+import org.mp.naumann.testcases.TestCaseParameters;
+import org.mp.naumann.testcases.VariableSizeTestCase;
 
 public class BenchmarksApplication {
 
@@ -57,6 +60,8 @@ public class BenchmarksApplication {
     private int splitLine = 15000;
     @Parameter(names = "--batchDirectory", description = "only relevant for variable mode")
     private String batchDirectory = "";
+    @Parameter(names = "--batchSizeRatio", description = "only relevant for fixed or singleFile mode")
+    private double batchSizeRatio = NaN;
 
     // parameters for algorithm configuration
     @Parameter(names = "--hyfdOnly")
@@ -161,7 +166,10 @@ public class BenchmarksApplication {
                     t = new VariableSizeTestCase(parameters, getFullBatchDirectory());
                     break;
                 case "fixed":
-                    t = new FixedSizeTestCase(parameters, batchSize);
+                    if (batchSizeRatio == NaN)
+                        t = new FixedSizeTestCase(parameters, batchSize);
+                    else
+                        t = new FixedSizeTestCase(parameters, batchSizeRatio);
                     break;
                 case "singleFile":
                     t = new SingleFileTestCase(parameters, splitLine, batchSize);
