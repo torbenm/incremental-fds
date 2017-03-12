@@ -32,7 +32,7 @@ public class BenchmarksApplication {
     @Parameter(names = "--dataSet")
     private String dataSet = "";
     @Parameter(names = "--stopAfter")
-    private int stopAfter = 1000;
+    private int stopAfter = Integer.MAX_VALUE;
     @Parameter(names = "--google")
     private boolean writeToGoogleSheets = false;
     @Parameter(names = "--sheetName")
@@ -73,13 +73,13 @@ public class BenchmarksApplication {
     private Boolean useEnhancedClusterPruning;
     @Parameter(names = "--recomputeDataStructures", arity = 1)
     private Boolean recomputeDataStructures;
-    @Parameter(names = "--simpleBloom", arity = 1)
+    @Parameter(names = "--simpleBloom")
     private Boolean simpleBloomPruning;
-    @Parameter(names = "--advancedBloom", arity = 1)
+    @Parameter(names = "--advancedBloom")
     private Boolean advancedBloomPruning;
-    @Parameter(names = "--simplePruning", arity = 1)
+    @Parameter(names = "--simplePruning")
     private Boolean simplePruning;
-    @Parameter(names = "--deletePruning", arity = 1)
+    @Parameter(names = "--deletePruning")
     private Boolean deletePruning;
     @Parameter(names = "--betterSampling", arity = 1)
     private Boolean betterSampling;
@@ -207,7 +207,7 @@ public class BenchmarksApplication {
         });
         SpeedBenchmark.begin(BenchmarkLevel.BENCHMARK);
         Benchmark.setMaxLevel(4);
-        Benchmark.addEventListener(FDLogger::info);
+        Benchmark.addEventListener(FDLogger::fine);
     }
 
     public static void tearDown() {

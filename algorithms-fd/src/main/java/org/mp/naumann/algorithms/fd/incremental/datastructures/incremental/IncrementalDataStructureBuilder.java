@@ -1,6 +1,7 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
@@ -18,6 +19,7 @@ import org.mp.naumann.processor.batch.Batch;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -76,7 +78,9 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         }
         Set<Integer> inserted = applier.getInserted();
         Set<Integer> deleted = applier.getDeleted();
+        Set<Integer> inserted_tmp = new HashSet<>(inserted);
         inserted.removeAll(deleted);
+        deleted.removeAll(inserted_tmp);
 
         Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
         deleted.forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));
@@ -184,21 +188,32 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
             return clusterMapBuilder.addRecord(record);
         }
 
+        private void logNotFoundWarning(Iterable<String> record) {
+            FDLogger.log(Level.WARNING, String.format("Trying to remove %s, but there is no such record.", record.toString()));
+        }
+
         @Override
         protected Collection<Integer> removeRecord(Map<String, String> valueMap) {
             List<String> record = columns.stream().map(valueMap::get).collect(Collectors.toList());
+
+            // find records from previous batches in PLIs
             List<Collection<Integer>> clusters = new ArrayList<>();
             for (PositionListIndex pli : plis) {
                 String value = record.get(pli.getAttribute());
                 int dictValue = dictionary.getOrAdd(value);
                 IntArrayList cluster = pli.getCluster(dictValue);
-                if (cluster == null || cluster.isEmpty()) {
-                    return Collections.emptyList();
+                if (cluster == null) {
+                    cluster = new IntArrayList();
                 }
                 clusters.add(cluster);
             }
             Set<Integer> matching = CollectionUtils.intersection(clusters);
+
+            // find records that were added in the current batch
+            matching.addAll(clusterMapBuilder.removeRecord(record));
+
             clusters.forEach(c -> c.removeAll(matching));
+            if (matching.isEmpty()) logNotFoundWarning(record);
             return matching;
         }
     }

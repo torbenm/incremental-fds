@@ -126,7 +126,7 @@ public class IncrementalFD implements
             List<HashMap<String, IntArrayList>> clusterMaps = pliBuilder.getClusterMaps();
             bloomPruning = new BloomPruningStrategy(orderedColumns);
             if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {
-                bloomPruning.addGenerator(new AllCombinationsBloomGenerator(2));
+                bloomPruning.addGenerator(new AllCombinationsBloomGenerator(3));
             }
             if (version
                 .usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM_ADVANCED)) {
@@ -252,7 +252,7 @@ public class IncrementalFD implements
         do {
             validFDs = validator.validate();
             if (validFDs != null) {
-                fdFinder.findFDs(validFDs);
+//                fdFinder.findFDs(validFDs);
             }
         } while (validFDs != null);
         benchmark.finishSubtask("Validation");

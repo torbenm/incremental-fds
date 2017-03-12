@@ -108,8 +108,8 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
             batchSource.startStreaming();
             SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Algorithm for all batches");
 
-            FDLogger.log(Level.INFO, String.format("Cumulative runtime (algorithm only): %sms", getTotalTime(batchEvents)));
-            FDLogger.log(Level.INFO, String.format("Found %s FDs:", resultListener.getFDs().size()));
+            System.out.println(String.format("Cumulative runtime (algorithm only): %sms", getTotalTime(batchEvents)));
+            System.out.println(String.format("Found %s FDs:", resultListener.getFDs().size()));
             resultListener.getFDs().forEach(fd -> FDLogger.log(Level.INFO, fd.toString()));
 
         } catch (SQLException e) {

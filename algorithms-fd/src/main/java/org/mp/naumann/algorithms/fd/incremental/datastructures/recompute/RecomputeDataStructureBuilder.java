@@ -49,7 +49,9 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
 
         Set<Integer> inserted = applier.getInserted();
         Set<Integer> deleted = applier.getDeleted();
+        Set<Integer> inserted_tmp = new HashSet<>(inserted);
         inserted.removeAll(deleted);
+        deleted.removeAll(inserted_tmp);
         recordIds.addAll(inserted);
         recordIds.removeAll(deleted);
 

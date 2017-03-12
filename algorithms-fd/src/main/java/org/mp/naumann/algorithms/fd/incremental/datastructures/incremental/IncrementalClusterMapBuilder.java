@@ -17,13 +17,10 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-
 import org.mp.naumann.algorithms.fd.structures.Dictionary;
+import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 class IncrementalClusterMapBuilder {
 
@@ -61,6 +58,24 @@ class IncrementalClusterMapBuilder {
             attributeId++;
         }
         return recId;
+    }
+
+    Collection<Integer> removeRecord(Iterable<String> record) {
+        int attributeId = 0;
+        List<Collection<Integer>> clusters = new ArrayList<>();
+        for (String value : record) {
+            Map<Integer, IntArrayList> clusterMap = clusterMaps.get(attributeId);
+            int dictValue = dictionary.getOrAdd(value);
+            IntArrayList cluster = clusterMap.get(dictValue);
+            if (cluster == null || cluster.isEmpty()) {
+                return Collections.emptyList();
+            }
+            clusters.add(cluster);
+            attributeId++;
+        }
+        Set<Integer> matching = CollectionUtils.intersection(clusters);
+        clusters.forEach(c -> c.removeAll(matching));
+        return matching;
     }
 
     void flush() {

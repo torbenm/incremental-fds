@@ -17,7 +17,6 @@ class IncrementalInductor {
     }
 
     void deduceDependencies(OpenBitSet lhs, int rhs) {
-        int newFDs = 0;
         List<OpenBitSet> specLhss = this.lattice.getFdAndGeneralizations(lhs, rhs);
         if (!specLhss.isEmpty()) { // TODO: May be "while" instead of "if"?
             for (OpenBitSet specLhs : specLhss) {
@@ -35,7 +34,6 @@ class IncrementalInductor {
 
                         if (!this.lattice.containsFdOrGeneralization(specLhs, rhs)) {
                             this.lattice.addFunctionalDependency(specLhs, rhs);
-                            newFDs++;
                         }
                         specLhs.fastClear(attr);
                     }
