@@ -48,20 +48,19 @@ public class LatticeElement {
             return true;
         }
 
+        int nextLhsAttr = lhs.nextSetBit(currentLhsAttr);
         // Is the dependency already read and we have not yet found a generalization?
-        if (currentLhsAttr < 0) {
+        if (nextLhsAttr < 0) {
             return false;
         }
 
-        int nextLhsAttr = lhs.nextSetBit(currentLhsAttr + 1);
-
-        if ((this.children != null) && (this.children[currentLhsAttr] != null) && (this.children[currentLhsAttr].isMarked(rhs))) {
-            if (this.children[currentLhsAttr].containsFdOrGeneralization(lhs, rhs, nextLhsAttr)) {
+        if ((this.children != null) && (this.children[nextLhsAttr] != null) && (this.children[nextLhsAttr].isMarked(rhs))) {
+            if (this.children[nextLhsAttr].containsFdOrGeneralization(lhs, rhs, nextLhsAttr + 1)) {
                 return true;
             }
         }
 
-        return this.containsFdOrGeneralization(lhs, rhs, nextLhsAttr);
+        return this.containsFdOrGeneralization(lhs, rhs, nextLhsAttr + 1);
     }
 
     private boolean isMarked(int rhs) {
@@ -100,11 +99,11 @@ public class LatticeElement {
             result.add(new LatticeElementLhsPair(currentLhs.clone(), this));
         } else {
             currentLevel++;
-            if (this.children == null) {
+            if (this.children == null || this.markedRhs.isEmpty()) {
                 return;
             }
 
-            for (int child = 0; child < this.numAttributes; child++) {
+            for (int child = currentLevel - 1; child < this.numAttributes; child++) {
                 if (this.children[child] == null) {
                     continue;
                 }
@@ -123,7 +122,7 @@ public class LatticeElement {
         }
         int nextLhsAttr = lhs.nextSetBit(currentAttr);
         // If the whole lhs was read and the lhs is specialized, we can remove the rhs
-        if (isSpecialized && nextLhsAttr < 0) {
+        if (isSpecialized && nextLhsAttr < 0 && isFd(rhs)) {
             this.removeFd(rhs);
             return;
         }
@@ -156,21 +155,22 @@ public class LatticeElement {
     }
 
     boolean removeRecursive(OpenBitSet lhs, int rhs, int currentLhsAttr) {
+        int nextLhsAttr = lhs.nextSetBit(currentLhsAttr);
         // If this is the last attribute of lhs, remove the fd-mark from the rhsFds
-        if (currentLhsAttr < 0) {
+        if (nextLhsAttr < 0) {
             this.removeFd(rhs);
             return true;
         }
 
-        if ((this.children != null) && (this.children[currentLhsAttr] != null)) {
+        if ((this.children != null) && (this.children[nextLhsAttr] != null)) {
             // Move to the next child with the next lhs attribute
-            if (!this.children[currentLhsAttr].removeRecursive(lhs, rhs, lhs.nextSetBit(currentLhsAttr + 1))) {
+            if (!this.children[nextLhsAttr].removeRecursive(lhs, rhs, nextLhsAttr + 1)) {
                 return false; // This is a shortcut: if the child was unable to remove the rhsFds, then this node can also not remove it
             }
 
             // Delete the child node if it has no rhsFds attributes any more
-            if (this.children[currentLhsAttr].hasNoMarked()) {
-                this.children[currentLhsAttr] = null;
+            if (this.children[nextLhsAttr].hasNoMarked()) {
+                this.children[nextLhsAttr] = null;
             }
 
             if (!hasChildren())
@@ -213,22 +213,23 @@ public class LatticeElement {
                                  List<OpenBitSet> foundLhs) {
         if (this.isFd(rhs)) {
             foundLhs.add(currentLhs.clone());
+            return;
         }
 
         if (this.children == null) {
             return;
         }
 
-        while (currentLhsAttr >= 0) {
-            int nextLhsAttr = lhs.nextSetBit(currentLhsAttr + 1);
+        int nextLhsAttr = lhs.nextSetBit(currentLhsAttr);
+        while (nextLhsAttr >= 0) {
 
-            if ((this.children[currentLhsAttr] != null) && (this.children[currentLhsAttr].isMarked(rhs))) {
-                currentLhs.fastSet(currentLhsAttr);
-                this.children[currentLhsAttr].getFdAndGeneralizations(lhs, rhs, nextLhsAttr, currentLhs, foundLhs);
-                currentLhs.fastClear(currentLhsAttr);
+            if ((this.children[nextLhsAttr] != null) && (this.children[nextLhsAttr].isMarked(rhs))) {
+                currentLhs.fastSet(nextLhsAttr);
+                this.children[nextLhsAttr].getFdAndGeneralizations(lhs, rhs, nextLhsAttr + 1, currentLhs, foundLhs);
+                currentLhs.fastClear(nextLhsAttr);
             }
 
-            currentLhsAttr = nextLhsAttr;
+            nextLhsAttr = lhs.nextSetBit(nextLhsAttr + 1);
         }
     }
 

@@ -71,8 +71,7 @@ public class IncrementalFDDemo {
 
         IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom")
                 .addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.DELETE_ANNOTATIONS)
-            .setInnerClusterPruning(true)
-            .setEnhancedClusterPruning(true)
+            .setDepthFirst(true)
 //                .addPruningStrategy(PruningStrategy.BLOOM_ADVANCED)
         ;
         IncrementalFDRunConfiguration runConfig = adult;

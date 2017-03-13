@@ -42,13 +42,13 @@ public class Lattice extends LatticeElement {
     }
 
     public void removeSpecializations(OpenBitSet lhs, int rhs) {
-        int nextAttr = 0;
-        this.removeSpecializations(lhs, rhs, nextAttr, false);
+        int currentLhsAttr = 0;
+        this.removeSpecializations(lhs, rhs, currentLhsAttr, false);
     }
 
     public boolean containsFdOrGeneralization(OpenBitSet lhs, int rhs) {
-        int nextLhsAttr = lhs.nextSetBit(0);
-        return this.containsFdOrGeneralization(lhs, rhs, nextLhsAttr);
+        int currentLhsAttr = 0;
+        return this.containsFdOrGeneralization(lhs, rhs, currentLhsAttr);
     }
 
     public Collection<LatticeElementLhsPair> getLevel(int level) {
@@ -73,15 +73,15 @@ public class Lattice extends LatticeElement {
     }
 
     public void removeFunctionalDependency(OpenBitSet lhs, int rhs) {
-        int currentLhsAttr = lhs.nextSetBit(0);
+        int currentLhsAttr = 0;
         this.removeRecursive(lhs, rhs, currentLhsAttr);
     }
 
     public List<OpenBitSet> getFdAndGeneralizations(OpenBitSet lhs, int rhs) {
         List<OpenBitSet> foundLhs = new ArrayList<>();
         OpenBitSet currentLhs = new OpenBitSet(numAttributes);
-        int nextLhsAttr = lhs.nextSetBit(0);
-        this.getFdAndGeneralizations(lhs, rhs, nextLhsAttr, currentLhs, foundLhs);
+        int currentLhsAttr = 0;
+        this.getFdAndGeneralizations(lhs, rhs, currentLhsAttr, currentLhs, foundLhs);
         return foundLhs;
     }
 
