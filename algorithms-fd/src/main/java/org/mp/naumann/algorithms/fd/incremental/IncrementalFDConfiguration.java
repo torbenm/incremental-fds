@@ -36,6 +36,22 @@ public class IncrementalFDConfiguration {
     private boolean pruneGeneralizations = true;
     private boolean storeEqual = true;
     private boolean improvedSampling = true;
+    private boolean depthFirst = false;
+
+    public IncrementalFDConfiguration setDepthFirst(boolean depthFirst) {
+        this.depthFirst = depthFirst;
+        return this;
+    }
+
+    public IncrementalFDConfiguration enableDepthFirst() {
+        depthFirst = true;
+        return this;
+    }
+
+    public IncrementalFDConfiguration disableDepthFirst() {
+        depthFirst = false;
+        return this;
+    }
 
     public boolean usesImprovedSampling() {
         return improvedSampling;
@@ -232,7 +248,11 @@ public class IncrementalFDConfiguration {
         return null;
     }
 
-    public enum PruningStrategy {
+	public boolean usesDepthFirst() {
+        return depthFirst;
+	}
+
+	public enum PruningStrategy {
         SIMPLE, BLOOM, BLOOM_ADVANCED, ANNOTATION, DELETE_ANNOTATIONS
     }
 

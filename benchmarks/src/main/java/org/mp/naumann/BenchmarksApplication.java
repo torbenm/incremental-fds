@@ -88,6 +88,8 @@ public class BenchmarksApplication {
     private Boolean deletePruning;
     @Parameter(names = "--betterSampling", arity = 1)
     private Boolean betterSampling;
+    @Parameter(names = "--depthFirst", arity = 1)
+    private Boolean depthFirst;
 
     public static void main(String[] args) throws IOException {
         BenchmarksApplication app = new BenchmarksApplication();
@@ -129,6 +131,9 @@ public class BenchmarksApplication {
         }
         if (deletePruning != null) {
             config.addPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS);
+        }
+        if (depthFirst != null) {
+            config.setDepthFirst(depthFirst);
         }
     }
 

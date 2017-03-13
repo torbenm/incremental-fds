@@ -245,7 +245,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         List<OpenBitSetFD> validFDs;
         do {
             validFDs = validator.validate();
-            if (validFDs != null) {
+            if (version.usesDepthFirst() && validFDs != null) {
                 fdFinder.findFDs(validFDs);
             }
         } while (validFDs != null);
