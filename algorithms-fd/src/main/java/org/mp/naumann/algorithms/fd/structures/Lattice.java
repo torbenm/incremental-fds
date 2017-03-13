@@ -56,6 +56,9 @@ public class Lattice extends LatticeElement {
         OpenBitSet currentLhs = new OpenBitSet(numAttributes);
         int currentLevel = 0;
         this.getLevel(level, currentLevel, currentLhs, result);
+        if (level == depth && result.isEmpty()) {
+            depth--;
+        }
         return result;
     }
 

@@ -8,8 +8,10 @@ import org.mp.naumann.algorithms.fd.structures.Lattice;
 class FDInductor {
 
     private final IncrementalInductor inductor;
+    private final int numAttributes;
 
     FDInductor(Lattice posCover, Lattice negCover, int numAttributes) {
+        this.numAttributes = numAttributes;
         this.inductor = new IncrementalInductor(posCover, negCover, numAttributes);
     }
 
@@ -28,7 +30,7 @@ class FDInductor {
                 // All 0s cannot be on the right-hand side anymore if 01010101 is the LHS.
                 // Thus flipping gives us the full rhs
                 OpenBitSet fullRhs = lhs.clone();
-                fullRhs.flip(0, fullRhs.size());
+                fullRhs.flip(0, numAttributes);
 
                 // Now we go through all "not-rhs's" and specialize the pos. cover with them.
                 for (int rhs = fullRhs.nextSetBit(0); rhs >= 0; rhs = fullRhs.nextSetBit(rhs + 1)) {

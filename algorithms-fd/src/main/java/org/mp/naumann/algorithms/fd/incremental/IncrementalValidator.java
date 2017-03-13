@@ -157,7 +157,8 @@ public abstract class IncrementalValidator<T> {
                 inverseLattice.removeSpecializations(flipped, rhs);
                 List<OpenBitSet> specializations = generateSpecializations(lhs, rhs);
                 for (OpenBitSet specialization : specializations) {
-                    if (!lattice.containsFdOrGeneralization(specialization, rhs)) {
+                    OpenBitSet flippedSpec = flip(specialization);
+                    if (!lattice.containsFdOrGeneralization(specialization, rhs) && !inverseLattice.containsFdOrGeneralization(flippedSpec, rhs)) {
                         candidates++;
                         lattice.addFunctionalDependency(specialization, rhs);
                     }
