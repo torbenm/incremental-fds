@@ -48,7 +48,6 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 
 	private FDTree posCover;
 
-	private FDSet negCover;
 	private PLIBuilder pliBuilder;
 	private final IncrementalFDConfiguration configuration;
 
@@ -184,7 +183,6 @@ public class HyFD implements FunctionalDependencyAlgorithm {
 		FDLogger.log(Level.FINER, "... done! (" + numFDs + " FDs)");
 		
 		this.posCover = posCover;
-		this.negCover = negCover;
 		this.pruner = matcher.getPruner();
 	}
 
@@ -224,10 +222,6 @@ public class HyFD implements FunctionalDependencyAlgorithm {
     public ViolationCollection getViolationCollection() {
         return violationCollection;
     }
-
-	public FDSet getNegCover() {
-		return negCover;
-	}
 
 	public PLIBuilder getPLIBuilder() {
 		return pliBuilder;

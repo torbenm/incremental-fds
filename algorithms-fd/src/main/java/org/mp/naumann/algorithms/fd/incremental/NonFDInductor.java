@@ -9,7 +9,7 @@ import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex
 import org.mp.naumann.algorithms.fd.structures.Lattice;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
-public class NonFDInductor {
+class NonFDInductor {
 
     private final IncrementalInductor inductor;
     private final List<? extends PositionListIndex> plis;
@@ -17,36 +17,39 @@ public class NonFDInductor {
     private final int numRecords;
     private final Lattice posCover;
     private final int numAttributes;
+    private final float efficiencyThreshold;
 
     NonFDInductor(Lattice posCover, Lattice negCover,
         List<? extends PositionListIndex> plis, CompressedRecords compressedRecords,
-        int numRecords) {
+        int numRecords, float efficiencyThreshold) {
         this.numAttributes = compressedRecords.getNumAttributes();
         this.plis = plis;
         this.compressedRecords = compressedRecords;
         this.numRecords = numRecords;
         this.posCover = posCover;
         this.inductor = new IncrementalInductor(negCover, posCover, numAttributes);
+        this.efficiencyThreshold = efficiencyThreshold;
     }
 
-    public void findFDs(List<OpenBitSetFD> fds) {
+    void findFDs(List<OpenBitSetFD> fds) {
         Benchmark benchmark = Benchmark.start("Depth first for " + fds.size() + " FDs");
         int i = 0;
-        int successes = 0;
         int total = 0;
+        int belowExpectation = 0;
         for (OpenBitSetFD fd : fds) {
             int rhs = fd.getRhs();
             OpenBitSet lhs = fd.getLhs().clone();
             lhs.flip(0, numAttributes);
             int newFds = generalize(lhs, rhs, 0);
             total += newFds;
-            if (newFds != 0) {
-                successes++;
-            }
             i++;
+            if (1.0 * newFds / total < 1.0 / i) {
+                belowExpectation++;
+            }
+            if (belowExpectation > 1 / efficiencyThreshold) {
+                break;
+            }
         }
-        System.out.println(successes + " successes out of " + i);
-        System.out.println("Found " + total + " new FDs");
         benchmark.finish();
     }
 

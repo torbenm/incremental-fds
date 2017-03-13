@@ -90,7 +90,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         this.columns = intermediateDatastructure.getColumns();
         this.valueComparator = intermediateDatastructure.getValueComparator();
         this.posCover = intermediateDatastructure.getPosCover();
-        this.negCover = intermediateDatastructure.getNegCover();
+        this.negCover = new FDSet(columns.size(), -1);
         this.violationCollection = intermediateDatastructure.getViolatingValues();
 
         PLIBuilder pliBuilder = intermediateDatastructure.getPliBuilder();

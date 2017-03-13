@@ -56,7 +56,6 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     private ExistingValuesPruningStrategy simplePruning;
     private BloomPruningStrategy bloomPruning;
     private DeletePruner deletePruner;
-    private int batchCount = 1;
 
     public IncrementalFD(String tableName, IncrementalFDConfiguration version) {
         this(tableName);
@@ -147,7 +146,6 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
     @Override
     public IncrementalFDResult execute(Batch batch) throws AlgorithmExecutionException {
-        batchCount++;
         FDLogger.log(Level.INFO, "----");
         FDLogger.log(Level.INFO, "Started IncrementalFD for new Batch");
         Benchmark benchmark = Benchmark.start("IncrementalFD for new Batch");
@@ -236,7 +234,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         FDLogger.log(Level.FINE, "Started validating non-FDs");
         Benchmark benchmark = Benchmark.start("Validating non-FDs", Benchmark.DEFAULT_LEVEL + 1);
         NonFDInductor fdFinder = new NonFDInductor(fds, nonFds, plis,
-            compressedRecords, dataStructureBuilder.getNumRecords());
+            compressedRecords, dataStructureBuilder.getNumRecords(), efficiencyThreshold);
         NonFDValidator validator = new NonFDValidator(dataStructureBuilder.getNumRecords(),
             compressedRecords, plis, validateParallel, fds, nonFds, efficiencyThreshold);
         if (version.usesPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS)) {

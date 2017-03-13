@@ -182,7 +182,6 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
         private final boolean singleFile;
         private final IncrementalFDConfiguration config;
         private final IncrementalFDResultListener resultListener;
-        private int batchCount = 1;
 
         HyFDBatchHandler(Table table, int limit, IncrementalFDConfiguration config, IncrementalFDResultListener resultListener) {
             this.table = table;
@@ -194,7 +193,6 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
         @Override
         public void handleBatch(Batch batch) {
-            batchCount++;
             if (singleFile) {
                 int size = batch.getInsertStatements().size();
                 table.setLimit(table.getLimit() + size);
