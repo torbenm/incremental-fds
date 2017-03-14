@@ -34,12 +34,7 @@ public class FixedSizeTestCase extends BaseTestCase {
             batchSize = Math.max((int) Math.round(baselineSize * batchSizeRatio), 1);
     }
 
-    @Override
     protected String getBatchSize() {
-        if (batchSizeRatio != NaN)
-            return Double.toString(batchSizeRatio);
-        else
-            return Integer.toString(batchSize);
+        return Integer.toString(batchSize);
     }
-
 }
