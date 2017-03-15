@@ -17,7 +17,7 @@ public abstract class AbstractStatementApplier implements StatementVisitor {
 
     @Override
     public void visit(DeleteStatement delete) {
-        Benchmark benchmark = Benchmark.start("Delete");
+        Benchmark benchmark = Benchmark.start("Delete", Benchmark.DEFAULT_LEVEL + 7);
         Collection<Integer> removed = removeRecord(delete.getValueMap());
         deleted.addAll(removed);
         benchmark.finish();
@@ -25,7 +25,7 @@ public abstract class AbstractStatementApplier implements StatementVisitor {
 
     @Override
     public void visit(UpdateStatement update) {
-        Benchmark benchmark = Benchmark.start("Update");
+        Benchmark benchmark = Benchmark.start("Update", Benchmark.DEFAULT_LEVEL + 7);
         Collection<Integer> removed = removeRecord(update.getOldValueMap());
         deleted.addAll(removed);
         int insertedRecord = addRecord(update.getValueMap());
@@ -35,7 +35,7 @@ public abstract class AbstractStatementApplier implements StatementVisitor {
 
     @Override
     public void visit(InsertStatement insert) {
-        Benchmark benchmark = Benchmark.start("Insert");
+        Benchmark benchmark = Benchmark.start("Insert", Benchmark.DEFAULT_LEVEL + 7);
         int insertedRecord = addRecord(insert.getValueMap());
         inserted.add(insertedRecord);
         benchmark.finish();

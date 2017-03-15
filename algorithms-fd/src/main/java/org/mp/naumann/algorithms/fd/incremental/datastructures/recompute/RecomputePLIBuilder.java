@@ -22,17 +22,16 @@ import java.util.List;
 import java.util.Map;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
-import org.mp.naumann.algorithms.fd.structures.BetterClusterMapBuilder;
 import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
 
 class RecomputePLIBuilder {
 
-    private final BetterClusterMapBuilder clusterMapBuilder;
+    private final RecomputeClusterMapBuilder clusterMapBuilder;
     private final boolean isNullEqualNull;
     private final List<Integer> pliOrder;
 
     RecomputePLIBuilder(ClusterMapBuilder clusterMapBuilder, boolean isNullEqualNull, List<Integer> pliOrder) {
-        this.clusterMapBuilder = new BetterClusterMapBuilder(clusterMapBuilder);
+        this.clusterMapBuilder = new RecomputeClusterMapBuilder(clusterMapBuilder);
         this.isNullEqualNull = isNullEqualNull;
         this.pliOrder = pliOrder;
     }

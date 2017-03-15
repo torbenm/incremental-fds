@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.mp.naumann.algorithms.fd.structures;
+package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -29,14 +29,15 @@ import java.util.Set;
 import java.util.logging.Level;
 import org.mp.naumann.algorithms.benchmark.better.Benchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
-public class BetterClusterMapBuilder {
+public class RecomputeClusterMapBuilder {
 
     private int numRecords = 0;
     private final List<Map<String, Collection<Integer>>> clusterMaps;
 
-    public BetterClusterMapBuilder(ClusterMapBuilder clusterMapBuilder) {
+    RecomputeClusterMapBuilder(ClusterMapBuilder clusterMapBuilder) {
         List<HashMap<String, IntArrayList>> oldClusterMaps = clusterMapBuilder.getClusterMaps();
         clusterMaps = new ArrayList<>();
         for (HashMap<String, IntArrayList> oldClusterMap : oldClusterMaps) {
@@ -54,11 +55,11 @@ public class BetterClusterMapBuilder {
         return clusterMaps;
     }
 
-    public int getNumLastRecords() {
+    int getNumLastRecords() {
         return this.numRecords;
     }
 
-    public int addRecord(Iterable<String> record) {
+    int addRecord(Iterable<String> record) {
         int recId = this.numRecords;
         int attributeId = 0;
 
@@ -82,8 +83,8 @@ public class BetterClusterMapBuilder {
         FDLogger.log(Level.WARNING, String.format("Trying to remove %s, but there is no such record.", record.toString()));
     }
 
-    public Collection<Integer> removeRecord(Iterable<String> record) {
-        Benchmark benchmark = Benchmark.start("Remove record");
+    Collection<Integer> removeRecord(Iterable<String> record) {
+        Benchmark benchmark = Benchmark.start("Remove record", Benchmark.DEFAULT_LEVEL + 7);
         int attributeId = 0;
         List<Collection<Integer>> clusters = new ArrayList<>();
         for (String value : record) {
