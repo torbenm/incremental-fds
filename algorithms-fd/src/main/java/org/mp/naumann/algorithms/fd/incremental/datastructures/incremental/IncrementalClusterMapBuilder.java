@@ -16,7 +16,7 @@
 
 package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import org.mp.naumann.algorithms.fd.structures.Dictionary;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
@@ -25,10 +25,10 @@ import java.util.*;
 class IncrementalClusterMapBuilder {
 
     private int nextRecordId;
-    private final List<Map<Integer, IntArrayList>> clusterMaps;
+    private final List<Map<Integer, Collection<Integer>>> clusterMaps;
     private final Dictionary<String> dictionary;
 
-    List<Map<Integer, IntArrayList>> getClusterMaps() {
+    List<Map<Integer, Collection<Integer>>> getClusterMaps() {
         return clusterMaps;
     }
 
@@ -45,12 +45,12 @@ class IncrementalClusterMapBuilder {
         int recId = this.nextRecordId++;
         int attributeId = 0;
         for (String value : record) {
-            Map<Integer, IntArrayList> clusterMap = clusterMaps.get(attributeId);
+            Map<Integer, Collection<Integer>> clusterMap = clusterMaps.get(attributeId);
             int dictValue = dictionary.getOrAdd(value);
             if (clusterMap.containsKey(dictValue)) {
                 clusterMap.get(dictValue).add(recId);
             } else {
-                IntArrayList newCluster = new IntArrayList();
+                Collection<Integer> newCluster = new IntOpenHashSet();
                 newCluster.add(recId);
                 clusterMap.put(dictValue, newCluster);
             }
@@ -64,9 +64,9 @@ class IncrementalClusterMapBuilder {
         int attributeId = 0;
         List<Collection<Integer>> clusters = new ArrayList<>();
         for (String value : record) {
-            Map<Integer, IntArrayList> clusterMap = clusterMaps.get(attributeId);
+            Map<Integer, Collection<Integer>> clusterMap = clusterMaps.get(attributeId);
             int dictValue = dictionary.getOrAdd(value);
-            IntArrayList cluster = clusterMap.get(dictValue);
+            Collection<Integer> cluster = clusterMap.get(dictValue);
             if (cluster == null || cluster.isEmpty()) {
                 return Collections.emptyList();
             }

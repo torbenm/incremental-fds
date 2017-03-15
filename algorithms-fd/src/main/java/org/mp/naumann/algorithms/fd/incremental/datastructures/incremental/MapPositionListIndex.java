@@ -16,16 +16,13 @@
 
 package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-
-import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
-import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.utils.PliUtils;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
 /**
  * Position list indices (or stripped partitions) are an index structure that
@@ -36,7 +33,7 @@ import java.util.stream.Collectors;
  */
 class MapPositionListIndex extends PositionListIndex {
 
-    private final Map<Integer, IntArrayList> clusters;
+    private final Map<Integer, Collection<Integer>> clusters;
 
     @Override
     public Collection<? extends Collection<Integer>> getClusters() {
@@ -48,12 +45,12 @@ class MapPositionListIndex extends PositionListIndex {
         return clusters.get(index);
     }
 
-    MapPositionListIndex(int attribute, Map<Integer, IntArrayList> clusters) {
+    MapPositionListIndex(int attribute, Map<Integer, Collection<Integer>> clusters) {
         super(attribute);
         this.clusters = clusters;
     }
 
-    Map<Integer, IntArrayList> getRawClusters() {
+    Map<Integer, Collection<Integer>> getRawClusters() {
         return clusters;
     }
 }
