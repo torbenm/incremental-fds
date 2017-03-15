@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures;
 
+import org.mp.naumann.algorithms.benchmark.better.Benchmark;
 import org.mp.naumann.database.statement.DeleteStatement;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.database.statement.StatementVisitor;
@@ -16,22 +17,28 @@ public abstract class AbstractStatementApplier implements StatementVisitor {
 
     @Override
     public void visit(DeleteStatement delete) {
+        Benchmark benchmark = Benchmark.start("Delete");
         Collection<Integer> removed = removeRecord(delete.getValueMap());
         deleted.addAll(removed);
+        benchmark.finish();
     }
 
     @Override
     public void visit(UpdateStatement update) {
+        Benchmark benchmark = Benchmark.start("Update");
         Collection<Integer> removed = removeRecord(update.getOldValueMap());
         deleted.addAll(removed);
         int insertedRecord = addRecord(update.getValueMap());
         inserted.add(insertedRecord);
+        benchmark.finish();
     }
 
     @Override
     public void visit(InsertStatement insert) {
+        Benchmark benchmark = Benchmark.start("Insert");
         int insertedRecord = addRecord(insert.getValueMap());
         inserted.add(insertedRecord);
+        benchmark.finish();
     }
 
     public Set<Integer> getInserted() {

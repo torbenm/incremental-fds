@@ -201,7 +201,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
             for (PositionListIndex pli : plis) {
                 String value = record.get(pli.getAttribute());
                 int dictValue = dictionary.getOrAdd(value);
-                IntArrayList cluster = pli.getCluster(dictValue);
+                Collection<Integer> cluster = pli.getCluster(dictValue);
                 if (cluster == null) {
                     cluster = new IntArrayList();
                 }

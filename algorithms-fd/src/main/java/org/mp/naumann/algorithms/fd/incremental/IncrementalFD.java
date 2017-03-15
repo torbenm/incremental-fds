@@ -152,6 +152,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
 
         FDLogger.log(Level.FINER, "Started updating data structures");
         CompressedDiff diff = dataStructureBuilder.update(batch);
+        benchmark.finishSubtask("Update data structures");
         List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecords();
 
@@ -162,12 +163,14 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             ValidatorResult result = validateFDs(plis, compressedRecords, batch, diff);
             validations += result.getValidations();
             pruned += result.getPruned();
+            benchmark.finishSubtask("Validate FDs");
         }
 
         if (diff.hasDeletes()) {
             ValidatorResult result = validateNonFDs(plis, compressedRecords, diff);
             validations += result.getValidations();
             pruned += result.getPruned();
+            benchmark.finishSubtask("Validate non-FDs");
         }
 
         List<OpenBitSetFD> fds = this.fds.getFunctionalDependencies();

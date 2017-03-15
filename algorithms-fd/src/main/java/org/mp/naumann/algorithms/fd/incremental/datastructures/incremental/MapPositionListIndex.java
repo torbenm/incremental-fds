@@ -39,12 +39,12 @@ class MapPositionListIndex extends PositionListIndex {
     private final Map<Integer, IntArrayList> clusters;
 
     @Override
-    public Collection<IntArrayList> getClusters() {
+    public Collection<? extends Collection<Integer>> getClusters() {
         return this.clusters.entrySet().stream().filter(e -> !e.getKey().equals(PliUtils.UNIQUE_VALUE)).map(Entry::getValue).collect(Collectors.toList());
     }
 
     @Override
-    public IntArrayList getCluster(int index) {
+    public Collection<Integer> getCluster(int index) {
         return clusters.get(index);
     }
 

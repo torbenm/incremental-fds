@@ -2,6 +2,7 @@ package org.mp.naumann.algorithms.fd.incremental.deprecated;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
+import java.util.Collection;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
@@ -71,7 +72,7 @@ class IncrementalSampler {
             float efficiencyFactor = (int) Math.ceil(1 / this.efficiencyThreshold);
             ClusterComparator comparator = new ClusterComparator(this.compressedRecords, this.compressedRecords.getNumAttributes() - 1, 1);
             for (PositionListIndex pli : this.plis) {
-                Iterator<IntArrayList> it = pli.getClustersToCheck(true);
+                Iterator<? extends Collection<Integer>> it = pli.getClustersToCheck(true);
                 List<IntArrayList> clusters = StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.CONCURRENT), true).map(c -> sort(comparator, c)).collect(Collectors.toList());
                 comparator.incrementActiveKey();
                 AttributeRepresentant attributeRepresentant = new AttributeRepresentant(clusters, efficiencyFactor, this.negCover, this.posCover, this, this.memoryGuardian);
@@ -101,7 +102,8 @@ class IncrementalSampler {
         return newNonFds;
     }
 
-    private static IntArrayList sort(Comparator<Integer> comparator, IntArrayList list) {
+    private static IntArrayList sort(Comparator<Integer> comparator, Collection<Integer> collection) {
+        IntArrayList list = new IntArrayList(collection);
         list.sort(comparator);
         return list;
     }

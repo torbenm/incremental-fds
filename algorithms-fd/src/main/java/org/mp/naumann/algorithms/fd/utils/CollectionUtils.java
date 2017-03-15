@@ -1,7 +1,5 @@
 package org.mp.naumann.algorithms.fd.utils;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -12,7 +10,7 @@ import java.util.Set;
 public class CollectionUtils {
 
     // Simply concatenate the elements of an IntArrayList
-    public static String concat(IntArrayList integers, String separator) {
+    public static String concat(Collection<Integer> integers, String separator) {
         if (integers == null)
             return "";
 

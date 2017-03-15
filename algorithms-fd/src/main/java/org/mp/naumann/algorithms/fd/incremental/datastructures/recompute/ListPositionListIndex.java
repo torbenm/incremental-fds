@@ -16,8 +16,6 @@
 
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 
@@ -33,19 +31,19 @@ import java.util.List;
  */
 class ListPositionListIndex extends PositionListIndex {
 
-    private final List<IntArrayList> clusters;
+    private final List<? extends Collection<Integer>> clusters;
 
     @Override
-    public Collection<IntArrayList> getClusters() {
+    public Collection<? extends Collection<Integer>> getClusters() {
         return this.clusters;
     }
 
     @Override
-    public IntArrayList getCluster(int index) {
+    public Collection<Integer> getCluster(int index) {
         return clusters.get(index);
     }
 
-    public ListPositionListIndex(int attribute, List<IntArrayList> clusters) {
+    public ListPositionListIndex(int attribute, List<? extends Collection<Integer>> clusters) {
         super(attribute);
         this.clusters = clusters;
     }

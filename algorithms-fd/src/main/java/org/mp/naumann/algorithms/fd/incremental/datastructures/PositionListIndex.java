@@ -16,22 +16,10 @@
 
 package org.mp.naumann.algorithms.fd.incremental.datastructures;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-
-import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
-import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
-import org.mp.naumann.algorithms.fd.structures.ClusterIdentifier;
-import org.mp.naumann.algorithms.fd.structures.ClusterIdentifierWithRecord;
-import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
-import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
-import org.mp.naumann.algorithms.fd.utils.PliUtils;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,6 +29,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
+import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
+import org.mp.naumann.algorithms.fd.structures.ClusterIdentifier;
+import org.mp.naumann.algorithms.fd.structures.ClusterIdentifierWithRecord;
+import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
+import org.mp.naumann.algorithms.fd.structures.IntegerPair;
+import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
 /**
  * Position list indices (or stripped partitions) are an index structure that
@@ -52,7 +49,7 @@ import java.util.stream.Collectors;
 public abstract class PositionListIndex implements IPositionListIndex {
 
     private final int attribute;
-    private List<IntArrayList> clustersWithNewRecords = null;
+    private List<? extends Collection<Integer>> clustersWithNewRecords = null;
     private Collection<Integer> newRecords = null;
     private Map<Integer, Set<Integer>> otherClustersWithNewRecords;
 
@@ -83,9 +80,9 @@ public abstract class PositionListIndex implements IPositionListIndex {
 
 
     public boolean refines(CompressedRecords compressedRecords, int rhsAttr, boolean topDown) {
-        Iterator<IntArrayList> it = getClustersToCheck(topDown);
+        Iterator<? extends Collection<Integer>> it = getClustersToCheck(topDown);
         while (it.hasNext()) {
-            IntArrayList cluster = it.next();
+            Collection<Integer> cluster = it.next();
             if (!this.probe(compressedRecords, rhsAttr, cluster)) {
                 return false;
             }
@@ -93,8 +90,8 @@ public abstract class PositionListIndex implements IPositionListIndex {
         return true;
     }
 
-    private boolean probe(CompressedRecords compressedRecords, int rhsAttr, IntArrayList cluster) {
-        int rhsClusterId = compressedRecords.get(cluster.getInt(0))[rhsAttr];
+    private boolean probe(CompressedRecords compressedRecords, int rhsAttr, Collection<Integer> cluster) {
+        int rhsClusterId = compressedRecords.get(cluster.iterator().next())[rhsAttr];
 
         // If otherClusterId < 0, then this cluster must point into more than one other clusters
         if (rhsClusterId == PliUtils.UNIQUE_VALUE) {
@@ -131,9 +128,9 @@ public abstract class PositionListIndex implements IPositionListIndex {
         }
 
         boolean useInnerClusterPruning = useInnerClusterPruning(topDown);
-        Iterator<IntArrayList> it = getClustersToCheck(topDown);
+        Iterator<? extends Collection<Integer>> it = getClustersToCheck(topDown);
         while (it.hasNext()) {
-            IntArrayList cluster = it.next();
+            Collection<Integer> cluster = it.next();
             Object2ObjectOpenHashMap<ClusterIdentifier, ClusterIdentifierWithRecord> subClusters = new Object2ObjectOpenHashMap<>(cluster.size());
             ObjectOpenHashSet<ClusterIdentifier> haveOldRecord = null;
             if (useInnerClusterPruning) {
@@ -205,8 +202,8 @@ public abstract class PositionListIndex implements IPositionListIndex {
         clustersWithNewRecords = clusterIds.stream().map(this::getCluster).collect(Collectors.toList());
     }
 
-    public Iterator<IntArrayList> getClustersToCheck(boolean topDown) {
-        final Collection<IntArrayList> toCheck;
+    public Iterator<? extends Collection<Integer>> getClustersToCheck(boolean topDown) {
+        final Collection<? extends Collection<Integer>> toCheck;
         if (topDown) {
             toCheck = clustersWithNewRecords == null ? getClusters() : clustersWithNewRecords;
         } else {
@@ -293,7 +290,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder("{ ");
-        for (IntArrayList cluster : getClusters()) {
+        for (Collection<Integer> cluster : getClusters()) {
             builder.append("{");
             builder.append(CollectionUtils.concat(cluster, ","));
             builder.append("} ");
@@ -304,7 +301,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
 
     private List<IntOpenHashSet> convertClustersToSets() {
         List<IntOpenHashSet> setClusters = new LinkedList<>();
-        for (IntArrayList cluster : getClusters()) {
+        for (Collection<Integer> cluster : getClusters()) {
             setClusters.add(new IntOpenHashSet(cluster));
         }
 
