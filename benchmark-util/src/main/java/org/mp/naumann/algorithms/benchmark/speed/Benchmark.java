@@ -3,6 +3,10 @@ package org.mp.naumann.algorithms.benchmark.speed;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Offers methods for time benchmarking.
+ *
+ */
 public class Benchmark {
 
     private static final Set<BenchmarkEventListener> eventListeners = new HashSet<>();

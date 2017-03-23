@@ -23,7 +23,12 @@ Cleaned repositories:
 * processor
 * data
 * algorithms
+* benchmarks-util
 
 Documentation still needed: 
 * `processor.batch.source.*`
 * `data`
+* benchmarks-util
+
+Tests missing:
+* benchmarks-util
