@@ -16,8 +16,8 @@ public class TreeViolationCollection implements ViolationCollection {
 
     private final ViolationTreeElement rootElement;
     private final List<OpenBitSetFD> invalidFDs = new ArrayList<>();
-    private int numAttributes;
     private final IncrementalFDConfiguration configuration;
+    private int numAttributes;
 
     public TreeViolationCollection(IncrementalFDConfiguration configuration) {
         this.configuration = configuration;
@@ -50,6 +50,7 @@ public class TreeViolationCollection implements ViolationCollection {
     public List<OpenBitSetFD> getInvalidFds() {
         return invalidFDs;
     }
+
     @Override
     public boolean isInvalid(OpenBitSet lhs, int rhs) {
         return false;

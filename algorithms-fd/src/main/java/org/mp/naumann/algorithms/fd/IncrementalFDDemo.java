@@ -1,14 +1,14 @@
 package org.mp.naumann.algorithms.fd;
 
-import ResourceConnection.ResourceConnector;
-import java.util.List;
-import java.util.logging.Level;
-import org.mp.naumann.algorithms.benchmark.better.Benchmark;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
+import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
+import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.database.ConnectionException;
+
+import java.util.List;
+import java.util.logging.Level;
 
 public class IncrementalFDDemo {
 
@@ -71,16 +71,14 @@ public class IncrementalFDDemo {
 
         IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom")
                 .addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.DELETE_ANNOTATIONS)
-            .setDepthFirst(true)
+                .setDepthFirst(true)
 //                .addPruningStrategy(PruningStrategy.BLOOM_ADVANCED)
-        ;
+                ;
         IncrementalFDRunConfiguration runConfig = adult;
 
 
-        SpeedBenchmark.enable();
         Benchmark.enableAll();
         Benchmark.addEventListener(FDLogger::info);
-        SpeedBenchmark.addEventListener(System.out::println);
 
         IncrementalFDRunner runner = new IncrementalFDRunner() {
             @Override

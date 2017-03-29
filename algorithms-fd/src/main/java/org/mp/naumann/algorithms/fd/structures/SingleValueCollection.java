@@ -34,6 +34,7 @@ public class SingleValueCollection<E> implements Collection<E> {
     public Iterator<E> iterator() {
         return new Iterator<E>() {
             private boolean notQueriedYet = true;
+
             @Override
             public boolean hasNext() {
                 return notQueriedYet;
@@ -60,12 +61,12 @@ public class SingleValueCollection<E> implements Collection<E> {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T[] toArray(T[] a) {
-        return (T[])toArray();
+        return (T[]) toArray();
     }
 
     @Override
     public boolean add(E e) {
-        if(!keepFirst || isEmpty()){
+        if (!keepFirst || isEmpty()) {
             this.element = e;
             return true;
         }
@@ -74,7 +75,7 @@ public class SingleValueCollection<E> implements Collection<E> {
 
     @Override
     public boolean remove(Object o) {
-        if(this.contains(o)){
+        if (this.contains(o)) {
             clear();
             return true;
         }
@@ -83,7 +84,7 @@ public class SingleValueCollection<E> implements Collection<E> {
 
     @Override
     public boolean containsAll(Collection<?> c) {
-        if(c.size() > 1){
+        if (c.size() > 1) {
             return false;
         }
         return c.stream().filter(this::contains).count() == 1;
@@ -103,7 +104,7 @@ public class SingleValueCollection<E> implements Collection<E> {
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        if(c.stream().filter(this::contains).count() == c.size()){
+        if (c.stream().filter(this::contains).count() == c.size()) {
             clear();
             return true;
         }

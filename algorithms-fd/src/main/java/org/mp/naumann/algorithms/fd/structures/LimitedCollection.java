@@ -1,6 +1,5 @@
 package org.mp.naumann.algorithms.fd.structures;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -50,7 +49,7 @@ public class LimitedCollection<T> implements Collection<T> {
 
     @Override
     public boolean add(T t) {
-        if(!isFull())
+        if (!isFull())
             return innerCollection.add(t);
         return false;
     }
@@ -67,7 +66,7 @@ public class LimitedCollection<T> implements Collection<T> {
 
     @Override
     public boolean addAll(Collection<? extends T> c) {
-        if(c.size() + this.size() > this.maxSize){
+        if (c.size() + this.size() > this.maxSize) {
             c.forEach(this::add);
             return false;
         } else {

@@ -4,10 +4,10 @@ import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.Lattice;
 import org.mp.naumann.algorithms.fd.structures.LatticeElement;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 public class NonFDValidator extends IncrementalValidator<List<OpenBitSetFD>> {
 
@@ -47,7 +47,7 @@ public class NonFDValidator extends IncrementalValidator<List<OpenBitSetFD>> {
     }
 
     @Override
-    protected List<OpenBitSet> generateSpecializations(OpenBitSet lhs, int rhs)  {
+    protected List<OpenBitSet> generateSpecializations(OpenBitSet lhs, int rhs) {
         List<OpenBitSet> specializations = new ArrayList<>();
         for (int extensionAttribute = 0; extensionAttribute < numAttributes; extensionAttribute++) {
             if (lhs.fastGet(extensionAttribute) // AA -> B is trivial

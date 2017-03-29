@@ -4,9 +4,9 @@ import java.util.Collection;
 
 public class PrintUtils {
 
-    public static String toString(int[] array){
+    public static String toString(int[] array) {
         StringBuilder b = new StringBuilder("[");
-        for(int i : array){
+        for (int i : array) {
             b.append(i);
             b.append(" ");
         }
@@ -14,15 +14,15 @@ public class PrintUtils {
         return b.toString();
     }
 
-    public static void print(Object... objects){
-        for(Object o : objects){
+    public static void print(Object... objects) {
+        for (Object o : objects) {
             System.out.print(o);
             System.out.print(" ");
         }
         System.out.println();
     }
 
-    public static void print(Collection<String> strings){
+    public static void print(Collection<String> strings) {
         strings.forEach(System.out::println);
     }
 }

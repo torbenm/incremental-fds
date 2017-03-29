@@ -56,7 +56,7 @@ public class FDValidator extends IncrementalValidator<List<IntegerPair>> {
     }
 
     @Override
-    protected List<OpenBitSet> generateSpecializations(OpenBitSet lhs, int rhs)  {
+    protected List<OpenBitSet> generateSpecializations(OpenBitSet lhs, int rhs) {
         List<OpenBitSet> specializations = new ArrayList<>();
         for (int extensionAttribute = 0; extensionAttribute < numAttributes; extensionAttribute++) {
             if (rhs == extensionAttribute // AB -> B is trivial

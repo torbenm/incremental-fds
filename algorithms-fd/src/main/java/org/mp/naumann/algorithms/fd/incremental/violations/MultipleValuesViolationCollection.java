@@ -38,14 +38,13 @@ public class MultipleValuesViolationCollection implements ViolationCollection {
     }
 
 
-
     @Override
     public void add(OpenBitSet orgAttr, int violatingRecord1, int violatingRecord2) {
         OpenBitSet attrs = orgAttr.clone();
-        if(!this.violationsMapById.containsKey(attrs)){
+        if (!this.violationsMapById.containsKey(attrs)) {
             this.violationsMapById.put(attrs, new ViolatingPairCollection(new HashSet<>(capacity)));
         } else {
-            if(this.violationsMapById.get(attrs).size() >= capacity){
+            if (this.violationsMapById.get(attrs).size() >= capacity) {
                 return;
             }
         }
@@ -57,17 +56,17 @@ public class MultipleValuesViolationCollection implements ViolationCollection {
     public Collection<OpenBitSetFD> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords) {
         List<OpenBitSet> affected = new ArrayList<>();
         int aff = 0, skip = 0;
-        for(Map.Entry<OpenBitSet, ViolatingPairCollection> entry : violationsMapById.entrySet()) {
+        for (Map.Entry<OpenBitSet, ViolatingPairCollection> entry : violationsMapById.entrySet()) {
             entry.getValue().removeAllIntersections(removedRecords);
-            if(entry.getValue().size() < 1) {
+            if (entry.getValue().size() < 1) {
                 affected.add(entry.getKey());
                 negativeCoverToUpdate.remove(entry.getKey());
                 aff++;
-            }else{
+            } else {
                 skip++;
             }
         }
-        FDLogger.log(Level.FINE, "In search for violations, matched "+ aff+ ", skipped "+ skip);
+        FDLogger.log(Level.FINE, "In search for violations, matched " + aff + ", skipped " + skip);
         return affected.parallelStream()
                 .map(obs -> BitSetUtils.toOpenBitSetFDCollection(obs, numAttributes))
                 .flatMap(Collection::stream).collect(Collectors.toList());

@@ -28,9 +28,8 @@ import java.util.stream.Collectors;
 public class BloomPruningStrategy {
 
     private final List<String> columns;
-    private BloomFilter<Collection<ColumnValue>> filter;
     private final Collection<BloomGenerator> generators = new ArrayList<>();
-
+    private BloomFilter<Collection<ColumnValue>> filter;
     private int puts = 0;
     private int requests = 0;
     private Map<OpenBitSet, List<Integer>> combinations;
@@ -102,7 +101,7 @@ public class BloomPruningStrategy {
         Set<Collection<ColumnValue>> inner = new HashSet<>();
         List<Map<String, String>> valueMaps = new ArrayList<>(inserts.size() + updates.size());
         valueMaps.addAll(inserts.stream().map(InsertStatement::getValueMap).collect(Collectors.toList()));
-        valueMaps.addAll(updates.stream().map(UpdateStatement::getValueMap).collect(Collectors.toList()));
+        valueMaps.addAll(updates.stream().map(UpdateStatement::getNewValueMap).collect(Collectors.toList()));
         for (Map<String, String> valueMap : valueMaps) {
             Collection<ColumnValue> vc = getValues(toArray(valueMap), combination);
             if (inner.contains(vc)) {

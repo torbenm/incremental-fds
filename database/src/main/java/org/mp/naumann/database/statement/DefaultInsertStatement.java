@@ -26,10 +26,10 @@ public class DefaultInsertStatement extends StatementBase implements InsertState
         InsertStatement insert = (InsertStatement) statement;
         return
                 insert.getClass().equals(this.getClass()) &&
-                insert.getTableName().equalsIgnoreCase(this.getTableName()) &&
-                insert.getSchema().equalsIgnoreCase(this.getSchema()) &&
-                this.getValueMap().size() == insert.getValueMap().size() &&
-                this.getValueMap().keySet().equals(insert.getValueMap().keySet());
+                        insert.getTableName().equalsIgnoreCase(this.getTableName()) &&
+                        insert.getSchema().equalsIgnoreCase(this.getSchema()) &&
+                        this.getValueMap().size() == insert.getValueMap().size() &&
+                        this.getValueMap().keySet().equals(insert.getValueMap().keySet());
     }
 
     @Override

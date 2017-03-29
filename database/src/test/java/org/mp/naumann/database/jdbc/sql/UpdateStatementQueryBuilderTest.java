@@ -1,13 +1,13 @@
 package org.mp.naumann.database.jdbc.sql;
 
-import static junit.framework.TestCase.assertEquals;
+import org.junit.Test;
+import org.mp.naumann.database.jdbc.sql.helper.UpdateStatements;
+import org.mp.naumann.database.statement.UpdateStatement;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
-import org.mp.naumann.database.jdbc.sql.helper.UpdateStatements;
-import org.mp.naumann.database.statement.UpdateStatement;
+import static junit.framework.TestCase.assertEquals;
 
 public class UpdateStatementQueryBuilderTest {
 

@@ -24,9 +24,15 @@ public class IncrementalFDResultListener implements ResultListener<IncrementalFD
         prunedCount += result.getPrunedCount();
     }
 
-    public int getValidationCount() { return validationCount; }
+    public int getValidationCount() {
+        return validationCount;
+    }
 
-    public int getPrunedCount() { return prunedCount; }
+    public int getPrunedCount() {
+        return prunedCount;
+    }
 
-    public List<FunctionalDependency> getFDs() { return fds; }
+    public List<FunctionalDependency> getFDs() {
+        return fds;
+    }
 }

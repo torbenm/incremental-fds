@@ -11,11 +11,12 @@ public interface Table extends HasName, HasColumns<String> {
     long getRowCount();
 
     boolean execute(Statement statement);
+
     boolean execute(StatementGroup statementGroup);
-    
+
     TableInput open() throws InputReadException;
 
-    void setLimit(int limit);
-
     int getLimit();
+
+    void setLimit(int limit);
 }

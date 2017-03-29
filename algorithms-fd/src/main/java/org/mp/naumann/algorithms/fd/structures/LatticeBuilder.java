@@ -2,10 +2,12 @@ package org.mp.naumann.algorithms.fd.structures;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import java.util.List;
-import java.util.logging.Level;
+
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
+
+import java.util.List;
+import java.util.logging.Level;
 
 public class LatticeBuilder {
 
@@ -26,7 +28,7 @@ public class LatticeBuilder {
     }
 
     public static LatticeBuilder build(int numAttributes,
-        List<OpenBitSetFD> functionalDependencies) {
+                                       List<OpenBitSetFD> functionalDependencies) {
         LatticeBuilder builder = new LatticeBuilder(numAttributes);
         builder.buildPositiveCover(functionalDependencies);
         builder.buildNegativeCover(functionalDependencies);

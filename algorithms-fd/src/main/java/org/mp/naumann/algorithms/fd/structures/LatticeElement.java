@@ -7,9 +7,9 @@ import java.util.List;
 public class LatticeElement {
 
     final int numAttributes;
-    private LatticeElement[] children;
     private final OpenBitSet rhsFds;
     private final OpenBitSet markedRhs;
+    private LatticeElement[] children;
 
     LatticeElement(int numAttributes) {
         this.numAttributes = numAttributes;

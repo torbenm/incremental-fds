@@ -38,9 +38,9 @@ public class SingleValueViolationCollection implements ViolationCollection {
     @Override
     public Collection<OpenBitSetFD> getAffected(FDSet negativeCoverToUpdate, Collection<Integer> removedRecords) {
         List<OpenBitSet> affected = new ArrayList<>();
-        for(Map.Entry<OpenBitSet, ViolatingPair> entry : this.violationMapById.entrySet()) {
+        for (Map.Entry<OpenBitSet, ViolatingPair> entry : this.violationMapById.entrySet()) {
 
-            if(removedRecords.contains(entry.getValue().getFirstRecord())
+            if (removedRecords.contains(entry.getValue().getFirstRecord())
                     || removedRecords.contains(entry.getValue().getSecondRecord())) {
                 affected.add(entry.getKey());
                 negativeCoverToUpdate.remove(entry.getKey());

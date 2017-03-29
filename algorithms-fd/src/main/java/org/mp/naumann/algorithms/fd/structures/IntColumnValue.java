@@ -25,15 +25,15 @@ public class IntColumnValue {
 
     @Override
     public boolean equals(Object obj) {
-        if(obj == this)
+        if (obj == this)
             return true;
-        if(!(obj instanceof IntColumnValue))
+        if (!(obj instanceof IntColumnValue))
             return false;
         return ((IntColumnValue) obj).column == this.column && ((IntColumnValue) obj).value == this.value;
     }
 
     @Override
     public String toString() {
-        return "["+column+": "+value+"]";
+        return "[" + column + ": " + value + "]";
     }
 }

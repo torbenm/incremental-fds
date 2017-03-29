@@ -1,15 +1,23 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.benchmark.better.Benchmark;
+import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -21,8 +29,8 @@ class IncrementalSampler {
     private final CompressedRecords compressedRecords;
     private final List<? extends PositionListIndex> plis;
     private final float efficiencyThreshold;
-    private List<AttributeRepresentant> attributeRepresentants = null;
     private final IncrementalMatcher matcher;
+    private List<AttributeRepresentant> attributeRepresentants = null;
     private Collection<Integer> newRecords;
 
     IncrementalSampler(CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, IncrementalMatcher matcher) {
@@ -32,6 +40,11 @@ class IncrementalSampler {
         this.plis = plis;
         this.efficiencyThreshold = efficiencyThreshold;
         this.matcher = matcher;
+    }
+
+    private static IntArrayList sort(Comparator<Integer> comparator, IntArrayList list) {
+        list.sort(comparator);
+        return list;
     }
 
     void setNewRecords(Collection<Integer> newRecords) {
@@ -113,11 +126,6 @@ class IncrementalSampler {
         return newNonFds;
     }
 
-    private static IntArrayList sort(Comparator<Integer> comparator, IntArrayList list) {
-        list.sort(comparator);
-        return list;
-    }
-
     private class ClusterComparator implements Comparator<Integer> {
 
         private final CompressedRecords sortKeys;
@@ -156,13 +164,20 @@ class IncrementalSampler {
 
     private class AttributeRepresentant implements Comparable<AttributeRepresentant> {
 
-        private int windowDistance;
         private final IntArrayList numNewNonFds = new IntArrayList();
         private final IntArrayList numComparisons = new IntArrayList();
-        private float efficiencyFactor;
         private final List<IntArrayList> clusters;
         private final FDSet negCover;
         private final IncrementalSampler sampler;
+        private int windowDistance;
+        private float efficiencyFactor;
+
+        AttributeRepresentant(List<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, IncrementalSampler sampler) {
+            this.clusters = clusters;
+            this.efficiencyFactor = efficiencyFactor;
+            this.negCover = negCover;
+            this.sampler = sampler;
+        }
 
         float getEfficiencyFactor() {
             return this.efficiencyFactor;
@@ -185,13 +200,6 @@ class IncrementalSampler {
                 return 0;
             }
             return (int) (sumNonFds * (this.efficiencyFactor / sumComparisons));
-        }
-
-        AttributeRepresentant(List<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, IncrementalSampler sampler) {
-            this.clusters = clusters;
-            this.efficiencyFactor = efficiencyFactor;
-            this.negCover = negCover;
-            this.sampler = sampler;
         }
 
         @Override

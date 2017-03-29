@@ -10,10 +10,8 @@ public class StrippedPartition {
     private ObjectBigArrayBigList<LongBigArrayBigList> strippedPartition = null;
 
     /**
-     * Create a StrippedPartition with only one equivalence class with the definied number of elements. <br/>
-     * Tuple ids start with 0 to numberOfElements-1
-     *
-     * @param numberTuples
+     * Create a StrippedPartition with only one equivalence class with the definied number of
+     * elements. <br/> Tuple ids start with 0 to numberOfElements-1
      */
     public StrippedPartition(long numberTuples) {
         this.strippedPartition = new ObjectBigArrayBigList<>();
@@ -31,8 +29,6 @@ public class StrippedPartition {
 
     /**
      * Create a StrippedPartition from a HashMap mapping the values to the tuple ids.
-     *
-     * @param partition
      */
     public StrippedPartition(Object2ObjectOpenHashMap<Object, LongBigArrayBigList> partition) {
         this.strippedPartition = new ObjectBigArrayBigList<>();

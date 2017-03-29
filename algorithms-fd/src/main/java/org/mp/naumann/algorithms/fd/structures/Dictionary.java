@@ -16,7 +16,7 @@ public class Dictionary<T> {
     }
 
     public Dictionary(boolean isNullEqualNull) {
-        NULL = isNullEqualNull? 0 : PliUtils.UNIQUE_VALUE;
+        NULL = isNullEqualNull ? 0 : PliUtils.UNIQUE_VALUE;
     }
 
     public int getOrAdd(T value) {

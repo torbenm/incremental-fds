@@ -23,6 +23,15 @@ class ArrayRecordCompressor implements RecordCompressor {
         this.numRecords = numRecords;
     }
 
+    private static int[] fetchRecordFrom(int recordId, int[][] invertedPlis) {
+        int numAttributes = invertedPlis.length;
+        int[] record = new int[numAttributes];
+        for (int i = 0; i < numAttributes; i++) {
+            record[i] = invertedPlis[i][recordId];
+        }
+        return record;
+    }
+
     @Override
     public CompressedRecords buildCompressedRecords() {
         int[][] compressedRecords = new int[numRecords][];
@@ -51,15 +60,6 @@ class ArrayRecordCompressor implements RecordCompressor {
             i++;
         }
         return invertedPlis;
-    }
-
-    private static int[] fetchRecordFrom(int recordId, int[][] invertedPlis) {
-        int numAttributes = invertedPlis.length;
-        int[] record = new int[numAttributes];
-        for (int i = 0; i < numAttributes; i++) {
-            record[i] = invertedPlis[i][recordId];
-        }
-        return record;
     }
 
 }

@@ -4,7 +4,9 @@ import java.sql.JDBCType;
 
 public interface Column<T> extends HasName {
 
-	Class<T> getType();
+    Class<T> getType();
 
-	default JDBCType getJDBCType() { return JDBCType.VARCHAR; }
+    default JDBCType getJDBCType() {
+        return JDBCType.VARCHAR;
+    }
 }

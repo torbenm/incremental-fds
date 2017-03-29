@@ -10,7 +10,7 @@ public class TestCaseParameters {
     final boolean hyfdOnly, hyfdCreateIndex;
 
     public TestCaseParameters(String schema, String tableName, IncrementalFDConfiguration config, int stopAfter,
-                       boolean hyfdOnly, boolean hyfdCreateIndex, String pgdb, String pguser, String pgpass) {
+                              boolean hyfdOnly, boolean hyfdCreateIndex, String pgdb, String pguser, String pgpass) {
         this.schema = schema;
         this.tableName = tableName;
         this.config = config;

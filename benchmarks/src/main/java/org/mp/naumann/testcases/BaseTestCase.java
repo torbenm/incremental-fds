@@ -1,18 +1,9 @@
 package org.mp.naumann.testcases;
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.logging.Level;
+import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
+import org.mp.naumann.algorithms.benchmark.speed.BenchmarkEvent;
+import org.mp.naumann.algorithms.benchmark.speed.BenchmarkEventListener;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedEvent;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedEventListener;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
@@ -30,18 +21,29 @@ import org.mp.naumann.processor.BatchProcessor;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
-import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
 import org.mp.naumann.processor.handler.BatchHandler;
+import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.PassThroughDatabaseBatchHandler;
 
-abstract class BaseTestCase implements TestCase, SpeedEventListener {
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Level;
 
-    private final IncrementalFDConfiguration config;
-    private final IncrementalFDResultListener resultListener = new IncrementalFDResultListener();
-    private final List<SpeedEvent> batchEvents = new ArrayList<>();
+import static org.mockito.Mockito.mock;
+
+abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
 
     final int stopAfter;
     final String schema, tableName, sourceTableName;
+    private final IncrementalFDConfiguration config;
+    private final IncrementalFDResultListener resultListener = new IncrementalFDResultListener();
+    private final List<BenchmarkEvent> batchEvents = new ArrayList<>();
     private final String pgdb, pgpass, pguser;
     private final boolean hyfdOnly, hyfdCreateIndex;
     private long baselineSize;
@@ -57,7 +59,7 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
         this.pgdb = parameters.pgdb;
         this.pguser = parameters.pguser;
         this.pgpass = parameters.pgpass;
-        SpeedBenchmark.addEventListener(this);
+        Benchmark.addEventListener(this);
     }
 
     @Override
@@ -89,7 +91,7 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
                 if (hyfdCreateIndex) {
                     // create index on every column of the temporary table
-                    for (String column: table.getColumnNames())
+                    for (String column : table.getColumnNames())
                         stmt.execute(String.format("CREATE INDEX %s_%s_idx ON %s (%s)", tableName, column, fullTableName, column));
                 }
 
@@ -101,13 +103,13 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
 
                 incrementalAlgorithm.initialize(ds);
                 incrementalAlgorithm.addResultListener(resultListener);
-                BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, new FakeDatabaseBatchHandler(), false);
+                BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, mock(DatabaseBatchHandler.class), false);
                 batchProcessor.addBatchHandler(incrementalAlgorithm);
             }
 
-            SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
+            Benchmark b = Benchmark.start("Algorithm for all batches", BenchmarkLevel.ALGORITHM.ordinal());
             batchSource.startStreaming();
-            SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Algorithm for all batches");
+            b.finish();
 
             System.out.println(String.format("Cumulative runtime (algorithm only): %sms", getTotalTime(batchEvents)));
             System.out.println(String.format("Found %s FDs:", resultListener.getFDs().size()));
@@ -137,36 +139,38 @@ abstract class BaseTestCase implements TestCase, SpeedEventListener {
     }
 
     @Override
-    public void receiveEvent(SpeedEvent info) {
-        if (info.getLevel() == BenchmarkLevel.BATCH) batchEvents.add(info);
+    public void notify(BenchmarkEvent info) {
+        if (info.getLevel() == BenchmarkLevel.BATCH.ordinal()) batchEvents.add(info);
     }
 
-    private long getAverageTime(List<SpeedEvent> events){
-        return (long)events
+    private long getAverageTime(List<BenchmarkEvent> events) {
+        return (long) events
                 .stream()
-                .mapToLong(SpeedEvent::getDuration)
+                .mapToLong(BenchmarkEvent::getDuration)
                 .average()
                 .orElse(-1);
     }
 
-    private long getMedianTime(List<SpeedEvent> events){
+    private long getMedianTime(List<BenchmarkEvent> events) {
         return events
                 .stream()
-                .mapToLong(SpeedEvent::getDuration)
+                .mapToLong(BenchmarkEvent::getDuration)
                 .sorted()
                 .skip(batchEvents.size() / 2)
                 .findFirst()
                 .orElse(-1);
     }
 
-    private long getTotalTime(List<SpeedEvent> events){
+    private long getTotalTime(List<BenchmarkEvent> events) {
         return events
                 .stream()
-                .mapToLong(SpeedEvent::getDuration)
+                .mapToLong(BenchmarkEvent::getDuration)
                 .sum();
     }
 
-    int getLimit() { return 0; }
+    int getLimit() {
+        return 0;
+    }
 
     abstract protected String getBatchSize();
 

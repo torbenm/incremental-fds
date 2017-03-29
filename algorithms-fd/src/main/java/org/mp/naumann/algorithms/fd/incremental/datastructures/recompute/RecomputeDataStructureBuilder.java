@@ -1,6 +1,6 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
-import org.mp.naumann.algorithms.benchmark.better.Benchmark;
+import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
@@ -13,7 +13,12 @@ import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -71,7 +76,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     }
 
     private int[] getCompressedRecord(int record) {
-        return version.usesPruningStrategy(PruningStrategy.ANNOTATION) || version.usesPruningStrategy(PruningStrategy.SIMPLE)? compressedRecords.get(record) : null;
+        return version.usesPruningStrategy(PruningStrategy.ANNOTATION) || version.usesPruningStrategy(PruningStrategy.SIMPLE) ? compressedRecords.get(record) : null;
     }
 
     private void updateDataStructures() {

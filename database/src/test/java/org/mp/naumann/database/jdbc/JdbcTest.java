@@ -3,10 +3,11 @@ package org.mp.naumann.database.jdbc;
 import com.opentable.db.postgres.embedded.DatabasePreparer;
 import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
 import com.opentable.db.postgres.junit.PreparedDbRule;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mp.naumann.database.ConnectionException;
 import org.junit.ClassRule;
+import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.utils.PostgresConnectionPreparer;
 
@@ -17,11 +18,10 @@ public class JdbcTest {
 
     static final String schema = "test";
     static final String tableName = "countries";
-    static DataConnector connector;
     private static final DatabasePreparer preparer = new PostgresConnectionPreparer();
-
     @ClassRule
     static public PreparedDbRule pr = EmbeddedPostgresRules.preparedDatabase(preparer);
+    static DataConnector connector;
 
     @BeforeClass
     public static void setUpOnce() throws Exception {

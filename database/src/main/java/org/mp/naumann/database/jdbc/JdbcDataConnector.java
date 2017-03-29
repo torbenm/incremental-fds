@@ -56,9 +56,9 @@ public class JdbcDataConnector implements DataConnector {
 
     public void close() throws ConnectionException {
         try {
-			conn.close();
-		} catch (SQLException e) {
-			throw new ConnectionException(e);
-		}
+            conn.close();
+        } catch (SQLException e) {
+            throw new ConnectionException(e);
+        }
     }
 }

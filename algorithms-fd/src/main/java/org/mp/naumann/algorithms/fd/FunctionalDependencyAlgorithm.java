@@ -5,6 +5,7 @@ import org.mp.naumann.database.Table;
 
 public interface FunctionalDependencyAlgorithm {
     void execute() throws AlgorithmExecutionException;
+
     void configure(Table table, FunctionalDependencyResultReceiver resultReceiver);
 
 }

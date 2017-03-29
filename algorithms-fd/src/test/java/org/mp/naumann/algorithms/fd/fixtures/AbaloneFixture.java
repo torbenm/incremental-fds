@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
+import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.data.ColumnCombination;
@@ -14,14 +15,12 @@ import org.mp.naumann.database.utils.ConnectionManager;
 import java.util.LinkedList;
 import java.util.List;
 
-import ResourceConnection.ResourceConnector;
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 
-public class AbaloneFixture implements AlgorithmFixture{
+public class AbaloneFixture implements AlgorithmFixture {
 
     protected ImmutableList<String> columnNames = ImmutableList.of("column1", "column2", "column3", "column4", "column5", "column6", "column7", "column8", "column9");
     protected int numberOfColumns = 9;

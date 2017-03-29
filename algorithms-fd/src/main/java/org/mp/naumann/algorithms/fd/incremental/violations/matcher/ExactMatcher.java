@@ -2,9 +2,7 @@ package org.mp.naumann.algorithms.fd.incremental.violations.matcher;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
-import org.mp.naumann.algorithms.fd.utils.PrintUtils;
 
-import java.util.Arrays;
 import java.util.Collection;
 
 public class ExactMatcher implements Matcher {

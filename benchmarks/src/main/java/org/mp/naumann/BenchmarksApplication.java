@@ -1,18 +1,12 @@
 package org.mp.naumann;
 
-import static java.lang.Double.NaN;
-
-import ResourceConnection.ResourceConnector;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import java.io.IOException;
-import java.util.logging.Level;
-import org.mp.naumann.algorithms.benchmark.better.Benchmark;
-import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
+
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
+import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.reporter.FileReporter;
 import org.mp.naumann.reporter.GoogleSheetsReporter;
@@ -22,6 +16,11 @@ import org.mp.naumann.testcases.SingleFileTestCase;
 import org.mp.naumann.testcases.TestCase;
 import org.mp.naumann.testcases.TestCaseParameters;
 import org.mp.naumann.testcases.VariableSizeTestCase;
+
+import java.io.IOException;
+import java.util.logging.Level;
+
+import static java.lang.Double.NaN;
 
 public class BenchmarksApplication {
 
@@ -154,7 +153,6 @@ public class BenchmarksApplication {
 
     private void run() throws IOException {
         setLogLevel();
-        setUp();
 
         if (name.isEmpty())
             name = (hyfdOnly ? "hyfd" : "incremental") + ", " + mode + (mode.equals("variable") ? " (" + batchDirectory + ")" : "");
@@ -193,39 +191,18 @@ public class BenchmarksApplication {
 
         } catch (ConnectionException e) {
             e.printStackTrace();
-            SpeedBenchmark.end(BenchmarkLevel.BENCHMARK, "Benchmark crashed");
-            SpeedBenchmark.disable();
+
         } catch (IOException e) {
             e.printStackTrace();
-            SpeedBenchmark.end(BenchmarkLevel.BENCHMARK, "Writing to GoogleSheets crashed");
-            SpeedBenchmark.disable();
-        } finally {
-            tearDown();
+
         }
     }
 
     private void setLogLevel() {
         try {
             FDLogger.setLevel(Level.parse(logLevel.toUpperCase()));
-        } catch(IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             FDLogger.setLevel(Level.INFO);
         }
     }
-
-    public static void setUp() {
-        SpeedBenchmark.enable();
-        SpeedBenchmark.addEventListener(e -> {
-            if (e.getLevel() == BenchmarkLevel.ALGORITHM || e.getLevel() == BenchmarkLevel.BATCH)
-                FDLogger.log(Level.INFO, e.toString());
-        });
-        SpeedBenchmark.begin(BenchmarkLevel.BENCHMARK);
-        Benchmark.setMaxLevel(4);
-        Benchmark.addEventListener(FDLogger::fine);
-    }
-
-    public static void tearDown() {
-        SpeedBenchmark.end(BenchmarkLevel.BENCHMARK, "Finished complete benchmark");
-        SpeedBenchmark.disable();
-    }
-
 }

@@ -52,7 +52,7 @@ class JdbcTable implements Table {
     }
 
     @Override
-    public int numberOfColumns(){
+    public int numberOfColumns() {
         return getColumns().size();
     }
 
@@ -72,8 +72,8 @@ class JdbcTable implements Table {
                 if (columns.isEmpty()) {
                     try (ResultSet rs = meta.getColumns(null, schema, schema + "." + name, null)) {
                         while (rs.next()) {
-							String name = rs.getString(4);
-							columns.add(new StringColumn(name, JDBCType.valueOf(rs.getInt(5))));
+                            String name = rs.getString(4);
+                            columns.add(new StringColumn(name, JDBCType.valueOf(rs.getInt(5))));
                         }
                     }
                 }
@@ -117,13 +117,13 @@ class JdbcTable implements Table {
     }
 
     @Override
-    public void setLimit(int limit) {
-        this.limit = limit;
+    public int getLimit() {
+        return limit;
     }
 
     @Override
-    public int getLimit() {
-        return limit;
+    public void setLimit(int limit) {
+        this.limit = limit;
     }
 
 }

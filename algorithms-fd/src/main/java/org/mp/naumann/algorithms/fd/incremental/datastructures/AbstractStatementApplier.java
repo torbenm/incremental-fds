@@ -24,7 +24,7 @@ public abstract class AbstractStatementApplier implements StatementVisitor {
     public void visit(UpdateStatement update) {
         Collection<Integer> removed = removeRecord(update.getOldValueMap());
         deleted.addAll(removed);
-        int insertedRecord = addRecord(update.getValueMap());
+        int insertedRecord = addRecord(update.getNewValueMap());
         inserted.add(insertedRecord);
     }
 

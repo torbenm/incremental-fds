@@ -12,25 +12,25 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class FDTreeElementLhsPair {
-	
-	private final FDTreeElement element;
-	private final OpenBitSet lhs;
-	
-	public FDTreeElement getElement() {
-		return this.element;
-	}
 
-	public OpenBitSet getLhs() {
-		return this.lhs;
-	}
+    private final FDTreeElement element;
+    private final OpenBitSet lhs;
 
-	public FDTreeElementLhsPair(FDTreeElement element, OpenBitSet lhs) {
-		this.element = element;
-		this.lhs = lhs;
-	}
+    public FDTreeElementLhsPair(FDTreeElement element, OpenBitSet lhs) {
+        this.element = element;
+        this.lhs = lhs;
+    }
 
-	public Collection<String> toFDStrings(){
-	    return element.getFdCollection().parallelStream().map(fd -> BitSetUtils.toString(lhs) + " -> "+fd).collect(Collectors.toList());
+    public FDTreeElement getElement() {
+        return this.element;
+    }
+
+    public OpenBitSet getLhs() {
+        return this.lhs;
+    }
+
+    public Collection<String> toFDStrings() {
+        return element.getFdCollection().parallelStream().map(fd -> BitSetUtils.toString(lhs) + " -> " + fd).collect(Collectors.toList());
     }
 
 

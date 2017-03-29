@@ -6,20 +6,20 @@ public class HashCodeBuilder implements Builder<Long> {
 
     private static final int DEFAULT_INITIAL_VALUE = 17;
     private static final int DEFAULT_MULTIPLIER_VALUE = 37;
-
-    private long total;
     private final long constant;
+    private long total;
 
-    public HashCodeBuilder(){
+    public HashCodeBuilder() {
         this(DEFAULT_INITIAL_VALUE, DEFAULT_MULTIPLIER_VALUE);
     }
-    public HashCodeBuilder(int initialValue, int multiplierValue){
+
+    public HashCodeBuilder(int initialValue, int multiplierValue) {
         this.constant = multiplierValue;
         this.total = initialValue;
     }
 
-    public void append(String value){
-        if(value == null)
+    public void append(String value) {
+        if (value == null)
             return;
         this.total = this.total * constant + value.hashCode();
     }

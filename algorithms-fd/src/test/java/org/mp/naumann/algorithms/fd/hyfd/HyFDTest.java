@@ -6,8 +6,8 @@ import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 public class HyFDTest extends FDAlgorithmTest {
 
 
-	@Override
-	protected FunctionalDependencyAlgorithm getNewInstance() {
-		return new HyFD();
-	}
+    @Override
+    protected FunctionalDependencyAlgorithm getNewInstance() {
+        return new HyFD();
+    }
 }

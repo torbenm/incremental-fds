@@ -27,107 +27,107 @@ import java.util.TreeSet;
  */
 public class ColumnCombination implements Serializable, Comparable<Object> {
 
-  private static final long serialVersionUID = -1675606730574675390L;
+    private static final long serialVersionUID = -1675606730574675390L;
 
-  private Set<ColumnIdentifier> columnIdentifiers;
+    private Set<ColumnIdentifier> columnIdentifiers;
 
-  /**
-   * Creates an empty column combination.
-   * Needed for serialization.
-   */
-  public ColumnCombination() {
-    columnIdentifiers = new TreeSet<>();
-  }
+    /**
+     * Creates an empty column combination.
+     * Needed for serialization.
+     */
+    public ColumnCombination() {
+        columnIdentifiers = new TreeSet<>();
+    }
 
-  /**
-   * Store string identifiers for columns to form a column combination.
-   *
-   * @param columnIdentifier the identifier in the ColumnCombination
-   */
-  public ColumnCombination(ColumnIdentifier... columnIdentifier) {
-    columnIdentifiers = new TreeSet<>(Arrays.asList(columnIdentifier));
-  }
+    /**
+     * Store string identifiers for columns to form a column combination.
+     *
+     * @param columnIdentifier the identifier in the ColumnCombination
+     */
+    public ColumnCombination(ColumnIdentifier... columnIdentifier) {
+        columnIdentifiers = new TreeSet<>(Arrays.asList(columnIdentifier));
+    }
 
-  @Override
-  public String toString() {
-    return columnIdentifiers.toString();
-  }
+    @Override
+    public String toString() {
+        return columnIdentifiers.toString();
+    }
 
-  @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime
-      * result
-      + ((columnIdentifiers == null) ? 0 : columnIdentifiers
-      .hashCode());
-    return result;
-  }
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime
+                * result
+                + ((columnIdentifiers == null) ? 0 : columnIdentifiers
+                .hashCode());
+        return result;
+    }
 
-  @Override
-  public int compareTo(Object o) {
-    if (o != null && o instanceof ColumnCombination) {
-      ColumnCombination other =  (ColumnCombination) o;
+    @Override
+    public int compareTo(Object o) {
+        if (o != null && o instanceof ColumnCombination) {
+            ColumnCombination other = (ColumnCombination) o;
 
-      int lengthComparison = this.columnIdentifiers.size() - other.columnIdentifiers.size();
-      if (lengthComparison != 0) {
-        return lengthComparison;
+            int lengthComparison = this.columnIdentifiers.size() - other.columnIdentifiers.size();
+            if (lengthComparison != 0) {
+                return lengthComparison;
 
-      } else {
-        Iterator<ColumnIdentifier> otherIterator = other.columnIdentifiers.iterator();
-        int equalCount = 0;
-        int negativeCount = 0;
-        int positiveCount = 0;
+            } else {
+                Iterator<ColumnIdentifier> otherIterator = other.columnIdentifiers.iterator();
+                int equalCount = 0;
+                int negativeCount = 0;
+                int positiveCount = 0;
 
-        while (otherIterator.hasNext()) {
-          ColumnIdentifier currentOther = otherIterator.next();
-          // because the order of the single column values can differ,
-          // you have to compare all permutations
-          for (ColumnIdentifier currentThis : this.columnIdentifiers) {
-            int currentComparison = currentThis.compareTo(currentOther);
-            if (currentComparison == 0) {
-              equalCount++;
-            } else if (currentComparison > 0) {
-              positiveCount++;
-            } else if (currentComparison < 0) {
-              negativeCount++;
+                while (otherIterator.hasNext()) {
+                    ColumnIdentifier currentOther = otherIterator.next();
+                    // because the order of the single column values can differ,
+                    // you have to compare all permutations
+                    for (ColumnIdentifier currentThis : this.columnIdentifiers) {
+                        int currentComparison = currentThis.compareTo(currentOther);
+                        if (currentComparison == 0) {
+                            equalCount++;
+                        } else if (currentComparison > 0) {
+                            positiveCount++;
+                        } else if (currentComparison < 0) {
+                            negativeCount++;
+                        }
+                    }
+                }
+
+                if (equalCount == this.columnIdentifiers.size()) {
+                    return 0;
+                } else if (positiveCount > negativeCount) {
+                    return 1;
+                } else {
+                    return -1;
+                }
             }
-          }
-        }
-
-        if (equalCount == this.columnIdentifiers.size()) {
-          return 0;
-        } else if (positiveCount > negativeCount) {
-          return 1;
         } else {
-          return -1;
+            //and always last
+            return 1;
         }
-      }
-    } else {
-      //and always last
-      return 1;
     }
-  }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        ColumnCombination other = (ColumnCombination) obj;
+        if (columnIdentifiers == null) {
+            if (other.columnIdentifiers != null) {
+                return false;
+            }
+        } else if (!columnIdentifiers.equals(other.columnIdentifiers)) {
+            return false;
+        }
+        return true;
     }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    ColumnCombination other = (ColumnCombination) obj;
-    if (columnIdentifiers == null) {
-      if (other.columnIdentifiers != null) {
-        return false;
-      }
-    } else if (!columnIdentifiers.equals(other.columnIdentifiers)) {
-      return false;
-    }
-    return true;
-  }
 }

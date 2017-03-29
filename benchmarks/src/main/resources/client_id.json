@@ -1,1 +1,14 @@
-{"installed":{"client_id":"926677738684-co5u3kbfmcle6aulolrvv5i1ckp82k9h.apps.googleusercontent.com","project_id":"gothic-sled-151909","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://accounts.google.com/o/oauth2/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"r8E8qa0sne7173Mkg3-68xpr","redirect_uris":["urn:ietf:wg:oauth:2.0:oob","http://localhost"]}}
+{
+  "installed": {
+    "client_id": "926677738684-co5u3kbfmcle6aulolrvv5i1ckp82k9h.apps.googleusercontent.com",
+    "project_id": "gothic-sled-151909",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://accounts.google.com/o/oauth2/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_secret": "r8E8qa0sne7173Mkg3-68xpr",
+    "redirect_uris": [
+      "urn:ietf:wg:oauth:2.0:oob",
+      "http://localhost"
+    ]
+  }
+}
