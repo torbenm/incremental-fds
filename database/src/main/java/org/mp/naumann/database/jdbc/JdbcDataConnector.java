@@ -44,6 +44,10 @@ public class JdbcDataConnector implements DataConnector {
         return tableNames.get(schema);
     }
 
+    public void clearTableNames(String schema) {
+        tableNames.remove(schema);
+    }
+
     public Table getTable(String schema, String tableName) {
         if (!getTableNames(schema).contains(tableName))
             throw new RuntimeException(String.format("Table '%s' not found in schema '%s'", tableName, schema));
@@ -52,9 +56,9 @@ public class JdbcDataConnector implements DataConnector {
 
     public void close() throws ConnectionException {
         try {
-			conn.close();
-		} catch (SQLException e) {
-			throw new ConnectionException(e);
-		}
+            conn.close();
+        } catch (SQLException e) {
+            throw new ConnectionException(e);
+        }
     }
 }

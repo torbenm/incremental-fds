@@ -29,16 +29,22 @@ class IncrementalSampler {
     private final CompressedRecords compressedRecords;
     private final List<? extends PositionListIndex> plis;
     private final float efficiencyThreshold;
-    private List<AttributeRepresentant> attributeRepresentants = null;
     private final IncrementalMatcher matcher;
+    private List<AttributeRepresentant> attributeRepresentants = null;
     private Collection<Integer> newRecords;
 
-    IncrementalSampler(FDSet agreeSets, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, IncrementalMatcher matcher) {
-        this.agreeSets = agreeSets;
+    IncrementalSampler(CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, IncrementalMatcher matcher) {
+        int numAttributes = compressedRecords.getNumAttributes();
+        this.agreeSets = new FDSet(numAttributes, -1);
         this.compressedRecords = compressedRecords;
         this.plis = plis;
         this.efficiencyThreshold = efficiencyThreshold;
         this.matcher = matcher;
+    }
+
+    private static IntArrayList sort(Comparator<Integer> comparator, IntArrayList list) {
+        list.sort(comparator);
+        return list;
     }
 
     void setNewRecords(Collection<Integer> newRecords) {
@@ -120,11 +126,6 @@ class IncrementalSampler {
         return newNonFds;
     }
 
-    private static IntArrayList sort(Comparator<Integer> comparator, IntArrayList list) {
-        list.sort(comparator);
-        return list;
-    }
-
     private class ClusterComparator implements Comparator<Integer> {
 
         private final CompressedRecords sortKeys;
@@ -157,19 +158,26 @@ class IncrementalSampler {
         }
 
         private int increment(int number) {
-            return (number == this.sortKeys.get(0).length - 1) ? 0 : number + 1;
+            return (number == this.sortKeys.getNumAttributes() - 1) ? 0 : number + 1;
         }
     }
 
     private class AttributeRepresentant implements Comparable<AttributeRepresentant> {
 
-        private int windowDistance;
         private final IntArrayList numNewNonFds = new IntArrayList();
         private final IntArrayList numComparisons = new IntArrayList();
-        private float efficiencyFactor;
         private final List<IntArrayList> clusters;
         private final FDSet negCover;
         private final IncrementalSampler sampler;
+        private int windowDistance;
+        private float efficiencyFactor;
+
+        AttributeRepresentant(List<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, IncrementalSampler sampler) {
+            this.clusters = clusters;
+            this.efficiencyFactor = efficiencyFactor;
+            this.negCover = negCover;
+            this.sampler = sampler;
+        }
 
         float getEfficiencyFactor() {
             return this.efficiencyFactor;
@@ -192,13 +200,6 @@ class IncrementalSampler {
                 return 0;
             }
             return (int) (sumNonFds * (this.efficiencyFactor / sumComparisons));
-        }
-
-        AttributeRepresentant(List<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, IncrementalSampler sampler) {
-            this.clusters = clusters;
-            this.efficiencyFactor = efficiencyFactor;
-            this.negCover = negCover;
-            this.sampler = sampler;
         }
 
         @Override

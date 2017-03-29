@@ -35,17 +35,17 @@ public class PLIBuilder {
     private final ClusterMapBuilder clusterMapBuilder;
     private final boolean isNullEqualNull;
 
+    public PLIBuilder(int numAttributes, boolean isNullEqualNull) {
+        this.clusterMapBuilder = new ClusterMapBuilder(numAttributes);
+        this.isNullEqualNull = isNullEqualNull;
+    }
+
     public List<HashMap<String, IntArrayList>> getClusterMaps() {
         return clusterMapBuilder.getClusterMaps();
     }
 
     public int getNumLastRecords() {
         return clusterMapBuilder.getNumLastRecords();
-    }
-
-    public PLIBuilder(int numAttributes, boolean isNullEqualNull) {
-        this.clusterMapBuilder = new ClusterMapBuilder(numAttributes);
-        this.isNullEqualNull = isNullEqualNull;
     }
 
     public void addRecords(TableInput tableInput) {

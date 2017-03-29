@@ -5,9 +5,15 @@ import java.sql.JDBCType;
 public interface Statement {
 
     String getTableName();
+
     String getSchema();
-    default JDBCType getJDBCType(String columnName) { return JDBCType.VARCHAR; }
+
+    default JDBCType getJDBCType(String columnName) {
+        return JDBCType.VARCHAR;
+    }
+
     void accept(StatementVisitor visitor);
+
     default boolean isOfEqualLayout(Statement statement) {
         return false;
     }

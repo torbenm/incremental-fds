@@ -27,11 +27,11 @@ public abstract class BatchProcessor implements BatchSourceListener {
      */
     private boolean insertToDatabaseFirst;
 
-    BatchProcessor(BatchSource batchSource, DatabaseBatchHandler databaseBatchHandler){
+    BatchProcessor(BatchSource batchSource, DatabaseBatchHandler databaseBatchHandler) {
         this(batchSource, databaseBatchHandler, false);
     }
 
-    BatchProcessor(BatchSource batchSource, DatabaseBatchHandler databaseBatchHandler, boolean insertToDatabaseFirst){
+    BatchProcessor(BatchSource batchSource, DatabaseBatchHandler databaseBatchHandler, boolean insertToDatabaseFirst) {
         this.databaseBatchHandler = databaseBatchHandler;
         this.batchHandlerCollection = initializeBatchHandlerCollection();
         this.insertToDatabaseFirst = insertToDatabaseFirst;
@@ -42,40 +42,47 @@ public abstract class BatchProcessor implements BatchSourceListener {
 
     /**
      * Adds a BatchHandler which is supposed to process data coming from a {@link BatchSource}
+     *
      * @param batchHandler The BatchHandler to add.
      */
-    public void addBatchHandler(BatchHandler batchHandler){
+    public void addBatchHandler(BatchHandler batchHandler) {
         batchHandlerCollection.add(batchHandler);
     }
 
     /**
-     * Adds a DataAwareBatchHandler which is supposed to process data coming from a {@link BatchSource}
+     * Adds a DataAwareBatchHandler which is supposed to process data coming from a {@link
+     * BatchSource}
+     *
      * @param batchHandler The DataAwareBatchHandler to add.
      */
-    public void addDataAwareBatchHandler(DataAwareBatchHandler batchHandler){
-    	batchHandler.setDataConnector(databaseBatchHandler.getConnector());
+    public void addDataAwareBatchHandler(DataAwareBatchHandler batchHandler) {
+        batchHandler.setDataConnector(databaseBatchHandler.getConnector());
         batchHandlerCollection.add(batchHandler);
     }
 
     /**
-     * Removes a BatchHandler from the list of BatchHandlers to process data coming from a {@link BatchSource}
+     * Removes a BatchHandler from the list of BatchHandlers to process data coming from a {@link
+     * BatchSource}
+     *
      * @param batchHandler The BatchHandler to remove.
      */
-    public void removeBatchHandler(BatchHandler batchHandler){
+    public void removeBatchHandler(BatchHandler batchHandler) {
         batchHandlerCollection.remove(batchHandler);
     }
 
     /**
      * Returns all currently registered BatchHandlers.
+     *
      * @return A Collection containing all registered BatchHandlers.
      */
-    protected Collection<BatchHandler> getBatchHandlers(){
+    protected Collection<BatchHandler> getBatchHandlers() {
         return batchHandlerCollection;
     }
 
     /**
-     * Takes a Batch and distributes it to the registered {@link BatchHandler} BatchHandlers.
-     * Also, this method makes sure that the {@link DatabaseBatchHandler} is called either first or last.
+     * Takes a Batch and distributes it to the registered {@link BatchHandler} BatchHandlers. Also,
+     * this method makes sure that the {@link DatabaseBatchHandler} is called either first or last.
+     *
      * @param batch The Batch to process.
      */
     public void batchArrived(Batch batch) {
@@ -96,7 +103,9 @@ public abstract class BatchProcessor implements BatchSourceListener {
 
     /**
      * Denotes whether or not the data should be forwarded to the datbase first or last.
-     * @param insertToDatabaseFirst true = call DataBaseBatchHandler first, false = call DatabaseBatchHandler last
+     *
+     * @param insertToDatabaseFirst true = call DataBaseBatchHandler first, false = call
+     *                              DatabaseBatchHandler last
      */
     void setInsertToDatabaseFirst(boolean insertToDatabaseFirst) {
         this.insertToDatabaseFirst = insertToDatabaseFirst;

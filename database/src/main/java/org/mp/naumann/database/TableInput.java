@@ -7,7 +7,7 @@ import org.mp.naumann.database.data.Row;
 import java.util.Iterator;
 
 public interface TableInput extends AutoCloseable, Iterator<Row>, HasColumns<String>, HasName {
-	
-	void close() throws InputReadException;
+
+    void close() throws InputReadException;
 
 }

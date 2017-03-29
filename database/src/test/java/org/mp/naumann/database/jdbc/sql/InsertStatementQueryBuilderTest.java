@@ -36,7 +36,7 @@ public class InsertStatementQueryBuilderTest {
         String expected = "INSERT INTO test.people (name, weight, age) VALUES ('max', 60.5, 15);";
         assertEquals(isqb.generateSingle(insertStatement), expected);
     }
-    
+
     @Test(expected = QueryBuilderException.class)
     public void testEmptyStatement() throws QueryBuilderException {
         InsertStatement insertStatement = createPeopleInsertEmpty();
@@ -44,7 +44,7 @@ public class InsertStatementQueryBuilderTest {
     }
 
     @Test
-    public void testGenerateKeyMap(){
+    public void testGenerateKeyMap() {
         InsertStatement insertStatement = createPeopleInsert1();
         assertEquals("(name, birthday, age) VALUES ", isqb.buildKeyClause(insertStatement));
 
@@ -53,7 +53,7 @@ public class InsertStatementQueryBuilderTest {
     }
 
     @Test
-    public void testGenerateValueMap(){
+    public void testGenerateValueMap() {
         InsertStatement insertStatement = createPeopleInsert1();
         assertEquals("('max', '2016-11-01', '15')", isqb.buildValueClause(insertStatement));
 
@@ -62,7 +62,7 @@ public class InsertStatementQueryBuilderTest {
     }
 
     @Test
-    public void testOpenStatement(){
+    public void testOpenStatement() {
         InsertStatement insertStatement = createPeopleInsert1();
         assertEquals("INSERT INTO test.people ", isqb.openStatement(insertStatement));
 
@@ -98,7 +98,7 @@ public class InsertStatementQueryBuilderTest {
                 "('max', '2016-11-01', '15'), " +
                 "('hanna', '2014-12-03', '29'), " +
                 "('frieda', '1024-02-02', '1029');" +
-                "\n" + "INSERT INTO test.persons (name, birthday, age) VALUES "+
+                "\n" + "INSERT INTO test.persons (name, birthday, age) VALUES " +
                 "('max', '2016-11-01', '15');";
         assertEquals(expected, isqb.generateMulti(statements));
     }

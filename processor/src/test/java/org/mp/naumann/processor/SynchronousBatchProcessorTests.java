@@ -8,14 +8,14 @@ import static org.mockito.Mockito.mock;
 
 public class SynchronousBatchProcessorTests extends BatchProcessorTests {
 
-    public SynchronousBatchProcessorTests(){
+    public SynchronousBatchProcessorTests() {
         batchProcessor = new SynchronousBatchProcessor(batchSource, databaseBatchHandler);
     }
 
     @Test
-    public void testSynchronicity(){
+    public void testSynchronicity() {
         OccurenceCountingBatchHandler.reset();
-        for(int i = 0; i < numberOfDistributedBatchHandlers; i++){
+        for (int i = 0; i < numberOfDistributedBatchHandlers; i++) {
             batchProcessor.addBatchHandler(new OccurenceCountingBatchHandler(i));
         }
         batchProcessor.batchArrived(mock(Batch.class));

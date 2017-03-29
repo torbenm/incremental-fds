@@ -34,7 +34,9 @@ public class ListBatch implements Batch {
         return tableName;
     }
 
-    public String getSchema() { return schema; }
+    public String getSchema() {
+        return schema;
+    }
 
     @Override
     public List<InsertStatement> getInsertStatements() {

@@ -6,16 +6,19 @@ class DeleteStatementQueryBuilder implements StatementQueryBuilder<DeleteStateme
 
     private static DeleteStatementQueryBuilder instance;
 
-    public static DeleteStatementQueryBuilder get(){
-        if(instance == null)
+    private DeleteStatementQueryBuilder() {
+    }
+
+    public static DeleteStatementQueryBuilder get() {
+        if (instance == null)
             instance = new DeleteStatementQueryBuilder();
         return instance;
     }
 
-    private DeleteStatementQueryBuilder() { }
-
     @Override
-    public String getMultiConnector() { return " OR "; }
+    public String getMultiConnector() {
+        return " OR ";
+    }
 
     @Override
     public String openStatement(DeleteStatement statement) {
@@ -23,7 +26,9 @@ class DeleteStatementQueryBuilder implements StatementQueryBuilder<DeleteStateme
     }
 
     @Override
-    public String buildKeyClause(DeleteStatement statement) { return " WHERE "; }
+    public String buildKeyClause(DeleteStatement statement) {
+        return " WHERE ";
+    }
 
     @Override
     public String buildValueClause(DeleteStatement statement) {

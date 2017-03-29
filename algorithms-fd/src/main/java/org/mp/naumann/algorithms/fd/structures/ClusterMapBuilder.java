@@ -19,6 +19,7 @@ package org.mp.naumann.algorithms.fd.structures;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 
+import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Row;
@@ -29,21 +30,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 
 public class ClusterMapBuilder {
 
-    private int numRecords = 0;
     private final List<HashMap<String, IntArrayList>> clusterMaps;
     private final HashMap<Long, IntArrayList> hashedRecords;
+    private int numRecords = 0;
 
-
-    public List<HashMap<String, IntArrayList>> getClusterMaps() {
-        return clusterMaps;
-    }
-
-    public int getNumLastRecords() {
-        return this.numRecords;
-    }
 
     public ClusterMapBuilder(int numAttributes) {
         clusterMaps = new ArrayList<>();
@@ -53,6 +47,13 @@ public class ClusterMapBuilder {
         hashedRecords = new HashMap<>();
     }
 
+    public List<HashMap<String, IntArrayList>> getClusterMaps() {
+        return clusterMaps;
+    }
+
+    public int getNumLastRecords() {
+        return this.numRecords;
+    }
 
     /**
      * Calculates the clusterMap for each column of a given relation.
@@ -123,6 +124,9 @@ public class ClusterMapBuilder {
         return records;
     }
 
+    private void logNotFoundWarning(Iterable<String> record) {
+        FDLogger.log(Level.WARNING, String.format("Trying to remove %s, but there is no such record.", record.toString()));
+    }
 
     public Collection<Integer> removeRecord(Iterable<String> record) {
         int attributeId = 0;
@@ -131,6 +135,7 @@ public class ClusterMapBuilder {
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
             IntArrayList cluster = clusterMap.get(value);
             if (cluster == null || cluster.isEmpty()) {
+                logNotFoundWarning(record);
                 return Collections.emptyList();
             }
             clusters.add(cluster);
@@ -138,6 +143,7 @@ public class ClusterMapBuilder {
         }
         Set<Integer> matching = CollectionUtils.intersection(clusters);
         clusters.forEach(c -> c.removeAll(matching));
+        if (matching.isEmpty()) logNotFoundWarning(record);
         return matching;
     }
 

@@ -28,20 +28,21 @@ public class FDTreeUtils {
         return currentLevel;
     }
 
-    public static List<String> fdLevelToString(FDTree tree, int level){
-       return getFdLevel(tree, level).stream()
-               .map(FDTreeElementLhsPair::toFDStrings)
-               .flatMap(Collection::stream)
-               .collect(Collectors.toList());
+    public static List<String> fdLevelToString(FDTree tree, int level) {
+        return getFdLevel(tree, level).stream()
+                .map(FDTreeElementLhsPair::toFDStrings)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
     }
-    public static List<String> fdLevelToReadableString(FDTree tree, int level, List<IPositionListIndex> plis, ObjectArrayList<ColumnIdentifier> columnIdentifiers){
+
+    public static List<String> fdLevelToReadableString(FDTree tree, int level, List<IPositionListIndex> plis, ObjectArrayList<ColumnIdentifier> columnIdentifiers) {
         return getFdLevel(tree, level).stream()
                 .map(f -> f.toFDStrings(plis, columnIdentifiers))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }
 
-    public static String fdToString(OpenBitSet lhs, int rhs, List<IPositionListIndex> plis, ObjectArrayList<ColumnIdentifier> columnIdentifiers){
+    public static String fdToString(OpenBitSet lhs, int rhs, List<IPositionListIndex> plis, ObjectArrayList<ColumnIdentifier> columnIdentifiers) {
         ColumnIdentifier[] columns = new ColumnIdentifier[(int) lhs.cardinality()];
         int j = 0;
         for (int i = lhs.nextSetBit(0); i >= 0; i = lhs.nextSetBit(i + 1)) {

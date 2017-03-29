@@ -130,7 +130,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
             index++;
         }
 
-        boolean useInnerClusterPruning = useInnerClusterPruning();
+        boolean useInnerClusterPruning = useInnerClusterPruning(topDown);
         Iterator<IntArrayList> it = getClustersToCheck(topDown);
         while (it.hasNext()) {
             IntArrayList cluster = it.next();
@@ -140,7 +140,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
                 haveOldRecord = new ObjectOpenHashSet<>(cluster.size());
             }
             for (int recordId : cluster) {
-                ClusterIdentifier subClusterIdentifier = this.buildClusterIdentifier(lhs, lhsSize, compressedRecords.get(recordId));
+                ClusterIdentifier subClusterIdentifier = this.buildClusterIdentifier(lhs, lhsSize, compressedRecords.get(recordId), topDown);
                 if (subClusterIdentifier == null) {
                     continue;
                 }
@@ -189,8 +189,8 @@ public abstract class PositionListIndex implements IPositionListIndex {
         return !newRecords.contains(recordId);
     }
 
-    private boolean useInnerClusterPruning() {
-        return newRecords != null;
+    private boolean useInnerClusterPruning(boolean topDown) {
+        return topDown && newRecords != null;
     }
 
     public void setNewRecords(Collection<Integer> newRecords) {
@@ -215,7 +215,8 @@ public abstract class PositionListIndex implements IPositionListIndex {
         return toCheck.stream().filter(c -> c.size() > 1).iterator();
     }
 
-    private ClusterIdentifier buildClusterIdentifier(OpenBitSet lhs, int lhsSize, int[] record) {
+    private ClusterIdentifier buildClusterIdentifier(OpenBitSet lhs, int lhsSize, int[] record,
+        boolean topDown) {
         int[] cluster = new int[lhsSize];
 
         int index = 0;
@@ -226,7 +227,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
                 return null;
             }
 
-            if (otherClustersWithNewRecords != null && !otherClustersWithNewRecords.get(lhsAttr).contains(clusterId)) {
+            if (topDown && otherClustersWithNewRecords != null && !otherClustersWithNewRecords.get(lhsAttr).contains(clusterId)) {
                 return null;
             }
 

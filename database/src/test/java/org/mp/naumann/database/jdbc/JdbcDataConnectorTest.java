@@ -11,29 +11,29 @@ import static org.junit.Assert.assertEquals;
 
 public class JdbcDataConnectorTest extends JdbcTest {
 
-	@Test
-	public void testGetTableNames() {
-		List<String> tableNames = connector.getTableNames(schema);
-		assertEquals(1, tableNames.size());
-		assertEquals(tableName, tableNames.get(0));
-	}
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
-	@Test
-	public void testGetTable() {
-		Table table = connector.getTable(schema, tableName);
-		assertEquals(tableName, table.getName());
-	}
+    @Test
+    public void testGetTableNames() {
+        List<String> tableNames = connector.getTableNames(schema);
+        assertEquals(1, tableNames.size());
+        assertEquals(tableName, tableNames.get(0));
+    }
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
+    @Test
+    public void testGetTable() {
+        Table table = connector.getTable(schema, tableName);
+        assertEquals(tableName, table.getName());
+    }
 
-	@Test
-	public void testGetInvalidTable() {
-		String invalidName = "invalid";
-		thrown.expect(RuntimeException.class);
-		thrown.expectMessage(String.format("Table '%s' not found in schema '%s'", invalidName, schema));
-		connector.getTable(schema, invalidName);
-	}
+    @Test
+    public void testGetInvalidTable() {
+        String invalidName = "invalid";
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage(String.format("Table '%s' not found in schema '%s'", invalidName, schema));
+        connector.getTable(schema, invalidName);
+    }
 
     /*
     there's a connection timeout of ~11s that I can't get rid of ...

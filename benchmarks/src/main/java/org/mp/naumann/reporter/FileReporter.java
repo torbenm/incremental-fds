@@ -17,7 +17,7 @@ public class FileReporter implements Reporter {
 
     @Override
     public void writeNewLine(Object[] objects) throws IOException {
-        try(BufferedWriter out = new BufferedWriter(new FileWriter(file, true))) {
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(file, true))) {
             String line = Arrays.stream(objects).map(Object::toString).collect(Collectors.joining(","));
             out.write(line);
             out.newLine();

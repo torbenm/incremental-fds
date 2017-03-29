@@ -13,13 +13,13 @@ public class OccurenceCountingBatchHandler implements BatchHandler {
         this.occurance = occurance;
     }
 
+    public static void reset() {
+        num = 0;
+    }
+
     @Override
     public void handleBatch(Batch batch) {
         assertEquals(num, occurance);
         num++;
-    }
-
-    public static void reset(){
-        num = 0;
     }
 }

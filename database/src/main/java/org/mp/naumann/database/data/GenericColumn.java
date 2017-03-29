@@ -10,17 +10,16 @@ public class GenericColumn<T> implements Column<T> {
         this.clazz = clazz;
     }
 
+    public static GenericColumn<String> StringColumn(String name) {
+        return new GenericColumn<>(name, String.class);
+    }
+
     public String getName() {
         return name;
     }
 
-	@Override
-	public Class<T> getType() {
-		return clazz;
-	}
-
-
-	public static GenericColumn<String> StringColumn(String name){
-        return new GenericColumn<>(name, String.class);
+    @Override
+    public Class<T> getType() {
+        return clazz;
     }
 }

@@ -5,6 +5,7 @@ import com.beust.jcommander.Parameter;
 
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.reporter.FileReporter;
@@ -13,10 +14,13 @@ import org.mp.naumann.reporter.Reporter;
 import org.mp.naumann.testcases.FixedSizeTestCase;
 import org.mp.naumann.testcases.SingleFileTestCase;
 import org.mp.naumann.testcases.TestCase;
+import org.mp.naumann.testcases.TestCaseParameters;
 import org.mp.naumann.testcases.VariableSizeTestCase;
 
 import java.io.IOException;
 import java.util.logging.Level;
+
+import static java.lang.Double.NaN;
 
 public class BenchmarksApplication {
 
@@ -30,13 +34,21 @@ public class BenchmarksApplication {
     @Parameter(names = "--dataSet")
     private String dataSet = "";
     @Parameter(names = "--stopAfter")
-    private int stopAfter = 1000;
+    private int stopAfter = Integer.MAX_VALUE;
     @Parameter(names = "--google")
     private boolean writeToGoogleSheets = false;
     @Parameter(names = "--sheetName")
     private String sheetName = "benchmark (new)";
     @Parameter(names = "--logLevel")
     private String logLevel = "info";
+
+    // optional postgres parameters
+    @Parameter(names = "--pgdb")
+    private String pgdb = null;
+    @Parameter(names = "--pguser")
+    private String pguser = null;
+    @Parameter(names = "--pgpass")
+    private String pgpass = null;
 
     // parameters for the specific modes
     @Parameter(names = "--mode", description = "either variable, fixed, or singleFile")
@@ -47,10 +59,14 @@ public class BenchmarksApplication {
     private int splitLine = 15000;
     @Parameter(names = "--batchDirectory", description = "only relevant for variable mode")
     private String batchDirectory = "";
+    @Parameter(names = "--batchSizeRatio", description = "only relevant for fixed or singleFile mode")
+    private double batchSizeRatio = NaN;
 
     // parameters for algorithm configuration
     @Parameter(names = "--hyfdOnly")
     private boolean hyfdOnly = false;
+    @Parameter(names = "--hyfdCreateIndex", description = "create an index on the db table, only relevant for hyfd mode", arity = 1)
+    private boolean hyfdCreateIndex = true;
     @Parameter(names = "--sampling", arity = 1)
     private Boolean useSampling;
     @Parameter(names = "--clusterPruning", arity = 1)
@@ -61,6 +77,18 @@ public class BenchmarksApplication {
     private Boolean useEnhancedClusterPruning;
     @Parameter(names = "--recomputeDataStructures", arity = 1)
     private Boolean recomputeDataStructures;
+    @Parameter(names = "--simpleBloom")
+    private Boolean simpleBloomPruning;
+    @Parameter(names = "--advancedBloom")
+    private Boolean advancedBloomPruning;
+    @Parameter(names = "--simplePruning")
+    private Boolean simplePruning;
+    @Parameter(names = "--deletePruning")
+    private Boolean deletePruning;
+    @Parameter(names = "--betterSampling", arity = 1)
+    private Boolean betterSampling;
+    @Parameter(names = "--depthFirst", arity = 1)
+    private Boolean depthFirst;
 
     public static void main(String[] args) throws IOException {
         BenchmarksApplication app = new BenchmarksApplication();
@@ -87,6 +115,24 @@ public class BenchmarksApplication {
         }
         if (recomputeDataStructures != null) {
             config.setRecomputeDataStructures(recomputeDataStructures);
+        }
+        if (simplePruning != null) {
+            config.addPruningStrategy(PruningStrategy.SIMPLE);
+        }
+        if (simpleBloomPruning != null) {
+            config.addPruningStrategy(PruningStrategy.BLOOM);
+        }
+        if (advancedBloomPruning != null) {
+            config.addPruningStrategy(PruningStrategy.BLOOM_ADVANCED);
+        }
+        if (betterSampling != null) {
+            config.setImprovedSampling(betterSampling);
+        }
+        if (deletePruning != null) {
+            config.addPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS);
+        }
+        if (depthFirst != null) {
+            config.setDepthFirst(depthFirst);
         }
     }
 
@@ -116,16 +162,20 @@ public class BenchmarksApplication {
 
         try {
             TestCase t;
+            TestCaseParameters parameters = new TestCaseParameters("", dataSet, config, stopAfter, hyfdOnly, hyfdCreateIndex, pgdb, pguser, pgpass);
 
             switch (mode) {
                 case "variable":
-                    t = new VariableSizeTestCase(dataSet, config, stopAfter, hyfdOnly, getFullBatchDirectory());
+                    t = new VariableSizeTestCase(parameters, getFullBatchDirectory());
                     break;
                 case "fixed":
-                    t = new FixedSizeTestCase(dataSet, config, stopAfter, hyfdOnly, batchSize);
+                    if (batchSizeRatio == NaN)
+                        t = new FixedSizeTestCase(parameters, batchSize);
+                    else
+                        t = new FixedSizeTestCase(parameters, batchSizeRatio);
                     break;
                 case "singleFile":
-                    t = new SingleFileTestCase(dataSet, config, stopAfter, hyfdOnly, splitLine, batchSize);
+                    t = new SingleFileTestCase(parameters, splitLine, batchSize);
                     break;
                 default:
                     throw new IllegalArgumentException(String.format("Invalid mode parameter: %s", mode));
@@ -151,7 +201,7 @@ public class BenchmarksApplication {
     private void setLogLevel() {
         try {
             FDLogger.setLevel(Level.parse(logLevel.toUpperCase()));
-        } catch(IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             FDLogger.setLevel(Level.INFO);
         }
     }

@@ -16,18 +16,18 @@ import java.util.List;
 public class FDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDependency>, Object> {
 
     private final List<String> algorithms = Arrays.asList("hyfd", "tane", "fdep");
-    
+
     private final List<FunctionalDependency> functionalDependencies;
+    private final IncrementalFDConfiguration configuration;
     private FunctionalDependencyAlgorithm fdAlgorithm;
-	private String schema;
-	private String tableName;
-	private final IncrementalFDConfiguration configuration;
+    private String schema;
+    private String tableName;
 
 
     public FDInitialAlgorithm(String algorithm, DataConnector dataConnector, String schema, String tableName, IncrementalFDConfiguration configuration) {
         this.configuration = configuration;
-        if(!algorithms.contains(algorithm.toLowerCase()))
-            throw new RuntimeException("Unknown Algorithm "+algorithm);
+        if (!algorithms.contains(algorithm.toLowerCase()))
+            throw new RuntimeException("Unknown Algorithm " + algorithm);
         this.schema = schema;
         this.tableName = tableName;
         this.functionalDependencies = new ArrayList<>();
@@ -35,9 +35,9 @@ public class FDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDepen
     }
 
     private void initializeAlgorithm(String algorithm, DataConnector dataConnector) {
-    	Table table = dataConnector.getTable(schema, tableName);
+        Table table = dataConnector.getTable(schema, tableName);
         FunctionalDependencyResultReceiver resultReceiver = functionalDependencies::add;
-        switch(algorithm.toLowerCase()){
+        switch (algorithm.toLowerCase()) {
             case "hyfd":
                 fdAlgorithm = new HyFD(configuration, table, resultReceiver);
                 break;
@@ -61,8 +61,8 @@ public class FDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDepen
         }
     }
 
-	@Override
-	public Object getIntermediateDataStructure() {
-		return null;
-	}
+    @Override
+    public Object getIntermediateDataStructure() {
+        return null;
+    }
 }

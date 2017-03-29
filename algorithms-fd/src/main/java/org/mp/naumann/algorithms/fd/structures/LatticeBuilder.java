@@ -1,10 +1,11 @@
 package org.mp.naumann.algorithms.fd.structures;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -26,10 +27,11 @@ public class LatticeBuilder {
         return build(numAttributes, functionalDependencies);
     }
 
-    private static LatticeBuilder build(int numAttributes, List<OpenBitSetFD> functionalDependencies) {
+    public static LatticeBuilder build(int numAttributes,
+                                       List<OpenBitSetFD> functionalDependencies) {
         LatticeBuilder builder = new LatticeBuilder(numAttributes);
         builder.buildPositiveCover(functionalDependencies);
-        builder.buildNegativeCover();
+        builder.buildNegativeCover(functionalDependencies);
         return builder;
     }
 
@@ -47,37 +49,31 @@ public class LatticeBuilder {
         return nonFds;
     }
 
-    private void buildNegativeCover() {
+    private void buildNegativeCover(List<OpenBitSetFD> validFds) {
         FDLogger.log(Level.FINER, "Building negative cover");
-        List<LhsRhsPair> currentLevel = Collections.singletonList(new LhsRhsPair(new OpenBitSet(numAttributes), new OpenBitSet(numAttributes)));
-        while (!currentLevel.isEmpty()) {
-            for (LhsRhsPair current : currentLevel) {
-                for (int rhs = current.getRhs().nextSetBit(0); rhs >= 0; rhs = current.getRhs().nextSetBit(rhs + 1)) {
-                    OpenBitSet flipped = current.getLhs().clone();
-                    flipped.flip(0, numAttributes);
-                    if (!isValidFd(flipped, rhs)) {
-                        current.getRhs().fastClear(rhs);
-                        if (isMaximal(current.getLhs(), rhs)) {
-                            nonFds.addFunctionalDependency(current.getLhs(), rhs);
+        Multimap<Integer, OpenBitSet> groupedLhs = HashMultimap.create();
+        for (OpenBitSetFD fd : validFds) {
+            groupedLhs.put(fd.getRhs(), fd.getLhs());
+        }
+        for (int rhs = 0; rhs < numAttributes; rhs++) {
+            OpenBitSet initial = new OpenBitSet(numAttributes);
+            initial.fastSet(rhs);
+            nonFds.addFunctionalDependency(initial, rhs);
+            for (OpenBitSet lhs : groupedLhs.get(rhs)) {
+                OpenBitSet flipped = lhs.clone();
+                flipped.flip(0, numAttributes);
+                List<OpenBitSet> invalidFds = nonFds.getFdAndGeneralizations(flipped, rhs);
+                for (OpenBitSet invalidFd : invalidFds) {
+                    nonFds.removeFunctionalDependency(invalidFd, rhs);
+                    for (int lhsAttr = lhs.nextSetBit(0); lhsAttr >= 0; lhsAttr = lhs.nextSetBit(lhsAttr + 1)) {
+                        OpenBitSet generalizedLhs = invalidFd.clone();
+                        generalizedLhs.fastSet(lhsAttr);
+                        if (!nonFds.containsFdOrGeneralization(generalizedLhs, rhs)) {
+                            nonFds.addFunctionalDependency(generalizedLhs, rhs);
                         }
                     }
                 }
             }
-            List<LhsRhsPair> nextLevel = new ArrayList<>();
-            for (LhsRhsPair current : currentLevel) {
-                int nextSetBit = current.getLhs().nextSetBit(0);
-                if (nextSetBit < 0) {
-                    nextSetBit = numAttributes;
-                }
-                for (int lhsAttr = 0; lhsAttr < nextSetBit; lhsAttr++) {
-                    OpenBitSet lhs = current.getLhs().clone();
-                    lhs.fastSet(lhsAttr);
-                    OpenBitSet rhs = current.getRhs().clone();
-                    rhs.fastSet(lhsAttr);
-                    nextLevel.add(new LhsRhsPair(lhs, rhs));
-                }
-            }
-            currentLevel = nextLevel;
         }
         FDLogger.log(Level.FINER, "Finsihed building negative cover");
     }
@@ -91,6 +87,7 @@ public class LatticeBuilder {
     }
 
     private static class LhsRhsPair {
+
         private final OpenBitSet lhs;
         private final OpenBitSet rhs;
 

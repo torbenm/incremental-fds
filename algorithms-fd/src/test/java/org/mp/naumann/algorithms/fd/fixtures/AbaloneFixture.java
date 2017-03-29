@@ -20,7 +20,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 
-public class AbaloneFixture implements AlgorithmFixture{
+public class AbaloneFixture implements AlgorithmFixture {
 
     protected ImmutableList<String> columnNames = ImmutableList.of("column1", "column2", "column3", "column4", "column5", "column6", "column7", "column8", "column9");
     protected int numberOfColumns = 9;

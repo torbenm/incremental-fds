@@ -10,7 +10,8 @@ public interface DatabaseBatchHandler extends BatchHandler {
 
     /**
      * The database connection
+     *
      * @return A DataConnector object representing the database connection
      */
-	DataConnector getConnector();
+    DataConnector getConnector();
 }

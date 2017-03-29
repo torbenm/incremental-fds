@@ -27,33 +27,35 @@ public class GoogleSheetsReporter implements Reporter {
     private final String APPLICATION_NAME =
             "Incremental Function Dependency Algorithms";
 
-    /** Directory to store user credentials for this application. */
+    /**
+     * Directory to store user credentials for this application.
+     */
     private final File DATA_STORE_DIR = new File(
             System.getProperty("user.home"), ".credentials/incremental-fd-benchmarks");
-
-    /** Global instance of the {@link FileDataStoreFactory}. */
-    private FileDataStoreFactory DATA_STORE_FACTORY;
-
-    /** Global instance of the JSON factory. */
+    /**
+     * Global instance of the JSON factory.
+     */
     private final JsonFactory JSON_FACTORY =
             JacksonFactory.getDefaultInstance();
-
-    /** Global instance of the HTTP transport. */
-    private HttpTransport HTTP_TRANSPORT;
-
     private final Sheets sheetService;
     private final String spreadsheetId;
     private final String spreadsheet;
-
-
-
-    /** Global instance of the scopes required by this quickstart.
+    /**
+     * Global instance of the scopes required by this quickstart.
      *
      * If modifying these scopes, delete your previously saved credentials
      * at ~/.credentials/sheets.googleapis.com-java-quickstart
      */
     private final List<String> SCOPES =
             Collections.singletonList(SheetsScopes.SPREADSHEETS);
+    /**
+     * Global instance of the {@link FileDataStoreFactory}.
+     */
+    private FileDataStoreFactory DATA_STORE_FACTORY;
+    /**
+     * Global instance of the HTTP transport.
+     */
+    private HttpTransport HTTP_TRANSPORT;
 
     {
         try {
@@ -73,8 +75,8 @@ public class GoogleSheetsReporter implements Reporter {
 
     /**
      * Creates an authorized Credential object.
+     *
      * @return an authorized Credential object.
-     * @throws IOException
      */
     private Credential authorize() throws IOException {
         // Load client secrets.
@@ -99,8 +101,8 @@ public class GoogleSheetsReporter implements Reporter {
 
     /**
      * Build and return an authorized Sheets API client service.
+     *
      * @return an authorized Sheets API client service
-     * @throws IOException
      */
     private Sheets getSheetsService() throws IOException {
         Credential credential = authorize();
@@ -110,7 +112,7 @@ public class GoogleSheetsReporter implements Reporter {
     }
 
     public void writeNewLine(Object... values) throws IOException {
-        String range = spreadsheet+"!A:I";
+        String range = spreadsheet + "!A:I";
         ValueRange vr = new ValueRange().setValues(Collections.singletonList(Lists.newArrayList(values)));
         sheetService.spreadsheets()
                 .values()
@@ -118,7 +120,6 @@ public class GoogleSheetsReporter implements Reporter {
                 .setValueInputOption("RAW")
                 .execute();
     }
-
 
 
 }

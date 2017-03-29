@@ -13,12 +13,7 @@ import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -51,21 +46,21 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         for (Statement statement : batch.getStatements()) {
             statement.accept(applier);
         }
-        Set<Integer> inserted = applier.getInserted();
-        Set<Integer> insertedUpdate = applier.getInsertedUpdate();
-        inserted.addAll(insertedUpdate);
-        recordIds.addAll(inserted);
 
+        Set<Integer> inserted = applier.getInserted();
         Set<Integer> deleted = applier.getDeleted();
-        Set<Integer> deletedUpdate = applier.getDeletedUpdate();
-        deleted.addAll(deletedUpdate);
+        Set<Integer> inserted_tmp = new HashSet<>(inserted);
+        inserted.removeAll(deleted);
+        deleted.removeAll(inserted_tmp);
+        recordIds.addAll(inserted);
         recordIds.removeAll(deleted);
+
         benchmark.finishSubtask("Apply statements");
         Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
         deleted.forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));
 
         benchmark.startSubtask();
-        updateDataStructures(inserted, deleted);
+        updateDataStructures(inserted);
         benchmark.finishSubtask("Update data structures");
 
         Map<Integer, int[]> insertedDiff = new HashMap<>(inserted.size());
@@ -85,7 +80,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         compressedRecords = recordCompressor.buildCompressedRecords();
     }
 
-    private void updateDataStructures(Set<Integer> inserted, Set<Integer> deleted) {
+    private void updateDataStructures(Set<Integer> inserted) {
         updateDataStructures();
 
         if (version.usesInnerClusterPruning()) {
@@ -104,7 +99,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
                     pli.setClustersWithNewRecords(clusterIds);
                 }
                 if (version.usesEnhancedClusterPruning()) {
-                    newClusters.put(i, clusterIds);
+                    if (newClusters != null) newClusters.put(i, clusterIds);
                 }
             }
             if (version.usesEnhancedClusterPruning()) {

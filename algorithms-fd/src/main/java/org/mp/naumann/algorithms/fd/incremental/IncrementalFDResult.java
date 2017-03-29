@@ -15,10 +15,16 @@ public class IncrementalFDResult {
         this.prunedCount = prunedCount;
     }
 
-    public int getValidationCount() { return validationCount; }
+    public int getValidationCount() {
+        return validationCount;
+    }
 
-    public int getPrunedCount() { return prunedCount; }
+    public int getPrunedCount() {
+        return prunedCount;
+    }
 
-    public List<FunctionalDependency> getFDs() { return fds; }
+    public List<FunctionalDependency> getFDs() {
+        return fds;
+    }
 
 }

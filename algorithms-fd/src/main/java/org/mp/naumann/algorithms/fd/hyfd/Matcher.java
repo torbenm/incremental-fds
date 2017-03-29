@@ -22,7 +22,7 @@ class Matcher {
         this.valueComparator = valueComparator;
         this.violationCollection = violationCollection;
         this.configuration = configuration;
-        this.pruner = new DeletePruner(compressedRecords[0].length, () -> new MaxSizeViolationSet(1), SimpleDeleteValidationPruner::new);
+        this.pruner = new DeletePruner(compressedRecords[0].length, () -> new MaxSizeViolationSet(1000), SimpleDeleteValidationPruner::new);
     }
 
     public void match(OpenBitSet equalAttrs, int recId1, int recId2) {
@@ -30,7 +30,7 @@ class Matcher {
         if (configuration.usesPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS)) {
             pruner.addAgreeSet(equalAttrs.clone(), recId1, recId2);
         }
-        if(configuration.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)) {
+        if (configuration.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)) {
             violationCollection.add(equalAttrs, recId1, recId2);
         }
     }

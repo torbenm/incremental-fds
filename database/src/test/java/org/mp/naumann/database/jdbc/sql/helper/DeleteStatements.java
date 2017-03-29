@@ -9,7 +9,7 @@ import java.util.Map;
 public class DeleteStatements {
 
 
-    public static DeleteStatement createDeleteStatement1(){
+    public static DeleteStatement createDeleteStatement1() {
         Map<String, String> valueMap = new HashMap<>();
         valueMap.put("country", "DE");
         valueMap.put("city", "Berlin");
@@ -17,28 +17,29 @@ public class DeleteStatements {
         return new DefaultDeleteStatement(valueMap, "test", "places");
     }
 
-    public static DeleteStatement createDeleteStatement2(){
+    public static DeleteStatement createDeleteStatement2() {
         Map<String, String> valueMap = new HashMap<>();
         valueMap.put("country", "DE");
         valueMap.put("city", "Potsdam");
         valueMap.put("street", "August-Bebel-Str.");
         return new DefaultDeleteStatement(valueMap, "test", "places");
     }
-    public static DeleteStatement createDeleteStatement2Columns(){
+
+    public static DeleteStatement createDeleteStatement2Columns() {
         Map<String, String> valueMap = new HashMap<>();
         valueMap.put("country", "US");
         valueMap.put("city", "San Francisco");
         return new DefaultDeleteStatement(valueMap, "test", "places");
     }
 
-    public static DeleteStatement createDeleteStatementOtherTable(){
+    public static DeleteStatement createDeleteStatementOtherTable() {
         Map<String, String> valueMap = new HashMap<>();
         valueMap.put("name", "Max");
         valueMap.put("age", "15");
         return new DefaultDeleteStatement(valueMap, "test", "persons");
     }
 
-    public static DeleteStatement createDeleteStatementEmptyValueMap(){
+    public static DeleteStatement createDeleteStatementEmptyValueMap() {
         Map<String, String> valueMap = new HashMap<>();
         return new DefaultDeleteStatement(valueMap, "test", "places");
     }

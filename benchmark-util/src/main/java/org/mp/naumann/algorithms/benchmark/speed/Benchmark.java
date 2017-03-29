@@ -5,12 +5,11 @@ import java.util.Set;
 
 /**
  * Offers methods for time benchmarking.
- *
  */
 public class Benchmark {
 
-    private static final Set<BenchmarkEventListener> eventListeners = new HashSet<>();
     public static final int DEFAULT_LEVEL = 0;
+    private static final Set<BenchmarkEventListener> eventListeners = new HashSet<>();
     private static int maxLevel;
     private final long startTime;
     private final int level;

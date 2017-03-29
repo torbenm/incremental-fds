@@ -31,13 +31,13 @@ interface StatementQueryBuilder<T extends Statement> {
         if (statements.size() <= 0)
             return "";
 
-        for (T statement: statements) validateStatement(statement);
+        for (T statement : statements) validateStatement(statement);
 
         List<List<T>> layoutGroups = new ArrayList<>();
 
-        for (T stmt: statements) {
+        for (T stmt : statements) {
             boolean found = false;
-            for (List<T> layoutGroup: layoutGroups) {
+            for (List<T> layoutGroup : layoutGroups) {
                 if (layoutGroup.get(0).isOfEqualLayout(stmt)) {
                     found = true;
                     layoutGroup.add(stmt);
@@ -50,7 +50,7 @@ interface StatementQueryBuilder<T extends Statement> {
         }
 
         StringBuilder queryBuilder = new StringBuilder();
-        for (List<T> layoutGroup: layoutGroups) {
+        for (List<T> layoutGroup : layoutGroups) {
             queryBuilder.append(openStatement(layoutGroup.get(0)));
             queryBuilder.append(buildKeyClause(layoutGroup.get(0)));
             queryBuilder.append(layoutGroup
@@ -62,10 +62,14 @@ interface StatementQueryBuilder<T extends Statement> {
         return queryBuilder.toString().trim();
     }
 
-    default String getMultiConnector() { return ", "; }
+    default String getMultiConnector() {
+        return ", ";
+    }
 
     String openStatement(T statement);
+
     String buildKeyClause(T statement);
+
     String buildValueClause(T statement);
 
 }

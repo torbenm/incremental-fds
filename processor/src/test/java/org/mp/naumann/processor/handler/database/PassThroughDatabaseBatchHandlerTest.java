@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 public class PassThroughDatabaseBatchHandlerTest {
 
     @Test
-	public void test_handle_calls_table_execute(){
+    public void test_handle_calls_table_execute() {
         DataConnector dc = mock(DataConnector.class);
         Table t = mock(Table.class);
         Batch b = mock(Batch.class);
@@ -23,7 +23,6 @@ public class PassThroughDatabaseBatchHandlerTest {
         ptdbh.handleBatch(b);
         verify(t).execute(b);
     }
-
 
 
 }

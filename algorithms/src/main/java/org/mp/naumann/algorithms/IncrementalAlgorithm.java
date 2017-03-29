@@ -15,39 +15,44 @@ import java.util.Collection;
  * every time again for an incoming batch.
  *
  * @param <T> The type of the result of this algorithm
- * @param <R> The intermediate datastructure used for linking the initial with the incremental algorithm
+ * @param <R> The intermediate datastructure used for linking the initial with the incremental
+ *            algorithm
  */
 public interface IncrementalAlgorithm<T, R> extends BatchHandler {
 
     /**
-     * This method is called by the batch processor and should take care of forwarding the batch to the actual execute method.
+     * This method is called by the batch processor and should take care of forwarding the batch to
+     * the actual execute method.
+     *
      * @param batch The batch that this algorithm should handle.
      */
-	@Override
-	default void handleBatch(Batch batch) {
-		T result = null;
-		try {
-			result = execute(batch);
-		} catch (AlgorithmExecutionException e) {
+    @Override
+    default void handleBatch(Batch batch) {
+        T result = null;
+        try {
+            result = execute(batch);
+        } catch (AlgorithmExecutionException e) {
             e.printStackTrace();
-		}
-		for (ResultListener<T> resultListener : getResultListeners()) {
-			resultListener.receiveResult(result);
-		}
-	}
+        }
+        for (ResultListener<T> resultListener : getResultListeners()) {
+            resultListener.receiveResult(result);
+        }
+    }
 
     /**
      * Returns the collection of result listeners associated with this incremental algorithm
+     *
      * @return The collection of result listeners
      */
-	Collection<ResultListener<T>> getResultListeners();
+    Collection<ResultListener<T>> getResultListeners();
 
     /**
      * Adds a result listener to this incremental algorithm.
      * The results of the execution are afterwards passed to the result listener
+     *
      * @param listener The result listener to add
      */
-	void addResultListener(ResultListener<T> listener);
+    void addResultListener(ResultListener<T> listener);
 
     /**
      * Executes the algorithm for the current batch.
@@ -62,7 +67,8 @@ public interface IncrementalAlgorithm<T, R> extends BatchHandler {
      * Intializes the incremental algorithm with an intermeidate datastructure. This datastructure
      * ideally comes from the matching initial algorithm.
      *
-     * @param intermediateDataStructure The intermediate datastructure coming from the initial algorithm
+     * @param intermediateDataStructure The intermediate datastructure coming from the initial
+     *                                  algorithm
      */
-	void initialize(R intermediateDataStructure);
+    void initialize(R intermediateDataStructure);
 }

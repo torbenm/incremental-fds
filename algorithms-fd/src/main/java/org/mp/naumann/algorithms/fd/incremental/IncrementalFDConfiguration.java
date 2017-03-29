@@ -16,12 +16,9 @@ public class IncrementalFDConfiguration {
     public static final IncrementalFDConfiguration V0_3 = new IncrementalFDConfiguration('3', "Improved pruning with bloom based on initial FDs").addPruningStrategy(PruningStrategy.BLOOM_ADVANCED);
     public static final IncrementalFDConfiguration V0_4 = new IncrementalFDConfiguration('4', "Annotation pruning for deletes").addPruningStrategy(PruningStrategy.ANNOTATION).setHashMapIdentification(false);
     public static final IncrementalFDConfiguration V0_5 = new IncrementalFDConfiguration('5', "Annotation pruning for deletes with hashmap identification").addPruningStrategy(PruningStrategy.ANNOTATION);
-
-    private static final IncrementalFDConfiguration[] configurations = {V0_0, V0_1,V0_2,V0_3,V0_4, V0_5};
-
-    public static final IncrementalFDConfiguration LATEST = configurations[configurations.length-1];
     public static final IncrementalFDConfiguration HYFD_ORIGINAL = V0_0;
-
+    private static final IncrementalFDConfiguration[] configurations = {V0_0, V0_1, V0_2, V0_3, V0_4, V0_5};
+    public static final IncrementalFDConfiguration LATEST = configurations[configurations.length - 1];
     private final char versionCode;
     private final Collection<PruningStrategy> pruningStrategies = new ArrayList<>();
     private final String versionName;
@@ -36,6 +33,43 @@ public class IncrementalFDConfiguration {
     private boolean pruneGeneralizations = true;
     private boolean storeEqual = true;
     private boolean improvedSampling = true;
+    private boolean depthFirst = false;
+    private int violationCollectionSize = 5;
+    private ViolationCollections violationCollectionType = ViolationCollections.MULTIPLE_VIOLATING_VALUES;
+
+    public IncrementalFDConfiguration(char versionCode, String versionName) {
+        this.versionCode = versionCode;
+        this.versionName = versionName;
+    }
+
+    public IncrementalFDConfiguration(String versionName) {
+        this.versionCode = 'x';
+        this.versionName = versionName;
+    }
+
+    public static IncrementalFDConfiguration getVersion(String name) {
+        char c = name.charAt(0);
+        for (IncrementalFDConfiguration config : configurations) {
+            if (config.versionCode == c)
+                return config;
+        }
+        return new IncrementalFDConfiguration(name);
+    }
+
+    public IncrementalFDConfiguration setDepthFirst(boolean depthFirst) {
+        this.depthFirst = depthFirst;
+        return this;
+    }
+
+    public IncrementalFDConfiguration enableDepthFirst() {
+        depthFirst = true;
+        return this;
+    }
+
+    public IncrementalFDConfiguration disableDepthFirst() {
+        depthFirst = false;
+        return this;
+    }
 
     public boolean usesImprovedSampling() {
         return improvedSampling;
@@ -56,10 +90,6 @@ public class IncrementalFDConfiguration {
         return this;
     }
 
-    private int violationCollectionSize = 5;
-    private ViolationCollections violationCollectionType = ViolationCollections.MULTIPLE_VIOLATING_VALUES;
-
-
     public boolean usingRemovalMap() {
         return removalMap;
     }
@@ -69,26 +99,8 @@ public class IncrementalFDConfiguration {
         return this;
     }
 
-    public IncrementalFDConfiguration(char versionCode, String versionName) {
-        this.versionCode = versionCode;
-        this.versionName = versionName;
-    }
-    public IncrementalFDConfiguration(String versionName) {
-        this.versionCode = 'x';
-        this.versionName = versionName;
-    }
-
     public String getVersionName() {
         return versionName;
-    }
-
-    public static IncrementalFDConfiguration getVersion(String name){
-        char c = name.charAt(0);
-        for(IncrementalFDConfiguration config : configurations){
-            if(config.versionCode == c)
-                return config;
-        }
-        return new IncrementalFDConfiguration(name);
     }
 
     public Collection<PruningStrategy> getPruningStrategies() {
@@ -107,14 +119,13 @@ public class IncrementalFDConfiguration {
         return enhancedClusterPruning;
     }
 
-    public boolean usesPruningStrategy(PruningStrategy strategy){
+    public boolean usesPruningStrategy(PruningStrategy strategy) {
         return getPruningStrategies().contains(strategy);
     }
 
     public boolean recomputesDataStructures() {
         return recomputeDataStructures;
     }
-
 
 
     public IncrementalFDConfiguration addPruningStrategy(PruningStrategy pruningStrategy) {
@@ -220,8 +231,8 @@ public class IncrementalFDConfiguration {
         return this;
     }
 
-    public ViolationCollection createViolationCollection(){
-        switch(this.violationCollectionType){
+    public ViolationCollection createViolationCollection() {
+        switch (this.violationCollectionType) {
             case SINGLE_VALUE:
                 return new SingleValueViolationCollection(this);
             case MULTIPLE_VIOLATING_VALUES:
@@ -230,6 +241,10 @@ public class IncrementalFDConfiguration {
                 return new TreeViolationCollection(this);
         }
         return null;
+    }
+
+    public boolean usesDepthFirst() {
+        return depthFirst;
     }
 
     public enum PruningStrategy {

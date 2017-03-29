@@ -24,7 +24,7 @@ public class AverageAlgorithmBenchmark implements AlgorithmBenchmark {
     private SynchronousBatchProcessor batchProcessor;
 
     public void constructTestCase(String testCase, String incrementalFileName, int batchSize,
-                                    String column, String table) throws ConnectionException {
+                                  String column, String table) throws ConnectionException {
         this.currentTestCase = testCase;
         String file = BenchmarksApplication.class.getResource(incrementalFileName).getPath();
         batchSource = new FixedSizeCsvBatchSource(file, "", "", batchSize);

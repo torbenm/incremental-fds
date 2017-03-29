@@ -1,7 +1,7 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-
+import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
@@ -17,14 +17,9 @@ import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -82,12 +77,11 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
             statement.accept(applier);
         }
         Set<Integer> inserted = applier.getInserted();
-        Set<Integer> insertedUpdate = applier.getInsertedUpdate();
-        inserted.addAll(insertedUpdate);
-
         Set<Integer> deleted = applier.getDeleted();
-        Set<Integer> deletedUpdate = applier.getDeletedUpdate();
-        deleted.addAll(deletedUpdate);
+        Set<Integer> inserted_tmp = new HashSet<>(inserted);
+        inserted.removeAll(deleted);
+        deleted.removeAll(inserted_tmp);
+
         Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
         deleted.forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));
 
@@ -116,7 +110,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
                     pli.setClustersWithNewRecords(clusterIds);
                 }
                 if (version.usesEnhancedClusterPruning()) {
-                    newClusters.put(i, clusterIds);
+                    if (newClusters != null) newClusters.put(i, clusterIds);
                 }
                 i++;
             }
@@ -136,9 +130,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         for (int recordId : inserted) {
             compressedRecords.put(recordId, fetchRecordFrom(recordId, invertedPlis));
         }
-        for (int recordId : deleted) {
-            compressedRecords.remove(recordId);
-        }
+        deleted.forEach(compressedRecords::remove);
     }
 
     private static int[] fetchRecordFrom(int recordId, List<Map<Integer, Integer>> invertedPlis) {
@@ -196,21 +188,32 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
             return clusterMapBuilder.addRecord(record);
         }
 
+        private void logNotFoundWarning(Iterable<String> record) {
+            FDLogger.log(Level.WARNING, String.format("Trying to remove %s, but there is no such record.", record.toString()));
+        }
+
         @Override
         protected Collection<Integer> removeRecord(Map<String, String> valueMap) {
             List<String> record = columns.stream().map(valueMap::get).collect(Collectors.toList());
+
+            // find records from previous batches in PLIs
             List<Collection<Integer>> clusters = new ArrayList<>();
             for (PositionListIndex pli : plis) {
                 String value = record.get(pli.getAttribute());
                 int dictValue = dictionary.getOrAdd(value);
                 IntArrayList cluster = pli.getCluster(dictValue);
-                if (cluster == null || cluster.isEmpty()) {
-                    return Collections.emptyList();
+                if (cluster == null) {
+                    cluster = new IntArrayList();
                 }
                 clusters.add(cluster);
             }
             Set<Integer> matching = CollectionUtils.intersection(clusters);
+
+            // find records that were added in the current batch
+            matching.addAll(clusterMapBuilder.removeRecord(record));
+
             clusters.forEach(c -> c.removeAll(matching));
+            if (matching.isEmpty()) logNotFoundWarning(record);
             return matching;
         }
     }

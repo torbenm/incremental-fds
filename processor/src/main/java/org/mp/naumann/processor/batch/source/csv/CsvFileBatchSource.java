@@ -3,16 +3,20 @@ package org.mp.naumann.processor.batch.source.csv;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.StringUtils;
 import org.mp.naumann.database.statement.DefaultDeleteStatement;
 import org.mp.naumann.database.statement.DefaultInsertStatement;
 import org.mp.naumann.database.statement.DefaultUpdateStatement;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.source.AbstractBatchSource;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +45,10 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
     private CSVParser initializeCsvParser(File file) {
         if ((csvParser == null) || (!file.getAbsolutePath().equals(filename))) {
             try {
-                csvParser = CSVParser.parse(file, CHARSET, FORMAT);
+                try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                    String[] header = Arrays.stream(reader.readLine().split(",")).map(s -> s.replace("\"", "").toLowerCase()).toArray(String[]::new);
+                    csvParser = CSVParser.parse(file, CHARSET, FORMAT.withHeader(header));
+                }
                 filename = file.getAbsolutePath();
             } catch (IOException e) {
                 //
@@ -56,16 +63,17 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
         parseRecords(initializeCsvParser(file));
     }
 
-    void parseRecords(CSVParser csvParser){
-        for(CSVRecord record : csvParser){
+    void parseRecords(CSVParser csvParser) {
+        for (CSVRecord record : csvParser) {
             addStatement(parseRecord(record));
         }
     }
-    Statement parseRecord(CSVRecord csvRecord){
+
+    Statement parseRecord(CSVRecord csvRecord) {
         return parseRecord(csvRecord.toMap());
     }
 
-    Statement parseRecord(Map<String, String> values){
+    Statement parseRecord(Map<String, String> values) {
         String action = (values.containsKey(ACTION_COLUMN.getKeyWord())
                 ? values.get(ACTION_COLUMN.getKeyWord()) : defaultAction.getKeyWord());
 
@@ -74,7 +82,14 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
         return stmt;
     }
 
-   Statement createStatement(String type, Map<String, String> values) {
+
+    private Map<String, String> sanitizeValues(Map<String, String> values) {
+        for (Map.Entry<String, String> entry : values.entrySet())
+            values.replace(entry.getKey(), entry.getValue(), StringUtils.left(entry.getValue(), 1000));
+        return values;
+    }
+
+    private Statement createStatement(String type, Map<String, String> values) {
         switch (CsvKeyWord.valueOfKeyWord(type)) {
             case INSERT_STATEMENT:
                 return new DefaultInsertStatement(values, schema, tableName);
@@ -88,13 +103,13 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
                     oldValues.put(key, splitValues[0]);
                     newValues.put(key, splitValues.length > 1 ? splitValues[1] : splitValues[0]);
                 });
-                return new DefaultUpdateStatement(newValues, oldValues, schema, tableName);
+                return new DefaultUpdateStatement(sanitizeValues(newValues), sanitizeValues(oldValues), schema, tableName);
             default:
                 throw new RuntimeException(String.format("Illegal statement type: %s", type));
         }
     }
 
-    public List<String> getColumnNames(){
+    public List<String> getColumnNames() {
         return csvParser.getHeaderMap()
                 .entrySet()
                 .parallelStream()

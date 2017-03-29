@@ -6,6 +6,7 @@ import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 public class OpenBitSetFD {
     private OpenBitSet lhs;
     private int rhs;
+
     public OpenBitSetFD(OpenBitSet lhs, int rhs) {
         this.lhs = lhs;
         this.rhs = rhs;
@@ -22,6 +23,10 @@ public class OpenBitSetFD {
     @Override
     public String toString() {
         return BitSetUtils.toString(lhs) + "->" + rhs;
+    }
+
+    public String toString(int lhsSize) {
+        return BitSetUtils.toString(lhs, lhsSize) + "->" + rhs;
     }
 
     @Override

@@ -18,11 +18,11 @@ public class DefaultDeleteStatement extends StatementBase implements DeleteState
     }
 
     @Override
-    public boolean isOfEqualLayout(Statement statement){
+    public boolean isOfEqualLayout(Statement statement) {
         return
                 statement.getClass().equals(this.getClass()) &&
-                this.getTableName().equalsIgnoreCase(statement.getTableName()) &&
-                this.getSchema().equalsIgnoreCase(statement.getSchema());
+                        this.getTableName().equalsIgnoreCase(statement.getTableName()) &&
+                        this.getSchema().equalsIgnoreCase(statement.getSchema());
     }
 
     @Override

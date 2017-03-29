@@ -39,36 +39,37 @@ import static org.mockito.Mockito.mock;
 
 abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
 
+    final int stopAfter;
+    final String schema, tableName, sourceTableName;
     private final IncrementalFDConfiguration config;
     private final IncrementalFDResultListener resultListener = new IncrementalFDResultListener();
     private final List<BenchmarkEvent> batchEvents = new ArrayList<>();
-
-    final int stopAfter;
-    final String schema, tableName, sourceTableName;
-    private final boolean hyfdOnly;
+    private final String pgdb, pgpass, pguser;
+    private final boolean hyfdOnly, hyfdCreateIndex;
     private long baselineSize;
 
-    BaseTestCase(String schema, String tableName, IncrementalFDConfiguration config, int stopAfter, boolean hyfdOnly) {
-        this.schema = schema;
-        this.sourceTableName = tableName;
-        this.tableName = tableName + "_tmp";
-        this.config = config;
-        this.stopAfter = stopAfter;
-        this.hyfdOnly = hyfdOnly;
+    BaseTestCase(TestCaseParameters parameters) {
+        this.schema = parameters.schema;
+        this.sourceTableName = parameters.tableName;
+        this.tableName = parameters.tableName + (parameters.hyfdOnly ? "_tmp" : "");
+        this.config = parameters.config;
+        this.stopAfter = parameters.stopAfter;
+        this.hyfdOnly = parameters.hyfdOnly;
+        this.hyfdCreateIndex = parameters.hyfdCreateIndex;
+        this.pgdb = parameters.pgdb;
+        this.pguser = parameters.pguser;
+        this.pgpass = parameters.pgpass;
         Benchmark.addEventListener(this);
     }
 
     @Override
     public void execute() throws ConnectionException, IOException {
-        try (Connection conn = ConnectionManager.getPostgresConnection(); DataConnector dc = new JdbcDataConnector(conn)) {
+//        try(Connection conn = ConnectionManager.getCsvConnection(ResourceConnector.BASELINE, ","); DataConnector dc = new JdbcDataConnector(conn)) {
+        try (Connection conn = ConnectionManager.getPostgresConnection(pgdb, pguser, pgpass); DataConnector dc = new JdbcDataConnector(conn)) {
 
-            // create temporary table that we can modify as batches come in
-            Statement stmt = conn.createStatement();
-            stmt.execute("CREATE TEMPORARY TABLE " + (schema.isEmpty() ? "" : schema + ".") + tableName + " AS SELECT * FROM " + sourceTableName);
-
+            Table table = dc.getTable(schema, sourceTableName);
+            setBaselineSize(table.getRowCount());
             StreamableBatchSource batchSource = getBatchSource();
-            Table table = dc.getTable(schema, tableName);
-            baselineSize = table.getRowCount();
 
             // execute HyFD in any case; we need the data structure for the incremental algorithm, and can use it
             // as warmup if we run in hyfdOnly mode
@@ -80,11 +81,26 @@ abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
             fds.forEach(fd -> FDLogger.log(Level.FINE, fd.toString()));
 
             if (hyfdOnly) {
+                // create temporary table that we can modify as batches come in
+                String fullTableName = (schema.isEmpty() ? "" : schema + ".") + tableName;
+                Statement stmt = conn.createStatement();
+                stmt.execute("CREATE TEMPORARY TABLE " + fullTableName + " AS SELECT * FROM " + sourceTableName);
+
+                dc.clearTableNames(schema);
+                table = dc.getTable(schema, tableName);
+
+                if (hyfdCreateIndex) {
+                    // create index on every column of the temporary table
+                    for (String column : table.getColumnNames())
+                        stmt.execute(String.format("CREATE INDEX %s_%s_idx ON %s (%s)", tableName, column, fullTableName, column));
+                }
+
                 BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, new PassThroughDatabaseBatchHandler(dc), true);
                 batchProcessor.addBatchHandler(new HyFDBatchHandler(table, getLimit(), config, resultListener));
             } else {
                 FDIntermediateDatastructure ds = initialAlgorithm.getIntermediateDataStructure();
                 IncrementalFD incrementalAlgorithm = new IncrementalFD(sourceTableName, config);
+
                 incrementalAlgorithm.initialize(ds);
                 incrementalAlgorithm.addResultListener(resultListener);
                 BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, mock(DatabaseBatchHandler.class), false);
@@ -95,8 +111,8 @@ abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
             batchSource.startStreaming();
             b.finish();
 
-            FDLogger.log(Level.INFO, String.format("Cumulative runtime (algorithm only): %sms", getTotalTime(batchEvents)));
-            FDLogger.log(Level.INFO, String.format("Found %s FDs:", resultListener.getFDs().size()));
+            System.out.println(String.format("Cumulative runtime (algorithm only): %sms", getTotalTime(batchEvents)));
+            System.out.println(String.format("Found %s FDs:", resultListener.getFDs().size()));
             resultListener.getFDs().forEach(fd -> FDLogger.log(Level.INFO, fd.toString()));
 
         } catch (SQLException e) {
@@ -127,15 +143,15 @@ abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
         if (info.getLevel() == BenchmarkLevel.BATCH.ordinal()) batchEvents.add(info);
     }
 
-    private long getAverageTime(List<BenchmarkEvent> events){
-        return (long)events
+    private long getAverageTime(List<BenchmarkEvent> events) {
+        return (long) events
                 .stream()
                 .mapToLong(BenchmarkEvent::getDuration)
                 .average()
                 .orElse(-1);
     }
 
-    private long getMedianTime(List<BenchmarkEvent> events){
+    private long getMedianTime(List<BenchmarkEvent> events) {
         return events
                 .stream()
                 .mapToLong(BenchmarkEvent::getDuration)
@@ -145,18 +161,24 @@ abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
                 .orElse(-1);
     }
 
-    private long getTotalTime(List<BenchmarkEvent> events){
+    private long getTotalTime(List<BenchmarkEvent> events) {
         return events
                 .stream()
                 .mapToLong(BenchmarkEvent::getDuration)
                 .sum();
     }
 
-    int getLimit() { return 0; }
+    int getLimit() {
+        return 0;
+    }
 
     abstract protected String getBatchSize();
 
     abstract protected StreamableBatchSource getBatchSource();
+
+    protected void setBaselineSize(long baselineSize) {
+        this.baselineSize = baselineSize;
+    }
 
     private static class HyFDBatchHandler implements BatchHandler {
 

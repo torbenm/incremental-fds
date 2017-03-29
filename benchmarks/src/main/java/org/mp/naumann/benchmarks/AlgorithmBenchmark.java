@@ -12,18 +12,20 @@ public interface AlgorithmBenchmark<T, R> {
     }
 
 
-
-    default void runIncremental(){
+    default void runIncremental() {
         getBatchSource().startStreaming();
     }
 
-    default void runBoth(){
+    default void runBoth() {
         runInitial();
         runIncremental();
     }
 
     String getCurrentTestCase();
+
     StreamableBatchSource getBatchSource();
-    InitialAlgorithm<T,R> getInitialAlgorithm();
+
+    InitialAlgorithm<T, R> getInitialAlgorithm();
+
     IncrementalAlgorithm<T, R> getIncrementalAlgorithm();
 }

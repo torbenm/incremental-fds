@@ -19,7 +19,7 @@ public abstract class AbstractBatchSourceTest {
     protected int numberOfBatchSourceListeners = 20;
 
     @Test
-    public void test_add_remove_batchsource_listener(){
+    public void test_add_remove_batchsource_listener() {
         BatchSourceListener bsl1 = mock(BatchSourceListener.class);
         BatchSourceListener bsl2 = mock(BatchSourceListener.class);
 
@@ -40,10 +40,10 @@ public abstract class AbstractBatchSourceTest {
     }
 
     @Test
-    public void testNotifyListener(){
+    public void testNotifyListener() {
         Batch batch = mock(Batch.class);
         List<BatchSourceListener> batchSourceListeners = new ArrayList<>(numberOfBatchSourceListeners);
-        for(int i = 0; i < numberOfBatchSourceListeners; i++){
+        for (int i = 0; i < numberOfBatchSourceListeners; i++) {
             batchSourceListeners.add(mock(BatchSourceListener.class));
             abstractBatchSource.addBatchSourceListener(batchSourceListeners.get(i));
         }

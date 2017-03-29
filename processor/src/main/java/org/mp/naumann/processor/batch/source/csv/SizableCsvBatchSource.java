@@ -1,9 +1,11 @@
 package org.mp.naumann.processor.batch.source.csv;
 
+
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.processor.batch.ListBatch;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
+
 
 public abstract class SizableCsvBatchSource extends CsvFileBatchSource implements StreamableBatchSource {
 

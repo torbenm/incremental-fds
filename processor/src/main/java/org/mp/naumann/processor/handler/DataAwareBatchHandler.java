@@ -9,8 +9,9 @@ public interface DataAwareBatchHandler extends BatchHandler {
 
     /**
      * Establishes the connection of this BatchHandler to the database in the background.
+     *
      * @param dataConnector A DataConnector object representing the database connection.
      */
-	void setDataConnector(DataConnector dataConnector);
+    void setDataConnector(DataConnector dataConnector);
 
 }

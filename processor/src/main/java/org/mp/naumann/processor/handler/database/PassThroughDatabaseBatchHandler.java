@@ -20,8 +20,8 @@ public class PassThroughDatabaseBatchHandler implements DatabaseBatchHandler {
         table.execute(batch);
     }
 
-	@Override
-	public DataConnector getConnector() {
-		return dataConnector;
-	}
+    @Override
+    public DataConnector getConnector() {
+        return dataConnector;
+    }
 }

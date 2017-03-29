@@ -84,4 +84,12 @@ public class BitSetUtils {
         }
         return s.toString();
     }
+
+    public static OpenBitSet fromString(String s) {
+        OpenBitSet bits = new OpenBitSet(s.length());
+        for (int idx = s.indexOf("1"); idx >= 0; idx = s.indexOf("1", idx + 1)) {
+            bits.fastSet(idx);
+        }
+        return bits;
+    }
 }

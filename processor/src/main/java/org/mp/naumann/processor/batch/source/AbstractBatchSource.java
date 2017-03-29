@@ -17,12 +17,12 @@ public abstract class AbstractBatchSource implements BatchSource {
         batchSourceListenerSet.remove(batchSourceListener);
     }
 
-    Set<BatchSourceListener> getBatchSourceListener(){
+    Set<BatchSourceListener> getBatchSourceListener() {
         return batchSourceListenerSet;
     }
 
-    protected void notifyListener(Batch batch){
-        for(BatchSourceListener listener : getBatchSourceListener())
+    protected void notifyListener(Batch batch) {
+        for (BatchSourceListener listener : getBatchSourceListener())
             listener.batchArrived(batch);
     }
 }

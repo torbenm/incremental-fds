@@ -11,34 +11,36 @@ import java.util.List;
 
 public class HyFDInitialAlgorithm implements InitialAlgorithm<List<FunctionalDependency>, FDIntermediateDatastructure> {
 
-	private HyFD hyfd;
-	private List<FunctionalDependency> fds = new ArrayList<>();
+    private HyFD hyfd;
+    private List<FunctionalDependency> fds = new ArrayList<>();
 
-	public HyFDInitialAlgorithm(IncrementalFDConfiguration configuration, Table table) {
-		hyfd = new HyFD(configuration, table, fds::add);
-	}
-	
-	@Override
-	public FDIntermediateDatastructure getIntermediateDataStructure() {
-		return new FDIntermediateDatastructure(hyfd.getNegCover(), hyfd.getPosCover(), hyfd.getPLIBuilder(), hyfd.getValueComparator(), hyfd.getViolationCollection(), hyfd.getColumns(), hyfd.getPruner());
-	}
+    public HyFDInitialAlgorithm(IncrementalFDConfiguration configuration, Table table) {
+        hyfd = new HyFD(configuration, table, fds::add);
+    }
 
-	@Override
-	public List<FunctionalDependency> execute() {
-		fds.clear();
-		try {
-			hyfd.execute();
-		} catch (AlgorithmExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return fds;
-	}
+    @Override
+    public FDIntermediateDatastructure getIntermediateDataStructure() {
+        return new FDIntermediateDatastructure(hyfd.getPosCover(), hyfd.getPLIBuilder(), hyfd.getValueComparator(), hyfd.getViolationCollection(), hyfd.getColumns(), hyfd.getPruner());
+    }
 
-	public List<FunctionalDependency> getFDs() {
-		return fds;
-	}
+    @Override
+    public List<FunctionalDependency> execute() {
+        fds.clear();
+        try {
+            hyfd.execute();
+        } catch (AlgorithmExecutionException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return fds;
+    }
 
-	public int getValidationCount() { return hyfd.lastValidationCount; }
+    public List<FunctionalDependency> getFDs() {
+        return fds;
+    }
+
+    public int getValidationCount() {
+        return hyfd.lastValidationCount;
+    }
 
 }

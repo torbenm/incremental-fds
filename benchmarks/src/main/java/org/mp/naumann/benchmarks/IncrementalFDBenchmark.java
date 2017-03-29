@@ -20,13 +20,13 @@ import java.sql.Connection;
 
 public class IncrementalFDBenchmark implements AlgorithmBenchmark {
 
+    private final IncrementalFDConfiguration version;
     private HyFDInitialAlgorithm initialAlgorithm;
     private IncrementalFD incrementalAlgorithm;
     private String currentTestCase;
     private StreamableBatchSource batchSource;
     private SynchronousBatchProcessor batchProcessor;
     private IncrementalFDResultListener resultListener;
-    private final IncrementalFDConfiguration version;
 
     public IncrementalFDBenchmark(IncrementalFDConfiguration version) {
         this.version = version;
@@ -63,7 +63,7 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
         constructInitialOnly(version, testCase, csvConnection, schema, tableName);
     }
 
-    private void reset(){
+    private void reset() {
         this.incrementalAlgorithm = null;
         this.initialAlgorithm = null;
         this.currentTestCase = null;
@@ -71,11 +71,11 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
         this.batchSource = null;
     }
 
-    public void setIncrementalFDResultListener(IncrementalFDResultListener resultListener){
+    public void setIncrementalFDResultListener(IncrementalFDResultListener resultListener) {
         this.resultListener = resultListener;
     }
 
-    public String getVersionName(){
+    public String getVersionName() {
         return version.getVersionName();
     }
 

@@ -34,7 +34,7 @@ public class DeleteStatementQueryBuilderTest {
                 DeleteStatements.createDeleteStatement2()
         );
         String expected = "DELETE FROM test.places WHERE " +
-                "(country = 'DE' AND city = 'Berlin' AND street = 'Unter den Linden')"+
+                "(country = 'DE' AND city = 'Berlin' AND street = 'Unter den Linden')" +
                 " OR (country = 'DE' AND city = 'Potsdam' AND street = 'August-Bebel-Str.');";
 
         assertEquals(expected, dsqb.generateMulti(statements));
@@ -48,8 +48,8 @@ public class DeleteStatementQueryBuilderTest {
                 DeleteStatements.createDeleteStatement2Columns()
         );
         String expected = "DELETE FROM test.places WHERE " +
-                "(country = 'DE' AND city = 'Berlin' AND street = 'Unter den Linden')"+
-                " OR (country = 'DE' AND city = 'Potsdam' AND street = 'August-Bebel-Str.')"+
+                "(country = 'DE' AND city = 'Berlin' AND street = 'Unter den Linden')" +
+                " OR (country = 'DE' AND city = 'Potsdam' AND street = 'August-Bebel-Str.')" +
                 " OR (country = 'US' AND city = 'San Francisco');";
 
         assertEquals(expected, dsqb.generateMulti(statements));

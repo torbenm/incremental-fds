@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-public class BridgesFixture implements AlgorithmFixture{
+public class BridgesFixture implements AlgorithmFixture {
     protected ImmutableList<String> columnNames = ImmutableList.of("column1", "column2", "column3", "column4", "column5", "column6", "column7", "column8", "column9", "column10", "column11", "column12", "column13");
     protected int numberOfColumns = 13;
     protected String relationName = "bridges";

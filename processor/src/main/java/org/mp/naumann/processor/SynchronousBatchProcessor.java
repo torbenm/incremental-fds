@@ -30,10 +30,11 @@ public class SynchronousBatchProcessor extends BatchProcessor {
 
     /**
      * Processes the batch in a synchronous fashion
+     *
      * @param batch The batch to process
      */
     protected void distributeBatch(Batch batch) {
-        for(BatchHandler batchHandler : getBatchHandlers()){
+        for (BatchHandler batchHandler : getBatchHandlers()) {
             batchHandler.handleBatch(batch);
         }
     }

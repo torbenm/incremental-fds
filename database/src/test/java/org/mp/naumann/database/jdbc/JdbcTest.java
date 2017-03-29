@@ -18,11 +18,10 @@ public class JdbcTest {
 
     static final String schema = "test";
     static final String tableName = "countries";
-    static DataConnector connector;
     private static final DatabasePreparer preparer = new PostgresConnectionPreparer();
-
     @ClassRule
     static public PreparedDbRule pr = EmbeddedPostgresRules.preparedDatabase(preparer);
+    static DataConnector connector;
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
