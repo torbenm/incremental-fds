@@ -16,11 +16,11 @@ public class KIntersectionMatcher implements Matcher {
         int j = 0;
         int c = 0;
         boolean matchedOnAll = true;
-        for(Integer rhsAttr : BitSetUtils.iterable(attrs)){
-            if(rhsAttr < removedValues.length && violatingValues[j] == removedValues[rhsAttr]){
-                if(++c >= k){
+        for (Integer rhsAttr : BitSetUtils.iterable(attrs)) {
+            if (rhsAttr < removedValues.length && violatingValues[j] == removedValues[rhsAttr]) {
+                if (++c >= k) {
                     return true;
-                }else{
+                } else {
                     matchedOnAll = false;
                 }
             }

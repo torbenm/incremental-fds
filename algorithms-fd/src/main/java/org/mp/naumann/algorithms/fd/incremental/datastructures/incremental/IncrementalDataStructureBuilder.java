@@ -1,6 +1,7 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
@@ -17,8 +18,14 @@ import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -31,9 +38,8 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
     private final List<Integer> pliOrder;
     private final IncrementalClusterMapBuilder clusterMapBuilder;
     private final Dictionary<String> dictionary;
-
-    private List<? extends PositionListIndex> plis;
     private final MapCompressedRecords compressedRecords;
+    private List<? extends PositionListIndex> plis;
 
     public IncrementalDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns) {
         this(pliBuilder, version, columns, pliBuilder.getPliOrder());
@@ -49,6 +55,15 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         this.compressedRecords = new MapCompressedRecords(nextRecordId, pliOrder.size());
         this.clusterMapBuilder = new IncrementalClusterMapBuilder(columns.size(), nextRecordId, dictionary);
         initialize(pliBuilder.getClusterMaps(), nextRecordId);
+    }
+
+    private static int[] fetchRecordFrom(int recordId, List<Map<Integer, Integer>> invertedPlis) {
+        int numAttributes = invertedPlis.size();
+        int[] record = new int[numAttributes];
+        for (int i = 0; i < numAttributes; i++) {
+            record[i] = invertedPlis.get(i).getOrDefault(recordId, PliUtils.UNIQUE_VALUE);
+        }
+        return record;
     }
 
     private void initialize(List<HashMap<String, IntArrayList>> oldClusterMaps, int nextRecordId) {
@@ -133,15 +148,6 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         deleted.forEach(compressedRecords::remove);
     }
 
-    private static int[] fetchRecordFrom(int recordId, List<Map<Integer, Integer>> invertedPlis) {
-        int numAttributes = invertedPlis.size();
-        int[] record = new int[numAttributes];
-        for (int i = 0; i < numAttributes; i++) {
-            record[i] = invertedPlis.get(i).getOrDefault(recordId, PliUtils.UNIQUE_VALUE);
-        }
-        return record;
-    }
-
     private List<Map<Integer, Integer>> invertPlis(List<Map<Integer, IntArrayList>> clusterMaps) {
         List<Map<Integer, Integer>> invertedPlis = new ArrayList<>();
         for (int clusterId : pliOrder) {
@@ -177,7 +183,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
     }
 
     private int[] getCompressedRecord(int record) {
-        return version.usesPruningStrategy(PruningStrategy.ANNOTATION) || version.usesPruningStrategy(PruningStrategy.SIMPLE)? compressedRecords.get(record) : null;
+        return version.usesPruningStrategy(PruningStrategy.ANNOTATION) || version.usesPruningStrategy(PruningStrategy.SIMPLE) ? compressedRecords.get(record) : null;
     }
 
     private class StatementApplier extends AbstractStatementApplier {

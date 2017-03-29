@@ -18,7 +18,7 @@ public abstract class SizableCsvBatchSource extends CsvFileBatchSource implement
 
     public SizableCsvBatchSource(String schema, String tableName, int batchSize) {
         super(schema, tableName);
-    	this.batchSize = batchSize;
+        this.batchSize = batchSize;
     }
 
     public SizableCsvBatchSource(String schema, String tableName, int batchSize, int stopAfter, int skipFirst) {
@@ -31,7 +31,7 @@ public abstract class SizableCsvBatchSource extends CsvFileBatchSource implement
         return batchSize;
     }
 
-    public void startStreaming(){
+    public void startStreaming() {
         streaming = true;
         weakStream();
         start();
@@ -39,13 +39,13 @@ public abstract class SizableCsvBatchSource extends CsvFileBatchSource implement
 
     protected abstract void start();
 
-	public void endStreaming(){
+    public void endStreaming() {
         //Stream one last time
         streaming = false;
         forceStream();
     }
 
-    public boolean isStreaming(){
+    public boolean isStreaming() {
         return streaming;
     }
 
@@ -53,15 +53,15 @@ public abstract class SizableCsvBatchSource extends CsvFileBatchSource implement
         return doneFilling;
     }
 
-    protected void finishFilling(){
+    protected void finishFilling() {
         doneFilling = true;
-        if(streaming)
+        if (streaming)
             forceStream();
     }
 
-    protected void addStatement(Statement stmt){
+    protected void addStatement(Statement stmt) {
         this.statementList.add(stmt);
-        if(streaming)
+        if (streaming)
             weakStream();
     }
 
@@ -70,31 +70,32 @@ public abstract class SizableCsvBatchSource extends CsvFileBatchSource implement
      * Otherwise, it checks if filling the storage up is done.
      * Then it calls forceStream to stream the rest.
      */
-    protected void weakStream(){
+    protected void weakStream() {
         // Streams if either their is enough to fill a batch,
         // or all the rest if filling is completed.
-        if(hasEnoughToStream() && streaming){
+        if (hasEnoughToStream() && streaming) {
             stream(batchSize);
             weakStream();
-        }else if(doneFilling){
+        } else if (doneFilling) {
             forceStream();
         }
     }
 
     /**
-     * Streams either way. However, it does not send out batches bigger than the specified batch size,
-     * but does not mind sending less either.
+     * Streams either way. However, it does not send out batches bigger than the specified batch
+     * size, but does not mind sending less either.
      */
-    protected  void forceStream(){
+    protected void forceStream() {
         // Streams all there is left if it is fewer than the specified size
-        if(hasSomethingToStream()){
-            int size = hasEnoughToStream() ? batchSize : statementList.size() -currentStatementPosition;
+        if (hasSomethingToStream()) {
+            int size = hasEnoughToStream() ? batchSize : statementList.size() - currentStatementPosition;
             stream(size);
             forceStream();
         }
     }
-    private synchronized void stream(int size){
-        if(stopAfter < 0 || currentBatch < stopAfter) {
+
+    private synchronized void stream(int size) {
+        if (stopAfter < 0 || currentBatch < stopAfter) {
             Batch batchToSend = new ListBatch(
                     statementList.subList(currentStatementPosition, currentStatementPosition + size),
                     this.schema,
@@ -103,17 +104,17 @@ public abstract class SizableCsvBatchSource extends CsvFileBatchSource implement
             currentStatementPosition += size;
             notifyListener(batchToSend);
             currentBatch++;
-        }else{
+        } else {
             streaming = false;
         }
 
     }
 
-    protected boolean hasEnoughToStream(){
+    protected boolean hasEnoughToStream() {
         return statementList.size() - currentStatementPosition >= batchSize;
     }
 
-    protected boolean hasSomethingToStream(){
+    protected boolean hasSomethingToStream() {
         return statementList.size() > currentStatementPosition;
     }
 

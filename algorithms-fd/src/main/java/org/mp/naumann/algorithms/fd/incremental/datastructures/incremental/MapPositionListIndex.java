@@ -38,6 +38,11 @@ class MapPositionListIndex extends PositionListIndex {
 
     private final Map<Integer, IntArrayList> clusters;
 
+    MapPositionListIndex(int attribute, Map<Integer, IntArrayList> clusters) {
+        super(attribute);
+        this.clusters = clusters;
+    }
+
     @Override
     public Collection<IntArrayList> getClusters() {
         return this.clusters.entrySet().stream().filter(e -> !e.getKey().equals(PliUtils.UNIQUE_VALUE)).map(Entry::getValue).collect(Collectors.toList());
@@ -46,11 +51,6 @@ class MapPositionListIndex extends PositionListIndex {
     @Override
     public IntArrayList getCluster(int index) {
         return clusters.get(index);
-    }
-
-    MapPositionListIndex(int attribute, Map<Integer, IntArrayList> clusters) {
-        super(attribute);
-        this.clusters = clusters;
     }
 
     Map<Integer, IntArrayList> getRawClusters() {

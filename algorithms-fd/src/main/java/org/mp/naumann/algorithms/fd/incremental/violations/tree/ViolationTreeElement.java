@@ -11,9 +11,9 @@ import java.util.Collection;
 public class ViolationTreeElement {
 
     private final OpenBitSet rhsCover;
-    private int numAttributes;
     private final ViolatingPairCollection violatingPairs;
     private final int violationCollectionSize;
+    private int numAttributes;
     private boolean isCover = false;
     private ViolationTreeElement[] children;
 
@@ -25,12 +25,12 @@ public class ViolationTreeElement {
     }
 
     public void add(OpenBitSet attr, ViolatingPair violatingPair, int currentRhs) {
-        if(currentRhs < 0){
+        if (currentRhs < 0) {
             // Found our guy!
             isCover = true;
-            if(violatingPairs.size() >= violationCollectionSize) return;
+            if (violatingPairs.size() >= violationCollectionSize) return;
             this.violatingPairs.add(violatingPair);
-        }else{
+        } else {
             getOrAddChild(currentRhs).add(attr, violatingPair, attr.nextSetBit(currentRhs + 1));
         }
     }
@@ -47,10 +47,10 @@ public class ViolationTreeElement {
         return rhsCover;
     }
 
-    private ViolationTreeElement getOrAddChild(int index){
-        if(children == null)
+    private ViolationTreeElement getOrAddChild(int index) {
+        if (children == null)
             children = new ViolationTreeElement[numAttributes];
-        if(children[index] == null){
+        if (children[index] == null) {
             OpenBitSet cover = this.rhsCover.clone();
             cover.set(index);
             children[index] = new ViolationTreeElement(cover, numAttributes, violationCollectionSize);
@@ -70,40 +70,40 @@ public class ViolationTreeElement {
 
         //TODO: can this first case ever happen?
         int nextPossRhs = 0;
-        if(rhsCover.cardinality() > 0){
+        if (rhsCover.cardinality() > 0) {
             nextPossRhs = available.nextSetBit(rhsCover.nextSetBit(0));
-            if(nextPossRhs < 0) return;
+            if (nextPossRhs < 0) return;
         }
-        if(children == null) return;
+        if (children == null) return;
 
-       for(int rhs = nextPossRhs; rhs >= 0; rhs = available.nextSetBit(rhs+1)){
-            if(children[rhs] != null){
+        for (int rhs = nextPossRhs; rhs >= 0; rhs = available.nextSetBit(rhs + 1)) {
+            if (children[rhs] != null) {
                 children[rhs].findAffected(removedRecords, available.clone(), affected);
             }
         }
     }
 
     protected void checkAffectedness(Collection<Integer> removedRecords,
-                                   OpenBitSet available,
-                                   Collection<OpenBitSetFD> affected){
-        if(isCover){
-            if(isAffected(removedRecords)){
+                                     OpenBitSet available,
+                                     Collection<OpenBitSetFD> affected) {
+        if (isCover) {
+            if (isAffected(removedRecords)) {
                 exportPossibleFds(available, affected);
             }
             trimRhsWithCover(available);
         }
     }
 
-    protected boolean isAffected(Collection<Integer> removedRecords){
+    protected boolean isAffected(Collection<Integer> removedRecords) {
         violatingPairs.removeAllIntersections(removedRecords);
         return violatingPairs.size() == 0;
     }
 
-    protected void trimRhsWithCover(OpenBitSet availableRhs){
+    protected void trimRhsWithCover(OpenBitSet availableRhs) {
         availableRhs.andNot(rhsCover);
     }
 
-    protected void exportPossibleFds(OpenBitSet available,Collection<OpenBitSetFD> affected){
+    protected void exportPossibleFds(OpenBitSet available, Collection<OpenBitSetFD> affected) {
 
         // --> Export
         OpenBitSet rhs = available.clone();
@@ -112,7 +112,7 @@ public class ViolationTreeElement {
         OpenBitSet lhs = rhsCover.clone();
         lhs.flip(0, numAttributes);
 
-        for(int rhsAttr : BitSetUtils.iterable(rhs)){
+        for (int rhsAttr : BitSetUtils.iterable(rhs)) {
             affected.add(new OpenBitSetFD(lhs, rhsAttr));
         }
     }

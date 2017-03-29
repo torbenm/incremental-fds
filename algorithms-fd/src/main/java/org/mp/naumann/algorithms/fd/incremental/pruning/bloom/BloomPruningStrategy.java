@@ -28,9 +28,8 @@ import java.util.stream.Collectors;
 public class BloomPruningStrategy {
 
     private final List<String> columns;
-    private BloomFilter<Collection<ColumnValue>> filter;
     private final Collection<BloomGenerator> generators = new ArrayList<>();
-
+    private BloomFilter<Collection<ColumnValue>> filter;
     private int puts = 0;
     private int requests = 0;
     private Map<OpenBitSet, List<Integer>> combinations;
