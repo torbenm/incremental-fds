@@ -1,5 +1,7 @@
 package org.mp.naumann.database.jdbc.sql;
 
+import org.mp.naumann.database.statement.DefaultDeleteStatement;
+import org.mp.naumann.database.statement.DefaultInsertStatement;
 import org.mp.naumann.database.statement.DeleteStatement;
 import org.mp.naumann.database.statement.InsertStatement;
 import org.mp.naumann.database.statement.Statement;
@@ -23,7 +25,7 @@ public class SqlQueryBuilder {
 
         if (stmt instanceof UpdateStatement) {
             UpdateStatement update = (UpdateStatement) stmt;
-            InsertStatement insert = new DefaultInsertStatement(update.getValueMap(), update.getSchema(), update.getTableName());
+            InsertStatement insert = new DefaultInsertStatement(update.getNewValueMap(), update.getSchema(), update.getTableName());
             DeleteStatement delete = new DefaultDeleteStatement(update.getOldValueMap(), update.getSchema(), update.getTableName());
             return generateSql(delete) + "\n" + generateSql(insert);
         }

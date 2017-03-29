@@ -89,7 +89,7 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
         return values;
     }
 
-    private Statement createStatement(String type, Map<String, String> values) {
+    public Statement createStatement(String type, Map<String, String> values) {
         switch (CsvKeyWord.valueOfKeyWord(type)) {
             case INSERT_STATEMENT:
                 return new DefaultInsertStatement(values, schema, tableName);
