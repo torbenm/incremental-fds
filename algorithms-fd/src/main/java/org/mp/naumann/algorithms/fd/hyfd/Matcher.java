@@ -30,7 +30,7 @@ class Matcher {
         if (configuration.usesPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS)) {
             pruner.addAgreeSet(equalAttrs.clone(), recId1, recId2);
         }
-        if(configuration.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)) {
+        if (configuration.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)) {
             violationCollection.add(equalAttrs, recId1, recId2);
         }
     }

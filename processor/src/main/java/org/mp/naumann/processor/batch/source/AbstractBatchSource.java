@@ -1,9 +1,9 @@
 package org.mp.naumann.processor.batch.source;
 
+import org.mp.naumann.processor.batch.Batch;
+
 import java.util.HashSet;
 import java.util.Set;
-
-import org.mp.naumann.processor.batch.Batch;
 
 public abstract class AbstractBatchSource implements BatchSource {
 
@@ -17,12 +17,12 @@ public abstract class AbstractBatchSource implements BatchSource {
         batchSourceListenerSet.remove(batchSourceListener);
     }
 
-    Set<BatchSourceListener> getBatchSourceListener(){
+    Set<BatchSourceListener> getBatchSourceListener() {
         return batchSourceListenerSet;
     }
 
-    protected void notifyListener(Batch batch){
-        for(BatchSourceListener listener : getBatchSourceListener())
+    protected void notifyListener(Batch batch) {
+        for (BatchSourceListener listener : getBatchSourceListener())
             listener.batchArrived(batch);
     }
 }

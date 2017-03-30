@@ -1,9 +1,10 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
-import java.util.List;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.structures.Lattice;
+
+import java.util.List;
 
 class FDInductor {
 

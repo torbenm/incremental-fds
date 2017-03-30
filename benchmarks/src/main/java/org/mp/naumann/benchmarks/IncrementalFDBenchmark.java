@@ -1,34 +1,32 @@
 package org.mp.naumann.benchmarks;
 
+import org.mockito.Mockito;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.InitialAlgorithm;
-import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.HyFDInitialAlgorithm;
-import org.mp.naumann.algorithms.fd.incremental.deprecated.IncrementalFD;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFD;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.DataConnector;
 import org.mp.naumann.database.Table;
 import org.mp.naumann.database.jdbc.JdbcDataConnector;
 import org.mp.naumann.processor.SynchronousBatchProcessor;
-import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
-import org.mp.naumann.processor.fake.FakeDatabaseBatchHandler;
+import org.mp.naumann.processor.batch.source.csv.FixedSizeCsvBatchSource;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 
 import java.sql.Connection;
 
 public class IncrementalFDBenchmark implements AlgorithmBenchmark {
 
+    private final IncrementalFDConfiguration version;
     private HyFDInitialAlgorithm initialAlgorithm;
     private IncrementalFD incrementalAlgorithm;
     private String currentTestCase;
     private StreamableBatchSource batchSource;
     private SynchronousBatchProcessor batchProcessor;
     private IncrementalFDResultListener resultListener;
-    private final IncrementalFDConfiguration version;
 
     public IncrementalFDBenchmark(IncrementalFDConfiguration version) {
         this.version = version;
@@ -39,8 +37,8 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
         reset();
         this.currentTestCase = testCase;
 
-        batchSource = new FixedSizeBatchSource(incrementalFilePath, "", "", batchSize, stopAfter, 0);
-        DatabaseBatchHandler databaseBatchHandler = new FakeDatabaseBatchHandler();
+        batchSource = new FixedSizeCsvBatchSource(incrementalFilePath, "", "", batchSize, stopAfter, 0);
+        DatabaseBatchHandler databaseBatchHandler = Mockito.mock(DatabaseBatchHandler.class);
 
         DataConnector dc = new JdbcDataConnector(csvConnection);
         Table table = dc.getTable(schema, tableName);
@@ -65,7 +63,7 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
         constructInitialOnly(version, testCase, csvConnection, schema, tableName);
     }
 
-    private void reset(){
+    private void reset() {
         this.incrementalAlgorithm = null;
         this.initialAlgorithm = null;
         this.currentTestCase = null;
@@ -73,11 +71,11 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
         this.batchSource = null;
     }
 
-    public void setIncrementalFDResultListener(IncrementalFDResultListener resultListener){
+    public void setIncrementalFDResultListener(IncrementalFDResultListener resultListener) {
         this.resultListener = resultListener;
     }
 
-    public String getVersionName(){
+    public String getVersionName() {
         return version.getVersionName();
     }
 
@@ -107,9 +105,7 @@ public class IncrementalFDBenchmark implements AlgorithmBenchmark {
     public void runIncremental() {
         incrementalAlgorithm.initialize(initialAlgorithm.getIntermediateDataStructure());
         incrementalAlgorithm.addResultListener(resultListener);
-        SpeedBenchmark.begin(BenchmarkLevel.ALGORITHM);
         getBatchSource().startStreaming();
-        SpeedBenchmark.end(BenchmarkLevel.ALGORITHM, "Finished incremental algorithm for test case "+getCurrentTestCase());
 
     }
 }

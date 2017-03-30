@@ -16,19 +16,32 @@
 
 package org.mp.naumann.algorithms.fd;
 
-import org.mp.naumann.algorithms.fd.FunctionalDependency;
-
 /**
  * Receives the results of a {@link FunctionalDependencyAlgorithm}.
  */
 public interface FunctionalDependencyResultReceiver {
 
-  /**
-   * Receives a {@link FunctionalDependency} from a {@link FunctionalDependencyAlgorithm}.
-   *
-   * @param functionalDependency a found {@link de.metanome.algorithm_integration.results.FunctionalDependency}
-   * @throws de.metanome.algorithm_integration.result_receiver.CouldNotReceiveResultException if no result could be received
-   * @throws ColumnNameMismatchException if the column names of the result does not match the column names of the input
-   */
-  void receiveResult(FunctionalDependency functionalDependency);
+    /**
+     * Receives a {@link FunctionalDependency} from a {@link FunctionalDependencyAlgorithm}.
+     *
+     * @param functionalDependency a found {@link de.metanome.algorithm_integration.results.FunctionalDependency}
+     * @throws de.metanome.algorithm_integration.result_receiver.CouldNotReceiveResultException if no
+     *                                                                                          result
+     *                                                                                          could
+     *                                                                                          be received
+     * @throws ColumnNameMismatchException                                                      if the
+     *                                                                                          column
+     *                                                                                          names
+     *                                                                                          of the
+     *                                                                                          result
+     *                                                                                          does
+     *                                                                                          not
+     *                                                                                          match
+     *                                                                                          the
+     *                                                                                          column
+     *                                                                                          names
+     *                                                                                          of the
+     *                                                                                          input
+     */
+    void receiveResult(FunctionalDependency functionalDependency);
 }

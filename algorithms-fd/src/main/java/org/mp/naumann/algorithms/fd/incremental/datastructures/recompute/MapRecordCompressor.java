@@ -21,6 +21,15 @@ class MapRecordCompressor implements RecordCompressor {
         this.plis = plis;
     }
 
+    private static int[] fetchRecordFrom(int recordId, List<Map<Integer, Integer>> invertedPlis) {
+        int numAttributes = invertedPlis.size();
+        int[] record = new int[numAttributes];
+        for (int i = 0; i < numAttributes; i++) {
+            record[i] = invertedPlis.get(i).getOrDefault(recordId, PliUtils.UNIQUE_VALUE);
+        }
+        return record;
+    }
+
     @Override
     public CompressedRecords buildCompressedRecords() {
         MapCompressedRecords compressedRecords = new MapCompressedRecords(recordIds.size(), plis.size());
@@ -46,15 +55,6 @@ class MapRecordCompressor implements RecordCompressor {
             invertedPlis.add(invertedPli);
         }
         return invertedPlis;
-    }
-
-    private static int[] fetchRecordFrom(int recordId, List<Map<Integer, Integer>> invertedPlis) {
-        int numAttributes = invertedPlis.size();
-        int[] record = new int[numAttributes];
-        for (int i = 0; i < numAttributes; i++) {
-            record[i] = invertedPlis.get(i).getOrDefault(recordId, PliUtils.UNIQUE_VALUE);
-        }
-        return record;
     }
 
 }

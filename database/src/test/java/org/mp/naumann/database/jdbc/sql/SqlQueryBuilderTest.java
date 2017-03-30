@@ -5,11 +5,8 @@ import org.junit.Test;
 public class SqlQueryBuilderTest {
 
 
-
-
-
     @Test
-    public void testGenerateQueryForUpdateStatement(){
+    public void testGenerateQueryForUpdateStatement() {
 
     }
 

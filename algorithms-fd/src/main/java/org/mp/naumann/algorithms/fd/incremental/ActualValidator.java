@@ -1,10 +1,11 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
-import java.util.List;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalValidator.ValidationResult;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
+
+import java.util.List;
 
 class ActualValidator {
 
@@ -16,18 +17,14 @@ class ActualValidator {
     private final boolean validateAll;
 
     ActualValidator(List<? extends PositionListIndex> plis,
-        CompressedRecords compressedRecords, int numRecords,
-        ValidationCallback validCallback, ValidationCallback invalidCallback, boolean validateAll) {
+                    CompressedRecords compressedRecords, int numRecords,
+                    ValidationCallback validCallback, ValidationCallback invalidCallback, boolean validateAll) {
         this.plis = plis;
         this.numRecords = numRecords;
         this.validCallback = validCallback;
         this.invalidCallback = invalidCallback;
         this.compressedRecords = compressedRecords;
         this.validateAll = validateAll;
-    }
-
-    public interface ValidationCallback {
-        void callback(OpenBitSet lhs, int rhs, List<OpenBitSetFD> collectedFDs);
     }
 
     ValidationResult validate(OpenBitSet lhs, int rhs) {
@@ -87,6 +84,10 @@ class ActualValidator {
             result.intersections++;
         }
         return result;
+    }
+
+    public interface ValidationCallback {
+        void callback(OpenBitSet lhs, int rhs, List<OpenBitSetFD> collectedFDs);
     }
 
 }

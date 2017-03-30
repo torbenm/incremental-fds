@@ -6,41 +6,41 @@ import org.junit.Before;
 
 
 public class FDTreeInDepthTest {
-	
-	private FDTree fdtree;
-	
-	@Before
-	public void setUp() throws Exception {
-		this.fdtree = new FDTree(5, -1);
-		
-		OpenBitSet lhs = new OpenBitSet();
-		lhs.set(0);
-		lhs.set(1);
-		lhs.set(3);
-		this.fdtree.addFunctionalDependency(lhs, 2);
-		
-		lhs = new OpenBitSet();
-		lhs.set(0);
-		this.fdtree.addFunctionalDependency(lhs, 2);
 
-		lhs = new OpenBitSet();
-		lhs.set(1);
-		this.fdtree.addFunctionalDependency(lhs, 2);
-		
-		lhs = new OpenBitSet();
-		lhs.set(1);
-		lhs.set(4);
-		this.fdtree.addFunctionalDependency(lhs, 2);
+    private FDTree fdtree;
 
-		lhs = new OpenBitSet();
-		lhs.set(4);
-		this.fdtree.addFunctionalDependency(lhs, 2);
-	}
+    @Before
+    public void setUp() throws Exception {
+        this.fdtree = new FDTree(5, -1);
 
-	@After
-	public void tearDown() throws Exception {
-	}
-	
+        OpenBitSet lhs = new OpenBitSet();
+        lhs.set(0);
+        lhs.set(1);
+        lhs.set(3);
+        this.fdtree.addFunctionalDependency(lhs, 2);
+
+        lhs = new OpenBitSet();
+        lhs.set(0);
+        this.fdtree.addFunctionalDependency(lhs, 2);
+
+        lhs = new OpenBitSet();
+        lhs.set(1);
+        this.fdtree.addFunctionalDependency(lhs, 2);
+
+        lhs = new OpenBitSet();
+        lhs.set(1);
+        lhs.set(4);
+        this.fdtree.addFunctionalDependency(lhs, 2);
+
+        lhs = new OpenBitSet();
+        lhs.set(4);
+        this.fdtree.addFunctionalDependency(lhs, 2);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+    }
+
 	/* @Test
 	public void testContainsGeneralization() {
 		this.fdtree.filterGeneralizations();
@@ -97,5 +97,5 @@ public class FDTreeInDepthTest {
 		lhs.set(4);
 		assertFalse(this.fdtree.containsFd(lhs, 2));
 	} */
-	
+
 }

@@ -20,17 +20,19 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import org.mp.naumann.algorithms.fd.structures.Dictionary;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 class IncrementalClusterMapBuilder {
 
     private int nextRecordId;
     private final List<Map<Integer, Collection<Integer>>> clusterMaps;
     private final Dictionary<String> dictionary;
-
-    List<Map<Integer, Collection<Integer>>> getClusterMaps() {
-        return clusterMaps;
-    }
 
     IncrementalClusterMapBuilder(int numAttributes, int nextRecordId, Dictionary<String> dictionary) {
         this.dictionary = dictionary;
@@ -39,6 +41,10 @@ class IncrementalClusterMapBuilder {
         for (int i = 0; i < numAttributes; i++) {
             clusterMaps.add(new HashMap<>());
         }
+    }
+
+    List<Map<Integer, Collection<Integer>>> getClusterMaps() {
+        return clusterMaps;
     }
 
     int addRecord(Iterable<String> record) {

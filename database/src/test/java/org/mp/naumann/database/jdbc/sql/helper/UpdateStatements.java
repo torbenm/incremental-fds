@@ -1,14 +1,14 @@
 package org.mp.naumann.database.jdbc.sql.helper;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.mp.naumann.database.statement.DefaultUpdateStatement;
 import org.mp.naumann.database.statement.UpdateStatement;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class UpdateStatements {
 
-    public static UpdateStatement createUpdateStatement1(){
+    public static UpdateStatement createUpdateStatement1() {
         Map<String, String> newValues = new HashMap<>();
         newValues.put("name", "max");
         newValues.put("age", "15");
@@ -20,7 +20,7 @@ public class UpdateStatements {
         return new DefaultUpdateStatement(newValues, oldValues, "test", "people");
     }
 
-    public static UpdateStatement createUpdateStatementDifferentTable(){
+    public static UpdateStatement createUpdateStatementDifferentTable() {
         Map<String, String> newValues = new HashMap<>();
         newValues.put("city", "San Francisco");
         newValues.put("country", "US");

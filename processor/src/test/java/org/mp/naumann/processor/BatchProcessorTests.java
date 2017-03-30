@@ -2,55 +2,129 @@ package org.mp.naumann.processor;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-import org.mp.naumann.processor.fake.FakeBatch;
-import org.mp.naumann.processor.fake.FakeBatchHandler;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mp.naumann.database.DataConnector;
+import org.mp.naumann.processor.batch.Batch;
+import org.mp.naumann.processor.batch.source.BatchSource;
 import org.mp.naumann.processor.handler.BatchHandler;
-import org.mp.naumann.processor.testhelper.BatchArrivedException;
-import org.mp.naumann.processor.testhelper.RegisteringBatchHandler;
-import org.mp.naumann.processor.testhelper.MakeSureImLastDatabaseBatchHandler;
+import org.mp.naumann.processor.handler.DataAwareBatchHandler;
+import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 
+public abstract class BatchProcessorTests {
 
-class BatchProcessorTests {
+    @Mock
+    protected BatchHandler batchHandler;
 
-    void testBatchHandlerCollection(BatchProcessor processor){
-        BatchHandler bh = new FakeBatchHandler();
-        processor.addBatchHandler(bh);
-        assertTrue(processor.getBatchHandlers().contains(bh));
-        processor.removeBatchHandler(bh);
-        assertFalse(processor.getBatchHandlers().contains(bh));
+    @Mock
+    protected BatchSource batchSource;
+
+    @Mock
+    protected DatabaseBatchHandler databaseBatchHandler;
+
+    protected int numberOfDistributedBatchHandlers = 20;
+
+    protected BatchProcessor batchProcessor;
+
+    public BatchProcessorTests() {
+        MockitoAnnotations.initMocks(this);
     }
 
-
-    void testDistributeBatch(BatchProcessor processor){
-        processor.addBatchHandler((Batch) -> { throw new BatchArrivedException(); });
-        processor.batchArrived(new FakeBatch());
+    @Before
+    public void setup() {
+        batchProcessor.addBatchHandler(batchHandler);
     }
 
-    long testDistributeToMultipleBatches(BatchProcessor batchProcessor, int i) {
-       for(int j = 0; j < i;j++){
-           batchProcessor.addBatchHandler(new RegisteringBatchHandler());
-       }
-       batchProcessor.batchArrived(new FakeBatch());
-        return batchProcessor.getBatchHandlers().parallelStream()
-                .filter(n -> ((RegisteringBatchHandler)n).isReached())
-                .count();
+    @Test
+    public void testBatchHandlerCollection() {
+        BatchHandler bh = mock(BatchHandler.class);
+        batchProcessor.addBatchHandler(bh);
+        assertTrue(batchProcessor.getBatchHandlers().contains(bh));
+        batchProcessor.removeBatchHandler(bh);
+        assertFalse(batchProcessor.getBatchHandlers().contains(bh));
     }
 
-    boolean testDatabaseHandlerIsLast(BatchProcessor batchProcessor, int i){
-        if(!(batchProcessor.getDatabaseBatchHandler() instanceof MakeSureImLastDatabaseBatchHandler))
-            throw new AssertionError("BatchProcessor has wrong DatabaseBatchHandler assigned!");
-        for(int j = 0; j < i;j++){
-            batchProcessor.addBatchHandler(new RegisteringBatchHandler());
+    @Test
+    public void test_add_dataware_batch_handler() {
+        DataAwareBatchHandler dabh = mock(DataAwareBatchHandler.class);
+        batchProcessor.addDataAwareBatchHandler(dabh);
+        verify(dabh, times(1)).setDataConnector(any(DataConnector.class));
+        assertTrue(batchProcessor.getBatchHandlers().contains(dabh));
+        batchProcessor.removeBatchHandler(dabh);
+        assertFalse(batchProcessor.getBatchHandlers().contains(dabh));
+    }
+
+    @Test
+    public void test_distribute_batch() {
+        Batch batch = mock(Batch.class);
+        batchProcessor.batchArrived(batch);
+        verify(batchHandler).handleBatch(batch);
+    }
+
+    @Test
+    public void test_distribute_to_multiple_batches() {
+        BatchHandler bh2 = mock(BatchHandler.class);
+        batchProcessor.addBatchHandler(bh2);
+
+        Batch batch = mock(Batch.class);
+        batchProcessor.batchArrived(batch);
+        verify(batchHandler).handleBatch(batch);
+        verify(bh2).handleBatch(batch);
+
+        batchProcessor.removeBatchHandler(bh2);
+    }
+
+    @Test
+    public void test_distribute_to_n_batches() {
+        List<BatchHandler> batchHandlers = new ArrayList<>(numberOfDistributedBatchHandlers);
+        for (int i = 0; i < numberOfDistributedBatchHandlers; i++) {
+            batchHandlers.add(mock(BatchHandler.class));
+            batchProcessor.addBatchHandler(batchHandlers.get(i));
         }
+        Batch batch = mock(Batch.class);
+        batchProcessor.batchArrived(batch);
+        batchHandlers.stream().map(Mockito::verify).forEach(b -> b.handleBatch(batch));
+        batchHandlers.forEach(batchProcessor::removeBatchHandler);
+    }
+
+    @Test
+    public void test_database_handler_is_first() {
+        batchProcessor.setInsertToDatabaseFirst(true);
+        Batch batch = mock(Batch.class);
+        Mockito.doThrow(new BatchHandledException()).when(databaseBatchHandler).handleBatch(batch);
         try {
-            batchProcessor.batchArrived(new FakeBatch());
-        }catch(MakeSureImLastDatabaseBatchHandler.DatabaseHandlerEnteredException e){
-            return batchProcessor.getBatchHandlers().parallelStream()
-                    .filter(n -> ((RegisteringBatchHandler)n).isReached())
-                    .count() == i;
+            batchProcessor.batchArrived(batch);
+            fail();
+        } catch (BatchHandledException e) {
+            verify(batchHandler, never()).handleBatch(batch);
         }
-        return false;
     }
 
+    @Test
+    public void test_database_handler_is_last() {
+        batchProcessor.setInsertToDatabaseFirst(false);
+        Batch batch = mock(Batch.class);
+        Mockito.doThrow(new BatchHandledException()).when(databaseBatchHandler).handleBatch(batch);
+        try {
+            batchProcessor.batchArrived(batch);
+            fail();
+        } catch (BatchHandledException e) {
+            verify(batchHandler).handleBatch(batch);
+        }
+    }
+
+    private class BatchHandledException extends RuntimeException {
+    }
 }

@@ -18,8 +18,14 @@ import org.mp.naumann.algorithms.fd.utils.PliUtils;
 import org.mp.naumann.database.statement.Statement;
 import org.mp.naumann.processor.batch.Batch;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -32,9 +38,8 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
     private final List<Integer> pliOrder;
     private final IncrementalClusterMapBuilder clusterMapBuilder;
     private final Dictionary<String> dictionary;
-
-    private List<? extends PositionListIndex> plis;
     private final MapCompressedRecords compressedRecords;
+    private List<? extends PositionListIndex> plis;
 
     public IncrementalDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns) {
         this(pliBuilder, version, columns, pliBuilder.getPliOrder());
@@ -178,7 +183,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
     }
 
     private int[] getCompressedRecord(int record) {
-        return version.usesPruningStrategy(PruningStrategy.ANNOTATION) || version.usesPruningStrategy(PruningStrategy.SIMPLE)? compressedRecords.get(record) : null;
+        return version.usesPruningStrategy(PruningStrategy.ANNOTATION) || version.usesPruningStrategy(PruningStrategy.SIMPLE) ? compressedRecords.get(record) : null;
     }
 
     private class StatementApplier extends AbstractStatementApplier {

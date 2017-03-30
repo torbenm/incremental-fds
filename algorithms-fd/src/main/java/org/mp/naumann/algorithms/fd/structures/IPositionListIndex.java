@@ -6,5 +6,6 @@ public interface IPositionListIndex {
     int getAttribute();
 
     Collection<? extends Collection<Integer>> getClusters();
+
     Collection<Integer> getCluster(int index);
 }

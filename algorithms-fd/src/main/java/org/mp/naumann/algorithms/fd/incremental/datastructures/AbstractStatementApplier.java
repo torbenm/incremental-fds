@@ -1,15 +1,14 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures;
 
-import org.mp.naumann.algorithms.benchmark.better.Benchmark;
-import org.mp.naumann.database.statement.DeleteStatement;
-import org.mp.naumann.database.statement.InsertStatement;
-import org.mp.naumann.database.statement.StatementVisitor;
-import org.mp.naumann.database.statement.UpdateStatement;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
+import org.mp.naumann.database.statement.DeleteStatement;
+import org.mp.naumann.database.statement.InsertStatement;
+import org.mp.naumann.database.statement.StatementVisitor;
+import org.mp.naumann.database.statement.UpdateStatement;
 
 public abstract class AbstractStatementApplier implements StatementVisitor {
     private final Set<Integer> inserted = new HashSet<>();
@@ -28,7 +27,7 @@ public abstract class AbstractStatementApplier implements StatementVisitor {
         Benchmark benchmark = Benchmark.start("Update", Benchmark.DEFAULT_LEVEL + 7);
         Collection<Integer> removed = removeRecord(update.getOldValueMap());
         deleted.addAll(removed);
-        int insertedRecord = addRecord(update.getValueMap());
+        int insertedRecord = addRecord(update.getNewValueMap());
         inserted.add(insertedRecord);
         benchmark.finish();
     }

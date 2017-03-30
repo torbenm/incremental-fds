@@ -25,9 +25,9 @@ public class SimpleBloomTest {
         BloomPruningStrategy builder1 = new BloomPruningStrategy(columns).addGenerator(new AllCombinationsBloomGenerator(1));
         BloomPruningStrategy builder2 = new BloomPruningStrategy(columns).addGenerator(new AllCombinationsBloomGenerator(2));
         List<String[]> records = new ArrayList<>();
-        records.add(new String[] {"1", "1", "3", "1"});
-        records.add(new String[] {"1", "2", "1", "1"});
-        records.add(new String[] {"0", "1", "1", "1"});
+        records.add(new String[]{"1", "1", "3", "1"});
+        records.add(new String[]{"1", "2", "1", "1"});
+        records.add(new String[]{"0", "1", "1", "1"});
         builder1.initialize(records);
         builder2.initialize(records);
         String schema = "";

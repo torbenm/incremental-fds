@@ -6,34 +6,35 @@ class UpdateStatementQueryBuilder implements StatementQueryBuilder<UpdateStateme
 
     private static UpdateStatementQueryBuilder instance;
 
-    public static UpdateStatementQueryBuilder get(){
-        if(instance == null)
+    private UpdateStatementQueryBuilder() {
+    }
+
+    public static UpdateStatementQueryBuilder get() {
+        if (instance == null)
             instance = new UpdateStatementQueryBuilder();
         return instance;
     }
 
-    private UpdateStatementQueryBuilder() { }
-
     @Override
     public void validateStatement(UpdateStatement statement) throws QueryBuilderException {
         StatementQueryBuilder.super.validateStatement(statement);
-        if (!(statement.getValueMap().size() == statement.getOldValueMap().size()))
+        if (!(statement.getNewValueMap().size() == statement.getOldValueMap().size()))
             throw new QueryBuilderException("Value maps for UpdateStatement must have same size");
     }
 
 
     @Override
-    public String openStatement(UpdateStatement statement){
+    public String openStatement(UpdateStatement statement) {
         return "UPDATE " + getCompleteTableName(statement);
     }
 
     @Override
-    public String buildKeyClause(UpdateStatement statement){
-        return " SET "+ SqlQueryBuilder.toKeyEqualsValueMap(statement.getValueMap(), statement, ", ", false);
+    public String buildKeyClause(UpdateStatement statement) {
+        return " SET " + SqlQueryBuilder.toKeyEqualsValueMap(statement.getNewValueMap(), statement, ", ", false);
     }
 
     @Override
-    public String buildValueClause(UpdateStatement statement){
+    public String buildValueClause(UpdateStatement statement) {
         return " WHERE " + SqlQueryBuilder.toKeyEqualsValueMap(statement.getOldValueMap(), statement, " AND ", true);
     }
 }

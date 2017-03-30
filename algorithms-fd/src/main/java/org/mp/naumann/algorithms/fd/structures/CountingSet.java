@@ -42,11 +42,11 @@ public class CountingSet<T> implements Set<T> {
 
     @Override
     public boolean add(T t) {
-        if(!this.contains(t)) {
+        if (!this.contains(t)) {
             this.valueCount.put(t, 1);
             return true;
-        }else {
-            this.valueCount.put(t, valueCount.get(t)+1);
+        } else {
+            this.valueCount.put(t, valueCount.get(t) + 1);
             return false;
         }
     }
@@ -54,12 +54,12 @@ public class CountingSet<T> implements Set<T> {
     @Override
     @SuppressWarnings({"unchecked", "suspicious"})
     public boolean remove(Object o) {
-        if(!valueCount.containsKey(o))
+        if (!valueCount.containsKey(o))
             return false;
         int count = valueCount.get(o);
-        if(count > 1) {
+        if (count > 1) {
             // not unchecked, cause we checked that the map contains this key
-            valueCount.put((T)o, count-1);
+            valueCount.put((T) o, count - 1);
             return false;
         }
         return this.valueCount.remove(o) != null;
@@ -91,9 +91,9 @@ public class CountingSet<T> implements Set<T> {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder stringBuilder = new StringBuilder("[");
-        for(Map.Entry<T, Integer> entry : valueCount.entrySet()){
+        for (Map.Entry<T, Integer> entry : valueCount.entrySet()) {
             stringBuilder.append(entry.getKey());
             stringBuilder.append(": ");
             stringBuilder.append(entry.getValue());

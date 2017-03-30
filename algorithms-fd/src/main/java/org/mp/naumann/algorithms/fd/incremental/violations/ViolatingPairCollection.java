@@ -74,12 +74,12 @@ public class ViolatingPairCollection implements Collection<ViolatingPair> {
         return violatingPairs.removeAll(c);
     }
 
-    public boolean removeAllIntersections(Collection<Integer> records){
+    public boolean removeAllIntersections(Collection<Integer> records) {
         boolean hasRemoved = false;
         List<ViolatingPair> forRemoval = new ArrayList<>(this.size());
-        for(ViolatingPair pair : this){
-            for(int recordId : records){
-                if(pair.intersects(recordId)){
+        for (ViolatingPair pair : this) {
+            for (int recordId : records) {
+                if (pair.intersects(recordId)) {
                     forRemoval.add(pair);
                     hasRemoved = true;
                     break;

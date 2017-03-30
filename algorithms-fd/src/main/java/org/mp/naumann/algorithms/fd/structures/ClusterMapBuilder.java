@@ -26,18 +26,10 @@ import org.mp.naumann.database.data.Row;
 
 public class ClusterMapBuilder {
 
-    private int numRecords = 0;
     private final List<HashMap<String, IntArrayList>> clusterMaps;
     private final HashMap<Long, IntArrayList> hashedRecords;
+    private int numRecords = 0;
 
-
-    public List<HashMap<String, IntArrayList>> getClusterMaps() {
-        return clusterMaps;
-    }
-
-    public int getNumLastRecords() {
-        return this.numRecords;
-    }
 
     public ClusterMapBuilder(int numAttributes) {
         clusterMaps = new ArrayList<>();
@@ -47,6 +39,13 @@ public class ClusterMapBuilder {
         hashedRecords = new HashMap<>();
     }
 
+    public List<HashMap<String, IntArrayList>> getClusterMaps() {
+        return clusterMaps;
+    }
+
+    public int getNumLastRecords() {
+        return this.numRecords;
+    }
 
     /**
      * Calculates the clusterMap for each column of a given relation.

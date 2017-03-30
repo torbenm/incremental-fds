@@ -53,13 +53,13 @@ public abstract class PositionListIndex implements IPositionListIndex {
     private Collection<Integer> newRecords = null;
     private Map<Integer, Set<Integer>> otherClustersWithNewRecords;
 
+    protected PositionListIndex(int attribute) {
+        this.attribute = attribute;
+    }
+
     @Override
     public int getAttribute() {
         return this.attribute;
-    }
-
-    protected PositionListIndex(int attribute) {
-        this.attribute = attribute;
     }
 
     /**
@@ -213,7 +213,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
     }
 
     private ClusterIdentifier buildClusterIdentifier(OpenBitSet lhs, int lhsSize, int[] record,
-        boolean topDown) {
+                                                     boolean topDown) {
         int[] cluster = new int[lhsSize];
 
         int index = 0;

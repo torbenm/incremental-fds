@@ -6,6 +6,7 @@ import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 public class OpenBitSetFD {
     private OpenBitSet lhs;
     private int rhs;
+
     public OpenBitSetFD(OpenBitSet lhs, int rhs) {
         this.lhs = lhs;
         this.rhs = rhs;

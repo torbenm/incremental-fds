@@ -6,7 +6,7 @@ public interface UpdateStatement extends Statement {
 
     Map<String, String> getOldValueMap();
 
-    Map<String, String> getValueMap();
+    Map<String, String> getNewValueMap();
 
     @Override
     default void accept(StatementVisitor visitor) {

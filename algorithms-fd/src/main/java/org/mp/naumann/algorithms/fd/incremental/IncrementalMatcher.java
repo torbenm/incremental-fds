@@ -19,7 +19,7 @@ class IncrementalMatcher {
         this.configuration = configuration;
     }
 
-    void match(OpenBitSet equalAttrs,  int recId1, int recId2) {
+    void match(OpenBitSet equalAttrs, int recId1, int recId2) {
         match(equalAttrs, compressedRecords.get(recId1), this.compressedRecords.get(recId2));
         if (configuration.usesPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS)) {
             pruner.addAgreeSet(equalAttrs.clone(), recId1, recId2);

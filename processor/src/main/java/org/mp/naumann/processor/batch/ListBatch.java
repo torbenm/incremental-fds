@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Implementation of a {@link Batch} which stores the statements in a List.
+ */
 public class ListBatch implements Batch {
 
     private final List<Statement> statements;
@@ -31,7 +34,9 @@ public class ListBatch implements Batch {
         return tableName;
     }
 
-    public String getSchema() { return schema; }
+    public String getSchema() {
+        return schema;
+    }
 
     @Override
     public List<InsertStatement> getInsertStatements() {

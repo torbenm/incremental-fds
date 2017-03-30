@@ -68,6 +68,10 @@ public class FDTreeElement {
         return this.rhsFds;
     }
 
+    public void setFds(OpenBitSet other) {
+        this.rhsFds = other;
+    }
+
     void markFd(int i) {
         this.rhsFds.set(i);
     }
@@ -80,25 +84,21 @@ public class FDTreeElement {
         this.rhsFds.clear(i);
     }
 
-    public void setFds(OpenBitSet other) {
-        this.rhsFds = other;
-    }
-
     public boolean isFd(int i) {
         return this.rhsFds.get(i);
     }
 
-    public Collection<Integer> getFdCollection(){
+    public Collection<Integer> getFdCollection() {
         List<Integer> fds = new ArrayList<>();
-        for(int rhsAttr = rhsAttributes.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhsAttributes.nextSetBit(rhsAttr+1)){
+        for (int rhsAttr = rhsAttributes.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhsAttributes.nextSetBit(rhsAttr + 1)) {
             fds.add(rhsAttr);
         }
         return fds;
     }
 
-    public Collection<FunctionalDependency> getFdCollection(OpenBitSet lhs, ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<IPositionListIndex> plis){
+    public Collection<FunctionalDependency> getFdCollection(OpenBitSet lhs, ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<IPositionListIndex> plis) {
         List<FunctionalDependency> fds = new ArrayList<>();
-        for(int rhsAttr = rhsAttributes.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhsAttributes.nextSetBit(rhsAttr+1)){
+        for (int rhsAttr = rhsAttributes.nextSetBit(0); rhsAttr >= 0; rhsAttr = rhsAttributes.nextSetBit(rhsAttr + 1)) {
             fds.add(findFunctionDependency(lhs, rhsAttr, columnIdentifiers, plis));
         }
         return fds;
@@ -155,9 +155,9 @@ public class FDTreeElement {
         }
     }
 
-    int removeFdFromGeneralizations(OpenBitSet lhs, int rhs, int currentLhsAttr, OpenBitSet currentLhs){
+    int removeFdFromGeneralizations(OpenBitSet lhs, int rhs, int currentLhsAttr, OpenBitSet currentLhs) {
         int removed = 0;
-        if(this.isFd(rhs)) {
+        if (this.isFd(rhs)) {
             this.removeFd(rhs);
             removed++;
         }
@@ -222,11 +222,12 @@ public class FDTreeElement {
         }
         return false;
     }
-    public void removeChildren(int rhs){
-        if(this.children == null) return;
 
-        for(int i = 0; i < numAttributes; i++){
-            if(this.children[i] != null && this.children[i].isFd(rhs)){
+    public void removeChildren(int rhs) {
+        if (this.children == null) return;
+
+        for (int i = 0; i < numAttributes; i++) {
+            if (this.children[i] != null && this.children[i].isFd(rhs)) {
                 this.children[i].removeRhsAttribute(rhs);
             }
         }
@@ -245,7 +246,7 @@ public class FDTreeElement {
                                        ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<? extends IPositionListIndex> plis) {
 
         for (int rhs = this.rhsFds.nextSetBit(0); rhs >= 0; rhs = this.rhsFds.nextSetBit(rhs + 1)) {
-            FunctionalDependency fdResult =  findFunctionDependency(lhs, rhs, columnIdentifiers, plis);
+            FunctionalDependency fdResult = findFunctionDependency(lhs, rhs, columnIdentifiers, plis);
             functionalDependencies.add(fdResult);
         }
 
@@ -307,7 +308,7 @@ public class FDTreeElement {
     }
 
     private FunctionalDependency findFunctionDependency(OpenBitSet lhs, int rhs,
-                                                        ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<? extends IPositionListIndex> plis){
+                                                        ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<? extends IPositionListIndex> plis) {
         ColumnIdentifier[] columns = new ColumnIdentifier[(int) lhs.cardinality()];
         int j = 0;
         for (int i = lhs.nextSetBit(0); i >= 0; i = lhs.nextSetBit(i + 1)) {

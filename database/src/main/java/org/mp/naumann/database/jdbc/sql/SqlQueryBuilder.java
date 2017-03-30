@@ -1,6 +1,12 @@
 package org.mp.naumann.database.jdbc.sql;
 
-import org.mp.naumann.database.statement.*;
+import org.mp.naumann.database.statement.DefaultDeleteStatement;
+import org.mp.naumann.database.statement.DefaultInsertStatement;
+import org.mp.naumann.database.statement.DeleteStatement;
+import org.mp.naumann.database.statement.InsertStatement;
+import org.mp.naumann.database.statement.Statement;
+import org.mp.naumann.database.statement.StatementGroup;
+import org.mp.naumann.database.statement.UpdateStatement;
 
 import java.sql.JDBCType;
 import java.util.Map;
@@ -10,7 +16,7 @@ public class SqlQueryBuilder {
 
     public static String generateSql(Statement stmt) throws QueryBuilderException {
         if (stmt instanceof InsertStatement) {
-            return InsertStatementQueryBuilder.get().generateSingle((InsertStatement)stmt);
+            return InsertStatementQueryBuilder.get().generateSingle((InsertStatement) stmt);
         }
 
         if (stmt instanceof DeleteStatement) {
@@ -19,7 +25,7 @@ public class SqlQueryBuilder {
 
         if (stmt instanceof UpdateStatement) {
             UpdateStatement update = (UpdateStatement) stmt;
-            InsertStatement insert = new DefaultInsertStatement(update.getValueMap(), update.getSchema(), update.getTableName());
+            InsertStatement insert = new DefaultInsertStatement(update.getNewValueMap(), update.getSchema(), update.getTableName());
             DeleteStatement delete = new DefaultDeleteStatement(update.getOldValueMap(), update.getSchema(), update.getTableName());
             return generateSql(delete) + "\n" + generateSql(insert);
         }
@@ -29,7 +35,7 @@ public class SqlQueryBuilder {
 
     public static String generateSql(StatementGroup statements) throws QueryBuilderException {
         StringBuilder sb = new StringBuilder();
-        for (Statement stmt: statements.getStatements()) {
+        for (Statement stmt : statements.getStatements()) {
             sb.append(generateSql(stmt));
             sb.append("\n");
         }
@@ -57,7 +63,7 @@ public class SqlQueryBuilder {
             return value;
     }
 
-    static String toKeyEqualsValueMap(Map<String, String> valueMap, Statement stmt, String separator, boolean isValueClause){
+    static String toKeyEqualsValueMap(Map<String, String> valueMap, Statement stmt, String separator, boolean isValueClause) {
         return valueMap
                 .entrySet()
                 .parallelStream()

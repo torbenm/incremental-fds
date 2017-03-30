@@ -8,6 +8,7 @@ import org.mp.naumann.database.Table;
 public interface AlgorithmFixture {
 
     Table getInputGenerator() throws ConnectionException, InputReadException;
+
     FunctionalDependencyResultReceiver getFunctionalDependencyResultReceiver();
 
     void verifyFunctionalDependencyResultReceiver();

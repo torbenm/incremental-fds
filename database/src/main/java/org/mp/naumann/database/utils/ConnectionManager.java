@@ -1,6 +1,6 @@
 package org.mp.naumann.database.utils;
 
-import ResourceConnection.ResourceConnector;
+import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.database.ConnectionException;
 import org.mp.naumann.database.jdbc.ConnectionInfo;
 
@@ -27,7 +27,8 @@ public class ConnectionManager {
         Properties properties = new Properties();
 
         InputStream input = ConnectionInfo.class.getClassLoader().getResourceAsStream("properties.xml");
-        if (input == null) input = ConnectionInfo.class.getClassLoader().getResourceAsStream("properties.default.xml");
+        if (input == null)
+            input = ConnectionInfo.class.getClassLoader().getResourceAsStream("properties.default.xml");
         if (input != null) {
             try {
                 try {

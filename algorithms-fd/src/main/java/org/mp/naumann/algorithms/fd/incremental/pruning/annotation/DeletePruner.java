@@ -18,27 +18,11 @@ import java.util.Set;
 
 public class DeletePruner {
 
-    public interface ViolationSet extends Iterable<ViolatingPair> {
-
-        void add(ViolatingPair violatingPair);
-
-        boolean isEmpty();
-    }
-
-    public interface CollectionCreator {
-        ViolationSet createCollection();
-    }
-
-    public interface ValidationPrunerCreator {
-        ValidationPruner createValidationPruner(CardinalitySet remaningValues);
-    }
-
     private final Map<OpenBitSet, ViolationSet> violations = new HashMap<>();
     private final Multimap<Integer, OpenBitSet> index = HashMultimap.create();
     private final int numAttributes;
     private final CollectionCreator collectionCreator;
     private final ValidationPrunerCreator validationPrunerCreator;
-
     public DeletePruner(int numAttributes, CollectionCreator collectionCreator, ValidationPrunerCreator validationPrunerCreator) {
         this.numAttributes = numAttributes;
         this.collectionCreator = collectionCreator;
@@ -81,6 +65,21 @@ public class DeletePruner {
             }
         }
         return validationPrunerCreator.createValidationPruner(remainingViolations);
+    }
+
+    public interface ViolationSet extends Iterable<ViolatingPair> {
+
+        void add(ViolatingPair violatingPair);
+
+        boolean isEmpty();
+    }
+
+    public interface CollectionCreator {
+        ViolationSet createCollection();
+    }
+
+    public interface ValidationPrunerCreator {
+        ValidationPruner createValidationPruner(CardinalitySet remaningValues);
     }
 
 }

@@ -3,15 +3,15 @@ package org.mp.naumann.processor.batch;
 
 import static org.junit.Assert.assertEquals;
 
-public class BatchTest {
+public abstract class BatchTest {
 
 
-	public void checkBatchSize(Batch b){
+    public void checkBatchSize(Batch batch) {
         assertEquals(
-                b.getInsertStatements().size() +
-                        b.getDeleteStatements().size() +
-                        b.getUpdateStatements().size(),
-                b.getSize()
+                batch.getInsertStatements().size() +
+                        batch.getDeleteStatements().size() +
+                        batch.getUpdateStatements().size(),
+                batch.getSize()
         );
     }
 

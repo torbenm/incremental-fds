@@ -1,8 +1,8 @@
 package org.mp.naumann.testcases;
 
-import ResourceConnection.ResourceConnector;
-import org.mp.naumann.processor.batch.source.FixedSizeBatchSource;
+import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.processor.batch.source.StreamableBatchSource;
+import org.mp.naumann.processor.batch.source.csv.FixedSizeCsvBatchSource;
 
 public class SingleFileTestCase extends BaseTestCase {
 
@@ -16,12 +16,16 @@ public class SingleFileTestCase extends BaseTestCase {
     }
 
     @Override
-    int getLimit() { return splitLine; }
+    int getLimit() {
+        return splitLine;
+    }
 
-    protected String getBatchSize() { return Integer.toString(batchSize); }
+    protected String getBatchSize() {
+        return Integer.toString(batchSize);
+    }
 
     protected StreamableBatchSource getBatchSource() {
-        return new FixedSizeBatchSource(ResourceConnector.BASELINE + sourceTableName + ".csv", schema, tableName, batchSize, stopAfter, splitLine);
+        return new FixedSizeCsvBatchSource(ResourceConnector.BASELINE + sourceTableName + ".csv", schema, tableName, batchSize, stopAfter, splitLine);
     }
 
 }

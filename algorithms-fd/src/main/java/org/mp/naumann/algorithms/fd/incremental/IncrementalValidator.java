@@ -1,18 +1,7 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.benchmark.better.Benchmark;
+import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.ActualValidator.ValidationCallback;
@@ -24,20 +13,32 @@ import org.mp.naumann.algorithms.fd.structures.LatticeElement;
 import org.mp.naumann.algorithms.fd.structures.LatticeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+
 public abstract class IncrementalValidator<T> {
 
+    final int numAttributes;
     private final ValidatorResult validatorResult = new ValidatorResult();
     private final List<ValidationPruner> validationPruners = new ArrayList<>();
     private final int numRecords;
     private final List<? extends PositionListIndex> plis;
     private final CompressedRecords compressedRecords;
-    final int numAttributes;
     private final float efficiencyThreshold;
     private int level = 0;
     private ExecutorService executor;
 
     IncrementalValidator(int numRecords, CompressedRecords compressedRecords,
-        List<? extends PositionListIndex> plis, boolean parallel, float efficiencyThreshold) {
+                         List<? extends PositionListIndex> plis, boolean parallel, float efficiencyThreshold) {
         this.numRecords = numRecords;
         this.plis = plis;
         this.compressedRecords = compressedRecords;
@@ -126,7 +127,7 @@ public abstract class IncrementalValidator<T> {
         int previousNumInvalidFds = 0;
         while (level <= lattice.getDepth()) {
             FDLogger.log(Level.FINER, "Started validating level " + level);
-            Benchmark benchmark = Benchmark.start("Validate level "+ level, Benchmark.DEFAULT_LEVEL + 3);
+            Benchmark benchmark = Benchmark.start("Validate level " + level, Benchmark.DEFAULT_LEVEL + 3);
             Collection<LatticeElementLhsPair> currentLevel = lattice.getLevel(level);
             if (!isTopDown()) {
                 // lattice is neg cover and contains flipped lhs'
@@ -236,9 +237,9 @@ public abstract class IncrementalValidator<T> {
 
     protected static class ValidationResult {
         public final List<IntegerPair> comparisonSuggestions = new ArrayList<>();
+        final List<OpenBitSetFD> collectedFDs = new ArrayList<>();
         int validations = 0;
         int intersections = 0;
-        final List<OpenBitSetFD> collectedFDs = new ArrayList<>();
 
         public void add(ValidationResult other) {
             this.validations += other.validations;

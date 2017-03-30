@@ -1,59 +1,55 @@
 package org.mp.naumann.processor.batch.source;
 
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.mp.naumann.processor.batch.Batch;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.mp.naumann.processor.fake.FakeAbstractBatchSource;
-import org.mp.naumann.processor.fake.FakeBatch;
-import org.mp.naumann.processor.fake.FakeBatchSourceListener;
+public abstract class AbstractBatchSourceTest {
 
-public class AbstractBatchSourceTest implements BatchSourceTest {
+    protected AbstractBatchSource abstractBatchSource;
 
+    protected int numberOfBatchSourceListeners = 20;
 
-    private AbstractBatchSource abs;
+    @Test
+    public void test_add_remove_batchsource_listener() {
+        BatchSourceListener bsl1 = mock(BatchSourceListener.class);
+        BatchSourceListener bsl2 = mock(BatchSourceListener.class);
 
-    @Before
-    public void init(){
-        abs = new FakeAbstractBatchSource();
-    }
+        abstractBatchSource.addBatchSourceListener(bsl1);
+        abstractBatchSource.addBatchSourceListener(bsl2);
 
+        assertEquals(2, abstractBatchSource.getBatchSourceListener().size());
+        assertTrue(abstractBatchSource.getBatchSourceListener().contains(bsl1));
+        assertTrue(abstractBatchSource.getBatchSourceListener().contains(bsl2));
 
-    @Override
-    public void testAddBatchSourceListener() {
-        FakeBatchSourceListener fbsl = new FakeBatchSourceListener();
-        FakeBatchSourceListener fbsl2 = new FakeBatchSourceListener();
-        abs.addBatchSourceListener(fbsl);
-        abs.addBatchSourceListener(fbsl2);
-        assertEquals(2, abs.getBatchSourceListener().size());
-        assertTrue(abs.getBatchSourceListener().contains(fbsl));
-        assertTrue(abs.getBatchSourceListener().contains(fbsl2));
-    }
+        abstractBatchSource.removeBatchSourceListener(bsl1);
+        assertEquals(1, abstractBatchSource.getBatchSourceListener().size());
+        assertFalse(abstractBatchSource.getBatchSourceListener().contains(bsl1));
+        assertTrue(abstractBatchSource.getBatchSourceListener().contains(bsl2));
 
-    @Override
-    public void testRemoveBatchSourceListener() {
-        FakeBatchSourceListener fbsl = new FakeBatchSourceListener();
-        FakeBatchSourceListener fbsl2 = new FakeBatchSourceListener();
-        abs.addBatchSourceListener(fbsl);
-        abs.addBatchSourceListener(fbsl2);
-        abs.removeBatchSourceListener(fbsl);
-        assertEquals(1, abs.getBatchSourceListener().size());
-        assertFalse(abs.getBatchSourceListener().contains(fbsl));
-        assertTrue(abs.getBatchSourceListener().contains(fbsl2));
+        abstractBatchSource.removeBatchSourceListener(bsl2);
+
     }
 
     @Test
-    public void testNotifyListener(){
-        for(int i = 0; i < 10; i++){
-            abs.addBatchSourceListener(new FakeBatchSourceListener());
+    public void testNotifyListener() {
+        Batch batch = mock(Batch.class);
+        List<BatchSourceListener> batchSourceListeners = new ArrayList<>(numberOfBatchSourceListeners);
+        for (int i = 0; i < numberOfBatchSourceListeners; i++) {
+            batchSourceListeners.add(mock(BatchSourceListener.class));
+            abstractBatchSource.addBatchSourceListener(batchSourceListeners.get(i));
         }
-        abs.notifyListener(new FakeBatch());
-        assertEquals(0,
-                abs.getBatchSourceListener()
-                .parallelStream()
-                .filter(n -> !((FakeBatchSourceListener)n).isReached())
-                .count());
+        abstractBatchSource.notifyListener(batch);
+
+        batchSourceListeners.stream().map(Mockito::verify).forEach(b -> b.batchArrived(batch));
+        batchSourceListeners.forEach(abstractBatchSource::removeBatchSourceListener);
     }
 }

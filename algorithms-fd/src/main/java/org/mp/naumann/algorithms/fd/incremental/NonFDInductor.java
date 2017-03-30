@@ -1,13 +1,14 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.benchmark.better.Benchmark;
+import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.fd.incremental.ActualValidator.ValidationCallback;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.Lattice;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 class NonFDInductor {
 
@@ -20,8 +21,8 @@ class NonFDInductor {
     private final float efficiencyThreshold;
 
     NonFDInductor(Lattice posCover, Lattice negCover,
-        List<? extends PositionListIndex> plis, CompressedRecords compressedRecords,
-        int numRecords, float efficiencyThreshold) {
+                  List<? extends PositionListIndex> plis, CompressedRecords compressedRecords,
+                  int numRecords, float efficiencyThreshold) {
         this.numAttributes = compressedRecords.getNumAttributes();
         this.plis = plis;
         this.compressedRecords = compressedRecords;
@@ -55,7 +56,7 @@ class NonFDInductor {
 
     private int generalize(OpenBitSet lhs, int rhs, int nextLhsAttr) {
         for (int lhsAttr = lhs.nextSetBit(nextLhsAttr); lhsAttr >= 0;
-            lhsAttr = lhs.nextSetBit(lhsAttr + 1)) {
+             lhsAttr = lhs.nextSetBit(lhsAttr + 1)) {
             AtomicBoolean wasValid = new AtomicBoolean();
             OpenBitSet genLhs = lhs.clone();
             genLhs.fastClear(lhsAttr);
@@ -63,7 +64,7 @@ class NonFDInductor {
                 ValidationCallback valid = (_lhs, rhsAttr, collectedFDs) -> wasValid.set(true);
                 ValidationCallback invalid = (_lhs, rhsAttr, collectedFDs) -> wasValid.set(false);
                 ActualValidator validator = new ActualValidator(plis, compressedRecords, numRecords,
-                    valid, invalid, true);
+                        valid, invalid, true);
                 validator.validate(genLhs, rhs);
                 if (wasValid.get()) {
                     return generalize(genLhs, rhs, lhsAttr + 1);

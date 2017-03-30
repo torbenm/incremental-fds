@@ -16,13 +16,14 @@
 
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+
+import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
-import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
 
 class RecomputePLIBuilder {
 
@@ -43,7 +44,6 @@ class RecomputePLIBuilder {
      * @return clustersPerAttribute,
      */
     List<ListPositionListIndex> fetchPositionListIndexes() {
-        SpeedBenchmark.begin(BenchmarkLevel.OPERATION);
         List<Map<String, Collection<Integer>>> clusterMaps = clusterMapBuilder.getClusterMaps();
         List<ListPositionListIndex> clustersPerAttribute = new ArrayList<>();
         for (int columnId : pliOrder) {

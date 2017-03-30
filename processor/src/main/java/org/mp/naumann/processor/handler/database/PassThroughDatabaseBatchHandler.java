@@ -1,9 +1,12 @@
 package org.mp.naumann.processor.handler.database;
 
 import org.mp.naumann.database.DataConnector;
-import org.mp.naumann.processor.batch.Batch;
 import org.mp.naumann.database.Table;
+import org.mp.naumann.processor.batch.Batch;
 
+/**
+ * A DatabaseBatchHandler that simply forwards the batch.
+ */
 public class PassThroughDatabaseBatchHandler implements DatabaseBatchHandler {
 
     private final DataConnector dataConnector;
@@ -17,8 +20,8 @@ public class PassThroughDatabaseBatchHandler implements DatabaseBatchHandler {
         table.execute(batch);
     }
 
-	@Override
-	public DataConnector getConnector() {
-		return dataConnector;
-	}
+    @Override
+    public DataConnector getConnector() {
+        return dataConnector;
+    }
 }

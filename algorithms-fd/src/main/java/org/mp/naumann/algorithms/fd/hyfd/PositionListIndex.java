@@ -46,6 +46,12 @@ public class PositionListIndex implements IPositionListIndex {
     private final List<IntArrayList> clusters;
     private final int numNonUniqueValues;
 
+    public PositionListIndex(int attribute, List<IntArrayList> clusters) {
+        this.attribute = attribute;
+        this.clusters = clusters;
+        this.numNonUniqueValues = this.countNonUniqueValuesIn(clusters);
+    }
+
     @Override
     public int getAttribute() {
         return this.attribute;
@@ -62,12 +68,6 @@ public class PositionListIndex implements IPositionListIndex {
 
     public int getNumNonUniqueValues() {
         return this.numNonUniqueValues;
-    }
-
-    public PositionListIndex(int attribute, List<IntArrayList> clusters) {
-        this.attribute = attribute;
-        this.clusters = clusters;
-        this.numNonUniqueValues = this.countNonUniqueValuesIn(clusters);
     }
 
     private int countNonUniqueValuesIn(List<IntArrayList> clusters) {
@@ -102,7 +102,7 @@ public class PositionListIndex implements IPositionListIndex {
     }
 
     private boolean probe(int[][] compressedRecords, int rhsAttr, IntArrayList cluster) {
-        if(cluster.size() == 0) return false;
+        if (cluster.size() == 0) return false;
 
         int rhsClusterId = compressedRecords[cluster.getInt(0)][rhsAttr];
 

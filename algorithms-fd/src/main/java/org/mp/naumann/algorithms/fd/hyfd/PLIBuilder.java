@@ -18,8 +18,6 @@ package org.mp.naumann.algorithms.fd.hyfd;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
-import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
-import org.mp.naumann.algorithms.benchmark.speed.SpeedBenchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
 import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
@@ -29,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -38,17 +35,17 @@ public class PLIBuilder {
     private final ClusterMapBuilder clusterMapBuilder;
     private final boolean isNullEqualNull;
 
+    public PLIBuilder(int numAttributes, boolean isNullEqualNull) {
+        this.clusterMapBuilder = new ClusterMapBuilder(numAttributes);
+        this.isNullEqualNull = isNullEqualNull;
+    }
+
     public List<HashMap<String, IntArrayList>> getClusterMaps() {
         return clusterMapBuilder.getClusterMaps();
     }
 
     public int getNumLastRecords() {
         return clusterMapBuilder.getNumLastRecords();
-    }
-
-    public PLIBuilder(int numAttributes, boolean isNullEqualNull) {
-        this.clusterMapBuilder = new ClusterMapBuilder(numAttributes);
-        this.isNullEqualNull = isNullEqualNull;
     }
 
     public void addRecords(TableInput tableInput) {
@@ -62,7 +59,6 @@ public class PLIBuilder {
      * @return clustersPerAttribute,
      */
     public List<PositionListIndex> fetchPositionListIndexes() {
-        SpeedBenchmark.begin(BenchmarkLevel.OPERATION);
         List<HashMap<String, IntArrayList>> clusterMaps = clusterMapBuilder.getClusterMaps();
         List<PositionListIndex> clustersPerAttribute = new ArrayList<>();
         for (int columnId = 0; columnId < clusterMaps.size(); columnId++) {
@@ -88,7 +84,6 @@ public class PLIBuilder {
             return numClustersInO2 - numClustersInO1;
         });
 
-        SpeedBenchmark.lap(BenchmarkLevel.OPERATION, "Sorted plis by cluster");
         return clustersPerAttribute;
     }
 

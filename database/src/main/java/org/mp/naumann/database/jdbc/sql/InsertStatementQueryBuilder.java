@@ -8,40 +8,41 @@ class InsertStatementQueryBuilder implements StatementQueryBuilder<InsertStateme
 
     private static InsertStatementQueryBuilder instance;
 
-    public static InsertStatementQueryBuilder get(){
-        if(instance == null)
+    InsertStatementQueryBuilder() {
+    }
+
+    public static InsertStatementQueryBuilder get() {
+        if (instance == null)
             instance = new InsertStatementQueryBuilder();
         return instance;
     }
 
-    InsertStatementQueryBuilder(){ }
-
     @Override
-    public String openStatement(InsertStatement statement){
+    public String openStatement(InsertStatement statement) {
         return "INSERT INTO " + getCompleteTableName(statement) + " ";
     }
 
     @Override
-    public String buildKeyClause(InsertStatement statement){
+    public String buildKeyClause(InsertStatement statement) {
         return "(" +
                 statement
-                    .getValueMap()
-                    .keySet()
-                    .stream()
+                        .getValueMap()
+                        .keySet()
+                        .stream()
                         .map(SqlQueryBuilder::formatKey)
                         .collect(Collectors.joining(", "))
                 + ") VALUES ";
     }
 
     @Override
-    public String buildValueClause(InsertStatement statement){
+    public String buildValueClause(InsertStatement statement) {
         return "(" +
                 statement
-                .getValueMap()
-                .entrySet()
-                .parallelStream()
-                .map(e -> SqlQueryBuilder.formatValue(e.getValue(), statement.getJDBCType(e.getKey())))
-                .collect(Collectors.joining(", ")) +
+                        .getValueMap()
+                        .entrySet()
+                        .parallelStream()
+                        .map(e -> SqlQueryBuilder.formatValue(e.getValue(), statement.getJDBCType(e.getKey())))
+                        .collect(Collectors.joining(", ")) +
                 ")";
     }
 }
