@@ -16,7 +16,7 @@
 
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
-import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
+import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 
 import java.util.Collection;

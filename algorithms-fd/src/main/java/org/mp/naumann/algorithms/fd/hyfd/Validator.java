@@ -1,16 +1,5 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
-import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
-import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
-import org.mp.naumann.algorithms.fd.structures.FDSet;
-import org.mp.naumann.algorithms.fd.structures.FDTree;
-import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
-import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
-import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -20,10 +9,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
+import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.structures.FDSet;
+import org.mp.naumann.algorithms.fd.structures.FDTree;
+import org.mp.naumann.algorithms.fd.structures.FDTreeElement;
+import org.mp.naumann.algorithms.fd.structures.FDTreeElementLhsPair;
+import org.mp.naumann.algorithms.fd.structures.IntegerPair;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 public class Validator {
 
-    private final ViolationCollection violationCollection;
     private final Matcher matcher;
     int lastValidationCount = 0;
     private FDSet negCover;
@@ -36,7 +33,7 @@ public class Validator {
     private ExecutorService executor;
     private int level = 0;
 
-    public Validator(FDSet negCover, FDTree posCover, int numRecords, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian, ViolationCollection violationCollection, Matcher matcher) {
+    public Validator(FDSet negCover, FDTree posCover, int numRecords, int[][] compressedRecords, List<PositionListIndex> plis, float efficiencyThreshold, boolean parallel, MemoryGuardian memoryGuardian, Matcher matcher) {
         this.negCover = negCover;
         this.posCover = posCover;
         this.numRecords = numRecords;
@@ -44,7 +41,6 @@ public class Validator {
         this.compressedRecords = compressedRecords;
         this.efficiencyThreshold = efficiencyThreshold;
         this.memoryGuardian = memoryGuardian;
-        this.violationCollection = violationCollection;
         this.matcher = matcher;
 
         if (parallel) {
@@ -303,7 +299,6 @@ public class Validator {
                     result.invalidFDs.add(new OpenBitSetFD(lhs, rhsAttr));
                 }
             }
-            violationCollection.addInvalidFd(result.invalidFDs);
             return result;
         }
     }

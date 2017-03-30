@@ -1,10 +1,5 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
-import org.mp.naumann.algorithms.fd.incremental.violations.MultipleValuesViolationCollection;
-import org.mp.naumann.algorithms.fd.incremental.violations.SingleValueViolationCollection;
-import org.mp.naumann.algorithms.fd.incremental.violations.TreeViolationCollection;
-import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
-
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -34,8 +29,6 @@ public class IncrementalFDConfiguration {
     private boolean storeEqual = true;
     private boolean improvedSampling = true;
     private boolean depthFirst = false;
-    private int violationCollectionSize = 5;
-    private ViolationCollections violationCollectionType = ViolationCollections.MULTIPLE_VIOLATING_VALUES;
 
     public IncrementalFDConfiguration(char versionCode, String versionName) {
         this.versionCode = versionCode;
@@ -213,34 +206,8 @@ public class IncrementalFDConfiguration {
         return this;
     }
 
-    public int getViolationCollectionSize() {
-        return violationCollectionSize;
-    }
-
     public IncrementalFDConfiguration setViolationCollectionSize(int violationCollectionSize) {
-        this.violationCollectionSize = violationCollectionSize;
         return this;
-    }
-
-    public ViolationCollections getViolationCollectionType() {
-        return violationCollectionType;
-    }
-
-    public IncrementalFDConfiguration setViolationCollectionType(ViolationCollections violationCollectionType) {
-        this.violationCollectionType = violationCollectionType;
-        return this;
-    }
-
-    public ViolationCollection createViolationCollection() {
-        switch (this.violationCollectionType) {
-            case SINGLE_VALUE:
-                return new SingleValueViolationCollection(this);
-            case MULTIPLE_VIOLATING_VALUES:
-                return new MultipleValuesViolationCollection(this, violationCollectionSize);
-            case TREE_STRUCTURE:
-                return new TreeViolationCollection(this);
-        }
-        return null;
     }
 
     public boolean usesDepthFirst() {
@@ -249,12 +216,6 @@ public class IncrementalFDConfiguration {
 
     public enum PruningStrategy {
         SIMPLE, BLOOM, BLOOM_ADVANCED, ANNOTATION, DELETE_ANNOTATIONS
-    }
-
-    public enum ViolationCollections {
-        SINGLE_VALUE,
-        MULTIPLE_VIOLATING_VALUES,
-        TREE_STRUCTURE
     }
 
 }

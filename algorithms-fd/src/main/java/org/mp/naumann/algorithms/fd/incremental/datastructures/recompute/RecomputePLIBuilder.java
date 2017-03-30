@@ -16,14 +16,12 @@
 
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-
+import org.mp.naumann.algorithms.fd.incremental.Factory;
 import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 
 class RecomputePLIBuilder {
 
@@ -31,8 +29,10 @@ class RecomputePLIBuilder {
     private final boolean isNullEqualNull;
     private final List<Integer> pliOrder;
 
-    RecomputePLIBuilder(ClusterMapBuilder clusterMapBuilder, boolean isNullEqualNull, List<Integer> pliOrder) {
-        this.clusterMapBuilder = new RecomputeClusterMapBuilder(clusterMapBuilder);
+    RecomputePLIBuilder(ClusterMapBuilder clusterMapBuilder, boolean isNullEqualNull,
+        List<Integer> pliOrder,
+        Factory<Collection<Integer>> clusterFactory) {
+        this.clusterMapBuilder = new RecomputeClusterMapBuilder(clusterMapBuilder, clusterFactory);
         this.isNullEqualNull = isNullEqualNull;
         this.pliOrder = pliOrder;
     }

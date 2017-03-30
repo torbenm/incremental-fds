@@ -1,25 +1,25 @@
-package org.mp.naumann.algorithms.fd.structures;
+package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class Dictionary<T> {
+class Dictionary<T> {
 
     private final int NULL;
     private final Map<T, Integer> dictionary = new HashMap<>();
     private int nextValue = 1;
 
-    public Dictionary() {
+    Dictionary() {
         this(false);
     }
 
-    public Dictionary(boolean isNullEqualNull) {
+    Dictionary(boolean isNullEqualNull) {
         NULL = isNullEqualNull ? 0 : PliUtils.UNIQUE_VALUE;
     }
 
-    public int getOrAdd(T value) {
+    int getOrAdd(T value) {
         if (value == null) {
             return NULL;
         }

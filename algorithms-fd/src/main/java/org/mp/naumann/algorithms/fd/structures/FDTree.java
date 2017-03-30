@@ -1,17 +1,16 @@
 package org.mp.naumann.algorithms.fd.structures;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-
-import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.FunctionalDependency;
-import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
-import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
-import org.mp.naumann.database.data.ColumnIdentifier;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.FunctionalDependency;
+import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
+import org.mp.naumann.algorithms.fd.hyfd.PositionListIndex;
+import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
+import org.mp.naumann.database.data.ColumnIdentifier;
 
 public class FDTree extends FDTreeElement {
 
@@ -143,19 +142,19 @@ public class FDTree extends FDTreeElement {
         this.removeRecursive(lhs, rhs, currentLhsAttr);
     }
 
-    public List<FunctionalDependency> getFunctionalDependencies(ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<? extends IPositionListIndex> plis) {
+    public List<FunctionalDependency> getFunctionalDependencies(ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis) {
         List<FunctionalDependency> functionalDependencies = new ArrayList<>();
         this.addFunctionalDependenciesInto(functionalDependencies, new OpenBitSet(), columnIdentifiers, plis);
         return functionalDependencies;
     }
 
-    List<OpenBitSetFD> getFunctionalDependencies() {
+    public List<OpenBitSetFD> getFunctionalDependencies() {
         List<OpenBitSetFD> functionalDependencies = new ArrayList<>();
         this.addFunctionalDependenciesInto(functionalDependencies, new OpenBitSet());
         return functionalDependencies;
     }
 
-    public int addFunctionalDependenciesInto(FunctionalDependencyResultReceiver resultReceiver, ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<? extends IPositionListIndex> plis) {
+    public int addFunctionalDependenciesInto(FunctionalDependencyResultReceiver resultReceiver, ObjectArrayList<ColumnIdentifier> columnIdentifiers, List<PositionListIndex> plis) {
         return this.addFunctionalDependenciesInto(resultReceiver, new OpenBitSet(), columnIdentifiers, plis);
     }
 }

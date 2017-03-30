@@ -6,7 +6,7 @@ import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
-import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
+import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.hyfd.PositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.RecordCompressor;
@@ -34,7 +34,7 @@ public class FDEPExecutor implements FunctionalDependencyAlgorithm {
     private int numAttributes;
 
     public FDEPExecutor() {
-        FDLogger.setCurrentAlgorithm(this);
+
     }
 
     public FDEPExecutor(Table table, FunctionalDependencyResultReceiver resultReceiver) {
@@ -140,10 +140,4 @@ public class FDEPExecutor implements FunctionalDependencyAlgorithm {
     }
 
 
-    private int[] fetchRecordFrom(int recordId, int[][] invertedPlis) {
-        int[] record = new int[this.numAttributes];
-        for (int i = 0; i < this.numAttributes; i++)
-            record[i] = invertedPlis[i][recordId];
-        return record;
-    }
 }

@@ -17,7 +17,6 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,21 +28,25 @@ import java.util.Set;
 import java.util.logging.Level;
 import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.incremental.Factory;
 import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
-public class RecomputeClusterMapBuilder {
+class RecomputeClusterMapBuilder {
 
     private int numRecords = 0;
     private final List<Map<String, Collection<Integer>>> clusterMaps;
+    private final Factory<Collection<Integer>> clusterFactory;
 
-    RecomputeClusterMapBuilder(ClusterMapBuilder clusterMapBuilder) {
+    RecomputeClusterMapBuilder(ClusterMapBuilder clusterMapBuilder,
+        Factory<Collection<Integer>> clusterFactory) {
+        this.clusterFactory = clusterFactory;
         List<HashMap<String, IntArrayList>> oldClusterMaps = clusterMapBuilder.getClusterMaps();
         clusterMaps = new ArrayList<>();
         for (HashMap<String, IntArrayList> oldClusterMap : oldClusterMaps) {
             Map<String, Collection<Integer>> clusterMap = new HashMap<>();
             for (Entry<String, IntArrayList> entry : oldClusterMap.entrySet()) {
-                Collection<Integer> newCluster = createCluster();
+                Collection<Integer> newCluster = this.clusterFactory.create();
                 newCluster.addAll(entry.getValue());
                 clusterMap.put(entry.getKey(), newCluster);
             }
@@ -52,12 +55,8 @@ public class RecomputeClusterMapBuilder {
         numRecords = clusterMapBuilder.getNumLastRecords();
     }
 
-    private Collection<Integer> createCluster() {
-        return new IntOpenHashSet();
-    }
 
-
-    public List<Map<String, Collection<Integer>>> getClusterMaps() {
+    List<Map<String, Collection<Integer>>> getClusterMaps() {
         return clusterMaps;
     }
 
@@ -74,7 +73,7 @@ public class RecomputeClusterMapBuilder {
             if (clusterMap.containsKey(value)) {
                 clusterMap.get(value).add(recId);
             } else {
-                Collection<Integer> newCluster = createCluster();
+                Collection<Integer> newCluster = clusterFactory.create();
                 newCluster.add(recId);
                 clusterMap.put(value, newCluster);
             }

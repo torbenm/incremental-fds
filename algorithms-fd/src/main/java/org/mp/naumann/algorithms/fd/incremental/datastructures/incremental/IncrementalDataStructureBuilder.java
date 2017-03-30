@@ -1,23 +1,6 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
-import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
-import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
-import org.mp.naumann.algorithms.fd.incremental.datastructures.AbstractStatementApplier;
-import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
-import org.mp.naumann.algorithms.fd.incremental.datastructures.MapCompressedRecords;
-import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.structures.Dictionary;
-import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
-import org.mp.naumann.algorithms.fd.utils.PliUtils;
-import org.mp.naumann.database.statement.Statement;
-import org.mp.naumann.processor.batch.Batch;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -29,6 +12,21 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.incremental.Factory;
+import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
+import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
+import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.AbstractStatementApplier;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.MapCompressedRecords;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
+import org.mp.naumann.database.statement.Statement;
+import org.mp.naumann.processor.batch.Batch;
 
 public class IncrementalDataStructureBuilder implements DataStructureBuilder {
 
@@ -41,30 +39,35 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
     private final MapCompressedRecords compressedRecords;
     private List<? extends PositionListIndex> plis;
 
-    public IncrementalDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns) {
-        this(pliBuilder, version, columns, pliBuilder.getPliOrder());
-    }
-
-    public IncrementalDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns, List<Integer> pliOrder) {
-        this.pliOrder = pliOrder;
+    public IncrementalDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns, Factory<Collection<Integer>> clusterFactory) {
+        this.pliOrder = pliBuilder.getPliOrder();
         this.pliBuilder = new IncrementalPLIBuilder(pliOrder);
         this.version = version;
         this.columns = columns;
         this.dictionary = new Dictionary<>(pliBuilder.isNullEqualNull());
         int nextRecordId = pliBuilder.getNumLastRecords();
         this.compressedRecords = new MapCompressedRecords(nextRecordId, pliOrder.size());
-        this.clusterMapBuilder = new IncrementalClusterMapBuilder(columns.size(), nextRecordId, dictionary);
-        initialize(pliBuilder.getClusterMaps(), nextRecordId);
+        this.clusterMapBuilder = new IncrementalClusterMapBuilder(columns.size(), nextRecordId, dictionary,
+            clusterFactory);
+        initialize(pliBuilder.getClusterMaps(), nextRecordId, clusterFactory);
     }
 
-    private void initialize(List<HashMap<String, IntArrayList>> oldClusterMaps, int nextRecordId) {
+    public IncrementalDataStructureBuilder(PLIBuilder pliBuilder,
+        IncrementalFDConfiguration incrementalFDConfiguration, List<String> columns) {
+        this(pliBuilder, incrementalFDConfiguration, columns, IntArrayList::new);
+    }
+
+    private void initialize(List<HashMap<String, IntArrayList>> oldClusterMaps, int nextRecordId,
+        Factory<Collection<Integer>> clusterFactory) {
         List<Integer> inserted = IntStream.range(0, nextRecordId).boxed().collect(Collectors.toList());
         List<Map<Integer, Collection<Integer>>> clusterMaps = new ArrayList<>(oldClusterMaps.size());
         for (HashMap<String, IntArrayList> oldClusterMap : oldClusterMaps) {
             Map<Integer, Collection<Integer>> clusterMap = new HashMap<>();
             for (Entry<String, IntArrayList> cluster : oldClusterMap.entrySet()) {
                 int dictValue = dictionary.getOrAdd(cluster.getKey());
-                clusterMap.put(dictValue, new IntOpenHashSet(cluster.getValue()));
+                Collection<Integer> newCluster = clusterFactory.create();
+                newCluster.addAll(cluster.getValue());
+                clusterMap.put(dictValue, newCluster);
             }
             clusterMaps.add(clusterMap);
         }

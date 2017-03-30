@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.structures;
+package org.mp.naumann.algorithms.fd.incremental.structures;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -8,6 +8,7 @@ import org.mp.naumann.algorithms.fd.FDLogger;
 
 import java.util.List;
 import java.util.logging.Level;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 public class LatticeBuilder {
 
@@ -21,14 +22,7 @@ public class LatticeBuilder {
         this.numAttributes = numAttributes;
     }
 
-    public static LatticeBuilder build(FDTree posCover) {
-        int numAttributes = posCover.getNumAttributes();
-        List<OpenBitSetFD> functionalDependencies = posCover.getFunctionalDependencies();
-        return build(numAttributes, functionalDependencies);
-    }
-
-    public static LatticeBuilder build(int numAttributes,
-                                       List<OpenBitSetFD> functionalDependencies) {
+    public static LatticeBuilder build(int numAttributes, List<OpenBitSetFD> functionalDependencies) {
         LatticeBuilder builder = new LatticeBuilder(numAttributes);
         builder.buildPositiveCover(functionalDependencies);
         builder.buildNegativeCover(functionalDependencies);
@@ -76,32 +70,5 @@ public class LatticeBuilder {
             }
         }
         FDLogger.log(Level.FINER, "Finsihed building negative cover");
-    }
-
-    private boolean isMaximal(OpenBitSet lhs, int rhs) {
-        return !nonFds.containsFdOrGeneralization(lhs, rhs);
-    }
-
-    private boolean isValidFd(OpenBitSet lhs, int rhs) {
-        return fds.containsFdOrGeneralization(lhs, rhs);
-    }
-
-    private static class LhsRhsPair {
-
-        private final OpenBitSet lhs;
-        private final OpenBitSet rhs;
-
-        private LhsRhsPair(OpenBitSet lhs, OpenBitSet rhs) {
-            this.lhs = lhs;
-            this.rhs = rhs;
-        }
-
-        public OpenBitSet getLhs() {
-            return lhs;
-        }
-
-        public OpenBitSet getRhs() {
-            return rhs;
-        }
     }
 }

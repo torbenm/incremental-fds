@@ -2,8 +2,8 @@ package org.mp.naumann.algorithms.fd.incremental;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.structures.Lattice;
-import org.mp.naumann.algorithms.fd.structures.LatticeElement;
+import org.mp.naumann.algorithms.fd.incremental.structures.Lattice;
+import org.mp.naumann.algorithms.fd.incremental.structures.LatticeElement;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.ArrayList;

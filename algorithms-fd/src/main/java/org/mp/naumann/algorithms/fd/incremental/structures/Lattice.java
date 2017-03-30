@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.structures;
+package org.mp.naumann.algorithms.fd.incremental.structures;
 
 import org.apache.lucene.util.OpenBitSet;
 
@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 public class Lattice extends LatticeElement {
 

@@ -1,8 +1,8 @@
 package org.mp.naumann.algorithms.fd.incremental.pruning.bloom;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.structures.Lattice;
-import org.mp.naumann.algorithms.fd.structures.LatticeElementLhsPair;
+import org.mp.naumann.algorithms.fd.incremental.structures.Lattice;
+import org.mp.naumann.algorithms.fd.incremental.structures.LatticeElementLhsPair;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -15,7 +15,7 @@ public class CurrentFDBloomGenerator implements BloomGenerator {
     private final Lattice fds;
     private final int maxLevel;
 
-    public CurrentFDBloomGenerator(Lattice fds, int maxLevel) {
+    private CurrentFDBloomGenerator(Lattice fds, int maxLevel) {
         this.fds = fds;
         this.maxLevel = maxLevel;
     }

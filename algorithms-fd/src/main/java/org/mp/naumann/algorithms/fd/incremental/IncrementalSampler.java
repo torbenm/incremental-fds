@@ -42,11 +42,6 @@ class IncrementalSampler {
         this.matcher = matcher;
     }
 
-    private static IntArrayList sort(Comparator<Integer> comparator, IntArrayList list) {
-        list.sort(comparator);
-        return list;
-    }
-
     void setNewRecords(Collection<Integer> newRecords) {
         this.newRecords = newRecords;
     }

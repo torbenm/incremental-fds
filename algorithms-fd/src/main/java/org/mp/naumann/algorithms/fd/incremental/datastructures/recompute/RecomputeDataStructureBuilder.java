@@ -1,7 +1,9 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
-import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
+import org.mp.naumann.algorithms.fd.incremental.Factory;
+import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
@@ -32,16 +34,17 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     private List<? extends PositionListIndex> plis;
     private CompressedRecords compressedRecords;
 
-    public RecomputeDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns) {
-        this(pliBuilder, version, columns, pliBuilder.getPliOrder());
-    }
-
-    public RecomputeDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns, List<Integer> pliOrder) {
-        this.pliBuilder = new RecomputePLIBuilder(pliBuilder.getClusterMapBuilder(), pliBuilder.isNullEqualNull(), pliOrder);
+    public RecomputeDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns, Factory<Collection<Integer>> clusterFactory) {
+        this.pliBuilder = new RecomputePLIBuilder(pliBuilder.getClusterMapBuilder(), pliBuilder.isNullEqualNull(), pliBuilder.getPliOrder(), clusterFactory);
         this.version = version;
         this.columns = columns;
         recordIds = IntStream.range(0, pliBuilder.getNumLastRecords()).boxed().collect(Collectors.toSet());
         updateDataStructures();
+    }
+
+    public RecomputeDataStructureBuilder(PLIBuilder pliBuilder,
+        IncrementalFDConfiguration incrementalFDConfiguration, List<String> columns) {
+        this(pliBuilder, incrementalFDConfiguration, columns, IntArrayList::new);
     }
 
     @Override

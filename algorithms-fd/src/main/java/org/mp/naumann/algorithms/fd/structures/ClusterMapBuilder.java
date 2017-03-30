@@ -27,7 +27,6 @@ import org.mp.naumann.database.data.Row;
 public class ClusterMapBuilder {
 
     private final List<HashMap<String, IntArrayList>> clusterMaps;
-    private final HashMap<Long, IntArrayList> hashedRecords;
     private int numRecords = 0;
 
 
@@ -36,7 +35,6 @@ public class ClusterMapBuilder {
         for (int i = 0; i < numAttributes; i++) {
             clusterMaps.add(new HashMap<>());
         }
-        hashedRecords = new HashMap<>();
     }
 
     public List<HashMap<String, IntArrayList>> getClusterMaps() {
@@ -53,9 +51,8 @@ public class ClusterMapBuilder {
      * to attribute values to record identifiers.
      *
      * @param tableInput the table/relation used as input, e.g. from a DB
-     * @return the list of clusterMaps, as described above
      */
-    public void addRecords(TableInput tableInput) {
+    void addRecords(TableInput tableInput) {
         while (tableInput.hasNext()) {
             Row record = tableInput.next();
 
@@ -65,10 +62,9 @@ public class ClusterMapBuilder {
         }
     }
 
-    private int addRecord(Iterable<String> record) {
+    private void addRecord(Iterable<String> record) {
         int recId = this.numRecords;
         int attributeId = 0;
-        HashCodeBuilder hashCodeBuilder = new HashCodeBuilder();
 
         for (String value : record) {
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
@@ -83,25 +79,16 @@ public class ClusterMapBuilder {
             attributeId++;
         }
         this.numRecords++;
-        addRecordToHashMap(hashCodeBuilder.build(), recId);
-        return recId;
     }
 
 
-    public void addRecords(Collection<? extends Iterable<String>> records) {
+    void addRecords(Collection<? extends Iterable<String>> records) {
         if (records.size() > Integer.MAX_VALUE)
             throw new RuntimeException("PLI encoding into integer based PLIs is not possible, because the number of records in the dataset exceeds Integer.MAX_VALUE. Use long based plis instead! (NumRecords = " + records.size() + " and Integer.MAX_VALUE = " + Integer.MAX_VALUE);
 
         for (Iterable<String> record : records) {
             addRecord(record);
         }
-    }
-
-
-    private void addRecordToHashMap(long hashcode, int recId) {
-        if (!hashedRecords.containsKey(hashcode))
-            hashedRecords.put(hashcode, new IntArrayList());
-        hashedRecords.get(hashcode).add(recId);
     }
 
 }

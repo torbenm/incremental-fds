@@ -20,18 +20,16 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-
-import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.structures.ClusterIdentifier;
-import org.mp.naumann.algorithms.fd.structures.ClusterIdentifierWithRecord;
-import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
-import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
-
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.structures.ClusterIdentifier;
+import org.mp.naumann.algorithms.fd.structures.ClusterIdentifierWithRecord;
+import org.mp.naumann.algorithms.fd.structures.IntegerPair;
+import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
+import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
 /**
  * Position list indices (or stripped partitions) are an index structure that
@@ -40,7 +38,7 @@ import java.util.List;
  * (3, 5)). Clusters of size 1 are discarded. A position list index should be
  * created using the {@link PLIBuilder}.
  */
-public class PositionListIndex implements IPositionListIndex {
+public class PositionListIndex {
 
     private final int attribute;
     private final List<IntArrayList> clusters;
@@ -52,18 +50,12 @@ public class PositionListIndex implements IPositionListIndex {
         this.numNonUniqueValues = this.countNonUniqueValuesIn(clusters);
     }
 
-    @Override
     public int getAttribute() {
         return this.attribute;
     }
 
     public List<IntArrayList> getClusters() {
         return this.clusters;
-    }
-
-    @Override
-    public IntArrayList getCluster(int index) {
-        return this.clusters.get(index);
     }
 
     public int getNumNonUniqueValues() {
@@ -75,15 +67,6 @@ public class PositionListIndex implements IPositionListIndex {
         for (IntArrayList cluster : clusters)
             numNonUniqueValues += cluster.size();
         return numNonUniqueValues;
-    }
-
-    /**
-     * Returns the number of non unary clusters.
-     *
-     * @return the number of clusters in the {@link PositionListIndex}
-     */
-    public long size() {
-        return this.clusters.size();
     }
 
     public boolean isConstant(int numRecords) {

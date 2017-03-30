@@ -27,16 +27,6 @@ public class CollectionUtils {
         return buffer.toString();
     }
 
-    public static <T> boolean intersects(Collection<T> one, Collection<T> two) {
-        Collection<T> looped = one.size() < two.size() ? one : two;
-        Collection<T> searcher = one.size() < two.size() ? two : one;
-        for (T value : searcher) {
-            if (looped.contains(value))
-                return true;
-        }
-        return false;
-    }
-
     public static <T> Set<T> intersection(List<Collection<T>> clusters) {
         if (clusters.isEmpty()) {
             return Collections.emptySet();

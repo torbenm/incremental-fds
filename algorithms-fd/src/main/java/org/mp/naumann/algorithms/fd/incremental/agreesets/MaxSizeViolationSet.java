@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.incremental.pruning.annotation;
+package org.mp.naumann.algorithms.fd.incremental.agreesets;
 
 public class MaxSizeViolationSet extends DefaultViolationSet {
 
@@ -9,10 +9,10 @@ public class MaxSizeViolationSet extends DefaultViolationSet {
     }
 
     @Override
-    public void add(ViolatingPair violatingPair) {
+    public void add(int a, int b) {
         if (set.size() >= maxSize) {
             return;
         }
-        super.add(violatingPair);
+        super.add(a, b);
     }
 }

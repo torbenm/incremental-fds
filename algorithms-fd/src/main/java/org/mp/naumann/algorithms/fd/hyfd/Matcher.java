@@ -3,35 +3,29 @@ package org.mp.naumann.algorithms.fd.hyfd;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
-import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.DeletePruner;
-import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.MaxSizeViolationSet;
-import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.SimpleDeleteValidationPruner;
-import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
+import org.mp.naumann.algorithms.fd.incremental.agreesets.AgreeSetCollection;
+import org.mp.naumann.algorithms.fd.incremental.agreesets.MaxSizeViolationSet;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
 
 class Matcher {
 
     private final int[][] compressedRecords;
     private final ValueComparator valueComparator;
-    private final ViolationCollection violationCollection;
     private final IncrementalFDConfiguration configuration;
-    private final DeletePruner pruner;
+    private final AgreeSetCollection agreeSets;
 
-    public Matcher(int[][] compressedRecords, ValueComparator valueComparator, ViolationCollection violationCollection, IncrementalFDConfiguration configuration) {
+    Matcher(int[][] compressedRecords, ValueComparator valueComparator,
+        IncrementalFDConfiguration configuration) {
         this.compressedRecords = compressedRecords;
         this.valueComparator = valueComparator;
-        this.violationCollection = violationCollection;
         this.configuration = configuration;
-        this.pruner = new DeletePruner(compressedRecords[0].length, () -> new MaxSizeViolationSet(1000), SimpleDeleteValidationPruner::new);
+        this.agreeSets = new AgreeSetCollection(() -> new MaxSizeViolationSet(1000));
     }
 
     public void match(OpenBitSet equalAttrs, int recId1, int recId2) {
         match(equalAttrs, compressedRecords[recId1], compressedRecords[recId2]);
         if (configuration.usesPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS)) {
-            pruner.addAgreeSet(equalAttrs.clone(), recId1, recId2);
-        }
-        if (configuration.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.ANNOTATION)) {
-            violationCollection.add(equalAttrs, recId1, recId2);
+            agreeSets.addAgreeSet(equalAttrs.clone(), recId1, recId2);
         }
     }
 
@@ -44,7 +38,7 @@ class Matcher {
         }
     }
 
-    public DeletePruner getPruner() {
-        return pruner;
+    AgreeSetCollection getAgreeSets() {
+        return agreeSets;
     }
 }

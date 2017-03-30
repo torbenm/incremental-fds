@@ -1,5 +1,16 @@
 package org.mp.naumann.testcases;
 
+import static org.mockito.Mockito.mock;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Level;
 import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkEvent;
 import org.mp.naumann.algorithms.benchmark.speed.BenchmarkEventListener;
@@ -24,18 +35,6 @@ import org.mp.naumann.processor.batch.source.StreamableBatchSource;
 import org.mp.naumann.processor.handler.BatchHandler;
 import org.mp.naumann.processor.handler.database.DatabaseBatchHandler;
 import org.mp.naumann.processor.handler.database.PassThroughDatabaseBatchHandler;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.logging.Level;
-
-import static org.mockito.Mockito.mock;
 
 abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
 
@@ -165,7 +164,7 @@ abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
     private long getTotalTime(List<BenchmarkEvent> events) {
         return events
                 .stream()
-                .mapToLong(BenchmarkEvent::getDuration)
+                .mapToLong(BenchmarkEvent::getDurationInMillis)
                 .sum();
     }
 

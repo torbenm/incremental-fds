@@ -17,11 +17,9 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures;
 
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -30,12 +28,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.structures.ClusterIdentifier;
 import org.mp.naumann.algorithms.fd.structures.ClusterIdentifierWithRecord;
-import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
+import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
@@ -46,7 +43,7 @@ import org.mp.naumann.algorithms.fd.utils.PliUtils;
  * (3, 5)). Clusters of size 1 are discarded. A position list index should be
  * created using the {@link PLIBuilder}.
  */
-public abstract class PositionListIndex implements IPositionListIndex {
+public abstract class PositionListIndex {
 
     private final int attribute;
     private List<? extends Collection<Integer>> clustersWithNewRecords = null;
@@ -57,7 +54,9 @@ public abstract class PositionListIndex implements IPositionListIndex {
         this.attribute = attribute;
     }
 
-    @Override
+    public abstract Collection<? extends Collection<Integer>> getClusters();
+    public abstract Collection<Integer> getCluster(int index);
+
     public int getAttribute() {
         return this.attribute;
     }
@@ -242,12 +241,7 @@ public abstract class PositionListIndex implements IPositionListIndex {
 
         List<IntOpenHashSet> setCluster = this.convertClustersToSets();
 
-        Collections.sort(setCluster, new Comparator<IntSet>() {
-            @Override
-            public int compare(IntSet o1, IntSet o2) {
-                return o1.hashCode() - o2.hashCode();
-            }
-        });
+        setCluster.sort(Comparator.comparingInt(IntOpenHashSet::hashCode));
         result = prime * result + (setCluster.hashCode());
         return result;
     }

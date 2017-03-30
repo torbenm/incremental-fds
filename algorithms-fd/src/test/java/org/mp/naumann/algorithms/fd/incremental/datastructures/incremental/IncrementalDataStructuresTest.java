@@ -1,15 +1,7 @@
-package org.mp.naumann.algorithms.fd.incremental.datastructures;
+package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
-import org.junit.Test;
-import org.mp.naumann.algorithms.fd.hyfd.PLIBuilder;
-import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
-import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.algorithms.fd.incremental.datastructures.incremental.IncrementalDataStructureBuilder;
-import org.mp.naumann.algorithms.fd.utils.PliUtils;
-import org.mp.naumann.database.statement.DefaultInsertStatement;
-import org.mp.naumann.database.statement.Statement;
-import org.mp.naumann.processor.batch.Batch;
-import org.mp.naumann.processor.batch.ListBatch;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,9 +9,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import org.junit.Test;
+import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.DataStructureBuilder;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
+import org.mp.naumann.database.statement.DefaultInsertStatement;
+import org.mp.naumann.database.statement.Statement;
+import org.mp.naumann.processor.batch.Batch;
+import org.mp.naumann.processor.batch.ListBatch;
 
 public class IncrementalDataStructuresTest {
 
