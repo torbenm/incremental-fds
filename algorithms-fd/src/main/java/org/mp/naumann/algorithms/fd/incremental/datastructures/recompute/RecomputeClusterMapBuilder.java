@@ -43,11 +43,17 @@ public class RecomputeClusterMapBuilder {
         for (HashMap<String, IntArrayList> oldClusterMap : oldClusterMaps) {
             Map<String, Collection<Integer>> clusterMap = new HashMap<>();
             for (Entry<String, IntArrayList> entry : oldClusterMap.entrySet()) {
-                clusterMap.put(entry.getKey(), new IntOpenHashSet(entry.getValue()));
+                Collection<Integer> newCluster = createCluster();
+                newCluster.addAll(entry.getValue());
+                clusterMap.put(entry.getKey(), newCluster);
             }
             clusterMaps.add(clusterMap);
         }
         numRecords = clusterMapBuilder.getNumLastRecords();
+    }
+
+    private Collection<Integer> createCluster() {
+        return new IntOpenHashSet();
     }
 
 
@@ -68,7 +74,7 @@ public class RecomputeClusterMapBuilder {
             if (clusterMap.containsKey(value)) {
                 clusterMap.get(value).add(recId);
             } else {
-                Collection<Integer> newCluster = new IntOpenHashSet();
+                Collection<Integer> newCluster = createCluster();
                 newCluster.add(recId);
                 clusterMap.put(value, newCluster);
             }
