@@ -101,7 +101,6 @@ abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
                 IncrementalFD incrementalAlgorithm = new IncrementalFD(sourceTableName, config);
 
                 incrementalAlgorithm.initialize(ds);
-                incrementalAlgorithm.setEfficiencyThreshold(0.001f);
                 incrementalAlgorithm.addResultListener(resultListener);
                 BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, mock(DatabaseBatchHandler.class), false);
                 batchProcessor.addBatchHandler(incrementalAlgorithm);
