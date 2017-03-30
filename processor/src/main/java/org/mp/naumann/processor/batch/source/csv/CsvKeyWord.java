@@ -2,11 +2,6 @@ package org.mp.naumann.processor.batch.source.csv;
 
 import java.util.Arrays;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
 public enum CsvKeyWord {
     ACTION_COLUMN("::action"),
     INSERT_STATEMENT("insert"),
@@ -15,10 +10,18 @@ public enum CsvKeyWord {
 
     private final String keyWord;
 
+    CsvKeyWord(String keyWord) {
+        this.keyWord = keyWord;
+    }
+
     public static CsvKeyWord valueOfKeyWord(String value) {
         return Arrays.stream(values())
-                .filter(k -> k.getKeyWord().equalsIgnoreCase(value))
-                .findFirst()
-                .orElseThrow(IllegalArgumentException::new);
+            .filter(k -> k.getKeyWord().equalsIgnoreCase(value))
+            .findFirst()
+            .orElseThrow(IllegalArgumentException::new);
+    }
+
+    public String getKeyWord() {
+        return keyWord;
     }
 }
