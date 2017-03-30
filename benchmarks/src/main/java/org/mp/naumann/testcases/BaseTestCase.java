@@ -76,8 +76,8 @@ abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
             initialAlgorithm.execute();
             List<FunctionalDependency> fds = initialAlgorithm.getFDs();
             FDLogger.log(Level.INFO, String.format("Initial FD count: %s", fds.size()));
-//            FDLogger.log(Level.FINE, "Initial FDs:");
-//            fds.forEach(fd -> FDLogger.log(Level.FINE, fd.toString()));
+            FDLogger.log(Level.FINE, "Initial FDs:");
+            fds.forEach(fd -> FDLogger.log(Level.FINE, fd.toString()));
 
             if (hyfdOnly) {
                 // create temporary table that we can modify as batches come in
@@ -101,7 +101,7 @@ abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
                 IncrementalFD incrementalAlgorithm = new IncrementalFD(sourceTableName, config);
 
                 incrementalAlgorithm.initialize(ds);
-//                incrementalAlgorithm.setEfficiencyThreshold(0.001f);
+                incrementalAlgorithm.setEfficiencyThreshold(0.001f);
                 incrementalAlgorithm.addResultListener(resultListener);
                 BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, mock(DatabaseBatchHandler.class), false);
                 batchProcessor.addBatchHandler(incrementalAlgorithm);
@@ -113,7 +113,7 @@ abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
 
             System.out.println(String.format("Cumulative runtime (algorithm only): %sms", getTotalTime(batchEvents)));
             System.out.println(String.format("Found %s FDs:", resultListener.getFDs().size()));
-//            resultListener.getFDs().forEach(fd -> FDLogger.log(Level.INFO, fd.toString()));
+            resultListener.getFDs().forEach(fd -> FDLogger.log(Level.INFO, fd.toString()));
 
         } catch (SQLException e) {
             e.printStackTrace();
