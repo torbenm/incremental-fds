@@ -4,6 +4,7 @@ import org.apache.lucene.util.OpenBitSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mp.naumann.algorithms.fd.structures.FDTree;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

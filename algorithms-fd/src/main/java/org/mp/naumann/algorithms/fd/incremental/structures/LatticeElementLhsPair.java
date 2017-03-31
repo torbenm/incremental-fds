@@ -1,4 +1,4 @@
-package org.mp.naumann.algorithms.fd.structures;
+package org.mp.naumann.algorithms.fd.incremental.structures;
 
 import org.apache.lucene.util.OpenBitSet;
 

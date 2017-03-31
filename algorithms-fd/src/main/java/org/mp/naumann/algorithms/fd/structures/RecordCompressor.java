@@ -1,14 +1,14 @@
 package org.mp.naumann.algorithms.fd.structures;
 
-import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.utils.PliUtils;
-
 import java.util.List;
 import java.util.logging.Level;
+import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.hyfd.PositionListIndex;
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
 public class RecordCompressor {
 
-    public static int[][] fetchCompressedRecords(List<? extends IPositionListIndex> plis, int numRecords) {
+    public static int[][] fetchCompressedRecords(List<PositionListIndex> plis, int numRecords) {
         // Calculate inverted plis
         FDLogger.log(Level.FINER, "Inverting plis ...");
         int[][] invertedPlis = PliUtils.invert(plis, numRecords);
@@ -17,7 +17,6 @@ public class RecordCompressor {
         int[][] compressedRecords = new int[numRecords][];
         for (int recordId = 0; recordId < numRecords; recordId++)
             compressedRecords[recordId] = fetchRecordFrom(recordId, invertedPlis);
-        invertedPlis = null;
         return compressedRecords;
     }
 

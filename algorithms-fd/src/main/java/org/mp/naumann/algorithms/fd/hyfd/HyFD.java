@@ -1,18 +1,20 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyAlgorithm;
 import org.mp.naumann.algorithms.fd.FunctionalDependencyResultReceiver;
+import org.mp.naumann.algorithms.fd.incremental.agreesets.AgreeSetCollection;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
-import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.DeletePruner;
-import org.mp.naumann.algorithms.fd.incremental.violations.ViolationCollection;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.FDTree;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
+import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.structures.RecordCompressor;
 import org.mp.naumann.algorithms.fd.utils.FileUtils;
 import org.mp.naumann.algorithms.fd.utils.ValueComparator;
@@ -22,16 +24,11 @@ import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.ColumnCombination;
 import org.mp.naumann.database.data.ColumnIdentifier;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-
 
 public class HyFD implements FunctionalDependencyAlgorithm {
 
     private final MemoryGuardian memoryGuardian = new MemoryGuardian(true);
     private final IncrementalFDConfiguration configuration;
-    private final ViolationCollection violationCollection;
     public int lastValidationCount = 0;
 
     // but usually we are only interested in FDs
@@ -46,17 +43,14 @@ public class HyFD implements FunctionalDependencyAlgorithm {
     private int numAttributes;
     private FDTree posCover;
     private PLIBuilder pliBuilder;
-    private DeletePruner pruner;
+    private AgreeSetCollection pruner;
 
     public HyFD() {
         this.configuration = IncrementalFDConfiguration.LATEST;
-        violationCollection = configuration.createViolationCollection();
     }
 
     public HyFD(IncrementalFDConfiguration configuration, Table table, FunctionalDependencyResultReceiver resultReceiver) {
-        FDLogger.setCurrentAlgorithm(this);
         this.configuration = configuration;
-        violationCollection = configuration.createViolationCollection();
         configure(table, resultReceiver);
     }
 
@@ -70,7 +64,6 @@ public class HyFD implements FunctionalDependencyAlgorithm {
         this.tableName = tableInput.getName();
         this.attributeNames = tableInput.getColumnNames();
         this.numAttributes = this.attributeNames.size();
-        this.violationCollection.setNumAttributes(numAttributes);
         if (this.valueComparator == null)
             this.valueComparator = new ValueComparator(true);
     }
@@ -132,13 +125,13 @@ public class HyFD implements FunctionalDependencyAlgorithm {
         // TODO: implement parallel sampling
 
         float efficiencyThreshold = 0.01f;
-        Matcher matcher = new Matcher(compressedRecords, valueComparator, violationCollection, configuration);
+        Matcher matcher = new Matcher(compressedRecords, valueComparator, configuration);
         Sampler sampler = new Sampler(negCover, posCover, compressedRecords, plis, efficiencyThreshold,
                 this.memoryGuardian, matcher);
         Inductor inductor = new Inductor(negCover, posCover, this.memoryGuardian);
         boolean validateParallel = true;
         Validator validator = new Validator(negCover, posCover, numRecords, compressedRecords, plis,
-                efficiencyThreshold, validateParallel, this.memoryGuardian, violationCollection, matcher);
+                efficiencyThreshold, validateParallel, this.memoryGuardian, matcher);
 
         List<IntegerPair> comparisonSuggestions = new ArrayList<>();
 
@@ -167,7 +160,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
         FDLogger.log(Level.FINER, "... done! (" + numFDs + " FDs)");
 
         this.posCover = posCover;
-        this.pruner = matcher.getPruner();
+        this.pruner = matcher.getAgreeSets();
     }
 
     public FDTree getPosCover() {
@@ -196,17 +189,6 @@ public class HyFD implements FunctionalDependencyAlgorithm {
         return columnIdentifiers;
     }
 
-    private int[] fetchRecordFrom(int recordId, int[][] invertedPlis) {
-        int[] record = new int[this.numAttributes];
-        for (int i = 0; i < this.numAttributes; i++)
-            record[i] = invertedPlis[i][recordId];
-        return record;
-    }
-
-    public ViolationCollection getViolationCollection() {
-        return violationCollection;
-    }
-
     public PLIBuilder getPLIBuilder() {
         return pliBuilder;
     }
@@ -219,7 +201,7 @@ public class HyFD implements FunctionalDependencyAlgorithm {
         return attributeNames;
     }
 
-    public DeletePruner getPruner() {
+    public AgreeSetCollection getPruner() {
         return pruner;
     }
 }

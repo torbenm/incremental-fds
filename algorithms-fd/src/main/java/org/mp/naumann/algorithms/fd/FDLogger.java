@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 public class FDLogger {
 
     private static final Logger logger = Logger.getLogger("global");
-    private static FunctionalDependencyAlgorithm currentAlgorithm;
     private static boolean silentMode = false;
 
     static {
@@ -25,10 +24,6 @@ public class FDLogger {
 
     public static void setLevel(Level level) {
         logger.setLevel(level);
-    }
-
-    public static void setCurrentAlgorithm(FunctionalDependencyAlgorithm algorithm) {
-        currentAlgorithm = algorithm;
     }
 
     public static void log(Level level, Object object) {

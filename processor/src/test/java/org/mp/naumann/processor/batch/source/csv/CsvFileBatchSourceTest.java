@@ -1,21 +1,20 @@
 package org.mp.naumann.processor.batch.source.csv;
 
-import org.junit.Test;
-import org.mp.naumann.database.statement.DeleteStatement;
-import org.mp.naumann.database.statement.InsertStatement;
-import org.mp.naumann.database.statement.Statement;
-import org.mp.naumann.database.statement.UpdateStatement;
-import org.mp.naumann.processor.batch.source.AbstractBatchSourceTest;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mp.naumann.processor.batch.source.csv.CsvKeyWord.ACTION_COLUMN;
 import static org.mp.naumann.processor.batch.source.csv.CsvKeyWord.DELETE_STATEMENT;
 import static org.mp.naumann.processor.batch.source.csv.CsvKeyWord.INSERT_STATEMENT;
 import static org.mp.naumann.processor.batch.source.csv.CsvKeyWord.UPDATE_STATEMENT;
+
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.Test;
+import org.mp.naumann.database.statement.DeleteStatement;
+import org.mp.naumann.database.statement.InsertStatement;
+import org.mp.naumann.database.statement.Statement;
+import org.mp.naumann.database.statement.UpdateStatement;
+import org.mp.naumann.processor.batch.source.AbstractBatchSourceTest;
 
 public class CsvFileBatchSourceTest extends AbstractBatchSourceTest {
 

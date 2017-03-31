@@ -1,13 +1,13 @@
-package org.mp.naumann.algorithms.fd.incremental.pruning.annotation;
+package org.mp.naumann.algorithms.fd.incremental.agreesets;
 
 import java.util.Collection;
 
-public class ViolatingPair {
+class ViolatingPair {
 
     private final int firstRecord;
     private final int secondRecord;
 
-    public ViolatingPair(int a, int b) {
+    ViolatingPair(int a, int b) {
         if (a < b) {
             this.firstRecord = a;
             this.secondRecord = b;
@@ -17,19 +17,7 @@ public class ViolatingPair {
         }
     }
 
-    public int getFirstRecord() {
-        return firstRecord;
-    }
-
-    public int getSecondRecord() {
-        return secondRecord;
-    }
-
-    public boolean intersects(int value) {
-        return firstRecord == value || secondRecord == value;
-    }
-
-    public boolean intersects(Collection<Integer> collection) {
+    boolean intersects(Collection<Integer> collection) {
         return collection.contains(firstRecord) || collection.contains(secondRecord);
     }
 

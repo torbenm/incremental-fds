@@ -17,25 +17,16 @@
 package org.mp.naumann.algorithms.fd.structures;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntArraySet;
-
-import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
-import org.mp.naumann.database.TableInput;
-import org.mp.naumann.database.data.Row;
-
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.logging.Level;
+import org.mp.naumann.database.TableInput;
+import org.mp.naumann.database.data.Row;
 
 public class ClusterMapBuilder {
 
     private final List<HashMap<String, IntArrayList>> clusterMaps;
-    private final HashMap<Long, IntArrayList> hashedRecords;
     private int numRecords = 0;
 
 
@@ -44,7 +35,6 @@ public class ClusterMapBuilder {
         for (int i = 0; i < numAttributes; i++) {
             clusterMaps.add(new HashMap<>());
         }
-        hashedRecords = new HashMap<>();
     }
 
     public List<HashMap<String, IntArrayList>> getClusterMaps() {
@@ -61,9 +51,8 @@ public class ClusterMapBuilder {
      * to attribute values to record identifiers.
      *
      * @param tableInput the table/relation used as input, e.g. from a DB
-     * @return the list of clusterMaps, as described above
      */
-    public void addRecords(TableInput tableInput) {
+    void addRecords(TableInput tableInput) {
         while (tableInput.hasNext()) {
             Row record = tableInput.next();
 
@@ -73,10 +62,9 @@ public class ClusterMapBuilder {
         }
     }
 
-    public int addRecord(Iterable<String> record) {
+    private void addRecord(Iterable<String> record) {
         int recId = this.numRecords;
         int attributeId = 0;
-        HashCodeBuilder hashCodeBuilder = new HashCodeBuilder();
 
         for (String value : record) {
             HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
@@ -91,60 +79,16 @@ public class ClusterMapBuilder {
             attributeId++;
         }
         this.numRecords++;
-        addRecordToHashMap(hashCodeBuilder.build(), recId);
-        return recId;
     }
 
 
-    public void addRecords(Collection<? extends Iterable<String>> records) {
+    void addRecords(Collection<? extends Iterable<String>> records) {
         if (records.size() > Integer.MAX_VALUE)
             throw new RuntimeException("PLI encoding into integer based PLIs is not possible, because the number of records in the dataset exceeds Integer.MAX_VALUE. Use long based plis instead! (NumRecords = " + records.size() + " and Integer.MAX_VALUE = " + Integer.MAX_VALUE);
 
         for (Iterable<String> record : records) {
             addRecord(record);
         }
-    }
-
-
-    private void addRecordToHashMap(long hashcode, int recId) {
-        if (!hashedRecords.containsKey(hashcode))
-            hashedRecords.put(hashcode, new IntArrayList());
-        hashedRecords.get(hashcode).add(recId);
-    }
-
-    public Collection<Integer> removeRecordWithHashMap(Iterable<String> record) {
-        Collection<Integer> records = new IntArraySet(); // new IntArrayList();
-        HashCodeBuilder builder = new HashCodeBuilder();
-        record.forEach(builder::append);
-        IntArrayList recId = hashedRecords.get(builder.build());
-        if (recId != null) {
-            records.addAll(recId);
-            hashedRecords.remove(builder.build());
-        }
-        return records;
-    }
-
-    private void logNotFoundWarning(Iterable<String> record) {
-        FDLogger.log(Level.WARNING, String.format("Trying to remove %s, but there is no such record.", record.toString()));
-    }
-
-    public Collection<Integer> removeRecord(Iterable<String> record) {
-        int attributeId = 0;
-        List<Collection<Integer>> clusters = new ArrayList<>();
-        for (String value : record) {
-            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
-            IntArrayList cluster = clusterMap.get(value);
-            if (cluster == null || cluster.isEmpty()) {
-                logNotFoundWarning(record);
-                return Collections.emptyList();
-            }
-            clusters.add(cluster);
-            attributeId++;
-        }
-        Set<Integer> matching = CollectionUtils.intersection(clusters);
-        clusters.forEach(c -> c.removeAll(matching));
-        if (matching.isEmpty()) logNotFoundWarning(record);
-        return matching;
     }
 
 }

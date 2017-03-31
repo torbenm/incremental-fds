@@ -42,11 +42,6 @@ class IncrementalSampler {
         this.matcher = matcher;
     }
 
-    private static IntArrayList sort(Comparator<Integer> comparator, IntArrayList list) {
-        list.sort(comparator);
-        return list;
-    }
-
     void setNewRecords(Collection<Integer> newRecords) {
         this.newRecords = newRecords;
     }
@@ -80,7 +75,7 @@ class IncrementalSampler {
             ClusterComparator comparator = new ClusterComparator(this.compressedRecords, this.compressedRecords.getNumAttributes() - 1, 1);
             for (PositionListIndex pli : this.plis) {
                 Benchmark pliBenchmark = Benchmark.start("Sampling PLI " + pli.getAttribute(), Benchmark.DEFAULT_LEVEL + 4);
-                Iterator<IntArrayList> it = pli.getClustersToCheck(true);
+                Iterator<? extends Collection<Integer>> it = pli.getClustersToCheck(true);
                 final List<IntArrayList> clusters;
                 if (SORT_PARALLEL) {
                     clusters = StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.CONCURRENT), true).map(c -> sort(comparator, c)).collect(Collectors.toList());
@@ -124,6 +119,12 @@ class IncrementalSampler {
         benchmark.finish();
 
         return newNonFds;
+    }
+
+    private static IntArrayList sort(Comparator<Integer> comparator, Collection<Integer> collection) {
+        IntArrayList list = new IntArrayList(collection);
+        list.sort(comparator);
+        return list;
     }
 
     private class ClusterComparator implements Comparator<Integer> {

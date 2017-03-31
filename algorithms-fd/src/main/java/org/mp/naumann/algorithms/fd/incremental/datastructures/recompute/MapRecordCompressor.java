@@ -1,17 +1,15 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-
-import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
-import org.mp.naumann.algorithms.fd.incremental.datastructures.MapCompressedRecords;
-import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.utils.PliUtils;
-
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.MapCompressedRecords;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
 class MapRecordCompressor implements RecordCompressor {
 
@@ -48,7 +46,7 @@ class MapRecordCompressor implements RecordCompressor {
             Map<Integer, Integer> invertedPli = new HashMap<>(recordIds.size());
 
             int clusterId = 0;
-            for (IntArrayList cluster : pli.getClusters()) {
+            for (Collection<Integer> cluster : pli.getClusters()) {
                 for (int recordId : cluster) {
                     invertedPli.put(recordId, clusterId);
                 }

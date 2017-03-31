@@ -16,23 +16,23 @@
 
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-
+import org.mp.naumann.algorithms.fd.incremental.Factory;
 import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
-
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 class RecomputePLIBuilder {
 
-    private final ClusterMapBuilder clusterMapBuilder;
+    private final RecomputeClusterMapBuilder clusterMapBuilder;
     private final boolean isNullEqualNull;
     private final List<Integer> pliOrder;
 
-    RecomputePLIBuilder(ClusterMapBuilder clusterMapBuilder, boolean isNullEqualNull, List<Integer> pliOrder) {
-        this.clusterMapBuilder = clusterMapBuilder;
+    RecomputePLIBuilder(ClusterMapBuilder clusterMapBuilder, boolean isNullEqualNull,
+        List<Integer> pliOrder,
+        Factory<Collection<Integer>> clusterFactory) {
+        this.clusterMapBuilder = new RecomputeClusterMapBuilder(clusterMapBuilder, clusterFactory);
         this.isNullEqualNull = isNullEqualNull;
         this.pliOrder = pliOrder;
     }
@@ -44,16 +44,16 @@ class RecomputePLIBuilder {
      * @return clustersPerAttribute,
      */
     List<ListPositionListIndex> fetchPositionListIndexes() {
-        List<HashMap<String, IntArrayList>> clusterMaps = clusterMapBuilder.getClusterMaps();
+        List<Map<String, Collection<Integer>>> clusterMaps = clusterMapBuilder.getClusterMaps();
         List<ListPositionListIndex> clustersPerAttribute = new ArrayList<>();
         for (int columnId : pliOrder) {
-            List<IntArrayList> clusters = new ArrayList<>();
-            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(columnId);
+            List<Collection<Integer>> clusters = new ArrayList<>();
+            Map<String, Collection<Integer>> clusterMap = clusterMaps.get(columnId);
 
             if (!isNullEqualNull)
                 clusterMap.remove(null);
 
-            for (IntArrayList cluster : clusterMap.values())
+            for (Collection<Integer> cluster : clusterMap.values())
                 if (cluster.size() > 1)
                     clusters.add(cluster);
 

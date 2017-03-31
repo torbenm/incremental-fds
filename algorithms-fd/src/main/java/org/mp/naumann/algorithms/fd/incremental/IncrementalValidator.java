@@ -8,9 +8,9 @@ import org.mp.naumann.algorithms.fd.incremental.ActualValidator.ValidationCallba
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
-import org.mp.naumann.algorithms.fd.structures.Lattice;
-import org.mp.naumann.algorithms.fd.structures.LatticeElement;
-import org.mp.naumann.algorithms.fd.structures.LatticeElementLhsPair;
+import org.mp.naumann.algorithms.fd.incremental.structures.Lattice;
+import org.mp.naumann.algorithms.fd.incremental.structures.LatticeElement;
+import org.mp.naumann.algorithms.fd.incremental.structures.LatticeElementLhsPair;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.ArrayList;

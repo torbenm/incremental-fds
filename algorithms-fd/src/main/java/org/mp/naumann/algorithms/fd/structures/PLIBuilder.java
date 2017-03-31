@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package org.mp.naumann.algorithms.fd.hyfd;
+package org.mp.naumann.algorithms.fd.structures;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-
-import org.mp.naumann.algorithms.fd.FDLogger;
-import org.mp.naumann.algorithms.fd.structures.ClusterMapBuilder;
-import org.mp.naumann.algorithms.fd.structures.IPositionListIndex;
-import org.mp.naumann.database.TableInput;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+import org.mp.naumann.algorithms.fd.FDLogger;
+import org.mp.naumann.algorithms.fd.hyfd.PositionListIndex;
+import org.mp.naumann.database.TableInput;
 
 public class PLIBuilder {
 
@@ -104,7 +101,7 @@ public class PLIBuilder {
     }
 
     public List<Integer> getPliOrder() {
-        return fetchPositionListIndexes().stream().map(IPositionListIndex::getAttribute).collect(Collectors.toList());
+        return fetchPositionListIndexes().stream().map(PositionListIndex::getAttribute).collect(Collectors.toList());
     }
 
 }

@@ -1,6 +1,6 @@
-package org.mp.naumann.algorithms.fd.incremental.pruning.annotation;
+package org.mp.naumann.algorithms.fd.incremental.agreesets;
 
-import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.DeletePruner.ViolationSet;
+import org.mp.naumann.algorithms.fd.incremental.agreesets.AgreeSetCollection.ViolationSet;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -11,8 +11,8 @@ public class DefaultViolationSet implements ViolationSet {
     protected Set<ViolatingPair> set = new HashSet<>();
 
     @Override
-    public void add(ViolatingPair violatingPair) {
-        set.add(violatingPair);
+    public void add(int a, int b) {
+        set.add(new ViolatingPair(a, b));
     }
 
     @Override

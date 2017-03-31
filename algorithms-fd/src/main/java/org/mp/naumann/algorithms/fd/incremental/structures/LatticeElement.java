@@ -1,8 +1,9 @@
-package org.mp.naumann.algorithms.fd.structures;
+package org.mp.naumann.algorithms.fd.incremental.structures;
 
 import org.apache.lucene.util.OpenBitSet;
 
 import java.util.List;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 public class LatticeElement {
 
@@ -17,7 +18,7 @@ public class LatticeElement {
         this.markedRhs = new OpenBitSet(numAttributes);
     }
 
-    public LatticeElement[] getChildren() {
+    LatticeElement[] getChildren() {
         return children;
     }
 
@@ -233,7 +234,4 @@ public class LatticeElement {
         }
     }
 
-    public OpenBitSet getMarkedRhs() {
-        return markedRhs;
-    }
 }

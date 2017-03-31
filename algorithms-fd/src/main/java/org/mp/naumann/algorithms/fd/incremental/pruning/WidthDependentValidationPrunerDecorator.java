@@ -1,7 +1,6 @@
-package org.mp.naumann.algorithms.fd.incremental.pruning.annotation;
+package org.mp.naumann.algorithms.fd.incremental.pruning;
 
 import org.apache.lucene.util.OpenBitSet;
-import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
 
 public class WidthDependentValidationPrunerDecorator implements ValidationPruner {
     private final ValidationPruner pruner;

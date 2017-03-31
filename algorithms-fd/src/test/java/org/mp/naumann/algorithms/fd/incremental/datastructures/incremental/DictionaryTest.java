@@ -1,6 +1,7 @@
-package org.mp.naumann.algorithms.fd.structures;
+package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
 import org.junit.Test;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.incremental.Dictionary;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
 import static org.junit.Assert.assertEquals;

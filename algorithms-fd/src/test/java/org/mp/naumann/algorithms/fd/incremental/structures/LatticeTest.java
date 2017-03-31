@@ -1,7 +1,10 @@
-package org.mp.naumann.algorithms.fd.structures;
+package org.mp.naumann.algorithms.fd.incremental.structures;
 
 import org.apache.lucene.util.OpenBitSet;
 import org.junit.Test;
+import org.mp.naumann.algorithms.fd.incremental.structures.Lattice;
+import org.mp.naumann.algorithms.fd.incremental.structures.LatticeElementLhsPair;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 import org.mp.naumann.algorithms.fd.utils.BitSetUtils;
 
 import java.util.Collection;

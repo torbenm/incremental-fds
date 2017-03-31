@@ -16,8 +16,7 @@
 
 package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-
+import java.util.Collection;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 
 import java.util.ArrayList;
@@ -33,7 +32,7 @@ class IncrementalPLIBuilder {
         this.pliOrder = pliOrder;
     }
 
-    private static IntArrayList concat(IntArrayList into, IntArrayList from) {
+    private static Collection<Integer> concat(Collection<Integer> into, Collection<Integer> from) {
         into.addAll(from);
         return into;
     }
@@ -44,7 +43,7 @@ class IncrementalPLIBuilder {
      *
      * @return clustersPerAttribute,
      */
-    List<? extends PositionListIndex> fetchPositionListIndexes(List<Map<Integer, IntArrayList>> clusterMaps) {
+    List<? extends PositionListIndex> fetchPositionListIndexes(List<Map<Integer, Collection<Integer>>> clusterMaps) {
         List<MapPositionListIndex> old = plis;
         if (old == null) {
             old = new ArrayList<>(pliOrder.size());
@@ -55,8 +54,8 @@ class IncrementalPLIBuilder {
         plis = new ArrayList<>();
         int i = 0;
         for (int columnId : pliOrder) {
-            Map<Integer, IntArrayList> clusters = old.get(i++).getRawClusters();
-            Map<Integer, IntArrayList> newClusters = clusterMaps.get(columnId);
+            Map<Integer, Collection<Integer>> clusters = old.get(i++).getRawClusters();
+            Map<Integer, Collection<Integer>> newClusters = clusterMaps.get(columnId);
             newClusters.forEach((k, v) -> clusters.merge(k, v, IncrementalPLIBuilder::concat));
 
             plis.add(new MapPositionListIndex(columnId, clusters));

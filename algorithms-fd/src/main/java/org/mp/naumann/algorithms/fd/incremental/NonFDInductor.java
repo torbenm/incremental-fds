@@ -4,7 +4,7 @@ import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.fd.incremental.ActualValidator.ValidationCallback;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
-import org.mp.naumann.algorithms.fd.structures.Lattice;
+import org.mp.naumann.algorithms.fd.incremental.structures.Lattice;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.List;
@@ -33,7 +33,7 @@ class NonFDInductor {
     }
 
     void findFDs(List<OpenBitSetFD> fds) {
-        Benchmark benchmark = Benchmark.start("Depth first for " + fds.size() + " FDs");
+        Benchmark benchmark = Benchmark.start("Depth first for " + fds.size() + " FDs", Benchmark.DEFAULT_LEVEL + 7);
         int i = 0;
         int total = 0;
         int belowExpectation = 0;

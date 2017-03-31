@@ -1,14 +1,6 @@
 package org.mp.naumann.processor.batch.source.csv;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang3.StringUtils;
-import org.mp.naumann.database.statement.DefaultDeleteStatement;
-import org.mp.naumann.database.statement.DefaultInsertStatement;
-import org.mp.naumann.database.statement.DefaultUpdateStatement;
-import org.mp.naumann.database.statement.Statement;
-import org.mp.naumann.processor.batch.source.AbstractBatchSource;
+import static org.mp.naumann.processor.batch.source.csv.CsvKeyWord.ACTION_COLUMN;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -21,8 +13,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static org.mp.naumann.processor.batch.source.csv.CsvKeyWord.ACTION_COLUMN;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.StringUtils;
+import org.mp.naumann.database.statement.DefaultDeleteStatement;
+import org.mp.naumann.database.statement.DefaultInsertStatement;
+import org.mp.naumann.database.statement.DefaultUpdateStatement;
+import org.mp.naumann.database.statement.Statement;
+import org.mp.naumann.processor.batch.source.AbstractBatchSource;
 
 public abstract class CsvFileBatchSource extends AbstractBatchSource {
 
