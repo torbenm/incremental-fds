@@ -165,18 +165,21 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         int validations = 0;
         int pruned = 0;
 
-        if (diff.hasInserts()) {
-            ValidatorResult result = validateFDs(plis, compressedRecords, batch, diff);
-            validations += result.getValidations();
-            pruned += result.getPruned();
-            benchmark.finishSubtask("Validate FDs");
-        }
-
+        //is it better to delete first or insert first?
+        //if delete first, FDs will move downwards. Likelihood that we delete all violations should be low
+        //if insert first, FDs will move upwards. Likelihood that we introduce new violations should be high, especially if many values are retained
         if (diff.hasDeletes()) {
             ValidatorResult result = validateNonFDs(plis, compressedRecords, diff);
             validations += result.getValidations();
             pruned += result.getPruned();
             benchmark.finishSubtask("Validate non-FDs");
+        }
+
+        if (diff.hasInserts()) {
+            ValidatorResult result = validateFDs(plis, compressedRecords, batch, diff);
+            validations += result.getValidations();
+            pruned += result.getPruned();
+            benchmark.finishSubtask("Validate FDs");
         }
 
         List<OpenBitSetFD> fds = this.fds.getFunctionalDependencies();
