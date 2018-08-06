@@ -18,7 +18,6 @@ package org.mp.naumann.algorithms.fd.incremental.datastructures;
 
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -47,8 +46,8 @@ public abstract class PositionListIndex {
 
     private final int attribute;
     private List<? extends Collection<Integer>> clustersWithNewRecords = null;
-    private Collection<Integer> newRecords = null;
     private Map<Integer, Set<Integer>> otherClustersWithNewRecords;
+    private Integer newRecordBoundary;
 
     protected PositionListIndex(int attribute) {
         this.attribute = attribute;
@@ -131,10 +130,6 @@ public abstract class PositionListIndex {
         while (it.hasNext()) {
             Collection<Integer> cluster = it.next();
             Object2ObjectOpenHashMap<ClusterIdentifier, ClusterIdentifierWithRecord> subClusters = new Object2ObjectOpenHashMap<>(cluster.size());
-            ObjectOpenHashSet<ClusterIdentifier> haveOldRecord = null;
-            if (useInnerClusterPruning) {
-                haveOldRecord = new ObjectOpenHashSet<>(cluster.size());
-            }
             for (int recordId : cluster) {
                 ClusterIdentifier subClusterIdentifier = this.buildClusterIdentifier(lhs, lhsSize, compressedRecords.get(recordId), topDown);
                 if (subClusterIdentifier == null) {
@@ -147,11 +142,7 @@ public abstract class PositionListIndex {
                 }
                 if (subClusters.containsKey(subClusterIdentifier)) {
                     if (useInnerClusterPruning && isOldRecord) {
-                        if (haveOldRecord.contains(subClusterIdentifier)) {
-                            continue;
-                        } else {
-                            haveOldRecord.add(subClusterIdentifier);
-                        }
+                        continue;
                     }
                     ClusterIdentifierWithRecord rhsClusters = subClusters.get(subClusterIdentifier);
 
@@ -172,9 +163,6 @@ public abstract class PositionListIndex {
                         rhsClusters[rhsAttr] = compressedRecords.get(recordId)[rhsAttrIndex2Id[rhsAttr]];
                     }
                     subClusters.put(subClusterIdentifier, new ClusterIdentifierWithRecord(rhsClusters, recordId));
-                    if (useInnerClusterPruning && isOldRecord) {
-                        haveOldRecord.add(subClusterIdentifier);
-                    }
                 }
             }
         }
@@ -182,15 +170,15 @@ public abstract class PositionListIndex {
     }
 
     private boolean isOldRecord(int recordId) {
-        return !newRecords.contains(recordId);
+        return recordId < newRecordBoundary;
     }
 
     private boolean useInnerClusterPruning(boolean topDown) {
-        return topDown && newRecords != null;
+        return topDown && newRecordBoundary != null;
     }
 
-    public void setNewRecords(Collection<Integer> newRecords) {
-        this.newRecords = newRecords;
+    public void setNewRecordBoundary(Integer newRecordBoundary) {
+        this.newRecordBoundary = newRecordBoundary;
     }
 
     public void setOtherClustersWithNewRecords(Map<Integer, Set<Integer>> otherClustersWithNewRecords) {

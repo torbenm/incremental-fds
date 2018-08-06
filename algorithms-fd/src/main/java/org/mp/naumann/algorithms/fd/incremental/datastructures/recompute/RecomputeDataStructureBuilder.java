@@ -50,6 +50,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     @Override
     public CompressedDiff update(Batch batch) {
         Benchmark benchmark = Benchmark.start("Recompute data structures", Benchmark.DEFAULT_LEVEL + 1);
+        int newRecordBoundary = pliBuilder.getNextRecordId();
         AbstractStatementApplier applier = new StatementApplier();
         for (Statement statement : batch.getStatements()) {
             statement.accept(applier);
@@ -68,7 +69,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         deleted.forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));
 
         benchmark.startSubtask();
-        updateDataStructures(inserted);
+        updateDataStructures(inserted, newRecordBoundary);
         benchmark.finishSubtask("Update data structures");
 
         Map<Integer, int[]> insertedDiff = new HashMap<>(inserted.size());
@@ -84,15 +85,15 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
 
     private void updateDataStructures() {
         plis = pliBuilder.fetchPositionListIndexes();
-        RecordCompressor recordCompressor = new ArrayRecordCompressor(recordIds, plis, pliBuilder.getNumRecords());
+        RecordCompressor recordCompressor = new ArrayRecordCompressor(recordIds, plis, pliBuilder.getNextRecordId());
         compressedRecords = recordCompressor.buildCompressedRecords();
     }
 
-    private void updateDataStructures(Set<Integer> inserted) {
+    private void updateDataStructures(Set<Integer> inserted, int newRecordBoundary) {
         updateDataStructures();
 
         if (version.usesInnerClusterPruning()) {
-            plis.forEach(pli -> pli.setNewRecords(inserted));
+            plis.forEach(pli -> pli.setNewRecordBoundary(newRecordBoundary));
         }
 
         if (version.usesClusterPruning() || version.usesEnhancedClusterPruning()) {

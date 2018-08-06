@@ -65,7 +65,7 @@ class RecomputeClusterMapBuilder {
     }
 
     int addRecord(Iterable<String> record) {
-        int recId = this.numRecords;
+        int recId = this.numRecords++;
         int attributeId = 0;
 
         for (String value : record) {
@@ -80,7 +80,6 @@ class RecomputeClusterMapBuilder {
 
             attributeId++;
         }
-        this.numRecords++;
         return recId;
     }
 

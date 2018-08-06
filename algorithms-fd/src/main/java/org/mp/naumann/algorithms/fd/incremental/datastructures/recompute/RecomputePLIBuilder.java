@@ -66,7 +66,7 @@ class RecomputePLIBuilder {
         return clusterMapBuilder.addRecord(values);
     }
 
-    public int getNumRecords() {
+    public int getNextRecordId() {
         return clusterMapBuilder.getNumLastRecords();
     }
 

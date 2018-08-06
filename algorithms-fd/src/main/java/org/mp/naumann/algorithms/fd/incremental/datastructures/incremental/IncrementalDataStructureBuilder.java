@@ -80,6 +80,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
 
     @Override
     public CompressedDiff update(Batch batch) {
+        Integer newRecordBoundary = clusterMapBuilder.getNextRecordId();
         clusterMapBuilder.flush();
         AbstractStatementApplier applier = new StatementApplier();
         for (Statement statement : batch.getStatements()) {
@@ -94,7 +95,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
         deleted.forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));
 
-        updateDataStructures(inserted, deleted);
+        updateDataStructures(inserted, deleted, newRecordBoundary);
 
         Map<Integer, int[]> insertedDiff = new HashMap<>(inserted.size());
         inserted.forEach(i -> insertedDiff.put(i, getCompressedRecord(i)));
@@ -102,7 +103,8 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         return new CompressedDiff(insertedDiff, deletedDiff, new HashMap<>(0), new HashMap<>(0));
     }
 
-    private void updateDataStructures(Collection<Integer> inserted, Collection<Integer> deleted) {
+    private void updateDataStructures(Collection<Integer> inserted, Collection<Integer> deleted,
+        Integer newRecordBoundary) {
         updatePlis();
         updateCompressedRecords(inserted, deleted);
         if (version.usesClusterPruning() || version.usesEnhancedClusterPruning()) {
@@ -129,7 +131,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
             }
         }
         if (version.usesInnerClusterPruning()) {
-            plis.forEach(pli -> pli.setNewRecords(inserted));
+            plis.forEach(pli -> pli.setNewRecordBoundary(newRecordBoundary));
         }
     }
 

@@ -44,6 +44,10 @@ class IncrementalClusterMapBuilder {
         }
     }
 
+    public int getNextRecordId() {
+        return nextRecordId;
+    }
+
     List<Map<Integer, Collection<Integer>>> getClusterMaps() {
         return clusterMaps;
     }
