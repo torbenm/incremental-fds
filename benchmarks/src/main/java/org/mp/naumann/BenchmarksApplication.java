@@ -3,6 +3,7 @@ package org.mp.naumann;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 
+import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
@@ -92,6 +93,7 @@ public class BenchmarksApplication {
 
     public static void main(String[] args) throws IOException {
         BenchmarksApplication app = new BenchmarksApplication();
+        Benchmark.enableAll();
         JCommander jc = new JCommander(app, args);
         if (app.help) {
             jc.usage();

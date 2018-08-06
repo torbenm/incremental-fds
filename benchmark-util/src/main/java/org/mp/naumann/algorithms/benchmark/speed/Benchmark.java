@@ -8,7 +8,7 @@ import java.util.Set;
  */
 public class Benchmark {
 
-    public static final int DEFAULT_LEVEL = 0;
+    public static final int DEFAULT_LEVEL = BenchmarkLevel.BATCH.ordinal() + 1;
     private static final Set<BenchmarkEventListener> eventListeners = new HashSet<>();
     private static int maxLevel;
     private final long startTime;

@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.IncrementalAlgorithm;
 import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
+import org.mp.naumann.algorithms.benchmark.speed.BenchmarkLevel;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
@@ -154,11 +155,12 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     public IncrementalFDResult execute(Batch batch) throws AlgorithmExecutionException {
         FDLogger.log(Level.INFO, "----");
         FDLogger.log(Level.INFO, "Started IncrementalFD for new Batch");
-        Benchmark benchmark = Benchmark.start("IncrementalFD for new Batch");
+        Benchmark batchBenchmark = Benchmark.start("IncrementalFD for new Batch", BenchmarkLevel.BATCH.ordinal());
+//        Benchmark benchmark = Benchmark.start("IncrementalFD for new Batch", BenchmarkLevel.BATCH.ordinal() + 1);
 
         FDLogger.log(Level.FINER, "Started updating data structures");
         CompressedDiff diff = dataStructureBuilder.update(batch);
-        benchmark.finishSubtask("Update data structures");
+//        benchmark.finishSubtask("Update data structures");
         List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecords();
 
@@ -172,19 +174,20 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             ValidatorResult result = validateNonFDs(plis, compressedRecords, diff);
             validations += result.getValidations();
             pruned += result.getPruned();
-            benchmark.finishSubtask("Validate non-FDs");
+//            benchmark.finishSubtask("Validate non-FDs");
         }
 
         if (diff.hasInserts()) {
             ValidatorResult result = validateFDs(plis, compressedRecords, batch, diff);
             validations += result.getValidations();
             pruned += result.getPruned();
-            benchmark.finishSubtask("Validate FDs");
+//            benchmark.finishSubtask("Validate FDs");
         }
 
         List<OpenBitSetFD> fds = this.fds.getFunctionalDependencies();
         List<FunctionalDependency> result = getFunctionalDependencies(fds);
-        benchmark.finish();
+//        benchmark.finish();
+        batchBenchmark.finish();
 
         return new IncrementalFDResult(result, validations, pruned);
     }

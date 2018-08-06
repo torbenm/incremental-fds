@@ -38,6 +38,7 @@ import org.mp.naumann.processor.handler.database.PassThroughDatabaseBatchHandler
 
 abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
 
+    public static final long MILLIS_IN_NANOS = 1_000_000L;
     final int stopAfter;
     final String schema, tableName, sourceTableName;
     private final IncrementalFDConfiguration config;
@@ -105,10 +106,11 @@ abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
                 BatchProcessor batchProcessor = new SynchronousBatchProcessor(batchSource, mock(DatabaseBatchHandler.class), false);
                 batchProcessor.addBatchHandler(incrementalAlgorithm);
             }
-
+            long start = System.currentTimeMillis();
             Benchmark b = Benchmark.start("Algorithm for all batches", BenchmarkLevel.ALGORITHM.ordinal());
             batchSource.startStreaming();
             b.finish();
+            System.out.println(String.format("Took %sms", (System.currentTimeMillis() - start)));
 
             System.out.println(String.format("Cumulative runtime (algorithm only): %sms", getTotalTime(batchEvents)));
             System.out.println(String.format("Found %s FDs:", resultListener.getFDs().size()));
@@ -147,7 +149,7 @@ abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
                 .stream()
                 .mapToLong(BenchmarkEvent::getDuration)
                 .average()
-                .orElse(-1);
+                .orElse(-1) / MILLIS_IN_NANOS;
     }
 
     private long getMedianTime(List<BenchmarkEvent> events) {
@@ -157,14 +159,14 @@ abstract class BaseTestCase implements TestCase, BenchmarkEventListener {
                 .sorted()
                 .skip(batchEvents.size() / 2)
                 .findFirst()
-                .orElse(-1);
+                .orElse(-1) / MILLIS_IN_NANOS;
     }
 
     private long getTotalTime(List<BenchmarkEvent> events) {
         return events
                 .stream()
-                .mapToLong(BenchmarkEvent::getDurationInMillis)
-                .sum();
+                .mapToLong(BenchmarkEvent::getDuration)
+                .sum() / MILLIS_IN_NANOS;
     }
 
     int getLimit() {

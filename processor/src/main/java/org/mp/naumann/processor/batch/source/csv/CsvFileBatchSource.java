@@ -50,7 +50,7 @@ public abstract class CsvFileBatchSource extends AbstractBatchSource {
                 }
                 filename = file.getAbsolutePath();
             } catch (IOException e) {
-                //
+                throw new RuntimeException(e);
             }
         }
         return csvParser;
