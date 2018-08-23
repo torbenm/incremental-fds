@@ -215,7 +215,7 @@ public class IncrementalFDConfiguration {
     }
 
     public enum PruningStrategy {
-        SIMPLE, BLOOM, BLOOM_ADVANCED, ANNOTATION, DELETE_ANNOTATIONS
+        SIMPLE, BLOOM, BLOOM_ADVANCED, ANNOTATION, DELETE_ANNOTATIONS, DELETES
     }
 
 }

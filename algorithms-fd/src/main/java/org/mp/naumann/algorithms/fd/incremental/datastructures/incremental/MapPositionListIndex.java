@@ -44,7 +44,7 @@ class MapPositionListIndex extends PositionListIndex {
 
     @Override
     public Collection<Cluster> getClusters() {
-        return this.clusters.entrySet().stream().filter(e -> !e.getKey().equals(PliUtils.UNIQUE_VALUE)).map(Entry::getValue).collect(Collectors.toList());
+        return this.clusters.int2ObjectEntrySet().stream().filter(e -> e.getIntKey() != PliUtils.UNIQUE_VALUE).map(Entry::getValue).collect(Collectors.toList());
     }
 
     @Override

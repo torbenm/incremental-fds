@@ -86,6 +86,8 @@ public class BenchmarksApplication {
     private Boolean simplePruning;
     @Parameter(names = "--deletePruning")
     private Boolean deletePruning;
+    @Parameter(names = "--deleteAnnotations")
+    private Boolean deleteAnnotations;
     @Parameter(names = "--betterSampling", arity = 1)
     private Boolean betterSampling;
     @Parameter(names = "--depthFirst", arity = 1)
@@ -131,6 +133,9 @@ public class BenchmarksApplication {
             config.setImprovedSampling(betterSampling);
         }
         if (deletePruning != null) {
+            config.addPruningStrategy(PruningStrategy.DELETES);
+        }
+        if (deleteAnnotations != null) {
             config.addPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS);
         }
         if (depthFirst != null) {
@@ -187,7 +192,7 @@ public class BenchmarksApplication {
 
             Reporter reporter = (writeToGoogleSheets
                     ? new GoogleSheetsReporter(spreadsheet, sheetName)
-                    : new FileReporter("report.txt")
+                    : new FileReporter("report.csv")
             );
             reporter.writeNewLine(t.sheetValues());
 

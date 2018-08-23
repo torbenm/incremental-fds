@@ -1,10 +1,13 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
+import java.util.HashSet;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.ActualValidator.ValidationCallback;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
@@ -30,6 +33,7 @@ public abstract class IncrementalValidator<T> {
     final int numAttributes;
     private final ValidatorResult validatorResult = new ValidatorResult();
     private final List<ValidationPruner> validationPruners = new ArrayList<>();
+    final Collection<PruningStrategy> pruningStrategies = new HashSet<>();
     private final int numRecords;
     private final List<? extends PositionListIndex> plis;
     private final CompressedRecords compressedRecords;
@@ -51,8 +55,13 @@ public abstract class IncrementalValidator<T> {
         }
     }
 
-    void addValidationPruner(ValidationPruner ValidationPruner) {
-        validationPruners.add(ValidationPruner);
+    void addValidationPruner(ValidationPruner validationPruner, PruningStrategy pruningStrategy) {
+        validationPruners.add(validationPruner);
+        addPruningStrategy(pruningStrategy);
+    }
+
+    void addPruningStrategy(PruningStrategy pruningStrategy) {
+        pruningStrategies.add(pruningStrategy);
     }
 
     ValidatorResult getValidatorResult() {
@@ -236,7 +245,7 @@ public abstract class IncrementalValidator<T> {
     }
 
     protected static class ValidationResult {
-        public final List<IntegerPair> comparisonSuggestions = new ArrayList<>();
+        public final List<ComparisonSugestion> comparisonSuggestions = new ArrayList<>();
         final List<OpenBitSetFD> collectedFDs = new ArrayList<>();
         int validations = 0;
         int intersections = 0;

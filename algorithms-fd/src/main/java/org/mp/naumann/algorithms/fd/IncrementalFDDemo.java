@@ -3,6 +3,7 @@ package org.mp.naumann.algorithms.fd;
 import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.exceptions.AlgorithmExecutionException;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.algorithms.fd.utils.IncrementalFDResultListener;
 import org.mp.naumann.data.ResourceConnector;
 import org.mp.naumann.database.ConnectionException;
@@ -70,7 +71,7 @@ public class IncrementalFDDemo {
         FDLogger.setLevel(Level.FINE);
 
         IncrementalFDConfiguration configuration = new IncrementalFDConfiguration("custom")
-                .addPruningStrategy(IncrementalFDConfiguration.PruningStrategy.DELETE_ANNOTATIONS)
+                .addPruningStrategy(PruningStrategy.DELETES)
                 .setDepthFirst(true)
 //                .addPruningStrategy(PruningStrategy.BLOOM_ADVANCED)
                 ;

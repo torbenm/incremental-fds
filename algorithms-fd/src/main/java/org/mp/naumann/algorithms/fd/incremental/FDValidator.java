@@ -1,7 +1,9 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.incremental.pruning.Violations;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.incremental.structures.Lattice;
 import org.mp.naumann.algorithms.fd.incremental.structures.LatticeElement;
@@ -15,12 +17,14 @@ public class FDValidator extends IncrementalValidator<List<IntegerPair>> {
     private final Lattice nonFds;
     private final IncrementalMatcher matcher;
     private List<IntegerPair> comparisonSuggestions = new ArrayList<>();
+    private Violations violations;
 
-    FDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds, float efficiencyThreshold, IncrementalMatcher matcher) {
+    FDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds, float efficiencyThreshold, IncrementalMatcher matcher, Violations violations) {
         super(numRecords, compressedRecords, plis, parallel, efficiencyThreshold);
         this.fds = fds;
         this.nonFds = nonFds;
         this.matcher = matcher;
+        this.violations = violations;
     }
 
     @Override
@@ -45,7 +49,12 @@ public class FDValidator extends IncrementalValidator<List<IntegerPair>> {
 
     @Override
     protected void receiveResult(ValidationResult result) {
-        this.comparisonSuggestions.addAll(result.comparisonSuggestions);
+        for (ComparisonSugestion comparisonSuggestion : result.comparisonSuggestions) {
+            if (pruningStrategies.contains(PruningStrategy.DELETES)) {
+                violations.add(comparisonSuggestion.getPair(), comparisonSuggestion.getFd());
+            }
+            this.comparisonSuggestions.add(comparisonSuggestion.getPair());
+        }
     }
 
     @Override

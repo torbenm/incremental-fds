@@ -30,12 +30,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.incremental.ComparisonSugestion;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.Cluster;
 import org.mp.naumann.algorithms.fd.structures.ClusterIdentifier;
 import org.mp.naumann.algorithms.fd.structures.ClusterIdentifierWithRecord;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
+import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
@@ -95,7 +98,7 @@ public abstract class PositionListIndex {
     }
 
     private boolean probe(CompressedRecords compressedRecords, int rhsAttr, Cluster cluster) {
-        int rhsClusterId = compressedRecords.get(cluster.iterator().next())[rhsAttr];
+        int rhsClusterId = compressedRecords.get(cluster.iterator().nextInt())[rhsAttr];
 
         // If otherClusterId < 0, then this cluster must point into more than one other clusters
         if (rhsClusterId == PliUtils.UNIQUE_VALUE) {
@@ -113,7 +116,7 @@ public abstract class PositionListIndex {
     }
 
 
-    public OpenBitSet refines(CompressedRecords compressedRecords, OpenBitSet lhs, OpenBitSet rhs, List<IntegerPair> comparisonSuggestions, boolean topDown) {
+    public OpenBitSet refines(CompressedRecords compressedRecords, OpenBitSet lhs, OpenBitSet rhs, List<ComparisonSugestion> comparisonSuggestions, boolean topDown) {
         int rhsSize = (int) rhs.cardinality();
         int lhsSize = (int) lhs.cardinality();
 
@@ -155,7 +158,7 @@ public abstract class PositionListIndex {
                     for (int rhsAttr = refinedRhs.nextSetBit(0); rhsAttr >= 0; rhsAttr = refinedRhs.nextSetBit(rhsAttr + 1)) {
                         int rhsCluster = compressedRecords.get(recordId)[rhsAttr];
                         if ((rhsCluster == PliUtils.UNIQUE_VALUE) || (rhsCluster != rhsClusters.get(rhsAttrId2Index[rhsAttr]))) {
-                            comparisonSuggestions.add(new IntegerPair(recordId, rhsClusters.getRecord()));
+                            comparisonSuggestions.add(new ComparisonSugestion(new IntegerPair(recordId, rhsClusters.getRecord()), new OpenBitSetFD(lhs, rhsAttr)));
 
                             refinedRhs.fastClear(rhsAttr);
                             if (refinedRhs.isEmpty()) {

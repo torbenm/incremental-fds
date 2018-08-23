@@ -132,7 +132,7 @@ class IncrementalSampler {
         return list;
     }
 
-    private class ClusterComparator extends AbstractIntComparator {
+    private class ClusterComparator implements IntComparator {
 
         private final CompressedRecords sortKeys;
         private int activeKey1;

@@ -1,9 +1,13 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.util.OpenBitSet;
+import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.incremental.pruning.Violations;
 import org.mp.naumann.algorithms.fd.incremental.structures.Lattice;
 import org.mp.naumann.algorithms.fd.incremental.structures.LatticeElement;
+import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 import java.util.ArrayList;
@@ -14,11 +18,13 @@ public class NonFDValidator extends IncrementalValidator<List<OpenBitSetFD>> {
     private final Lattice fds;
     private final Lattice nonFds;
     private List<OpenBitSetFD> lastValid;
+    private Violations violations;
 
-    NonFDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds, float efficiencyThreshold) {
+    NonFDValidator(int numRecords, CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, boolean parallel, Lattice fds, Lattice nonFds, float efficiencyThreshold, Violations violations) {
         super(numRecords, compressedRecords, plis, parallel, efficiencyThreshold);
         this.fds = fds;
         this.nonFds = nonFds;
+        this.violations = violations;
     }
 
     @Override
@@ -39,6 +45,11 @@ public class NonFDValidator extends IncrementalValidator<List<OpenBitSetFD>> {
     @Override
     protected void receiveResult(ValidationResult result) {
         lastValid = result.collectedFDs;
+        if (pruningStrategies.contains(PruningStrategy.DELETES)) {
+            for (ComparisonSugestion comparisonSuggestion : result.comparisonSuggestions) {
+                violations.add(comparisonSuggestion.getPair(), comparisonSuggestion.getFd());
+            }
+        }
     }
 
     @Override

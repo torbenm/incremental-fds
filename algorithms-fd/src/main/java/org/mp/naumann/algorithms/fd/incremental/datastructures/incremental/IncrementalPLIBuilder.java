@@ -60,7 +60,7 @@ class IncrementalPLIBuilder {
         for (int columnId : pliOrder) {
             Int2ObjectMap<Cluster> clusters = old.get(i++).getRawClusters();
             Int2ObjectMap<Cluster> newClusters = clusterMaps.get(columnId);
-            newClusters.forEach((k, v) -> clusters.merge(k, v, IncrementalPLIBuilder::concat));
+            newClusters.forEach((k, v) -> clusters.merge((int) k, v, IncrementalPLIBuilder::concat));
 
             plis.add(new MapPositionListIndex(columnId, clusters));
         }

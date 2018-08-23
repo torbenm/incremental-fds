@@ -1,12 +1,9 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,6 +20,9 @@ import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.Cluster;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.IntArrayListCluster;
+import org.mp.naumann.algorithms.fd.incremental.pruning.Violations;
+import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.ExactDeleteValidationPruner;
+import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.SimpleDeleteValidationPruner;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalValidator.ValidatorResult;
@@ -32,8 +32,6 @@ import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex
 import org.mp.naumann.algorithms.fd.incremental.datastructures.incremental.IncrementalDataStructureBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.RecomputeDataStructureBuilder;
 import org.mp.naumann.algorithms.fd.incremental.pruning.ValidationPruner;
-import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.ExactDeleteValidationPruner;
-import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.SimpleDeleteValidationPruner;
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.AllCombinationsBloomGenerator;
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.BloomPruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.pruning.bloom.CurrentFDBloomGenerator;
@@ -65,6 +63,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     private ExistingValuesPruningStrategy simplePruning;
     private BloomPruningStrategy bloomPruning;
     private AgreeSetCollection agreeSets;
+    private Violations violations = new Violations();
 
     public IncrementalFD(String tableName, IncrementalFDConfiguration version) {
         this(tableName);
@@ -143,6 +142,23 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.SIMPLE)) {
             simplePruning = new ExistingValuesPruningStrategy(columns);
         }
+        if (usesDeletePruning()) {
+            List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
+            CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecords();
+            NonFDInductor fdFinder = new NonFDInductor(fds, nonFds, plis,
+                compressedRecords, dataStructureBuilder.getNumRecords(), efficiencyThreshold);
+            NonFDValidator validator = new NonFDValidator(dataStructureBuilder.getNumRecords(),
+                compressedRecords, plis, validateParallel, fds, nonFds, efficiencyThreshold, violations);
+            validator.addPruningStrategy(PruningStrategy.DELETES);
+            List<OpenBitSetFD> validFDs;
+            do {
+                try {
+                    validFDs = validator.validate();
+                } catch (AlgorithmExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            } while (validFDs != null);
+        }
     }
 
     private boolean usesBloomPruning() {
@@ -204,19 +220,19 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         Benchmark benchmark = Benchmark.start("Validate FDs", Benchmark.DEFAULT_LEVEL + 1);
 
         IncrementalMatcher matcher = new IncrementalMatcher(compressedRecords, valueComparator,
-            agreeSets, version);
+            agreeSets, version, violations);
         IncrementalSampler sampler = new IncrementalSampler(compressedRecords, plis,
                 efficiencyThreshold, matcher);
         FDInductor inductor = new FDInductor(fds, nonFds,
                 compressedRecords.getNumAttributes());
         FDValidator validator = new FDValidator(dataStructureBuilder.getNumRecords(),
-                compressedRecords, plis, validateParallel, fds, nonFds, efficiencyThreshold, matcher);
+                compressedRecords, plis, validateParallel, fds, nonFds, efficiencyThreshold, matcher, violations);
 
         if (usesBloomPruning()) {
-            validator.addValidationPruner(bloomPruning.analyzeBatch(batch));
+            validator.addValidationPruner(bloomPruning.analyzeBatch(batch), PruningStrategy.BLOOM);
         }
         if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.SIMPLE)) {
-            validator.addValidationPruner(simplePruning.analyzeDiff(diff));
+            validator.addValidationPruner(simplePruning.analyzeDiff(diff), PruningStrategy.SIMPLE);
         }
         if (version.usesImprovedSampling()) {
             sampler.setNewRecords(diff.getInsertedRecords().keySet());
@@ -256,7 +272,12 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         NonFDInductor fdFinder = new NonFDInductor(fds, nonFds, plis,
                 compressedRecords, dataStructureBuilder.getNumRecords(), efficiencyThreshold);
         NonFDValidator validator = new NonFDValidator(dataStructureBuilder.getNumRecords(),
-                compressedRecords, plis, validateParallel, fds, nonFds, efficiencyThreshold);
+                compressedRecords, plis, validateParallel, fds, nonFds, efficiencyThreshold, violations);
+        if (usesDeletePruning()) {
+            ValidationPruner pruner = violations.createPruner(diff.getDeletedRecords().keySet());
+            validator.addValidationPruner(pruner, PruningStrategy.DELETES);
+            benchmark.finishSubtask("Pruning");
+        }
         if (version.usesPruningStrategy(PruningStrategy.DELETE_ANNOTATIONS)) {
             Set<OpenBitSet> agreeSets = this.agreeSets.analyzeDiff(diff);
             final ValidationPruner pruner;
@@ -265,7 +286,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             } else{
                 pruner = new SimpleDeleteValidationPruner(agreeSets);
             }
-            validator.addValidationPruner(pruner);
+            validator.addValidationPruner(pruner, PruningStrategy.DELETE_ANNOTATIONS);
             benchmark.finishSubtask("Pruning");
         }
         List<OpenBitSetFD> validFDs;
@@ -281,6 +302,10 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         return validator.getValidatorResult();
     }
 
+    private boolean usesDeletePruning() {
+        return version.usesPruningStrategy(PruningStrategy.DELETES);
+    }
+
     private List<FunctionalDependency> getFunctionalDependencies(List<OpenBitSetFD> fds) {
         List<FunctionalDependency> result = new ArrayList<>(fds.size());
         ObjectArrayList<ColumnIdentifier> columnIdentifiers = buildColumnIdentifiers();
@@ -290,9 +315,9 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
             int i = 0;
             for (int lhsAttr = lhs.nextSetBit(0); lhsAttr >= 0;
                  lhsAttr = lhs.nextSetBit(lhsAttr + 1)) {
-                cols[i++] = columnIdentifiers.get(pliOrder.get(lhsAttr));
+                cols[i++] = columnIdentifiers.get(pliOrder.getInt(lhsAttr));
             }
-            ColumnIdentifier rhs = columnIdentifiers.get(pliOrder.get(fd.getRhs()));
+            ColumnIdentifier rhs = columnIdentifiers.get(pliOrder.getInt(fd.getRhs()));
             result.add(new FunctionalDependency(new ColumnCombination(cols), rhs));
         }
         return result;
