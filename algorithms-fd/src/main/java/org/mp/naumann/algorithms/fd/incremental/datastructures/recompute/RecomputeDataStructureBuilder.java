@@ -1,6 +1,12 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.Map.Entry;
+import java.util.function.IntConsumer;
 import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.fd.incremental.Factory;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
@@ -29,22 +35,22 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
     private final RecomputePLIBuilder pliBuilder;
     private final IncrementalFDConfiguration version;
     private final List<String> columns;
-    private final Set<Integer> recordIds;
+    private final IntSet recordIds;
 
     private List<? extends PositionListIndex> plis;
     private CompressedRecords compressedRecords;
 
-    public RecomputeDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns, Factory<Collection<Integer>> clusterFactory) {
+    public RecomputeDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns, Factory<Cluster> clusterFactory) {
         this.pliBuilder = new RecomputePLIBuilder(pliBuilder.getClusterMapBuilder(), pliBuilder.isNullEqualNull(), pliBuilder.getPliOrder(), clusterFactory);
         this.version = version;
         this.columns = columns;
-        recordIds = IntStream.range(0, pliBuilder.getNumLastRecords()).boxed().collect(Collectors.toSet());
+        recordIds = IntStream.range(0, pliBuilder.getNumLastRecords()).boxed().collect(Collectors.toCollection(IntOpenHashSet::new));
         updateDataStructures();
     }
 
     public RecomputeDataStructureBuilder(PLIBuilder pliBuilder,
         IncrementalFDConfiguration incrementalFDConfiguration, List<String> columns) {
-        this(pliBuilder, incrementalFDConfiguration, columns, IntArrayList::new);
+        this(pliBuilder, incrementalFDConfiguration, columns, IntArrayListCluster::new);
     }
 
     @Override
@@ -56,27 +62,27 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
             statement.accept(applier);
         }
 
-        Set<Integer> inserted = applier.getInserted();
-        Set<Integer> deleted = applier.getDeleted();
-        Set<Integer> inserted_tmp = new HashSet<>(inserted);
+        IntSet inserted = applier.getInserted();
+        IntSet deleted = applier.getDeleted();
+        IntSet inserted_tmp = new IntOpenHashSet(inserted);
         inserted.removeAll(deleted);
         deleted.removeAll(inserted_tmp);
         recordIds.addAll(inserted);
         recordIds.removeAll(deleted);
 
         benchmark.finishSubtask("Apply statements");
-        Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
-        deleted.forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));
+        Int2ObjectMap<int[]> deletedDiff = new Int2ObjectOpenHashMap<>(deleted.size());
+        deleted.forEach((IntConsumer) i -> deletedDiff.put(i, getCompressedRecord(i)));
 
         benchmark.startSubtask();
         updateDataStructures(inserted, newRecordBoundary);
         benchmark.finishSubtask("Update data structures");
 
-        Map<Integer, int[]> insertedDiff = new HashMap<>(inserted.size());
-        inserted.forEach(i -> insertedDiff.put(i, getCompressedRecord(i)));
+        Int2ObjectMap<int[]> insertedDiff = new Int2ObjectOpenHashMap<>(inserted.size());
+        inserted.forEach((IntConsumer) i -> insertedDiff.put(i, getCompressedRecord(i)));
 
         benchmark.finish();
-        return new CompressedDiff(insertedDiff, deletedDiff, new HashMap<>(0), new HashMap<>(0));
+        return new CompressedDiff(insertedDiff, deletedDiff, new Int2ObjectOpenHashMap<>(0), new Int2ObjectOpenHashMap<>(0));
     }
 
     private int[] getCompressedRecord(int record) {
@@ -89,7 +95,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         compressedRecords = recordCompressor.buildCompressedRecords();
     }
 
-    private void updateDataStructures(Set<Integer> inserted, int newRecordBoundary) {
+    private void updateDataStructures(IntSet inserted, int newRecordBoundary) {
         updateDataStructures();
 
         if (version.usesInnerClusterPruning()) {
@@ -97,13 +103,14 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         }
 
         if (version.usesClusterPruning() || version.usesEnhancedClusterPruning()) {
-            Map<Integer, Set<Integer>> newClusters = null;
+            Int2ObjectMap<IntSet> newClusters = null;
             if (version.usesEnhancedClusterPruning()) {
-                newClusters = new HashMap<>(plis.size());
+                newClusters = new Int2ObjectOpenHashMap<>(plis.size());
             }
             for (int i = 0; i < plis.size(); i++) {
                 PositionListIndex pli = plis.get(i);
-                Set<Integer> clusterIds = extractClustersWithNewRecords(inserted, i);
+                IntSet clusterIds = extractClustersWithNewRecords(inserted, i,
+                    newRecordBoundary);
                 if (version.usesClusterPruning()) {
                     pli.setClustersWithNewRecords(clusterIds);
                 }
@@ -112,22 +119,35 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
                 }
             }
             if (version.usesEnhancedClusterPruning()) {
-                Map<Integer, Set<Integer>> otherClustersWithNewRecords = newClusters;
+                Int2ObjectMap<IntSet> otherClustersWithNewRecords = newClusters;
                 plis.forEach(pli -> pli.setOtherClustersWithNewRecords(otherClustersWithNewRecords));
             }
         }
 
     }
 
-    private Set<Integer> extractClustersWithNewRecords(Collection<Integer> newRecords, int attribute) {
-        Set<Integer> clusterIds = new HashSet<>();
-        for (int id : newRecords) {
-            int clusterId = compressedRecords.get(id)[attribute];
-            if (clusterId != PliUtils.UNIQUE_VALUE) {
-                clusterIds.add(clusterId);
+    private IntSet extractClustersWithNewRecords(IntCollection newRecords,
+        int attribute, int newRecordBoundary) {
+        PositionListIndex pli = plis.get(attribute);
+        if (newRecords.size() > pli.size()) {
+            IntSet clusterIds = new IntOpenHashSet();
+            for (Int2ObjectMap.Entry<Cluster> cluster : pli.getClustersWithKey()) {
+                int clusterId = cluster.getIntKey();
+                if (cluster.getValue().largestElement() >= newRecordBoundary) {
+                    clusterIds.add(clusterId);
+                }
             }
+            return clusterIds;
+        } else {
+            IntSet clusterIds = new IntOpenHashSet();
+            for (int id : newRecords) {
+                int clusterId = compressedRecords.get(id)[attribute];
+                if (clusterId != PliUtils.UNIQUE_VALUE) {
+                    clusterIds.add(clusterId);
+                }
+            }
+            return clusterIds;
         }
-        return clusterIds;
     }
 
     public List<? extends PositionListIndex> getPlis() {
@@ -152,7 +172,7 @@ public class RecomputeDataStructureBuilder implements DataStructureBuilder {
         }
 
         @Override
-        protected Collection<Integer> removeRecord(Map<String, String> valueMap) {
+        protected IntCollection removeRecord(Map<String, String> valueMap) {
             List<String> values = columns.stream().map(valueMap::get).collect(Collectors.toList());
             return pliBuilder.removeRecord(values);
         }

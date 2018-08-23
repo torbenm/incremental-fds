@@ -1,16 +1,17 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import java.util.Map;
 
 public class CompressedDiff {
 
-    private final Map<Integer, int[]> insertedRecords;
-    private final Map<Integer, int[]> deletedRecords;
-    private final Map<Integer, int[]> oldUpdatedRecords;
-    private final Map<Integer, int[]> newUpdatedRecords;
+    private final Int2ObjectMap<int[]> insertedRecords;
+    private final Int2ObjectMap<int[]> deletedRecords;
+    private final Int2ObjectMap<int[]> oldUpdatedRecords;
+    private final Int2ObjectMap<int[]> newUpdatedRecords;
 
-    public CompressedDiff(Map<Integer, int[]> insertedRecords, Map<Integer, int[]> deletedRecords, Map<Integer, int[]> oldUpdatedRecords,
-                          Map<Integer, int[]> newUpdatedRecords) {
+    public CompressedDiff(Int2ObjectMap<int[]> insertedRecords, Int2ObjectMap<int[]> deletedRecords, Int2ObjectMap<int[]> oldUpdatedRecords,
+                          Int2ObjectMap<int[]> newUpdatedRecords) {
         this.insertedRecords = insertedRecords;
         this.deletedRecords = deletedRecords;
         this.oldUpdatedRecords = oldUpdatedRecords;
@@ -25,19 +26,19 @@ public class CompressedDiff {
         return !(deletedRecords.isEmpty() && oldUpdatedRecords.isEmpty());
     }
 
-    public Map<Integer, int[]> getInsertedRecords() {
+    public Int2ObjectMap<int[]> getInsertedRecords() {
         return insertedRecords;
     }
 
-    public Map<Integer, int[]> getDeletedRecords() {
+    public Int2ObjectMap<int[]> getDeletedRecords() {
         return deletedRecords;
     }
 
-    public Map<Integer, int[]> getOldUpdatedRecords() {
+    public Int2ObjectMap<int[]> getOldUpdatedRecords() {
         return oldUpdatedRecords;
     }
 
-    public Map<Integer, int[]> getNewUpdatedRecords() {
+    public Int2ObjectMap<int[]> getNewUpdatedRecords() {
         return newUpdatedRecords;
     }
 

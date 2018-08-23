@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -11,11 +12,11 @@ import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
 class ArrayRecordCompressor implements RecordCompressor {
 
-    private final Set<Integer> recordIds;
+    private final IntSet recordIds;
     private final List<? extends PositionListIndex> plis;
     private final int numRecords;
 
-    ArrayRecordCompressor(Set<Integer> recordIds, List<? extends PositionListIndex> plis, int numRecords) {
+    ArrayRecordCompressor(IntSet recordIds, List<? extends PositionListIndex> plis, int numRecords) {
         this.recordIds = recordIds;
         this.plis = plis;
         this.numRecords = numRecords;
@@ -48,7 +49,7 @@ class ArrayRecordCompressor implements RecordCompressor {
             Arrays.fill(invertedPli, PliUtils.UNIQUE_VALUE);
 
             int clusterId = 0;
-            for (Collection<Integer> cluster : pli.getClusters()) {
+            for (Cluster cluster : pli.getClusters()) {
                 for (int recordId : cluster) {
                     invertedPli[recordId] = clusterId;
                 }

@@ -16,6 +16,11 @@
 
 package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.ints.IntLists;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,23 +29,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.mp.naumann.algorithms.fd.incremental.Factory;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.Cluster;
 import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 
 class IncrementalClusterMapBuilder {
 
     private int nextRecordId;
-    private final List<Map<Integer, Collection<Integer>>> clusterMaps;
+    private final List<Int2ObjectMap<Cluster>> clusterMaps;
     private final Dictionary<String> dictionary;
-    private final Factory<Collection<Integer>> clusterFactory;
+    private final Factory<Cluster> clusterFactory;
 
     IncrementalClusterMapBuilder(int numAttributes, int nextRecordId, Dictionary<String> dictionary,
-        Factory<Collection<Integer>> clusterFactory) {
+        Factory<Cluster> clusterFactory) {
         this.dictionary = dictionary;
         this.nextRecordId = nextRecordId;
         this.clusterMaps = new ArrayList<>(numAttributes);
         this.clusterFactory = clusterFactory;
         for (int i = 0; i < numAttributes; i++) {
-            clusterMaps.add(new HashMap<>());
+            clusterMaps.add(new Int2ObjectOpenHashMap<>());
         }
     }
 
@@ -48,7 +54,7 @@ class IncrementalClusterMapBuilder {
         return nextRecordId;
     }
 
-    List<Map<Integer, Collection<Integer>>> getClusterMaps() {
+    List<Int2ObjectMap<Cluster>> getClusterMaps() {
         return clusterMaps;
     }
 
@@ -56,12 +62,12 @@ class IncrementalClusterMapBuilder {
         int recId = this.nextRecordId++;
         int attributeId = 0;
         for (String value : record) {
-            Map<Integer, Collection<Integer>> clusterMap = clusterMaps.get(attributeId);
+            Int2ObjectMap<Cluster> clusterMap = clusterMaps.get(attributeId);
             int dictValue = dictionary.getOrAdd(value);
             if (clusterMap.containsKey(dictValue)) {
                 clusterMap.get(dictValue).add(recId);
             } else {
-                Collection<Integer> newCluster = clusterFactory.create();
+                Cluster newCluster = clusterFactory.create();
                 newCluster.add(recId);
                 clusterMap.put(dictValue, newCluster);
             }
@@ -71,20 +77,20 @@ class IncrementalClusterMapBuilder {
         return recId;
     }
 
-    Collection<Integer> removeRecord(Iterable<String> record) {
+    IntCollection removeRecord(Iterable<String> record) {
         int attributeId = 0;
-        List<Collection<Integer>> clusters = new ArrayList<>();
+        List<Cluster> clusters = new ArrayList<>();
         for (String value : record) {
-            Map<Integer, Collection<Integer>> clusterMap = clusterMaps.get(attributeId);
+            Int2ObjectMap<Cluster> clusterMap = clusterMaps.get(attributeId);
             int dictValue = dictionary.getOrAdd(value);
-            Collection<Integer> cluster = clusterMap.get(dictValue);
+            Cluster cluster = clusterMap.get(dictValue);
             if (cluster == null || cluster.isEmpty()) {
-                return Collections.emptyList();
+                return IntLists.EMPTY_LIST;
             }
             clusters.add(cluster);
             attributeId++;
         }
-        Set<Integer> matching = CollectionUtils.intersection(clusters);
+        IntSet matching = CollectionUtils.intersection(clusters);
         clusters.forEach(c -> c.removeAll(matching));
         return matching;
     }

@@ -17,16 +17,18 @@
 package org.mp.naumann.algorithms.fd.structures;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.mp.naumann.database.TableInput;
 import org.mp.naumann.database.data.Row;
 
 public class ClusterMapBuilder {
 
-    private final List<HashMap<String, IntArrayList>> clusterMaps;
+    private final List<Map<String, IntList>> clusterMaps;
     private int numRecords = 0;
 
 
@@ -37,7 +39,7 @@ public class ClusterMapBuilder {
         }
     }
 
-    public List<HashMap<String, IntArrayList>> getClusterMaps() {
+    public List<Map<String, IntList>> getClusterMaps() {
         return clusterMaps;
     }
 
@@ -67,7 +69,7 @@ public class ClusterMapBuilder {
         int attributeId = 0;
 
         for (String value : record) {
-            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(attributeId);
+            Map<String, IntList> clusterMap = clusterMaps.get(attributeId);
             if (clusterMap.containsKey(value)) {
                 clusterMap.get(value).add(recId);
             } else {

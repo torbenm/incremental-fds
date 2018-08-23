@@ -1,9 +1,13 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures;
 
+import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.IntConsumer;
 import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.database.statement.DeleteStatement;
 import org.mp.naumann.database.statement.InsertStatement;
@@ -12,8 +16,8 @@ import org.mp.naumann.database.statement.UpdateStatement;
 
 public abstract class AbstractStatementApplier implements StatementVisitor {
 
-	private final Set<Integer> inserted = new HashSet<>();
-	private final Set<Integer> deleted = new HashSet<>();
+	private final IntSet inserted = new IntOpenHashSet();
+	private final IntSet deleted = new IntOpenHashSet();
 
 	@Override
 	public void visit(DeleteStatement delete) {
@@ -25,13 +29,13 @@ public abstract class AbstractStatementApplier implements StatementVisitor {
 	@Override
 	public void visit(UpdateStatement update) {
 		Benchmark benchmark = Benchmark.start("Update", Benchmark.DEFAULT_LEVEL + 7);
-		Collection<Integer> removed = delete(update.getOldValueMap());
-		removed.forEach(id -> insert(update.getNewValueMap()));
+		IntCollection removed = delete(update.getOldValueMap());
+		removed.forEach((IntConsumer) id -> insert(update.getNewValueMap()));
 		benchmark.finish();
 	}
 
-	private Collection<Integer> delete(Map<String, String> oldValueMap) {
-		Collection<Integer> removed = removeRecord(oldValueMap);
+	private IntCollection delete(Map<String, String> oldValueMap) {
+		IntCollection removed = removeRecord(oldValueMap);
 		deleted.addAll(removed);
 		return removed;
 	}
@@ -48,15 +52,15 @@ public abstract class AbstractStatementApplier implements StatementVisitor {
 		benchmark.finish();
 	}
 
-	public Set<Integer> getInserted() {
+	public IntSet getInserted() {
 		return inserted;
 	}
 
-	public Set<Integer> getDeleted() {
+	public IntSet getDeleted() {
 		return deleted;
 	}
 
 	protected abstract int addRecord(Map<String, String> valueMap);
 
-	protected abstract Collection<Integer> removeRecord(Map<String, String> valueMap);
+	protected abstract IntCollection removeRecord(Map<String, String> valueMap);
 }

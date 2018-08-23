@@ -17,6 +17,11 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.ints.IntCollections;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntLists;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,18 +40,18 @@ import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 class RecomputeClusterMapBuilder {
 
     private int numRecords = 0;
-    private final List<Map<String, Collection<Integer>>> clusterMaps;
-    private final Factory<Collection<Integer>> clusterFactory;
+    private final List<Map<String, Cluster>> clusterMaps;
+    private final Factory<Cluster> clusterFactory;
 
     RecomputeClusterMapBuilder(ClusterMapBuilder clusterMapBuilder,
-        Factory<Collection<Integer>> clusterFactory) {
+        Factory<Cluster> clusterFactory) {
         this.clusterFactory = clusterFactory;
-        List<HashMap<String, IntArrayList>> oldClusterMaps = clusterMapBuilder.getClusterMaps();
+        List<Map<String, IntList>> oldClusterMaps = clusterMapBuilder.getClusterMaps();
         clusterMaps = new ArrayList<>();
-        for (HashMap<String, IntArrayList> oldClusterMap : oldClusterMaps) {
-            Map<String, Collection<Integer>> clusterMap = new HashMap<>();
-            for (Entry<String, IntArrayList> entry : oldClusterMap.entrySet()) {
-                Collection<Integer> newCluster = this.clusterFactory.create();
+        for (Map<String, IntList> oldClusterMap : oldClusterMaps) {
+            Map<String, Cluster> clusterMap = new HashMap<>();
+            for (Entry<String, IntList> entry : oldClusterMap.entrySet()) {
+                Cluster newCluster = this.clusterFactory.create();
                 newCluster.addAll(entry.getValue());
                 clusterMap.put(entry.getKey(), newCluster);
             }
@@ -56,7 +61,7 @@ class RecomputeClusterMapBuilder {
     }
 
 
-    List<Map<String, Collection<Integer>>> getClusterMaps() {
+    List<Map<String, Cluster>> getClusterMaps() {
         return clusterMaps;
     }
 
@@ -69,11 +74,11 @@ class RecomputeClusterMapBuilder {
         int attributeId = 0;
 
         for (String value : record) {
-            Map<String, Collection<Integer>> clusterMap = clusterMaps.get(attributeId);
+            Map<String, Cluster> clusterMap = clusterMaps.get(attributeId);
             if (clusterMap.containsKey(value)) {
                 clusterMap.get(value).add(recId);
             } else {
-                Collection<Integer> newCluster = clusterFactory.create();
+                Cluster newCluster = clusterFactory.create();
                 newCluster.add(recId);
                 clusterMap.put(value, newCluster);
             }
@@ -87,22 +92,22 @@ class RecomputeClusterMapBuilder {
         FDLogger.log(Level.WARNING, String.format("Trying to remove %s, but there is no such record.", record.toString()));
     }
 
-    Collection<Integer> removeRecord(Iterable<String> record) {
+    IntCollection removeRecord(Iterable<String> record) {
         Benchmark benchmark = Benchmark.start("Remove record", Benchmark.DEFAULT_LEVEL + 7);
         int attributeId = 0;
-        List<Collection<Integer>> clusters = new ArrayList<>();
+        List<Cluster> clusters = new ArrayList<>();
         for (String value : record) {
-            Map<String, Collection<Integer>> clusterMap = clusterMaps.get(attributeId);
-            Collection<Integer> cluster = clusterMap.get(value);
+            Map<String, Cluster> clusterMap = clusterMaps.get(attributeId);
+            Cluster cluster = clusterMap.get(value);
             if (cluster == null || cluster.isEmpty()) {
                 logNotFoundWarning(record);
-                return Collections.emptyList();
+                return IntLists.EMPTY_LIST;
             }
             clusters.add(cluster);
             attributeId++;
         }
         benchmark.finishSubtask("Retrieve clusters");
-        Set<Integer> matching = CollectionUtils.intersection(clusters);
+        IntSet matching = CollectionUtils.intersection(clusters);
         benchmark.finishSubtask("Intersection");
         clusters.forEach(c -> c.removeAll(matching));
         benchmark.finishSubtask("Apply");

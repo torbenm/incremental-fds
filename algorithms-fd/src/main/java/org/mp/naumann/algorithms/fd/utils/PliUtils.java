@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd.utils;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -16,7 +17,7 @@ public class PliUtils {
             Arrays.fill(invertedPli, -1);
 
             int clusterId = 0;
-            for (Collection<Integer> cluster : plis.get(attr).getClusters()) {
+            for (IntList cluster : plis.get(attr).getClusters()) {
                 for (int recordId : cluster) {
                     invertedPli[recordId] = clusterId;
                 }

@@ -2,6 +2,7 @@ package org.mp.naumann.algorithms.fd.incremental.agreesets;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,7 +32,7 @@ public class AgreeSetCollection {
 
     public Set<OpenBitSet> analyzeDiff(CompressedDiff diff) {
         Set<OpenBitSet> agreeSets = new HashSet<>(violations.size());
-        Set<Integer> deleted = diff.getDeletedRecords().keySet();
+        IntSet deleted = diff.getDeletedRecords().keySet();
         for (int delete : deleted) {
             Collection<OpenBitSet> removed = index.removeAll(delete);
             agreeSets.addAll(removed);

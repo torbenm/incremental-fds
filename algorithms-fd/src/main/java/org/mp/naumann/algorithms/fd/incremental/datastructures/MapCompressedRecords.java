@@ -1,5 +1,7 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
 
 import java.util.HashMap;
@@ -7,16 +9,16 @@ import java.util.Map;
 
 public class MapCompressedRecords implements CompressedRecords {
 
-    private final Map<Integer, int[]> compressedRecords;
+    private final Int2ObjectMap<int[]> compressedRecords;
     private final int numAttributes;
 
-    private MapCompressedRecords(Map<Integer, int[]> compressedRecords, int numAttributes) {
+    private MapCompressedRecords(Int2ObjectMap<int[]> compressedRecords, int numAttributes) {
         this.compressedRecords = compressedRecords;
         this.numAttributes = numAttributes;
     }
 
     public MapCompressedRecords(int initialSize, int numAttributes) {
-        this(new HashMap<>(initialSize), numAttributes);
+        this(new Int2ObjectOpenHashMap<>(initialSize), numAttributes);
     }
 
     @Override
@@ -33,7 +35,7 @@ public class MapCompressedRecords implements CompressedRecords {
         return numAttributes;
     }
 
-    public void put(Integer id, int[] record) {
+    public void put(int id, int[] record) {
         compressedRecords.put(id, record);
     }
 

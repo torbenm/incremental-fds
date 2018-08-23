@@ -1,6 +1,14 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -9,11 +17,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.IntConsumer;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.incremental.Factory;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.Cluster;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.IntArrayListCluster;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.CompressedDiff;
 import org.mp.naumann.algorithms.fd.incremental.CompressedRecords;
@@ -33,13 +44,13 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
     private final IncrementalPLIBuilder pliBuilder;
     private final IncrementalFDConfiguration version;
     private final List<String> columns;
-    private final List<Integer> pliOrder;
+    private final IntList pliOrder;
     private final IncrementalClusterMapBuilder clusterMapBuilder;
     private final Dictionary<String> dictionary;
     private final MapCompressedRecords compressedRecords;
     private List<? extends PositionListIndex> plis;
 
-    public IncrementalDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns, Factory<Collection<Integer>> clusterFactory) {
+    public IncrementalDataStructureBuilder(PLIBuilder pliBuilder, IncrementalFDConfiguration version, List<String> columns, Factory<Cluster> clusterFactory) {
         this.pliOrder = pliBuilder.getPliOrder();
         this.pliBuilder = new IncrementalPLIBuilder(pliOrder);
         this.version = version;
@@ -54,25 +65,25 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
 
     public IncrementalDataStructureBuilder(PLIBuilder pliBuilder,
         IncrementalFDConfiguration incrementalFDConfiguration, List<String> columns) {
-        this(pliBuilder, incrementalFDConfiguration, columns, IntArrayList::new);
+        this(pliBuilder, incrementalFDConfiguration, columns, IntArrayListCluster::new);
     }
 
-    private void initialize(List<HashMap<String, IntArrayList>> oldClusterMaps, int nextRecordId,
-        Factory<Collection<Integer>> clusterFactory) {
-        List<Integer> inserted = IntStream.range(0, nextRecordId).boxed().collect(Collectors.toList());
-        List<Map<Integer, Collection<Integer>>> clusterMaps = new ArrayList<>(oldClusterMaps.size());
-        for (HashMap<String, IntArrayList> oldClusterMap : oldClusterMaps) {
-            Map<Integer, Collection<Integer>> clusterMap = new HashMap<>();
-            for (Entry<String, IntArrayList> cluster : oldClusterMap.entrySet()) {
+    private void initialize(List<Map<String, IntList>> oldClusterMaps, int nextRecordId,
+        Factory<Cluster> clusterFactory) {
+        IntList inserted = IntStream.range(0, nextRecordId).boxed().collect(Collectors.toCollection(IntArrayList::new));
+        List<Int2ObjectMap<Cluster>> clusterMaps = new ArrayList<>(oldClusterMaps.size());
+        for (Map<String, IntList> oldClusterMap : oldClusterMaps) {
+            Int2ObjectMap<Cluster> clusterMap = new Int2ObjectOpenHashMap<>();
+            for (Entry<String, IntList> cluster : oldClusterMap.entrySet()) {
                 int dictValue = dictionary.getOrAdd(cluster.getKey());
-                Collection<Integer> newCluster = clusterFactory.create();
+                Cluster newCluster = clusterFactory.create();
                 newCluster.addAll(cluster.getValue());
                 clusterMap.put(dictValue, newCluster);
             }
             clusterMaps.add(clusterMap);
         }
         plis = pliBuilder.fetchPositionListIndexes(clusterMaps);
-        List<Map<Integer, Integer>> invertedPlis = invertPlis(clusterMaps);
+        List<Int2IntMap> invertedPlis = invertPlis(clusterMaps);
         for (int recordId : inserted) {
             compressedRecords.put(recordId, fetchRecordFrom(recordId, invertedPlis));
         }
@@ -80,43 +91,43 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
 
     @Override
     public CompressedDiff update(Batch batch) {
-        Integer newRecordBoundary = clusterMapBuilder.getNextRecordId();
+        int newRecordBoundary = clusterMapBuilder.getNextRecordId();
         clusterMapBuilder.flush();
         AbstractStatementApplier applier = new StatementApplier();
         for (Statement statement : batch.getStatements()) {
             statement.accept(applier);
         }
-        Set<Integer> inserted = applier.getInserted();
-        Set<Integer> deleted = applier.getDeleted();
-        Set<Integer> inserted_tmp = new HashSet<>(inserted);
+        IntSet inserted = applier.getInserted();
+        IntSet deleted = applier.getDeleted();
+        IntSet inserted_tmp = new IntOpenHashSet(inserted);
         inserted.removeAll(deleted);
         deleted.removeAll(inserted_tmp);
 
-        Map<Integer, int[]> deletedDiff = new HashMap<>(deleted.size());
-        deleted.forEach(i -> deletedDiff.put(i, getCompressedRecord(i)));
+        Int2ObjectMap<int[]> deletedDiff = new Int2ObjectOpenHashMap<>(deleted.size());
+        deleted.forEach((IntConsumer) i -> deletedDiff.put(i, getCompressedRecord(i)));
 
         updateDataStructures(inserted, deleted, newRecordBoundary);
 
-        Map<Integer, int[]> insertedDiff = new HashMap<>(inserted.size());
-        inserted.forEach(i -> insertedDiff.put(i, getCompressedRecord(i)));
+        Int2ObjectMap<int[]> insertedDiff = new Int2ObjectOpenHashMap<>(inserted.size());
+        inserted.forEach((IntConsumer) i -> insertedDiff.put(i, getCompressedRecord(i)));
 
-        return new CompressedDiff(insertedDiff, deletedDiff, new HashMap<>(0), new HashMap<>(0));
+        return new CompressedDiff(insertedDiff, deletedDiff, new Int2ObjectOpenHashMap<>(0), new Int2ObjectOpenHashMap<>(0));
     }
 
-    private void updateDataStructures(Collection<Integer> inserted, Collection<Integer> deleted,
-        Integer newRecordBoundary) {
+    private void updateDataStructures(IntCollection inserted, IntCollection deleted,
+        int newRecordBoundary) {
         updatePlis();
         updateCompressedRecords(inserted, deleted);
         if (version.usesClusterPruning() || version.usesEnhancedClusterPruning()) {
-            List<Map<Integer, Collection<Integer>>> clusterMaps = clusterMapBuilder.getClusterMaps();
-            Map<Integer, Set<Integer>> newClusters = null;
+            List<Int2ObjectMap<Cluster>> clusterMaps = clusterMapBuilder.getClusterMaps();
+            Int2ObjectMap<IntSet> newClusters = null;
             if (version.usesEnhancedClusterPruning()) {
-                newClusters = new HashMap<>(plis.size());
+                newClusters = new Int2ObjectOpenHashMap<>(plis.size());
             }
             int i = 0;
             for (PositionListIndex pli : plis) {
                 int attribute = pli.getAttribute();
-                Set<Integer> clusterIds = clusterMaps.get(attribute).keySet();
+                IntSet clusterIds = clusterMaps.get(attribute).keySet();
                 if (version.usesClusterPruning()) {
                     pli.setClustersWithNewRecords(clusterIds);
                 }
@@ -126,7 +137,7 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
                 i++;
             }
             if (version.usesEnhancedClusterPruning()) {
-                Map<Integer, Set<Integer>> otherClustersWithNewRecords = newClusters;
+                Int2ObjectMap<IntSet> otherClustersWithNewRecords = newClusters;
                 plis.forEach(pli -> pli.setOtherClustersWithNewRecords(otherClustersWithNewRecords));
             }
         }
@@ -135,16 +146,16 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         }
     }
 
-    private void updateCompressedRecords(Collection<Integer> inserted, Collection<Integer> deleted) {
-        List<Map<Integer, Collection<Integer>>> clusterMaps = clusterMapBuilder.getClusterMaps();
-        List<Map<Integer, Integer>> invertedPlis = invertPlis(clusterMaps);
+    private void updateCompressedRecords(IntCollection inserted, IntCollection deleted) {
+        List<Int2ObjectMap<Cluster>> clusterMaps = clusterMapBuilder.getClusterMaps();
+        List<Int2IntMap> invertedPlis = invertPlis(clusterMaps);
         for (int recordId : inserted) {
             compressedRecords.put(recordId, fetchRecordFrom(recordId, invertedPlis));
         }
-        deleted.forEach(compressedRecords::remove);
+        deleted.forEach((IntConsumer) compressedRecords::remove);
     }
 
-    private static int[] fetchRecordFrom(int recordId, List<Map<Integer, Integer>> invertedPlis) {
+    private static int[] fetchRecordFrom(int recordId, List<Int2IntMap> invertedPlis) {
         int numAttributes = invertedPlis.size();
         int[] record = new int[numAttributes];
         for (int i = 0; i < numAttributes; i++) {
@@ -153,14 +164,14 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         return record;
     }
 
-    private List<Map<Integer, Integer>> invertPlis(List<Map<Integer, Collection<Integer>>> clusterMaps) {
-        List<Map<Integer, Integer>> invertedPlis = new ArrayList<>();
+    private List<Int2IntMap> invertPlis(List<Int2ObjectMap<Cluster>> clusterMaps) {
+        List<Int2IntMap> invertedPlis = new ArrayList<>();
         for (int clusterId : pliOrder) {
-            Map<Integer, Integer> invertedPli = new HashMap<>();
+            Int2IntMap invertedPli = new Int2IntOpenHashMap();
 
-            for (Entry<Integer, Collection<Integer>> cluster : clusterMaps.get(clusterId).entrySet()) {
+            for (Int2ObjectMap.Entry<Cluster> cluster : clusterMaps.get(clusterId).int2ObjectEntrySet()) {
                 for (int recordId : cluster.getValue()) {
-                    invertedPli.put(recordId, cluster.getKey());
+                    invertedPli.put(recordId, cluster.getIntKey());
                 }
             }
             invertedPlis.add(invertedPli);
@@ -204,21 +215,21 @@ public class IncrementalDataStructureBuilder implements DataStructureBuilder {
         }
 
         @Override
-        protected Collection<Integer> removeRecord(Map<String, String> valueMap) {
+        protected IntCollection removeRecord(Map<String, String> valueMap) {
             List<String> record = columns.stream().map(valueMap::get).collect(Collectors.toList());
 
             // find records from previous batches in PLIs
-            List<Collection<Integer>> clusters = new ArrayList<>();
+            List<Cluster> clusters = new ArrayList<>();
             for (PositionListIndex pli : plis) {
                 String value = record.get(pli.getAttribute());
                 int dictValue = dictionary.getOrAdd(value);
-                Collection<Integer> cluster = pli.getCluster(dictValue);
+                Cluster cluster = pli.getCluster(dictValue);
                 if (cluster == null) {
-                    cluster = new IntArrayList();
+                    cluster = new IntArrayListCluster();
                 }
                 clusters.add(cluster);
             }
-            Set<Integer> matching = CollectionUtils.intersection(clusters);
+            IntSet matching = CollectionUtils.intersection(clusters);
 
             // find records that were added in the current batch
             matching.addAll(clusterMapBuilder.removeRecord(record));

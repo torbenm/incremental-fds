@@ -1,12 +1,17 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
+import it.unimi.dsi.fastutil.ints.AbstractIntComparator;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
+import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.ints.IntComparator;
+import it.unimi.dsi.fastutil.ints.IntList;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.benchmark.speed.Benchmark;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.Cluster;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
 
@@ -31,7 +36,7 @@ class IncrementalSampler {
     private final float efficiencyThreshold;
     private final IncrementalMatcher matcher;
     private List<AttributeRepresentant> attributeRepresentants = null;
-    private Collection<Integer> newRecords;
+    private IntCollection newRecords;
 
     IncrementalSampler(CompressedRecords compressedRecords, List<? extends PositionListIndex> plis, float efficiencyThreshold, IncrementalMatcher matcher) {
         int numAttributes = compressedRecords.getNumAttributes();
@@ -42,7 +47,7 @@ class IncrementalSampler {
         this.matcher = matcher;
     }
 
-    void setNewRecords(Collection<Integer> newRecords) {
+    void setNewRecords(IntCollection newRecords) {
         this.newRecords = newRecords;
     }
 
@@ -75,14 +80,14 @@ class IncrementalSampler {
             ClusterComparator comparator = new ClusterComparator(this.compressedRecords, this.compressedRecords.getNumAttributes() - 1, 1);
             for (PositionListIndex pli : this.plis) {
                 Benchmark pliBenchmark = Benchmark.start("Sampling PLI " + pli.getAttribute(), Benchmark.DEFAULT_LEVEL + 4);
-                Iterator<? extends Collection<Integer>> it = pli.getClustersToCheck(true);
-                final List<IntArrayList> clusters;
+                Iterator<Cluster> it = pli.getClustersToCheck(true);
+                final List<IntList> clusters;
                 if (SORT_PARALLEL) {
-                    clusters = StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.CONCURRENT), true).map(c -> sort(comparator, c)).collect(Collectors.toList());
+                    clusters = StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.CONCURRENT), true).map(c -> sort(comparator, c.toCollection())).collect(Collectors.toList());
                 } else {
                     clusters = new ArrayList<>();
                     while (it.hasNext()) {
-                        clusters.add(sort(comparator, it.next()));
+                        clusters.add(sort(comparator, it.next().toCollection()));
                     }
                 }
                 pliBenchmark.finishSubtask("Sorting");
@@ -121,13 +126,13 @@ class IncrementalSampler {
         return newNonFds;
     }
 
-    private static IntArrayList sort(Comparator<Integer> comparator, Collection<Integer> collection) {
-        IntArrayList list = new IntArrayList(collection);
+    private static IntList sort(IntComparator comparator, IntCollection collection) {
+        IntList list = new IntArrayList(collection);
         list.sort(comparator);
         return list;
     }
 
-    private class ClusterComparator implements Comparator<Integer> {
+    private class ClusterComparator extends AbstractIntComparator {
 
         private final CompressedRecords sortKeys;
         private int activeKey1;
@@ -146,7 +151,7 @@ class IncrementalSampler {
         }
 
         @Override
-        public int compare(Integer o1, Integer o2) {
+        public int compare(int o1, int o2) {
             // Previous -> Next
             int value1 = this.sortKeys.get(o1)[this.activeKey1];
             int value2 = this.sortKeys.get(o2)[this.activeKey1];
@@ -165,15 +170,15 @@ class IncrementalSampler {
 
     private class AttributeRepresentant implements Comparable<AttributeRepresentant> {
 
-        private final IntArrayList numNewNonFds = new IntArrayList();
-        private final IntArrayList numComparisons = new IntArrayList();
-        private final List<IntArrayList> clusters;
+        private final IntList numNewNonFds = new IntArrayList();
+        private final IntList numComparisons = new IntArrayList();
+        private final List<IntList> clusters;
         private final FDSet negCover;
         private final IncrementalSampler sampler;
         private int windowDistance;
         private float efficiencyFactor;
 
-        AttributeRepresentant(List<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, IncrementalSampler sampler) {
+        AttributeRepresentant(List<IntList> clusters, float efficiencyFactor, FDSet negCover, IncrementalSampler sampler) {
             this.clusters = clusters;
             this.efficiencyFactor = efficiencyFactor;
             this.negCover = negCover;
@@ -215,9 +220,9 @@ class IncrementalSampler {
             OpenBitSet equalAttrs = new OpenBitSet(compressedRecords.getNumAttributes());
 
             int previousNegCoverSize = newNonFds.size();
-            Iterator<IntArrayList> clusterIterator = this.clusters.iterator();
+            Iterator<IntList> clusterIterator = this.clusters.iterator();
             while (clusterIterator.hasNext()) {
-                IntArrayList cluster = clusterIterator.next();
+                IntList cluster = clusterIterator.next();
 
                 if (cluster.size() <= this.windowDistance) {
                     clusterIterator.remove();

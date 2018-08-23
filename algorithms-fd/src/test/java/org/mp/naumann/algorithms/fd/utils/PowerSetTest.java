@@ -1,5 +1,7 @@
 package org.mp.naumann.algorithms.fd.utils;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -12,7 +14,7 @@ public class PowerSetTest {
 
     @Test
     public void test() {
-        Set<Integer> originalSet = new HashSet<>(Arrays.asList(1, 2, 3, 4));
+        IntSet originalSet = new IntOpenHashSet(Arrays.asList(1, 2, 3, 4));
         assertEquals(1, PowerSet.getPowerSet(originalSet, 0).size());
         assertEquals(5, PowerSet.getPowerSet(originalSet, 1).size());
         assertEquals(11, PowerSet.getPowerSet(originalSet, 2).size());

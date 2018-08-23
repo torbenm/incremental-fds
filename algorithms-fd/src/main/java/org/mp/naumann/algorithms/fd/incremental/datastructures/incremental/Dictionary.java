@@ -1,5 +1,7 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
 import java.util.HashMap;
@@ -8,7 +10,7 @@ import java.util.Map;
 class Dictionary<T> {
 
     private final int NULL;
-    private final Map<T, Integer> dictionary = new HashMap<>();
+    private final Object2IntMap<T> dictionary = new Object2IntOpenHashMap<>();
     private int nextValue = 1;
 
     Dictionary() {
@@ -23,7 +25,7 @@ class Dictionary<T> {
         if (value == null) {
             return NULL;
         }
-        return dictionary.computeIfAbsent(value, k -> nextValue++);
+        return dictionary.computeIntIfAbsent(value, k -> nextValue++);
     }
 
 }

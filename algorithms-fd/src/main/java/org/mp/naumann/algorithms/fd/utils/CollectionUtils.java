@@ -1,11 +1,16 @@
 package org.mp.naumann.algorithms.fd.utils;
 
+import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntSets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.Cluster;
 
 public class CollectionUtils {
 
@@ -27,17 +32,17 @@ public class CollectionUtils {
         return buffer.toString();
     }
 
-    public static <T> Set<T> intersection(List<Collection<T>> clusters) {
+    public static IntSet intersection(List<Cluster> clusters) {
         if (clusters.isEmpty()) {
-            return Collections.emptySet();
+            return IntSets.EMPTY_SET;
         }
-        clusters.sort(Comparator.comparingInt(Collection::size));
-        Set<T> matching = null;
-        for (Collection<T> cluster : clusters) {
+        clusters.sort(Comparator.comparingInt(Cluster::size));
+        IntSet matching = null;
+        for (Cluster cluster : clusters) {
             if (matching == null) {
-                matching = new HashSet<>(cluster);
+                matching = new IntOpenHashSet(cluster.toCollection());
             } else {
-                matching.retainAll(cluster);
+                matching.retainAll(cluster.toCollection());
             }
             if (matching.isEmpty()) {
                 return matching;

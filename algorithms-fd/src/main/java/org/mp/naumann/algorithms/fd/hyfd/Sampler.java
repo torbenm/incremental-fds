@@ -2,6 +2,7 @@ package org.mp.naumann.algorithms.fd.hyfd;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.structures.FDSet;
@@ -63,7 +64,7 @@ class Sampler {
             long time = System.currentTimeMillis();
             ClusterComparator comparator = new ClusterComparator(this.compressedRecords, this.compressedRecords[0].length - 1, 1);
             for (PositionListIndex pli : this.plis) {
-                for (IntArrayList cluster : pli.getClusters()) {
+                for (IntList cluster : pli.getClusters()) {
                     Collections.sort(cluster, comparator);
                 }
                 comparator.incrementActiveKey();
@@ -141,16 +142,16 @@ class Sampler {
     private class AttributeRepresentant implements Comparable<AttributeRepresentant> {
 
         private int windowDistance;
-        private IntArrayList numNewNonFds = new IntArrayList();
-        private IntArrayList numComparisons = new IntArrayList();
+        private IntList numNewNonFds = new IntArrayList();
+        private IntList numComparisons = new IntArrayList();
         private float efficiencyFactor;
-        private List<IntArrayList> clusters;
+        private List<IntList> clusters;
         private FDSet negCover;
         private FDTree posCover;
         private Sampler sampler;
         private MemoryGuardian memoryGuardian;
 
-        public AttributeRepresentant(Collection<IntArrayList> clusters, float efficiencyFactor, FDSet negCover, FDTree posCover, Sampler sampler, MemoryGuardian memoryGuardian) {
+        public AttributeRepresentant(Collection<IntList> clusters, float efficiencyFactor, FDSet negCover, FDTree posCover, Sampler sampler, MemoryGuardian memoryGuardian) {
             this.clusters = new ArrayList<>(clusters);
             this.efficiencyFactor = efficiencyFactor;
             this.negCover = negCover;
@@ -194,9 +195,9 @@ class Sampler {
             OpenBitSet equalAttrs = new OpenBitSet(this.posCover.getNumAttributes());
 
             int previousNegCoverSize = newNonFds.size();
-            Iterator<IntArrayList> clusterIterator = this.clusters.iterator();
+            Iterator<IntList> clusterIterator = this.clusters.iterator();
             while (clusterIterator.hasNext()) {
-                IntArrayList cluster = clusterIterator.next();
+                IntList cluster = clusterIterator.next();
 
                 if (cluster.size() <= this.windowDistance) {
                     clusterIterator.remove();

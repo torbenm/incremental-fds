@@ -1,5 +1,9 @@
 package org.mp.naumann.algorithms.fd.incremental.pruning.bloom;
 
+import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.function.IntConsumer;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.utils.PowerSet;
 
@@ -26,16 +30,15 @@ public class AllCombinationsBloomGenerator implements BloomGenerator {
     @Override
     public Set<OpenBitSet> generateCombinations(List<String> columns) {
         this.numAttributes = columns.size();
-        Set<Integer> columnSet = IntStream.range(0, numAttributes).boxed().collect(Collectors.toSet());
+        IntSet columnSet = IntStream.range(0, numAttributes).boxed().collect(Collectors.toCollection(
+            IntOpenHashSet::new));
         int maxLevel = Math.min(numAttributes, this.maxLevel);
         return PowerSet.getPowerSet(columnSet, maxLevel).stream().map(this::toBitSet).collect(Collectors.toSet());
     }
 
-    private OpenBitSet toBitSet(Collection<Integer> cols) {
+    private OpenBitSet toBitSet(IntCollection cols) {
         OpenBitSet bits = new OpenBitSet(numAttributes);
-        for (Integer column : cols) {
-            bits.fastSet(column);
-        }
+        cols.forEach((IntConsumer) bits::fastSet);
         return bits;
     }
 }

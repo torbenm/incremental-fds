@@ -17,10 +17,12 @@
 package org.mp.naumann.algorithms.fd.structures;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import org.mp.naumann.algorithms.fd.FDLogger;
@@ -37,7 +39,7 @@ public class PLIBuilder {
         this.isNullEqualNull = isNullEqualNull;
     }
 
-    public List<HashMap<String, IntArrayList>> getClusterMaps() {
+    public List<Map<String, IntList>> getClusterMaps() {
         return clusterMapBuilder.getClusterMaps();
     }
 
@@ -56,16 +58,16 @@ public class PLIBuilder {
      * @return clustersPerAttribute,
      */
     public List<PositionListIndex> fetchPositionListIndexes() {
-        List<HashMap<String, IntArrayList>> clusterMaps = clusterMapBuilder.getClusterMaps();
+        List<Map<String, IntList>> clusterMaps = clusterMapBuilder.getClusterMaps();
         List<PositionListIndex> clustersPerAttribute = new ArrayList<>();
         for (int columnId = 0; columnId < clusterMaps.size(); columnId++) {
-            List<IntArrayList> clusters = new ArrayList<>();
-            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(columnId);
+            List<IntList> clusters = new ArrayList<>();
+            Map<String, IntList> clusterMap = clusterMaps.get(columnId);
 
             if (!isNullEqualNull)
                 clusterMap.remove(null);
 
-            for (IntArrayList cluster : clusterMap.values())
+            for (IntList cluster : clusterMap.values())
                 if (cluster.size() > 1)
                     clusters.add(cluster);
 
@@ -100,8 +102,8 @@ public class PLIBuilder {
         return clusterMapBuilder;
     }
 
-    public List<Integer> getPliOrder() {
-        return fetchPositionListIndexes().stream().map(PositionListIndex::getAttribute).collect(Collectors.toList());
+    public IntList getPliOrder() {
+        return fetchPositionListIndexes().stream().map(PositionListIndex::getAttribute).collect(Collectors.toCollection(IntArrayList::new));
     }
 
 }

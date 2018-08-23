@@ -16,6 +16,9 @@
 
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
+import it.unimi.dsi.fastutil.ints.AbstractInt2ObjectMap.BasicEntry;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
+import java.util.stream.IntStream;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 
@@ -31,19 +34,30 @@ import java.util.List;
  */
 class ListPositionListIndex extends PositionListIndex {
 
-    private final List<? extends Collection<Integer>> clusters;
+    private final List<Cluster> clusters;
 
     @Override
-    public Collection<? extends Collection<Integer>> getClusters() {
+    public Iterable<Entry<Cluster>> getClustersWithKey() {
+        return () -> IntStream.range(0, clusters.size())
+            .mapToObj(i -> createEntry(i, clusters.get(i)))
+            .iterator();
+    }
+
+    private static <T> Entry<T> createEntry(int i, T value) {
+        return new BasicEntry<>(i, value);
+    }
+
+    @Override
+    public Collection<Cluster> getClusters() {
         return this.clusters;
     }
 
     @Override
-    public Collection<Integer> getCluster(int index) {
+    public Cluster getCluster(int index) {
         return clusters.get(index);
     }
 
-    public ListPositionListIndex(int attribute, List<? extends Collection<Integer>> clusters) {
+    public ListPositionListIndex(int attribute, List<Cluster> clusters) {
         super(attribute);
         this.clusters = clusters;
     }

@@ -1,12 +1,14 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -19,6 +21,8 @@ import org.mp.naumann.algorithms.fd.FDIntermediateDatastructure;
 import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.Cluster;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.IntArrayListCluster;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalFDConfiguration.PruningStrategy;
 import org.mp.naumann.algorithms.fd.incremental.IncrementalValidator.ValidatorResult;
@@ -53,7 +57,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
     private float efficiencyThreshold = 0.01f;
     private IncrementalFDConfiguration version = IncrementalFDConfiguration.LATEST;
     private List<String> columns;
-    private List<Integer> pliOrder;
+    private IntList pliOrder;
     private DataStructureBuilder dataStructureBuilder;
     private Lattice fds;
     private Lattice nonFds;
@@ -105,7 +109,8 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         this.fds = builder.getFds();
         this.nonFds = builder.getNonFds();
 
-        Factory<Collection<Integer>> clusterFactory = pliBuilder.getNumLastRecords() > 1_000_000? IntOpenHashSet::new : IntArrayList::new;
+//        Factory<Cluster> clusterFactory = pliBuilder.getNumLastRecords() > 1_000_000? IntOpenHashSet::new : IntArrayListCluster::new;
+        Factory<Cluster> clusterFactory = IntArrayListCluster::new;
 
         if (version.recomputesDataStructures()) {
             dataStructureBuilder = new RecomputeDataStructureBuilder(pliBuilder, this.version,
@@ -124,7 +129,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         if (usesBloomPruning()) {
             List<String> orderedColumns = pliOrder.stream().map(columns::get)
                     .collect(Collectors.toList());
-            List<HashMap<String, IntArrayList>> clusterMaps = pliBuilder.getClusterMaps();
+            List<Map<String, IntList>> clusterMaps = pliBuilder.getClusterMaps();
             bloomPruning = new BloomPruningStrategy(orderedColumns);
             if (version.usesPruningStrategy(IncrementalFDConfiguration.PruningStrategy.BLOOM)) {
                 bloomPruning.addGenerator(new AllCombinationsBloomGenerator(3));

@@ -17,6 +17,7 @@
 package org.mp.naumann.algorithms.fd.hyfd;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -41,10 +42,10 @@ import org.mp.naumann.algorithms.fd.utils.CollectionUtils;
 public class PositionListIndex {
 
     private final int attribute;
-    private final List<IntArrayList> clusters;
+    private final List<IntList> clusters;
     private final int numNonUniqueValues;
 
-    public PositionListIndex(int attribute, List<IntArrayList> clusters) {
+    public PositionListIndex(int attribute, List<IntList> clusters) {
         this.attribute = attribute;
         this.clusters = clusters;
         this.numNonUniqueValues = this.countNonUniqueValuesIn(clusters);
@@ -54,7 +55,7 @@ public class PositionListIndex {
         return this.attribute;
     }
 
-    public List<IntArrayList> getClusters() {
+    public List<IntList> getClusters() {
         return this.clusters;
     }
 
@@ -62,9 +63,9 @@ public class PositionListIndex {
         return this.numNonUniqueValues;
     }
 
-    private int countNonUniqueValuesIn(List<IntArrayList> clusters) {
+    private int countNonUniqueValuesIn(List<IntList> clusters) {
         int numNonUniqueValues = 0;
-        for (IntArrayList cluster : clusters)
+        for (IntList cluster : clusters)
             numNonUniqueValues += cluster.size();
         return numNonUniqueValues;
     }
@@ -77,14 +78,14 @@ public class PositionListIndex {
 
 
     public boolean refines(int[][] compressedRecords, int rhsAttr) {
-        for (IntArrayList cluster : this.clusters) {
+        for (IntList cluster : this.clusters) {
             if (!this.probe(compressedRecords, rhsAttr, cluster))
                 return false;
         }
         return true;
     }
 
-    private boolean probe(int[][] compressedRecords, int rhsAttr, IntArrayList cluster) {
+    private boolean probe(int[][] compressedRecords, int rhsAttr, IntList cluster) {
         if (cluster.size() == 0) return false;
 
         int rhsClusterId = compressedRecords[cluster.getInt(0)][rhsAttr];
@@ -123,7 +124,7 @@ public class PositionListIndex {
             index++;
         }
 
-        for (IntArrayList cluster : this.clusters) {
+        for (IntList cluster : this.clusters) {
             Object2ObjectOpenHashMap<ClusterIdentifier, ClusterIdentifierWithRecord> subClusters = new Object2ObjectOpenHashMap<>(cluster.size());
             for (int recordId : cluster) {
                 ClusterIdentifier subClusterIdentifier = this.buildClusterIdentifier(lhs, lhsSize, compressedRecords[recordId]);
@@ -225,7 +226,7 @@ public class PositionListIndex {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder("{ ");
-        for (IntArrayList cluster : this.clusters) {
+        for (IntList cluster : this.clusters) {
             builder.append("{");
             builder.append(CollectionUtils.concat(cluster, ","));
             builder.append("} ");
@@ -234,9 +235,9 @@ public class PositionListIndex {
         return builder.toString();
     }
 
-    private List<IntOpenHashSet> convertClustersToSets(List<IntArrayList> listCluster) {
+    private List<IntOpenHashSet> convertClustersToSets(List<IntList> listCluster) {
         List<IntOpenHashSet> setClusters = new LinkedList<>();
-        for (IntArrayList cluster : listCluster) {
+        for (IntList cluster : listCluster) {
             setClusters.add(new IntOpenHashSet(cluster));
         }
 

@@ -1,5 +1,8 @@
 package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,15 +16,15 @@ import org.mp.naumann.algorithms.fd.utils.PliUtils;
 
 class MapRecordCompressor implements RecordCompressor {
 
-    private final Set<Integer> recordIds;
+    private final IntSet recordIds;
     private final List<? extends PositionListIndex> plis;
 
-    MapRecordCompressor(Set<Integer> recordIds, List<? extends PositionListIndex> plis) {
+    MapRecordCompressor(IntSet recordIds, List<? extends PositionListIndex> plis) {
         this.recordIds = recordIds;
         this.plis = plis;
     }
 
-    private static int[] fetchRecordFrom(int recordId, List<Map<Integer, Integer>> invertedPlis) {
+    private static int[] fetchRecordFrom(int recordId, List<Int2IntMap> invertedPlis) {
         int numAttributes = invertedPlis.size();
         int[] record = new int[numAttributes];
         for (int i = 0; i < numAttributes; i++) {
@@ -33,20 +36,20 @@ class MapRecordCompressor implements RecordCompressor {
     @Override
     public CompressedRecords buildCompressedRecords() {
         MapCompressedRecords compressedRecords = new MapCompressedRecords(recordIds.size(), plis.size());
-        List<Map<Integer, Integer>> invertedPlis = invertPlis();
+        List<Int2IntMap> invertedPlis = invertPlis();
         for (int recordId : recordIds) {
             compressedRecords.put(recordId, fetchRecordFrom(recordId, invertedPlis));
         }
         return compressedRecords;
     }
 
-    private List<Map<Integer, Integer>> invertPlis() {
-        List<Map<Integer, Integer>> invertedPlis = new ArrayList<>();
+    private List<Int2IntMap> invertPlis() {
+        List<Int2IntMap> invertedPlis = new ArrayList<>();
         for (PositionListIndex pli : plis) {
-            Map<Integer, Integer> invertedPli = new HashMap<>(recordIds.size());
+            Int2IntMap invertedPli = new Int2IntOpenHashMap(recordIds.size());
 
             int clusterId = 0;
-            for (Collection<Integer> cluster : pli.getClusters()) {
+            for (Cluster cluster : pli.getClusters()) {
                 for (int recordId : cluster) {
                     invertedPli.put(recordId, clusterId);
                 }

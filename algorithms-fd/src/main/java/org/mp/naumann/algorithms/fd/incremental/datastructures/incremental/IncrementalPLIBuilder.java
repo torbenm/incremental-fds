@@ -16,6 +16,9 @@
 
 package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.Collection;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 
@@ -23,16 +26,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.Cluster;
 
 class IncrementalPLIBuilder {
-    private final List<Integer> pliOrder;
+    private final IntList pliOrder;
     private List<MapPositionListIndex> plis;
 
-    IncrementalPLIBuilder(List<Integer> pliOrder) {
+    IncrementalPLIBuilder(IntList pliOrder) {
         this.pliOrder = pliOrder;
     }
 
-    private static Collection<Integer> concat(Collection<Integer> into, Collection<Integer> from) {
+    private static Cluster concat(Cluster into, Cluster from) {
         into.addAll(from);
         return into;
     }
@@ -43,19 +47,19 @@ class IncrementalPLIBuilder {
      *
      * @return clustersPerAttribute,
      */
-    List<? extends PositionListIndex> fetchPositionListIndexes(List<Map<Integer, Collection<Integer>>> clusterMaps) {
+    List<? extends PositionListIndex> fetchPositionListIndexes(List<Int2ObjectMap<Cluster>> clusterMaps) {
         List<MapPositionListIndex> old = plis;
         if (old == null) {
             old = new ArrayList<>(pliOrder.size());
             for (int i = 0; i < pliOrder.size(); i++) {
-                old.add(new MapPositionListIndex(i, new HashMap<>()));
+                old.add(new MapPositionListIndex(i, new Int2ObjectOpenHashMap<>()));
             }
         }
         plis = new ArrayList<>();
         int i = 0;
         for (int columnId : pliOrder) {
-            Map<Integer, Collection<Integer>> clusters = old.get(i++).getRawClusters();
-            Map<Integer, Collection<Integer>> newClusters = clusterMaps.get(columnId);
+            Int2ObjectMap<Cluster> clusters = old.get(i++).getRawClusters();
+            Int2ObjectMap<Cluster> newClusters = clusterMaps.get(columnId);
             newClusters.forEach((k, v) -> clusters.merge(k, v, IncrementalPLIBuilder::concat));
 
             plis.add(new MapPositionListIndex(columnId, clusters));

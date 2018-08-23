@@ -1,5 +1,7 @@
 package org.mp.naumann.algorithms.fd.utils;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import org.apache.lucene.util.OpenBitSet;
 
 import java.util.ArrayList;
@@ -15,8 +17,8 @@ public class BitSetUtils {
         return toString(a, a.length());
     }
 
-    public static List<Integer> collectSetBits(OpenBitSet bitSet) {
-        List<Integer> cols = new ArrayList<>();
+    public static IntList collectSetBits(OpenBitSet bitSet) {
+        IntList cols = new IntArrayList();
         for (int nextSetBit = bitSet.nextSetBit(0); nextSetBit >= 0; nextSetBit = bitSet.nextSetBit(nextSetBit + 1)) {
             cols.add(nextSetBit);
         }

@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd.incremental.agreesets;
 
+import it.unimi.dsi.fastutil.ints.IntCollection;
 import java.util.Collection;
 
 class ViolatingPair {
@@ -17,7 +18,7 @@ class ViolatingPair {
         }
     }
 
-    boolean intersects(Collection<Integer> collection) {
+    boolean intersects(IntCollection collection) {
         return collection.contains(firstRecord) || collection.contains(secondRecord);
     }
 

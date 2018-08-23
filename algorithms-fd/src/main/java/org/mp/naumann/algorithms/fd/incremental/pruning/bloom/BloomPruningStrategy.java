@@ -4,6 +4,7 @@ import com.google.common.hash.BloomFilter;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.util.OpenBitSet;
 import org.mp.naumann.algorithms.fd.FDLogger;
@@ -32,7 +33,7 @@ public class BloomPruningStrategy {
     private BloomFilter<Collection<ColumnValue>> filter;
     private int puts = 0;
     private int requests = 0;
-    private Map<OpenBitSet, List<Integer>> combinations;
+    private Map<OpenBitSet, IntList> combinations;
     private int bloomViolations = 0;
     private int innerViolations = 0;
 
@@ -40,7 +41,7 @@ public class BloomPruningStrategy {
         this.columns = columns;
     }
 
-    private List<String[]> invertRecords(int numRecords, List<HashMap<String, IntArrayList>> clusterMaps, List<Integer> pliOrder) {
+    private List<String[]> invertRecords(int numRecords, List<Map<String, IntList>> clusterMaps, IntList pliOrder) {
         FDLogger.log(Level.FINER, "Inverting records...");
         List<String[]> invertedRecords = new ArrayList<>(numRecords);
         for (int i = 0; i < numRecords; i++) {
@@ -48,8 +49,8 @@ public class BloomPruningStrategy {
         }
         int i = 0;
         for (int columnId : pliOrder) {
-            HashMap<String, IntArrayList> clusterMap = clusterMaps.get(columnId);
-            for (Entry<String, IntArrayList> entry : clusterMap.entrySet()) {
+            Map<String, IntList> clusterMap = clusterMaps.get(columnId);
+            for (Entry<String, IntList> entry : clusterMap.entrySet()) {
                 for (int id : entry.getValue()) {
                     invertedRecords.get(id)[i] = entry.getKey();
                 }
@@ -72,7 +73,7 @@ public class BloomPruningStrategy {
         int oldBloomViolations = bloomViolations;
         int oldInnerViolations = innerViolations;
         CardinalitySet nonViolations = new CardinalitySet(columns.size());
-        for (Entry<OpenBitSet, List<Integer>> combination : combinations.entrySet()) {
+        for (Entry<OpenBitSet, IntList> combination : combinations.entrySet()) {
             boolean isUniqueCombination = isUniqueCombination(inserts, updates, combination.getValue());
             if (isUniqueCombination) {
                 nonViolations.add(combination.getKey());
@@ -80,7 +81,7 @@ public class BloomPruningStrategy {
             }
         }
         int oldPuts = puts;
-        for (List<Integer> fd : combinations.values()) {
+        for (IntList fd : combinations.values()) {
             for (InsertStatement insert : inserts) {
                 updateFilter(fd, toArray(insert.getValueMap()));
             }
@@ -96,7 +97,7 @@ public class BloomPruningStrategy {
         return new BloomValidationPruner(nonViolations);
     }
 
-    private boolean isUniqueCombination(List<InsertStatement> inserts, List<UpdateStatement> updates, List<Integer> combination) {
+    private boolean isUniqueCombination(List<InsertStatement> inserts, List<UpdateStatement> updates, IntList combination) {
         boolean isUniqueCombination = true;
         Set<Collection<ColumnValue>> inner = new HashSet<>();
         List<Map<String, String>> valueMaps = new ArrayList<>(inserts.size() + updates.size());
@@ -123,9 +124,9 @@ public class BloomPruningStrategy {
         return columns.stream().map(record::get).toArray(String[]::new);
     }
 
-    private Collection<ColumnValue> getValues(String[] record, List<Integer> combination) {
+    private Collection<ColumnValue> getValues(String[] record, IntList combination) {
         Collection<ColumnValue> list = new ArrayList<>();
-        for (Integer column : combination) {
+        for (int column : combination) {
             list.add(new ColumnValue(column, record[column]));
         }
         return list;
@@ -136,7 +137,7 @@ public class BloomPruningStrategy {
         return filter.mightContain(combination);
     }
 
-    public void initialize(List<HashMap<String, IntArrayList>> clusterMaps, int numRecords, List<Integer> pliOrder) {
+    public void initialize(List<Map<String, IntList>> clusterMaps, int numRecords, IntList pliOrder) {
         Collection<String[]> invertedRecords = invertRecords(numRecords, clusterMaps, pliOrder);
         initialize(invertedRecords);
     }
@@ -148,7 +149,7 @@ public class BloomPruningStrategy {
         FDLogger.log(Level.FINER, "Initializing bloom filter...");
         int expectedInsertions = 100_000_000;
         filter = BloomFilter.create(new ValueCombinationFunnel(), expectedInsertions);
-        for (List<Integer> combination : combinations.values()) {
+        for (IntList combination : combinations.values()) {
             for (String[] record : invertedRecords) {
                 updateFilter(combination, record);
             }
@@ -157,11 +158,11 @@ public class BloomPruningStrategy {
         FDLogger.log(Level.FINER, "Finished initializing bloom filter");
     }
 
-    private Map<OpenBitSet, List<Integer>> toMap(Set<OpenBitSet> fds) {
+    private Map<OpenBitSet, IntList> toMap(Set<OpenBitSet> fds) {
         return fds.stream().map(bits -> Pair.of(bits, BitSetUtils.collectSetBits(bits))).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
     }
 
-    private void updateFilter(List<Integer> cols, String[] record) {
+    private void updateFilter(IntList cols, String[] record) {
         put(getValues(record, cols));
     }
 

@@ -16,10 +16,12 @@
 
 package org.mp.naumann.algorithms.fd.incremental.datastructures.incremental;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.Cluster;
 import org.mp.naumann.algorithms.fd.structures.PLIBuilder;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.PositionListIndex;
 import org.mp.naumann.algorithms.fd.utils.PliUtils;
@@ -33,24 +35,29 @@ import org.mp.naumann.algorithms.fd.utils.PliUtils;
  */
 class MapPositionListIndex extends PositionListIndex {
 
-    private final Map<Integer, Collection<Integer>> clusters;
+    private final Int2ObjectMap<Cluster> clusters;
 
     @Override
-    public Collection<? extends Collection<Integer>> getClusters() {
+    public Iterable<Int2ObjectMap.Entry<Cluster>> getClustersWithKey() {
+        return clusters.int2ObjectEntrySet();
+    }
+
+    @Override
+    public Collection<Cluster> getClusters() {
         return this.clusters.entrySet().stream().filter(e -> !e.getKey().equals(PliUtils.UNIQUE_VALUE)).map(Entry::getValue).collect(Collectors.toList());
     }
 
     @Override
-    public Collection<Integer> getCluster(int index) {
+    public Cluster getCluster(int index) {
         return clusters.get(index);
     }
 
-    MapPositionListIndex(int attribute, Map<Integer, Collection<Integer>> clusters) {
+    MapPositionListIndex(int attribute, Int2ObjectMap<Cluster> clusters) {
         super(attribute);
         this.clusters = clusters;
     }
 
-    Map<Integer, Collection<Integer>> getRawClusters() {
+    Int2ObjectMap<Cluster> getRawClusters() {
         return clusters;
     }
 }
