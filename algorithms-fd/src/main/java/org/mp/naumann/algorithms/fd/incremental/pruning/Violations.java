@@ -5,9 +5,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.IntConsumer;
 import org.mp.naumann.algorithms.fd.structures.IntegerPair;
@@ -15,11 +13,20 @@ import org.mp.naumann.algorithms.fd.structures.OpenBitSetFD;
 
 public class Violations {
 
+	public Violations(int maxSize) {
+		this.maxSize = maxSize;
+	}
+
+	private final int maxSize;
 	private final Int2ObjectMap<Collection<OpenBitSetFD>> violated = new Int2ObjectOpenHashMap<>();
 	private final Collection<OpenBitSetFD> tracked = new HashSet<>();
-	
+
+	public Violations() {
+		this(Integer.MAX_VALUE);
+	}
+
 	public void add(IntegerPair pair, OpenBitSetFD e) {
-		if (!tracked.contains(e)) {
+		if (tracked.size() < maxSize && !tracked.contains(e)) {
 			tracked.add(e);
 			int a = pair.a();
 			add(a, e);

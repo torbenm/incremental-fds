@@ -1,5 +1,6 @@
 package org.mp.naumann.algorithms.fd.incremental;
 
+import it.unimi.dsi.fastutil.ints.Int2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.Cluster;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.IntArrayListCluster;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.IntLinkedHashSetCluster;
 import org.mp.naumann.algorithms.fd.incremental.pruning.Violations;
 import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.ExactDeleteValidationPruner;
