@@ -42,7 +42,7 @@ public class CollectionUtils {
             if (matching == null) {
                 matching = new IntOpenHashSet(cluster.toCollection());
             } else {
-                matching.retainAll(cluster.toCollection());
+                matching.retainAll(cluster.asSet());
             }
             if (matching.isEmpty()) {
                 return matching;

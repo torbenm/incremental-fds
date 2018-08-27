@@ -19,7 +19,7 @@ import org.mp.naumann.algorithms.fd.FDLogger;
 import org.mp.naumann.algorithms.fd.FunctionalDependency;
 import org.mp.naumann.algorithms.fd.hyfd.FDList;
 import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.Cluster;
-import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.IntArrayListCluster;
+import org.mp.naumann.algorithms.fd.incremental.datastructures.recompute.IntLinkedHashSetCluster;
 import org.mp.naumann.algorithms.fd.incremental.pruning.Violations;
 import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.ExactDeleteValidationPruner;
 import org.mp.naumann.algorithms.fd.incremental.pruning.annotation.SimpleDeleteValidationPruner;
@@ -108,8 +108,8 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         this.fds = builder.getFds();
         this.nonFds = builder.getNonFds();
 
-//        Factory<Cluster> clusterFactory = pliBuilder.getNumLastRecords() > 1_000_000? IntOpenHashSet::new : IntArrayListCluster::new;
-        Factory<Cluster> clusterFactory = IntArrayListCluster::new;
+//        Factory<Cluster> clusterFactory = pliBuilder.getNumLastRecords() > 1_000_000? IntLinkedHashSetCluster::new : IntArrayListCluster::new;
+        Factory<Cluster> clusterFactory = IntLinkedHashSetCluster::new;
 
         if (version.recomputesDataStructures()) {
             dataStructureBuilder = new RecomputeDataStructureBuilder(pliBuilder, this.version,
@@ -185,6 +185,7 @@ public class IncrementalFD implements IncrementalAlgorithm<IncrementalFDResult, 
         List<? extends PositionListIndex> plis = dataStructureBuilder.getPlis();
         CompressedRecords compressedRecords = dataStructureBuilder.getCompressedRecords();
 
+        FDLogger.log(Level.FINER, "Finished updating data structures");
         int validations = 0;
         int pruned = 0;
 

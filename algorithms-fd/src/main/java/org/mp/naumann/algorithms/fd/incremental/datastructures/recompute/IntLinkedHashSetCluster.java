@@ -3,13 +3,15 @@ package org.mp.naumann.algorithms.fd.incremental.datastructures.recompute;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.Collections;
 
-public class IntArrayListCluster implements Cluster {
+public class IntLinkedHashSetCluster implements Cluster {
 
-	private final IntList cluster = new IntArrayList();
+	private final IntLinkedOpenHashSet cluster = new IntLinkedOpenHashSet();
 
 	@Override
 	public void add(int i) {
@@ -33,7 +35,7 @@ public class IntArrayListCluster implements Cluster {
 
 	@Override
 	public int largestElement() {
-		return cluster.getInt(cluster.size() - 1);
+		return cluster.lastInt();
 	}
 
 	@Override
@@ -53,6 +55,6 @@ public class IntArrayListCluster implements Cluster {
 
 	@Override
 	public IntSet asSet() {
-		return new IntOpenHashSet(cluster);
+		return cluster;
 	}
 }

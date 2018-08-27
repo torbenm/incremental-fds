@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Set;
 
 public interface Cluster extends IntIterable {
@@ -28,4 +29,6 @@ public interface Cluster extends IntIterable {
 	int size();
 
 	IntCollection toCollection();
+
+	IntSet asSet();
 }
